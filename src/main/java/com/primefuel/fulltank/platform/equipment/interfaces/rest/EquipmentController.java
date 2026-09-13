@@ -14,11 +14,13 @@ import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.Equip
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.UpdateEquipmentCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.EquipmentRepository;
+import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -30,19 +32,24 @@ public class EquipmentController {
     private final EquipmentCommandService equipmentCommandService;
     private final EquipmentQueryService equipmentQueryService;
     private final EquipmentRepository equipmentRepository;
+    private final CurrentUserAccess currentUserAccess;
 
     public EquipmentController(EquipmentCommandService equipmentCommandService,
                                EquipmentQueryService equipmentQueryService,
-                               EquipmentRepository equipmentRepository) {
+                               EquipmentRepository equipmentRepository,
+                               CurrentUserAccess currentUserAccess) {
         this.equipmentCommandService = equipmentCommandService;
         this.equipmentQueryService = equipmentQueryService;
         this.equipmentRepository = equipmentRepository;
+        this.currentUserAccess = currentUserAccess;
     }
 
     @PostMapping("/{equipmentId}/favorite-provider")
+    @PreAuthorize("@currentUserAccess.isBuyerRole()")
     public ResponseEntity<EquipmentResource> assignFavoriteProvider(
             @PathVariable Long equipmentId, @RequestBody FavoriteProviderResource resource) {
         return equipmentRepository.findById(equipmentId)
+                .filter(equipment -> currentUserAccess.ownsCompany(equipment.getCompanyId()))
                 .map(equipment -> {
                     equipment.assignFavoriteProvider(resource.providerId());
                     var saved = equipmentRepository.save(equipment);
@@ -52,6 +59,7 @@ public class EquipmentController {
     }
 
     @PostMapping
+    @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
     public ResponseEntity<?> createEquipment(@RequestBody CreateEquipmentResource resource) {
         var command = CreateEquipmentCommandFromResourceAssembler.toCommandFromResource(resource);
         var result = equipmentCommandService.handle(command);
@@ -64,6 +72,10 @@ public class EquipmentController {
     @PostMapping("/{equipmentId}/update")
     public ResponseEntity<?> updateEquipment(@PathVariable Long equipmentId,
                                              @RequestBody UpdateEquipmentResource resource) {
+        var existing = equipmentRepository.findById(equipmentId).orElse(null);
+        if (existing == null || !currentUserAccess.ownsCompany(existing.getCompanyId())) {
+            return ResponseEntity.notFound().build();
+        }
         var command = UpdateEquipmentCommandFromResourceAssembler.toCommandFromResource(equipmentId, resource);
         var result = equipmentCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
@@ -73,6 +85,7 @@ public class EquipmentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<EquipmentResource>> getAllEquipment() {
         var equipment = equipmentQueryService.handle(new GetAllEquipmentQuery());
         var resources = equipment.stream().map(EquipmentResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -81,13 +94,15 @@ public class EquipmentController {
 
     @GetMapping("/{equipmentId}")
     public ResponseEntity<EquipmentResource> getEquipmentById(@PathVariable Long equipmentId) {
-        var result = equipmentQueryService.handle(new GetEquipmentByIdQuery(equipmentId));
+        var result = equipmentQueryService.handle(new GetEquipmentByIdQuery(equipmentId))
+                .filter(equipment -> currentUserAccess.ownsCompany(equipment.getCompanyId()));
         return result.map(e -> new ResponseEntity<>(
                         EquipmentResourceFromEntityAssembler.toResourceFromEntity(e), HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/company/{companyId}")
+    @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<List<EquipmentResource>> getEquipmentByCompany(@PathVariable Long companyId) {
         var equipment = equipmentQueryService.handle(new GetEquipmentByCompanyIdQuery(companyId));
         var resources = equipment.stream().map(EquipmentResourceFromEntityAssembler::toResourceFromEntity).toList();

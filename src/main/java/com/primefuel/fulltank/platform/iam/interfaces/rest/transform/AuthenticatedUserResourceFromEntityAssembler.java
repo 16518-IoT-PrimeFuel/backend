@@ -9,6 +9,9 @@ public final class AuthenticatedUserResourceFromEntityAssembler {
     }
 
     public static AuthenticatedUserResource toResourceFromEntity(User user, String token) {
-        return new AuthenticatedUserResource(user.getId(), user.getUsername(), token);
+        var roles = user.getRoles() == null ? java.util.List.<String>of()
+                : user.getRoles().stream().map(role -> role.getName().name()).toList();
+        return new AuthenticatedUserResource(user.getId(), user.getUsername(), token,
+                roles, user.getCompanyId(), user.getProviderId());
     }
 }

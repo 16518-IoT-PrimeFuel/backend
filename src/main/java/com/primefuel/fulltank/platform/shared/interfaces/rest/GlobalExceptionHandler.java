@@ -5,9 +5,11 @@ import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ErrorRes
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
@@ -18,6 +20,20 @@ import java.util.ResourceBundle;
 public class GlobalExceptionHandler {
 
     private static final String MESSAGES_BASENAME = "messages";
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException ex) {
+        return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                ApplicationError.forbidden(ex.getMessage() != null ? ex.getMessage() : "Access denied"));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<?> handleResponseStatusException(ResponseStatusException ex) {
+        return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                ApplicationError.validationError(
+                        "request",
+                        ex.getReason() != null ? ex.getReason() : "Invalid request"));
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {

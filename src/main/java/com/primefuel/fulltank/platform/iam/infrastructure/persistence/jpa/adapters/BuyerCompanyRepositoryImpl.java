@@ -36,4 +36,9 @@ public class BuyerCompanyRepositoryImpl implements BuyerCompanyRepository {
         var entity = BuyerCompanyPersistenceAssembler.toPersistenceFromDomain(buyerCompany);
         return BuyerCompanyPersistenceAssembler.toDomainFromPersistence(buyerCompanyRepository.save(entity));
     }
+
+    @Override
+    public boolean existsByRuc(String ruc) {
+        return buyerCompanyRepository.existsByRuc(ruc);
+    }
 }

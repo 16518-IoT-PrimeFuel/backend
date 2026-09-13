@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProviderCompanyPersistenceRepository extends JpaRepository<ProviderCompanyPersistenceEntity, Long> {
+    boolean existsByRuc(String ruc);
 }

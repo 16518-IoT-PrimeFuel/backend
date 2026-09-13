@@ -36,4 +36,9 @@ public class ProviderCompanyRepositoryImpl implements ProviderCompanyRepository 
         var entity = ProviderCompanyPersistenceAssembler.toPersistenceFromDomain(providerCompany);
         return ProviderCompanyPersistenceAssembler.toDomainFromPersistence(providerCompanyRepository.save(entity));
     }
+
+    @Override
+    public boolean existsByRuc(String ruc) {
+        return providerCompanyRepository.existsByRuc(ruc);
+    }
 }

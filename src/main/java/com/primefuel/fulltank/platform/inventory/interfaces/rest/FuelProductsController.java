@@ -6,6 +6,7 @@ import com.primefuel.fulltank.platform.inventory.domain.model.commands.DeleteFue
 import com.primefuel.fulltank.platform.inventory.domain.model.queries.GetAllFuelProductsQuery;
 import com.primefuel.fulltank.platform.inventory.domain.model.queries.GetFuelProductByIdQuery;
 import com.primefuel.fulltank.platform.inventory.domain.model.queries.GetFuelProductsByProviderIdQuery;
+import com.primefuel.fulltank.platform.inventory.domain.model.aggregates.FuelProduct;
 import com.primefuel.fulltank.platform.inventory.interfaces.rest.resources.CreateFuelProductResource;
 import com.primefuel.fulltank.platform.inventory.interfaces.rest.resources.FuelProductResource;
 import com.primefuel.fulltank.platform.inventory.interfaces.rest.resources.UpdateFuelProductResource;
@@ -15,11 +16,13 @@ import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.FuelP
 import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.UpdateFuelProductCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.UpdateFuelProductStockCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
+import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -30,14 +33,18 @@ public class FuelProductsController {
 
     private final FuelProductCommandService fuelProductCommandService;
     private final FuelProductQueryService fuelProductQueryService;
+    private final CurrentUserAccess currentUserAccess;
 
     public FuelProductsController(FuelProductCommandService fuelProductCommandService,
-                                  FuelProductQueryService fuelProductQueryService) {
+                                  FuelProductQueryService fuelProductQueryService,
+                                  CurrentUserAccess currentUserAccess) {
         this.fuelProductCommandService = fuelProductCommandService;
         this.fuelProductQueryService = fuelProductQueryService;
+        this.currentUserAccess = currentUserAccess;
     }
 
     @PostMapping
+    @PreAuthorize("@currentUserAccess.ownsProvider(#resource.providerId())")
     public ResponseEntity<?> createFuelProduct(@RequestBody CreateFuelProductResource resource) {
         var command = CreateFuelProductCommandFromResourceAssembler.toCommandFromResource(resource);
         var result = fuelProductCommandService.handle(command);
@@ -50,6 +57,7 @@ public class FuelProductsController {
     @PostMapping("/{fuelProductId}/update-stock")
     public ResponseEntity<?> updateStock(@PathVariable Long fuelProductId,
                                          @RequestBody UpdateFuelProductStockResource resource) {
+        if (!ownsProduct(fuelProductId)) return ResponseEntity.notFound().build();
         var command = UpdateFuelProductStockCommandFromResourceAssembler.toCommandFromResource(fuelProductId, resource);
         var result = fuelProductCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
@@ -59,6 +67,7 @@ public class FuelProductsController {
     }
 
     @GetMapping
+    @PreAuthorize("@currentUserAccess.isBuyerRole()")
     public ResponseEntity<List<FuelProductResource>> getAllFuelProducts() {
         var products = fuelProductQueryService.handle(new GetAllFuelProductsQuery());
         var resources = products.stream().map(FuelProductResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -67,13 +76,16 @@ public class FuelProductsController {
 
     @GetMapping("/{fuelProductId}")
     public ResponseEntity<FuelProductResource> getFuelProductById(@PathVariable Long fuelProductId) {
-        var result = fuelProductQueryService.handle(new GetFuelProductByIdQuery(fuelProductId));
+        var result = fuelProductQueryService.handle(new GetFuelProductByIdQuery(fuelProductId))
+                .filter(product -> currentUserAccess.isBuyerRole()
+                        || currentUserAccess.ownsProvider(product.getProviderId()));
         return result.map(p -> new ResponseEntity<>(
                         FuelProductResourceFromEntityAssembler.toResourceFromEntity(p), HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/provider/{providerId}")
+    @PreAuthorize("@currentUserAccess.isBuyerRole() or @currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<List<FuelProductResource>> getFuelProductsByProvider(@PathVariable Long providerId) {
         var products = fuelProductQueryService.handle(new GetFuelProductsByProviderIdQuery(providerId));
         var resources = products.stream().map(FuelProductResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -83,6 +95,7 @@ public class FuelProductsController {
     @PutMapping("/{fuelProductId}")
     public ResponseEntity<?> updateFuelProduct(@PathVariable Long fuelProductId,
                                                @RequestBody UpdateFuelProductResource resource) {
+        if (!ownsProduct(fuelProductId)) return ResponseEntity.notFound().build();
         var command = UpdateFuelProductCommandFromResourceAssembler.toCommandFromResource(fuelProductId, resource);
         var result = fuelProductCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
@@ -93,10 +106,18 @@ public class FuelProductsController {
 
     @DeleteMapping("/{fuelProductId}")
     public ResponseEntity<?> deleteFuelProduct(@PathVariable Long fuelProductId) {
+        if (!ownsProduct(fuelProductId)) return ResponseEntity.notFound().build();
         var result = fuelProductCommandService.handle(new DeleteFuelProductCommand(fuelProductId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
                 ignored -> null,
                 HttpStatus.NO_CONTENT);
+    }
+
+    private boolean ownsProduct(Long fuelProductId) {
+        return fuelProductQueryService.handle(new GetFuelProductByIdQuery(fuelProductId))
+                .map(FuelProduct::getProviderId)
+                .filter(currentUserAccess::ownsProvider)
+                .isPresent();
     }
 }

@@ -11,12 +11,14 @@ import com.primefuel.fulltank.platform.notification.interfaces.rest.resources.No
 import com.primefuel.fulltank.platform.notification.interfaces.rest.transform.CreateNotificationCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.notification.interfaces.rest.transform.NotificationResourceFromEntityAssembler;
 import com.primefuel.fulltank.platform.iam.domain.repositories.UserRepository;
+import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -28,17 +30,30 @@ public class NotificationsController {
     private final NotificationCommandService notificationCommandService;
     private final NotificationQueryService notificationQueryService;
     private final UserRepository userRepository;
+    private final CurrentUserAccess currentUserAccess;
 
     public NotificationsController(NotificationCommandService notificationCommandService,
                                    NotificationQueryService notificationQueryService,
-                                   UserRepository userRepository) {
+                                   UserRepository userRepository,
+                                   CurrentUserAccess currentUserAccess) {
         this.notificationCommandService = notificationCommandService;
         this.notificationQueryService = notificationQueryService;
         this.userRepository = userRepository;
+        this.currentUserAccess = currentUserAccess;
     }
 
     @PostMapping
+    @PreAuthorize("@currentUserAccess.ownsUser(#resource.userId()) or @currentUserAccess.ownsCompany(#resource.companyId()) or @currentUserAccess.ownsProvider(#resource.providerId())")
     public ResponseEntity<?> createNotification(@RequestBody CreateNotificationResource resource) {
+        int recipients = (resource.userId() == null ? 0 : 1)
+                + (resource.companyId() == null ? 0 : 1)
+                + (resource.providerId() == null ? 0 : 1);
+        if (recipients != 1) return ResponseEntity.badRequest().body("Specify exactly one notification recipient");
+        if (resource.userId() != null && !currentUserAccess.ownsUser(resource.userId())
+                || resource.companyId() != null && !currentUserAccess.ownsCompany(resource.companyId())
+                || resource.providerId() != null && !currentUserAccess.ownsProvider(resource.providerId())) {
+            return ResponseEntity.notFound().build();
+        }
         var userId = resolveUserId(resource);
         if (userId == null) {
             return ResponseEntity.badRequest().body("Notification recipient does not exist");
@@ -55,6 +70,10 @@ public class NotificationsController {
 
     @PostMapping("/{notificationId}/mark-as-read")
     public ResponseEntity<?> markAsRead(@PathVariable Long notificationId) {
+        var notification = notificationQueryService.handle(new GetNotificationByIdQuery(notificationId));
+        if (notification.isEmpty() || !currentUserAccess.ownsUser(notification.get().getUserId())) {
+            return ResponseEntity.notFound().build();
+        }
         var result = notificationCommandService.handle(new MarkNotificationAsReadCommand(notificationId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
@@ -64,13 +83,15 @@ public class NotificationsController {
 
     @GetMapping("/{notificationId}")
     public ResponseEntity<NotificationResource> getNotificationById(@PathVariable Long notificationId) {
-        var result = notificationQueryService.handle(new GetNotificationByIdQuery(notificationId));
+        var result = notificationQueryService.handle(new GetNotificationByIdQuery(notificationId))
+                .filter(notification -> currentUserAccess.ownsUser(notification.getUserId()));
         return result.map(n -> new ResponseEntity<>(
                         NotificationResourceFromEntityAssembler.toResourceFromEntity(n), HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("@currentUserAccess.ownsUser(#userId)")
     public ResponseEntity<List<NotificationResource>> getNotificationsByUser(@PathVariable Long userId) {
         var notifications = notificationQueryService.handle(new GetNotificationsByUserIdQuery(userId));
         var resources = notifications.stream().map(NotificationResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -78,6 +99,7 @@ public class NotificationsController {
     }
 
     @GetMapping("/buyer/{companyId}")
+    @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<List<NotificationResource>> getNotificationsByBuyer(@PathVariable Long companyId) {
         return userRepository.findByCompanyId(companyId)
                 .map(user -> getNotificationsByUser(user.getId()))
@@ -85,6 +107,7 @@ public class NotificationsController {
     }
 
     @GetMapping("/provider/{providerId}")
+    @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<List<NotificationResource>> getNotificationsByProvider(@PathVariable Long providerId) {
         return userRepository.findByProviderId(providerId)
                 .map(user -> getNotificationsByUser(user.getId()))
@@ -92,6 +115,7 @@ public class NotificationsController {
     }
 
     @GetMapping("/user/{userId}/unread")
+    @PreAuthorize("@currentUserAccess.ownsUser(#userId)")
     public ResponseEntity<List<NotificationResource>> getUnreadByUser(@PathVariable Long userId) {
         var notifications = notificationQueryService.handle(new GetUnreadNotificationsByUserIdQuery(userId));
         var resources = notifications.stream().map(NotificationResourceFromEntityAssembler::toResourceFromEntity).toList();

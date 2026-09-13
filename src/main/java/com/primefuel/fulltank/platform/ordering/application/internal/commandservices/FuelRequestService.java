@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FuelRequestService {
@@ -55,6 +56,10 @@ public class FuelRequestService {
         if (buyerCompanyId != null) return requests.findByBuyerCompanyId(buyerCompanyId);
         if (providerId != null) return requests.findByProviderId(providerId);
         return requests.findAll();
+    }
+
+    public Optional<FuelRequestPersistenceEntity> findById(Long requestId) {
+        return requests.findById(requestId);
     }
 
     @Transactional

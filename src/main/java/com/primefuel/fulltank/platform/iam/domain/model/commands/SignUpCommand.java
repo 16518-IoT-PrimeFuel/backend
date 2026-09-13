@@ -8,6 +8,6 @@ public record SignUpCommand(
         String username,
         String password,
         List<Role> roles,
-        Long companyId,
-        Long providerId) {
+        CreateBuyerCompanyCommand buyerCompany,
+        CreateProviderCompanyCommand providerCompany) {
 }

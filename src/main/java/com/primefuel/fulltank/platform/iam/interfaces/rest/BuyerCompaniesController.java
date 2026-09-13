@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -46,6 +47,7 @@ public class BuyerCompaniesController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<BuyerCompanyResource>> getAllBuyerCompanies() {
         var companies = buyerCompanyQueryService.handle(new GetAllBuyerCompaniesQuery());
         var resources = companies.stream().map(BuyerCompanyResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -53,6 +55,7 @@ public class BuyerCompaniesController {
     }
 
     @GetMapping("/{companyId}")
+    @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<BuyerCompanyResource> getBuyerCompanyById(@PathVariable Long companyId) {
         var result = buyerCompanyQueryService.handle(new GetBuyerCompanyByIdQuery(companyId));
         return result.map(company -> new ResponseEntity<>(
@@ -61,6 +64,7 @@ public class BuyerCompaniesController {
     }
 
     @PutMapping("/{companyId}")
+    @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<BuyerCompanyResource> updateBuyerCompany(@PathVariable Long companyId,
                                                                    @RequestBody CreateBuyerCompanyResource resource) {
         var result = buyerCompanyRepository.findById(companyId);

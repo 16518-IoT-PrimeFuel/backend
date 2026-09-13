@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class UsersController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<UserResource>> getAllUsers() {
         var users = userQueryService.handle(new GetAllUsersQuery());
         var resources = users.stream().map(UserResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -35,6 +37,7 @@ public class UsersController {
     }
 
     @GetMapping("/{userId}")
+    @PreAuthorize("@currentUserAccess.ownsUser(#userId)")
     public ResponseEntity<UserResource> getUserById(@PathVariable Long userId) {
         var result = userQueryService.handle(new GetUserByIdQuery(userId));
         return result.map(user -> new ResponseEntity<>(

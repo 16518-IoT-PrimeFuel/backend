@@ -5,6 +5,7 @@ import com.primefuel.fulltank.platform.catalog.domain.repositories.ProviderRatin
 import com.primefuel.fulltank.platform.catalog.interfaces.rest.resources.ProviderRatingResource;
 import com.primefuel.fulltank.platform.iam.domain.repositories.BuyerCompanyRepository;
 import com.primefuel.fulltank.platform.iam.domain.repositories.ProviderCompanyRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,7 @@ public class ProviderRatingsController {
     }
 
     @PostMapping
+    @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
     public ResponseEntity<?> create(@RequestBody ProviderRatingResource resource) {
         var validation = validate(resource);
         if (validation != null) return validation;
@@ -53,6 +55,7 @@ public class ProviderRatingsController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody ProviderRatingResource resource) {
         var validation = validate(resource);
         if (validation != null) return validation;

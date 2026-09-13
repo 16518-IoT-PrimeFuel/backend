@@ -1,6 +1,9 @@
 package com.primefuel.fulltank.platform.iam.interfaces.rest;
 
 import com.primefuel.fulltank.platform.iam.application.commandservices.UserCommandService;
+import com.primefuel.fulltank.platform.iam.application.internal.commandservices.PasswordResetService;
+import com.primefuel.fulltank.platform.iam.interfaces.rest.resources.PasswordResetConfirmResource;
+import com.primefuel.fulltank.platform.iam.interfaces.rest.resources.PasswordResetRequestResource;
 import com.primefuel.fulltank.platform.iam.interfaces.rest.resources.SignInResource;
 import com.primefuel.fulltank.platform.iam.interfaces.rest.resources.SignUpResource;
 import com.primefuel.fulltank.platform.iam.interfaces.rest.transform.AuthenticatedUserResourceFromEntityAssembler;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping(value = "/api/v1/authentication", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -23,13 +27,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
 
     private final UserCommandService userCommandService;
+    private final PasswordResetService passwordResetService;
 
-    public AuthenticationController(UserCommandService userCommandService) {
+    public AuthenticationController(UserCommandService userCommandService, PasswordResetService passwordResetService) {
         this.userCommandService = userCommandService;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<?> signUp(@RequestBody SignUpResource resource) {
+    public ResponseEntity<?> signUp(@Valid @RequestBody SignUpResource resource) {
         var command = SignUpCommandFromResourceAssembler.toCommandFromResource(resource);
         var result = userCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
@@ -47,5 +53,18 @@ public class AuthenticationController {
                 pair -> AuthenticatedUserResourceFromEntityAssembler.toResourceFromEntity(
                         pair.getLeft(), pair.getRight()),
                 HttpStatus.OK);
+    }
+
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<?> requestPasswordReset(@Valid @RequestBody PasswordResetRequestResource resource) {
+        passwordResetService.request(resource.email());
+        return ResponseEntity.accepted().body(java.util.Map.of(
+                "message", "If the account exists, password reset instructions have been sent."));
+    }
+
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<?> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmResource resource) {
+        passwordResetService.confirm(resource.token(), resource.newPassword());
+        return ResponseEntity.noContent().build();
     }
 }

@@ -46,4 +46,8 @@ public record ApplicationError(
                 "Unexpected error in %s".formatted(context),
                 reason);
     }
+
+    public static ApplicationError forbidden(String reason) {
+        return new ApplicationError("FORBIDDEN", "Access denied", reason);
+    }
 }

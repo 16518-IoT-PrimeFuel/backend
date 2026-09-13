@@ -91,6 +91,7 @@ public final class ErrorResponseAssembler {
 
     public static HttpStatusCode toStatusFromErrorCode(String errorCode) {
         return switch (errorCode) {
+            case "FORBIDDEN" -> HttpStatus.FORBIDDEN;
             case "VALIDATION_ERROR" -> HttpStatus.BAD_REQUEST;
             case String s when s.endsWith("_NOT_FOUND") -> HttpStatus.NOT_FOUND;
             case "BUSINESS_RULE_VIOLATION" -> HttpStatusCode.valueOf(422);

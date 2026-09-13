@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -46,6 +47,7 @@ public class ProviderCompaniesController {
     }
 
     @GetMapping
+    @PreAuthorize("@currentUserAccess.isBuyerRole()")
     public ResponseEntity<List<ProviderCompanyResource>> getAllProviderCompanies() {
         var companies = providerCompanyQueryService.handle(new GetAllProviderCompaniesQuery());
         var resources = companies.stream().map(ProviderCompanyResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -53,6 +55,7 @@ public class ProviderCompaniesController {
     }
 
     @GetMapping("/{providerId}")
+    @PreAuthorize("@currentUserAccess.isBuyerRole() or @currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<ProviderCompanyResource> getProviderCompanyById(@PathVariable Long providerId) {
         var result = providerCompanyQueryService.handle(new GetProviderCompanyByIdQuery(providerId));
         return result.map(company -> new ResponseEntity<>(
@@ -61,6 +64,7 @@ public class ProviderCompaniesController {
     }
 
     @PutMapping("/{providerId}")
+    @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<ProviderCompanyResource> updateProviderCompany(@PathVariable Long providerId,
                                                                          @RequestBody CreateProviderCompanyResource resource) {
         var result = providerCompanyRepository.findById(providerId);

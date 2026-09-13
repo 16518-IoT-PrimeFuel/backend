@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping(value = "/api/v1/analytics", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -31,6 +32,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/platform")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<PlatformSummaryResource> getPlatformSummary() {
         var summary = analyticsQueryService.handle(new GetPlatformSummaryQuery());
         return new ResponseEntity<>(
@@ -39,6 +41,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/providers/{providerId}")
+    @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<ProviderAnalyticsResource> getProviderAnalytics(@PathVariable Long providerId) {
         var analytics = analyticsQueryService.handle(new GetProviderAnalyticsQuery(providerId));
         return new ResponseEntity<>(
@@ -47,6 +50,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/buyers/{companyId}")
+    @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<BuyerAnalyticsResource> getBuyerAnalytics(@PathVariable Long companyId) {
         var analytics = analyticsQueryService.handle(new GetBuyerAnalyticsQuery(companyId));
         return new ResponseEntity<>(

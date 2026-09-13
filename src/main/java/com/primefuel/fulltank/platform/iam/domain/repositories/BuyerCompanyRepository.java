@@ -9,4 +9,5 @@ public interface BuyerCompanyRepository {
     Optional<BuyerCompany> findById(Long id);
     List<BuyerCompany> findAll();
     BuyerCompany save(BuyerCompany buyerCompany);
+    boolean existsByRuc(String ruc);
 }

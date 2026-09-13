@@ -9,4 +9,5 @@ public interface ProviderCompanyRepository {
     Optional<ProviderCompany> findById(Long id);
     List<ProviderCompany> findAll();
     ProviderCompany save(ProviderCompany providerCompany);
+    boolean existsByRuc(String ruc);
 }

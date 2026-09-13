@@ -12,12 +12,14 @@ import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.Create
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.FuelOrderResource;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.transform.CreateFuelOrderCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.transform.FuelOrderResourceFromEntityAssembler;
+import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -28,14 +30,18 @@ public class FuelOrdersController {
 
     private final FuelOrderCommandService fuelOrderCommandService;
     private final FuelOrderQueryService fuelOrderQueryService;
+    private final CurrentUserAccess currentUserAccess;
 
     public FuelOrdersController(FuelOrderCommandService fuelOrderCommandService,
-                                FuelOrderQueryService fuelOrderQueryService) {
+                                FuelOrderQueryService fuelOrderQueryService,
+                                CurrentUserAccess currentUserAccess) {
         this.fuelOrderCommandService = fuelOrderCommandService;
         this.fuelOrderQueryService = fuelOrderQueryService;
+        this.currentUserAccess = currentUserAccess;
     }
 
     @PostMapping
+    @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
     public ResponseEntity<?> createFuelOrder(@RequestBody CreateFuelOrderResource resource) {
         var command = CreateFuelOrderCommandFromResourceAssembler.toCommandFromResource(resource);
         var result = fuelOrderCommandService.handle(command);
@@ -47,6 +53,7 @@ public class FuelOrdersController {
 
     @PostMapping("/{orderId}/confirm")
     public ResponseEntity<?> confirmOrder(@PathVariable Long orderId) {
+        if (!ownsOrderAsBuyer(orderId)) return ResponseEntity.notFound().build();
         var result = fuelOrderCommandService.handle(new ConfirmFuelOrderCommand(orderId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
@@ -56,6 +63,7 @@ public class FuelOrdersController {
 
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
+        if (!ownsOrder(orderId)) return ResponseEntity.notFound().build();
         var result = fuelOrderCommandService.handle(new CancelFuelOrderCommand(orderId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
@@ -64,6 +72,7 @@ public class FuelOrdersController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<FuelOrderResource>> getAllOrders() {
         var orders = fuelOrderQueryService.handle(new GetAllFuelOrdersQuery());
         var resources = orders.stream().map(FuelOrderResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -72,13 +81,15 @@ public class FuelOrdersController {
 
     @GetMapping("/{orderId}")
     public ResponseEntity<FuelOrderResource> getOrderById(@PathVariable Long orderId) {
-        var result = fuelOrderQueryService.handle(new GetFuelOrderByIdQuery(orderId));
+        var result = fuelOrderQueryService.handle(new GetFuelOrderByIdQuery(orderId))
+                .filter(order -> currentUserAccess.ownsCompanyOrProvider(order.getCompanyId(), order.getProviderId()));
         return result.map(o -> new ResponseEntity<>(
                         FuelOrderResourceFromEntityAssembler.toResourceFromEntity(o), HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/company/{companyId}")
+    @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<List<FuelOrderResource>> getOrdersByCompany(@PathVariable Long companyId) {
         var orders = fuelOrderQueryService.handle(new GetFuelOrdersByCompanyIdQuery(companyId));
         var resources = orders.stream().map(FuelOrderResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -86,9 +97,23 @@ public class FuelOrdersController {
     }
 
     @GetMapping("/provider/{providerId}")
+    @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<List<FuelOrderResource>> getOrdersByProvider(@PathVariable Long providerId) {
         var orders = fuelOrderQueryService.handle(new GetFuelOrdersByProviderIdQuery(providerId));
         var resources = orders.stream().map(FuelOrderResourceFromEntityAssembler::toResourceFromEntity).toList();
         return new ResponseEntity<>(resources, HttpStatus.OK);
+    }
+
+    private boolean ownsOrder(Long orderId) {
+        return fuelOrderQueryService.handle(new GetFuelOrderByIdQuery(orderId))
+                .filter(order -> currentUserAccess.ownsCompanyOrProvider(
+                        order.getCompanyId(), order.getProviderId()))
+                .isPresent();
+    }
+
+    private boolean ownsOrderAsBuyer(Long orderId) {
+        return fuelOrderQueryService.handle(new GetFuelOrderByIdQuery(orderId))
+                .filter(order -> currentUserAccess.ownsCompany(order.getCompanyId()))
+                .isPresent();
     }
 }
