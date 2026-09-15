@@ -1,0 +1,49 @@
+@startuml iam-bounded-context
+title FullTank - IAM Bounded Context
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam defaultFontName Arial
+skinparam ArrowColor #475569
+skinparam RectangleBorderColor #334155
+
+actor "Mobile / Web Client" as client
+actor "Platform Administrator" as admin
+rectangle "FullTank Platform" as platform {
+  rectangle "IAM Bounded Context\nIdentity and Access Management" as iam #E8F1FF {
+    rectangle "Authentication\nSign in / Sign up / Password reset" as auth #DCEBFF
+    rectangle "User Directory\nUsers, roles and companies" as directory #DCEBFF
+    rectangle "Authorization\nJWT, ownership and role checks" as authorization #DCEBFF
+  }
+  database "MySQL\nIAM tables" as db #FFF4D6
+  queue "SMTP provider" as smtp #FDE2E2
+}
+rectangle "Ordering" as ordering #EAF7EE
+rectangle "Inventory" as inventory #EAF7EE
+rectangle "Fulfillment" as fulfillment #EAF7EE
+rectangle "Reporting" as reporting #EAF7EE
+
+client --> auth : HTTPS / JSON
+client --> directory : HTTPS / JSON
+admin --> directory : protected administration
+auth --> authorization : authenticates and issues JWT
+authorization --> directory : loads user roles and ownership
+directory --> db : persists users, roles, buyer/provider companies
+auth --> db : persists reset token hash
+auth --> smtp : sends one-time reset link
+authorization ..> ordering : protects resources
+authorization ..> inventory : protects resources
+authorization ..> fulfillment : protects resources
+authorization ..> reporting : protects resources
+
+note right of iam
+  Public endpoints:
+  /authentication/sign-in
+  /authentication/sign-up
+  /authentication/password-reset/*
+
+  Protected endpoints use the JWT
+  and CurrentUserAccess ownership rules.
+end note
+@enduml

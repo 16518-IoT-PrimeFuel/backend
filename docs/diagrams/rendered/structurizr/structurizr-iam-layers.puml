@@ -1,0 +1,77 @@
+@startuml
+title <size:24>IAM tactical layers</size>
+
+set separator none
+left to right direction
+skinparam ranksep 60
+skinparam nodesep 30
+hide stereotype
+
+<style>
+  root {
+    BackgroundColor: #ffffff;
+    FontColor: #444444;
+  }
+  // Element
+  .Element-RWxlbWVudA== {
+    BackgroundColor: #ffffff;
+    LineColor: #444444;
+    LineStyle: 0;
+    LineThickness: 2;
+    FontColor: #444444;
+    FontSize: 24;
+    HorizontalAlignment: center;
+    Shadowing: 0;
+    MaximumWidth: 450;
+  }
+  // Relationship
+  .Relationship-UmVsYXRpb25zaGlw {
+    LineThickness: 2;
+    LineStyle: 10-10;
+    LineColor: #444444;
+    FontColor: #444444;
+    FontSize: 24;
+  }
+  // FullTank Platform
+  .Boundary-RnVsbFRhbmsgUGxhdGZvcm0= {
+    BackgroundColor: #ffffff;
+    LineColor: #444444;
+    LineStyle: 0;
+    LineThickness: 2;
+    FontColor: #444444;
+    FontSize: 24;
+    HorizontalAlignment: center;
+    Shadowing: 0;
+  }
+  // IAM Bounded Context
+  .Boundary-SUFNIEJvdW5kZWQgQ29udGV4dA== {
+    BackgroundColor: #ffffff;
+    LineColor: #444444;
+    LineStyle: 0;
+    LineThickness: 2;
+    FontColor: #444444;
+    FontSize: 24;
+    HorizontalAlignment: center;
+    Shadowing: 0;
+  }
+</style>
+
+rectangle "==Mobile / Web Client\n<size:16>[Person]</size>\n\nConsumes the public and protected REST API." <<Element-RWxlbWVudA==>> as MobileWebClient
+
+rectangle "FullTank Platform\n<size:16>[Software System]</size>" <<Boundary-RnVsbFRhbmsgUGxhdGZvcm0=>> {
+  rectangle "IAM Bounded Context\n<size:16>[Container: Spring Boot / DDD]</size>" <<Boundary-SUFNIEJvdW5kZWQgQ29udGV4dA==>> {
+    rectangle "==Interfaces Layer\n<size:16>[Component: Spring MVC]</size>\n\nREST controllers, resources, assemblers and ACL" <<Element-RWxlbWVudA==>> as FullTankPlatform.IAMBoundedContext.InterfacesLayer
+    rectangle "==Application Layer\n<size:16>[Component: Java]</size>\n\nUse cases, command/query services and outbound ports" <<Element-RWxlbWVudA==>> as FullTankPlatform.IAMBoundedContext.ApplicationLayer
+    rectangle "==Domain Layer\n<size:16>[Component: Java]</size>\n\nAggregates, commands, queries and repository ports" <<Element-RWxlbWVudA==>> as FullTankPlatform.IAMBoundedContext.DomainLayer
+    rectangle "==Infrastructure Layer\n<size:16>[Component: Spring / JPA]</size>\n\nJPA adapters, JWT, BCrypt and Spring Security" <<Element-RWxlbWVudA==>> as FullTankPlatform.IAMBoundedContext.InfrastructureLayer
+  }
+
+}
+
+MobileWebClient --> FullTankPlatform.IAMBoundedContext.InterfacesLayer <<Relationship-UmVsYXRpb25zaGlw>> : "Uses HTTPS/JSON"
+FullTankPlatform.IAMBoundedContext.InterfacesLayer --> FullTankPlatform.IAMBoundedContext.ApplicationLayer <<Relationship-UmVsYXRpb25zaGlw>> : "Invokes use cases"
+FullTankPlatform.IAMBoundedContext.ApplicationLayer --> FullTankPlatform.IAMBoundedContext.DomainLayer <<Relationship-UmVsYXRpb25zaGlw>> : "Coordinates domain behavior"
+FullTankPlatform.IAMBoundedContext.InfrastructureLayer --> FullTankPlatform.IAMBoundedContext.DomainLayer <<Relationship-UmVsYXRpb25zaGlw>> : "Implements ports"
+FullTankPlatform.IAMBoundedContext.InterfacesLayer --> FullTankPlatform.IAMBoundedContext.InfrastructureLayer <<Relationship-UmVsYXRpb25zaGlw>> : "Uses authentication boundary"
+
+@enduml

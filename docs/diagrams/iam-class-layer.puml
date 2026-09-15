@@ -1,0 +1,166 @@
+@startuml iam-class-layer
+title FullTank - IAM Tactical Class Layer
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam linetype ortho
+
+skinparam package {
+  BackgroundColor<<interfaces>> #FFF1E6
+  BorderColor<<interfaces>> #C2410C
+  BackgroundColor<<application>> #E8F1FF
+  BorderColor<<application>> #2563EB
+  BackgroundColor<<domain>> #EAF7EE
+  BorderColor<<domain>> #15803D
+  BackgroundColor<<infrastructure>> #F5EAFE
+  BorderColor<<infrastructure>> #7E22CE
+}
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+}
+
+package "Interfaces Layer" <<interfaces>> {
+  class AuthenticationController <<REST Controller>>
+  class UsersController <<REST Controller>>
+  class BuyerCompaniesController <<REST Controller>>
+  class ProviderCompaniesController <<REST Controller>>
+  class DirectoryController <<REST Controller>>
+  class SignUpResource <<DTO / record>>
+  class SignInResource <<DTO / record>>
+  class AuthenticatedUserResource <<DTO / record>>
+  class PasswordResetRequestResource <<DTO / record>>
+  class PasswordResetConfirmResource <<DTO / record>>
+  class UserResource <<DTO / record>>
+  class BuyerCompanyResource <<DTO / record>>
+  class ProviderCompanyResource <<DTO / record>>
+  class SignUpCommandFromResourceAssembler <<Assembler>>
+  class SignInCommandFromResourceAssembler <<Assembler>>
+  class UserResourceFromEntityAssembler <<Assembler>>
+  class AuthenticatedUserResourceFromEntityAssembler <<Assembler>>
+  class BuyerCompanyResourceFromEntityAssembler <<Assembler>>
+  class ProviderCompanyResourceFromEntityAssembler <<Assembler>>
+  interface IamContextFacade <<ACL>>
+}
+
+package "Application Layer" <<application>> {
+  interface UserCommandService
+  interface UserQueryService
+  interface BuyerCompanyCommandService
+  interface BuyerCompanyQueryService
+  interface ProviderCompanyCommandService
+  interface ProviderCompanyQueryService
+  interface RoleCommandService
+  class UserCommandServiceImpl <<Command Handler>>
+  class UserQueryServiceImpl <<Query Service>>
+  class BuyerCompanyCommandServiceImpl <<Command Handler>>
+  class BuyerCompanyQueryServiceImpl <<Query Service>>
+  class ProviderCompanyCommandServiceImpl <<Command Handler>>
+  class ProviderCompanyQueryServiceImpl <<Query Service>>
+  class RoleCommandServiceImpl <<Command Handler>>
+  class PasswordResetService <<Application Service>>
+  interface HashingService <<Outbound Port>>
+  interface TokenService <<Outbound Port>>
+}
+
+package "Domain Layer" <<domain>> {
+  class User <<Aggregate Root>>
+  class BuyerCompany <<Aggregate Root>>
+  class ProviderCompany <<Aggregate Root>>
+  class Role <<Entity>>
+  enum Roles <<Value Object>>
+  class SignUpCommand <<Command>>
+  class SignInCommand <<Command>>
+  class CreateBuyerCompanyCommand <<Command>>
+  class CreateProviderCompanyCommand <<Command>>
+  class SeedRolesCommand <<Command>>
+  class GetAllUsersQuery <<Query>>
+  class GetUserByIdQuery <<Query>>
+  class GetUserByUsernameQuery <<Query>>
+  class GetAllBuyerCompaniesQuery <<Query>>
+  class GetBuyerCompanyByIdQuery <<Query>>
+  class GetAllProviderCompaniesQuery <<Query>>
+  class GetProviderCompanyByIdQuery <<Query>>
+  interface UserRepository <<Repository Port>>
+  interface RoleRepository <<Repository Port>>
+  interface BuyerCompanyRepository <<Repository Port>>
+  interface ProviderCompanyRepository <<Repository Port>>
+}
+
+package "Infrastructure Layer" <<infrastructure>> {
+  class UserRepositoryImpl <<Repository Adapter>>
+  class RoleRepositoryImpl <<Repository Adapter>>
+  class BuyerCompanyRepositoryImpl <<Repository Adapter>>
+  class ProviderCompanyRepositoryImpl <<Repository Adapter>>
+  class UserPersistenceEntity <<JPA Entity>>
+  class RolePersistenceEntity <<JPA Entity>>
+  class BuyerCompanyPersistenceEntity <<JPA Entity>>
+  class ProviderCompanyPersistenceEntity <<JPA Entity>>
+  class PasswordResetTokenEntity <<JPA Entity>>
+  interface UserPersistenceRepository <<Spring Data JPA>>
+  interface RolePersistenceRepository <<Spring Data JPA>>
+  interface BuyerCompanyPersistenceRepository <<Spring Data JPA>>
+  interface ProviderCompanyPersistenceRepository <<Spring Data JPA>>
+  interface PasswordResetTokenRepository <<Spring Data JPA>>
+  class UserPersistenceAssembler <<Mapper>>
+  class RolePersistenceAssembler <<Mapper>>
+  class BuyerCompanyPersistenceAssembler <<Mapper>>
+  class ProviderCompanyPersistenceAssembler <<Mapper>>
+  class WebSecurityConfiguration <<Security Configuration>>
+  class BearerAuthorizationRequestFilter <<JWT Filter>>
+  class UserDetailsServiceImpl <<Security Adapter>>
+  class CurrentUserAccess <<Ownership Policy>>
+  class HashingServiceImpl <<BCrypt Adapter>>
+  class TokenServiceImpl <<JWT Adapter>>
+}
+
+AuthenticationController ..> UserCommandService
+AuthenticationController ..> PasswordResetService
+UsersController ..> UserQueryService
+BuyerCompaniesController ..> BuyerCompanyCommandService
+ProviderCompaniesController ..> ProviderCompanyCommandService
+DirectoryController ..> ProviderCompanyQueryService
+IamContextFacade ..> UserQueryService
+UserCommandServiceImpl ..|> UserCommandService
+UserQueryServiceImpl ..|> UserQueryService
+BuyerCompanyCommandServiceImpl ..|> BuyerCompanyCommandService
+BuyerCompanyQueryServiceImpl ..|> BuyerCompanyQueryService
+ProviderCompanyCommandServiceImpl ..|> ProviderCompanyCommandService
+ProviderCompanyQueryServiceImpl ..|> ProviderCompanyQueryService
+RoleCommandServiceImpl ..|> RoleCommandService
+UserCommandServiceImpl ..> UserRepository
+UserCommandServiceImpl ..> BuyerCompanyRepository
+UserCommandServiceImpl ..> ProviderCompanyRepository
+UserCommandServiceImpl ..> HashingService
+UserCommandServiceImpl ..> TokenService
+PasswordResetService ..> UserRepository
+PasswordResetService ..> HashingService
+PasswordResetService ..> PasswordResetTokenRepository
+User "1" o-- "*" Role
+Role --> Roles
+UserRepositoryImpl ..|> UserRepository
+RoleRepositoryImpl ..|> RoleRepository
+BuyerCompanyRepositoryImpl ..|> BuyerCompanyRepository
+ProviderCompanyRepositoryImpl ..|> ProviderCompanyRepository
+UserRepositoryImpl ..> UserPersistenceRepository
+RoleRepositoryImpl ..> RolePersistenceRepository
+BuyerCompanyRepositoryImpl ..> BuyerCompanyPersistenceRepository
+ProviderCompanyRepositoryImpl ..> ProviderCompanyPersistenceRepository
+UserRepositoryImpl ..> UserPersistenceAssembler
+HashingServiceImpl ..|> HashingService
+TokenServiceImpl ..|> TokenService
+BearerAuthorizationRequestFilter ..> TokenService
+UserDetailsServiceImpl ..> UserRepository
+CurrentUserAccess ..> UserDetailsServiceImpl
+PasswordResetTokenRepository ..> PasswordResetTokenEntity
+
+legend right
+  == Colors ==
+  <#FFF1E6> Interfaces: REST, DTOs and ACL
+  <#E8F1FF> Application: use cases and ports
+  <#EAF7EE> Domain: aggregates, commands and repository ports
+  <#F5EAFE> Infrastructure: adapters, persistence and security
+endlegend
+@enduml
