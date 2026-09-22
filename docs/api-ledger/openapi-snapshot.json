@@ -669,6 +669,22 @@
         },
         "type" : "object"
       },
+      "InviteMemberResource" : {
+        "properties" : {
+          "email" : {
+            "format" : "email",
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "role" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        },
+        "required" : [ "email", "role" ],
+        "type" : "object"
+      },
       "MonthlyAmount" : {
         "properties" : {
           "amount" : {
@@ -716,6 +732,26 @@
             "type" : "integer"
           }
         },
+        "type" : "object"
+      },
+      "OnboardOrganizationResource" : {
+        "properties" : {
+          "name" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "ruc" : {
+            "maxLength" : 11,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "type" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        },
+        "required" : [ "name", "ruc", "type" ],
         "type" : "object"
       },
       "OrganizationResource" : {
@@ -2444,7 +2480,7 @@
     },
     "/api/v1/fuel-requests/{requestId}/accept" : {
       "post" : {
-        "operationId" : "accept",
+        "operationId" : "accept_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "requestId",
@@ -3297,6 +3333,59 @@
         "tags" : [ "vehicles-controller" ]
       }
     },
+    "/api/v2/invitations/{invitationId}" : {
+      "delete" : {
+        "operationId" : "revoke",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "invitationId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Invitations" ]
+      }
+    },
+    "/api/v2/invitations/{token}/accept" : {
+      "post" : {
+        "operationId" : "accept",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Invitations" ]
+      }
+    },
     "/api/v2/me/organizations" : {
       "get" : {
         "operationId" : "getMyOrganizations",
@@ -3317,6 +3406,71 @@
         },
         "tags" : [ "Organizations" ]
       }
+    },
+    "/api/v2/onboarding" : {
+      "post" : {
+        "operationId" : "onboard",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardOrganizationResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Onboarding" ]
+      }
+    },
+    "/api/v2/organizations/{organizationId}/invitations" : {
+      "post" : {
+        "operationId" : "invite",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "organizationId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InviteMemberResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Invitations" ]
+      }
     }
   },
   "security" : [ {
@@ -3327,14 +3481,11 @@
     "url" : "http://localhost:8080"
   } ],
   "tags" : [ {
+    "description" : "Organization onboarding endpoints (v2)",
+    "name" : "Onboarding"
+  }, {
     "description" : "Analytics and reporting endpoints",
     "name" : "Analytics"
-  }, {
-    "description" : "Inventory management endpoints",
-    "name" : "Fuel Products"
-  }, {
-    "description" : "Provider company management endpoints",
-    "name" : "Provider Companies"
   }, {
     "description" : "Users management endpoints",
     "name" : "Users"
@@ -3344,6 +3495,18 @@
   }, {
     "description" : "Fulfillment management endpoints",
     "name" : "Deliveries"
+  }, {
+    "description" : "Organization membership invitations (v2)",
+    "name" : "Invitations"
+  }, {
+    "description" : "Equipment management endpoints",
+    "name" : "Equipment"
+  }, {
+    "description" : "Inventory management endpoints",
+    "name" : "Fuel Products"
+  }, {
+    "description" : "Provider company management endpoints",
+    "name" : "Provider Companies"
   }, {
     "description" : "Payment management endpoints",
     "name" : "Payments"
@@ -3359,8 +3522,5 @@
   }, {
     "description" : "Notification management endpoints",
     "name" : "Notifications"
-  }, {
-    "description" : "Equipment management endpoints",
-    "name" : "Equipment"
   } ]
 }

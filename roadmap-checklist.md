@@ -59,7 +59,11 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       `iam.api.MembershipAccess` (resuelve organización del principal, no del body) y
       `GET /api/v2/me/organizations`. Build 39/39 verde.
       → `docs/api-ledger/T04-A-organization-membership.md`
-- [ ] T04-B — Onboarding, invitación y compatibilidad IAM
+- [x] **T04-B** — Onboarding, invitación y compatibilidad IAM. Signup v1 con dual-write
+      (Organization + `OWNER` Membership en la misma TX), login dual-read (campos legacy +
+      `memberships`), v2: `POST /api/v2/onboarding`, invitaciones (invitar/aceptar/revocar) con
+      reglas de expiración/duplicado/revocación, `V6` validada en MySQL 8.0.46. Build 41/41 verde.
+      → `docs/api-ledger/T04-B-onboarding-invitations.md`
 - [ ] T05-A — CustomerAccount y sitios
 - [ ] T05-B — Mapa y backfill de pertenencia
 
