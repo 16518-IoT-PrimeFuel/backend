@@ -490,6 +490,12 @@ flowchart TD
 - **Rollback strategy:** consulta legacy; conservar campos nuevos.
 - **Definition of Done:** reglas comunes + U07 documentada.
 
+> **U07 resuelta (2026-09-22, decisión de producto).** Sin fecha de vencimiento por ahora: elegible =
+> estado permitido (`AVAILABLE`) + `active=true` + mismo tenant; `SUSPENDED`/`MAINTENANCE`/`INACTIVE` no
+> elegibles, `ASSIGNED`/`IN_ROUTE` ocupado (no se sugiere, pero no es lo mismo que inelegible). Sin rol
+> "fleet manager" nuevo: alcanza con `iam.api.TenantAccess` (provider dueño del recurso), igual que ya
+> usan los controllers de `fleet` hoy.
+
 ### S13 — Reservar capacidad y recursos de flota
 
 - **SPEC-ID / Título:** S13 / Reservar capacidad y recursos de flota.
@@ -529,6 +535,11 @@ flowchart TD
 - **Test plan:** tabla de estados, optimistic concurrency, retries y legacy mapping.
 - **Rollback strategy:** mapper v1 + feature switch; no revertir evidencia física.
 - **Definition of Done:** reglas comunes + U11 definida.
+
+> **U11 resuelta (2026-09-22, decisión de producto).** Evidencia de `complete` = volumen entregado
+> (numérico), sin foto ni firma — no hay infraestructura de captura de archivos en el repo y agregarla es
+> scope nuevo, no de S14. Se permite variación: `deliveredVolume ≤ requestedVolume`, ambos valores se
+> conservan (mermas/entregas parciales son válidas, no forzar coincidencia exacta).
 
 ### S15 — Orquestar asignación después de aceptación
 

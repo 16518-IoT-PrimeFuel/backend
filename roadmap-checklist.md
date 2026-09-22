@@ -156,11 +156,46 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 
 ## W5 — Fleet, reservas, delivery y asignación (S12, S13, S14, S15)
 
-- [ ] T12-A — Extraer Fleet de CRUD
-- [ ] T12-B — Política y consulta de elegibilidad
+- [x] **T12-A** — Extraer Fleet de CRUD. Módulo nuevo `fleet`: agregados `Driver`/`Tanker` (mueven
+      `Driver`/`Vehicle` de `fulfillment`), estados tipados, `driverId ≠ userId`, soft-disable
+      (`active`+`deactivatedAt`), seam `fleet.api` (`FleetCatalog`/`FleetRegistry`) + eventos
+      `ResourceEnabled`/`ResourceDisabled`, v2 `/api/v2/drivers` y `/api/v2/tankers`; adapters v1
+      reescritos sobre `fleet.api` + `iam.api.TenantAccess` (DELETE = soft-disable); `V16` aditiva escrita.
+      **Delta del baseline ArchUnit** (12 entradas de controllers eliminadas + 3 del ctor de
+      `DeliveryCommandServiceImpl` actualizadas). Código, migración y tests escritos
+      (**build no verificado en esta máquina — pendiente de verificación por el usuario**).
+      **Revisión (orquestador):** sin dangling refs a las clases viejas de `fulfillment`; migración V16
+      aditiva y segura. Gap real: `FleetRegistryTest` solo cubre la seam `fleet.api` — ningún test ejercita
+      `DriversController`/`VehiclesController` (v1) ni `DriversV2Controller`/`TankersV2Controller` (v2) a
+      nivel REST/MockMvc, y el cambio DELETE→soft-disable (A6) sigue sin cobertura propia (ya reconocido en
+      el doc del ticket). Store de ArchUnit editado a mano, sin correr la suite — riesgo real hasta que se
+      compile.
+      **Fix de revisión aplicado (2026-09-22):** se agregó `FleetV2ControllerTest` (MockMvc) que ejercita
+      `DriversV2Controller`/`TankersV2Controller` de punta a punta — cross-tenant 404 (lectura, disable y
+      elegibilidad), `deactivate`/`activate` reales por HTTP y la fila conservada tras el soft-disable (A6).
+      → `docs/api-ledger/T12-A-fleet-catalog.md`
+- [x] **T12-B** — Política y consulta de elegibilidad (**cierra S12**). `fleet.api.EligibilityQuery` + impl:
+      resultado de tres valores (`ELIGIBLE`/`BUSY`/`INELIGIBLE`) según **U07 (2026-09-22)** — elegible =
+      `AVAILABLE` + `active` + mismo tenant; `ASSIGNED`/`IN_ROUTE` = ocupado (no sugerido, pero no
+      "inelegible"); sin vigencia ni rol nuevo (autoriza `iam.api.TenantAccess`). REST v2
+      `/drivers|tankers/eligible` y `/{id}/eligibility`. Solo filtra: sin routing/ranking (fuera de S12).
+      Reemplaza al doc de bloqueo por U07.
+      (**build no verificado en esta máquina — pendiente de verificación por el usuario**).
+      → `docs/api-ledger/T12-B-eligibility-query.md`
 - [ ] T13-A — Modelo y cálculo de capacidad
 - [ ] T13-B — Reserva concurrente y liberación
-- [ ] T14-A — Lifecycle y comandos de ejecución de Delivery
+- [x] **T14-A** — Lifecycle y comandos de ejecución de Delivery (prepara S14). Máquina física
+      `ASSIGNED→STARTED→ARRIVED→DELIVERING→COMPLETED` + salidas terminales `FAILED`/`CANCELLED`
+      (`DeliveryPhysicalState`, transición inválida → 409); `physical_state` en columna nueva (el `status`
+      legacy queda con su mapa de compatibilidad, sin reescribir filas viejas); `version`/`@Version` +
+      timestamps; journal append-only `delivery_state_transitions`; **U11 (2026-09-22)**: evidencia de
+      `complete` = `deliveredVolume` numérico, `≤ requestedVolume` permitido y **ambos valores conservados**
+      (sin foto/firma); eventos `DeliveryAssigned/Started/Arrived/Completed/Failed` por el outbox de T19-A
+      con `aggregateVersion`; v2 `/api/v2/deliveries/{id}/start|arrive|complete|fail` (+ `assign`/`cancel`/
+      `transitions` documentados) y tenant cruzado → 404. **Pago intacto/desacoplado.** `V17` aditiva.
+      Sin cambios en el baseline de ArchUnit. v1 **no** se re-enruta (eso es T14-B).
+      (**build no verificado en esta máquina — pendiente de verificación por el usuario**).
+      → `docs/api-ledger/T14-A-delivery-lifecycle.md`
 - [ ] T14-B — Compatibilidad de estados y cierre físico
 - [ ] T15-A — Interfaz de asignación transaccional
 - [ ] T15-B — Eliminar accesos cruzados y probar carreras
