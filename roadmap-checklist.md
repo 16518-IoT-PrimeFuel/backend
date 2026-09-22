@@ -21,16 +21,44 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 
 ## W1 — Guardrails, esquema y entrega durable (S02, S03, S19)
 
-- [ ] T02-A — Spike y reglas de dependencia de módulos
-- [ ] T02-B — Interfaz pública piloto y baseline de arquitectura
-- [ ] T03-A — Inventario de esquema y baseline
-- [ ] T03-B — Sustitución controlada del DDL de arranque
-- [ ] T19-A — Registro de publicación y contratos de eventos
-- [ ] T19-B — Idempotencia, replay y observabilidad
+- [x] **T02-A** — Spike y reglas de dependencia de módulos. ArchUnit 1.5.0 (Java 26 verificado en
+      runtime); reglas de frontera con baseline congelado (185 dependencias internas en 8 módulos) +
+      regla `shared`; una violación nueva falla (verificado sembrando una y revirtiéndola). Build
+      33/33 verde.
+      → `docs/api-ledger/T02-A-module-dependency-rules.md`
+- [x] **T02-B** — Interfaz pública piloto y baseline de arquitectura. Primera seam pública
+      `iam.api.TenantAccess` (5 métodos) + `TenantAccessImpl`; piloto `FuelProductsController`
+      migrado. Baseline congelado **185 → 180** (inventory 5 → 0), sin violaciones nuevas. Build 33/33
+      verde.
+      → `docs/api-ledger/T02-B-tenant-access-seam.md`
+- [x] **T03-A** — Inventario de esquema y baseline. Flyway elegido (Boot-managed, deshabilitado hasta
+      T03-B); 15 entidades → 17 tablas; `V1__baseline.sql` generado vía Hibernate con `MySQLDialect` y
+      **validado en MySQL 8.0.46 local** (Flyway aplica V1 + Hibernate `validate` pasa; 18 tablas con
+      `flyway_schema_history`). Runbook de restore. Upgrade legacy/restore → gate de T03-B. Build
+      33/33 verde.
+      → `docs/api-ledger/T03-A-schema-baseline.md`; `docs/runbooks/database-restore.md`
+- [x] **T03-B** — Sustitución controlada del DDL de arranque. `ddl-auto=validate` en dev/mysql + Flyway
+      habilitado con `baseline-on-migrate`; los 2 `ALTER` migrados a `V2__normalize_legacy_enum_columns`;
+      `MySqlSchemaCompatibilityInitializer` eliminado (L06 resuelto). **Validado en MySQL 8.0.46**: path
+      vacío (V1+V2+validate) y legacy (baseline v1+V2+validate) convergen. Build 33/33 verde.
+      → `docs/api-ledger/T03-B-startup-ddl-replacement.md`
+- [x] **T19-A** — Registro de publicación y contratos. Outbox transaccional hand-rolled (sin Modulith):
+      `shared.events.EventEnvelope` + `EventPublicationRegistry`; impl `@Transactional(MANDATORY)`;
+      tabla `event_publications` (`V3`, validada con `validate` en MySQL 8.0.46). Atomicidad probada
+      (rollback no deja publicación). Build 37/37 verde.
+      → `docs/api-ledger/T19-A-event-publication-registry.md`
+- [x] **T19-B** — Idempotencia, replay y observabilidad (alcance mínimo). Inbox de dedup
+      (`EventInbox` + tabla `consumed_events` `V4`, único `(consumer, event_id)`) + test. Replay/
+      backlog/poison/dispatcher diferidos a propósito. Build 39/39 verde.
+      → `docs/api-ledger/T19-B-inbox-idempotency.md`
 
 ## W2 — Identidad, tenant y clientes (S04, S05)
 
-- [ ] T04-A — Modelo y resolución de membresía (Organization/Membership)
+- [x] **T04-A** — Modelo y resolución de membresía (Organization/Membership). Agregados + VOs,
+      comandos/queries, servicios, persistencia (`V5`, validada en MySQL 8.0.46), seam
+      `iam.api.MembershipAccess` (resuelve organización del principal, no del body) y
+      `GET /api/v2/me/organizations`. Build 39/39 verde.
+      → `docs/api-ledger/T04-A-organization-membership.md`
 - [ ] T04-B — Onboarding, invitación y compatibilidad IAM
 - [ ] T05-A — CustomerAccount y sitios
 - [ ] T05-B — Mapa y backfill de pertenencia
