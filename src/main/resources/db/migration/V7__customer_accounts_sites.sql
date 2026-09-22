@@ -1,0 +1,3 @@
+create table customer_accounts (active bit not null, legacy_company_id bigint, organization_id bigint not null, created_at datetime(6) not null, id bigint not null auto_increment, ruc varchar(11), updated_at datetime(6) not null, address varchar(255), contact_email varchar(255), name varchar(150) not null, phone varchar(255), primary key (id)) engine=InnoDB;
+alter table customer_accounts add constraint uk_customer_accounts_legacy_company unique (legacy_company_id);
+create table customer_sites (active bit not null, customer_account_id bigint not null, organization_id bigint not null, created_at datetime(6) not null, id bigint not null auto_increment, updated_at datetime(6) not null, address varchar(255), name varchar(150) not null, primary key (id)) engine=InnoDB;
