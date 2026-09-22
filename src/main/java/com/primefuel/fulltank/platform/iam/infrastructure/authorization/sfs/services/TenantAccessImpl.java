@@ -3,6 +3,8 @@ package com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.ser
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component("tenantAccess")
 public class TenantAccessImpl implements TenantAccess {
 
@@ -35,5 +37,10 @@ public class TenantAccessImpl implements TenantAccess {
     @Override
     public boolean isBuyerRole() {
         return currentUserAccess.isBuyerRole();
+    }
+
+    @Override
+    public Optional<Long> currentProviderId() {
+        return currentUserAccess.currentProviderId();
     }
 }

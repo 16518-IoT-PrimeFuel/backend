@@ -1,5 +1,7 @@
 package com.primefuel.fulltank.platform.iam.api;
 
+import java.util.Optional;
+
 public interface TenantAccess {
 
     boolean ownsCompany(Long companyId);
@@ -11,4 +13,6 @@ public interface TenantAccess {
     boolean ownsCompanyOrProvider(Long companyId, Long providerId);
 
     boolean isBuyerRole();
+
+    Optional<Long> currentProviderId();
 }
