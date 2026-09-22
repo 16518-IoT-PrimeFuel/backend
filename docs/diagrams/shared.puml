@@ -57,7 +57,6 @@ package "infrastructure" <<infrastructure>> {
     abstract class AuditableAbstractPersistenceEntity <<entity>>
   }
   package "persistence.jpa.configuration" {
-    class MySqlSchemaCompatibilityInitializer
     class SnakeCaseWithPluralizedTablePhysicalNamingStrategy
   }
 }

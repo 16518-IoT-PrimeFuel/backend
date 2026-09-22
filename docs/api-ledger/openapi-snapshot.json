@@ -718,6 +718,24 @@
         },
         "type" : "object"
       },
+      "OrganizationResource" : {
+        "properties" : {
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "PasswordResetConfirmResource" : {
         "properties" : {
           "newPassword" : {
@@ -3278,6 +3296,27 @@
         },
         "tags" : [ "vehicles-controller" ]
       }
+    },
+    "/api/v2/me/organizations" : {
+      "get" : {
+        "operationId" : "getMyOrganizations",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Organizations" ]
+      }
     }
   },
   "security" : [ {
@@ -3314,6 +3353,9 @@
   }, {
     "description" : "Ordering management endpoints",
     "name" : "Fuel Orders"
+  }, {
+    "description" : "Organizations the authenticated user belongs to (v2)",
+    "name" : "Organizations"
   }, {
     "description" : "Notification management endpoints",
     "name" : "Notifications"
