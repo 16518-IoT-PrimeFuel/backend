@@ -1,0 +1,2 @@
+create table device_credentials (created_at datetime(6) not null, id bigint not null auto_increment, revoked_at datetime(6), token_version integer not null, updated_at datetime(6) not null, channel varchar(60) not null, created_at_credential datetime(6) not null, device_id varchar(120) not null, token_hash varchar(64) not null, status VARCHAR(20) not null, primary key (id)) engine=InnoDB;
+alter table device_credentials add constraint uk_device_credentials_token_hash unique (token_hash);
