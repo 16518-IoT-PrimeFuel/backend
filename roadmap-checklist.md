@@ -182,7 +182,15 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       Reemplaza al doc de bloqueo por U07.
       (**build no verificado en esta máquina — pendiente de verificación por el usuario**).
       → `docs/api-ledger/T12-B-eligibility-query.md`
-- [ ] T13-A — Modelo y cálculo de capacidad
+- [x] **T13-A** — Modelo y cálculo de capacidad. Agregado `FleetReservation` (ventana temporal
+      `ReservationWindow` semiabierta + `Volume`/`Unit`) en `fleet..`, seam `fleet.api.FleetReservations`
+      (`reserve`); capacidad utilizable ≥ volumen (con conversión de unidades) y sin overlap (revalidado
+      dentro de la TX) → 409, recurso de otro tenant → 404. Lock `PESSIMISTIC_WRITE` sobre driver+tanker
+      (U06) y `@Version` listos; `reference` + único para idempotencia. `V18` aditiva. **U05/U06** heredadas
+      de T11-A/T11-B (referenciadas en el ledger). `REST v2` no se agrega (S13). Concurrencia/release/expiry
+      quedan para T13-B.
+      (**build no verificado en esta máquina — pendiente de verificación por el usuario**).
+      → `docs/api-ledger/T13-A-fleet-reservation-model.md`
 - [ ] T13-B — Reserva concurrente y liberación
 - [x] **T14-A** — Lifecycle y comandos de ejecución de Delivery (prepara S14). Máquina física
       `ASSIGNED→STARTED→ARRIVED→DELIVERING→COMPLETED` + salidas terminales `FAILED`/`CANCELLED`
@@ -196,7 +204,18 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       Sin cambios en el baseline de ArchUnit. v1 **no** se re-enruta (eso es T14-B).
       (**build no verificado en esta máquina — pendiente de verificación por el usuario**).
       → `docs/api-ledger/T14-A-delivery-lifecycle.md`
-- [ ] T14-B — Compatibilidad de estados y cierre físico
+- [x] **T14-B** — Compatibilidad de estados y cierre físico (**cierra S14**). El adapter v1
+      (`DeliveryCommandServiceImpl`) enruta las mutaciones de estado del delivery por la máquina de T14-A:
+      `dispatch → AssignDeliveryCommand`, `fail → FailDeliveryCommand` y `complete →
+      CompletePhysicalDeliveryCommand`; el contrato HTTP v1 (rutas/cuerpos/`status`) queda intacto. El
+      cierre v1 no trae volumen ni estados intermedios: el adapter resuelve la evidencia (cantidad del
+      pedido) y materializa `ASSIGNED→STARTED→ARRIVED` antes de cerrar (asunciones A1/A2). `complete`
+      repetido → **409** sin sumar volumen ni duplicar journal/eventos; efectos externos v1 (release
+      driver/tanker, refuel, pedido→`PENDING_PAYMENT`) conservados para T15-B. `payment` no muta físico
+      (verificado, nada que retirar). Golden `DeliveryV1LifecycleMappingTest` + `OrderFulfillmentGoldenPathTest`
+      verde; known-gap de T01-B #3 resuelto.
+      (**build no verificado en esta máquina — pendiente de verificación por el usuario**).
+      → `docs/api-ledger/T14-B-legacy-delivery-lifecycle.md`
 - [ ] T15-A — Interfaz de asignación transaccional
 - [ ] T15-B — Eliminar accesos cruzados y probar carreras
 

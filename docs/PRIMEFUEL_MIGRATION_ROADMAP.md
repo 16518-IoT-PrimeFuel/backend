@@ -516,6 +516,19 @@ flowchart TD
 - **Rollback strategy:** bloquear reservas nuevas; operar/liberar existentes con versión compatible.
 - **Definition of Done:** reglas comunes + U05/U06 reflejadas.
 
+> **U05/U06 resueltas (2026-09-22, decisión de ingeniería, sigue el precedente de T11-A/T11-B).**
+> No son decisiones de negocio nuevas: T11-A/T11-B ya las sentaron para `supply` y S13 las hereda
+> por consistencia.
+> - **U05 (precisión/unidad de la capacidad):** `capacidad utilizable` de S13 se modela con los mismos
+>   `shared.domain.model.valueobjects.Unit`/`Volume` de T11-A, sobre el `Double` legacy sin migrar a decimal
+>   (misma asunción A1/U05 que `SupplyCatalog`). No se abre trabajo de precisión nuevo en T13-A; si se
+>   decide migrar a decimal más adelante, es un ticket propio que toca `supply` y `fleet` a la vez.
+> - **U06 (estrategia de lock/constraint):** la reserva de `FleetReservation` (driver+tanker+ventana)
+>   usa el mismo patrón de `PESSIMISTIC_WRITE` que T11-B usó en `supply_stock_locks`, aplicado sobre el
+>   recurso reservado (driver y tanker, no un lock global) para que dos carreras no puedan reservar el
+>   mismo recurso en ventanas que se solapan. Overlap de ventana se revalida dentro de la misma TX que
+>   toma el lock, no antes.
+
 ### S14 — Separar lifecycle físico de Delivery
 
 - **SPEC-ID / Título:** S14 / Separar lifecycle físico de Delivery.
