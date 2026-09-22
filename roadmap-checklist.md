@@ -111,6 +111,11 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 
 ## W4 — Dispositivos, telemetría y reposición automática (S07, S08, S09)
 
+> **Decisión de producto (revisión posterior): S07/S08 quedan built-but-frozen.** El código commiteado de
+> `telemetry`, `devicebinding` y las migraciones `V12`–`V14` se conserva tal cual (no se revierte ni se
+> elimina), pero no se planea más desarrollo sobre esa infraestructura IoT de sensores. S09 continúa: su
+> evaluación de reposición se dispara por telemetría **y por carga manual de nivel** (shadow por defecto).
+
 - [x] **T07-A** — Modelo temporal de DeviceBinding. Agregado con ventana semiabierta
       `[validFrom, validTo)`, doble barrera contra solapamiento (check de dominio + único
       `(device_id, channel, active_slot)`), bind/revoke/move, eventos sin credenciales y seam
@@ -133,8 +138,21 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       y `TankAssets.applyValidatedReading` que ignora lecturas desordenadas (el snapshot no retrocede).
       Sin esquema nuevo. Build verde.
       → `docs/api-ledger/T08-B-tank-integration.md`
-- [ ] T09-A — Regla de reposición y episodios
-- [ ] T09-B — Generación automática idempotente
+- [x] T09-A — Regla de reposición y episodios. `RefillThresholds` (U03 20% / U04 +10 pp), agregados
+      `RefillPolicy`/`RefillEpisode`, evaluador puro `RefillPolicyEvaluator` (umbral/histéresis/rearmado/
+      request pendiente, reloj inyectable) y servicios + v2 `/api/v2/tanks/{id}/refill-policy` +
+      `/refill-episodes`; `V15` escrita (**build no verificado en esta máquina — pendiente de verificación
+      por el usuario**). Shadow: solo persiste episodios y loguea decisiones, sin efectos externos.
+      → `docs/api-ledger/T09-A-refill-policy-episodes.md`
+- [x] T09-B — Generación automática idempotente. `RefillPolicyEvaluationConsumer` (dedup por inbox,
+      clave de episodio = identidad de lectura) + generación opt-in por tanque vía
+      `ReplenishmentCommandService` (idempotente por `episodeKey`); `ValidatedTankReadingEvent` movido a
+      `telemetry.api.events`. **Addendum (revisión de producto): segundo disparador por carga manual de
+      nivel** (`equipment.api.events.TankLevelManuallyUpdatedEvent` publicado por `applyManualLevel`), mismas
+      garantías de idempotencia, sin endpoint nuevo; así la generación no depende de IoT. Shadow por
+      defecto: sin `autoGenerateEnabled` solo persiste/loguea decisiones.
+      Tests escritos (**build no verificado en esta máquina — pendiente de verificación por el usuario**).
+      → `docs/api-ledger/T09-B-automatic-generation.md`
 
 ## W5 — Fleet, reservas, delivery y asignación (S12, S13, S14, S15)
 
@@ -148,6 +166,10 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 - [ ] T15-B — Eliminar accesos cruzados y probar carreras
 
 ## W6 — Tracking, safety y válvula (S16, S17, S18, S21)
+
+> **Requiere rediseño antes de iniciar — no depender de `telemetry`/`devicebinding` actual.** Con S07/S08
+> congeladas, W6 no puede asumir sus dependencias tal como están hoy; la spec de S16 (y lo que la encadena)
+> debe rediseñarse antes de arrancar cualquier ticket de W6.
 
 - [ ] T16-A — Contrato de telemetría de transporte
 - [ ] T16-B — Proyección y consulta de seguimiento

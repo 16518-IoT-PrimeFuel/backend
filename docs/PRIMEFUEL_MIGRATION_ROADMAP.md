@@ -190,6 +190,13 @@ flowchart TD
 - **Exit criteria:** desorden no retrocede nivel; duplicados no duplican efectos; cien lecturas bajas crean como máximo una solicitud.
 - **Rollback point:** desactivar generación automática y consumidores; conservar lecturas, inbox y solicitudes para conciliación.
 
+> **Decisión de producto (revisión posterior) — S07/S08 quedan built-but-frozen.** El código ya commiteado
+> (`telemetry`, `devicebinding`, migraciones `V12`–`V14`) **se conserva tal cual**: no se revierte, no se
+> elimina y no se construye nada nuevo sobre esa infraestructura IoT. No hay más desarrollo planeado para
+> la telemetría de sensores. S09 (reposición automática) **sí continúa**: su evaluación se dispara tanto por
+> telemetría (si algún día existe) como por **carga manual de nivel**, de modo que la generación automática
+> no depende de sensores ni de `devicebinding`.
+
 ### W5 — Fleet, reservas, delivery y asignación
 
 - **Objetivo:** asignar recursos elegibles solo después de aceptación y separar alta, inicio y cierre físico.
@@ -204,13 +211,20 @@ flowchart TD
 ### W6 — Tracking, safety y válvula
 
 - **Objetivo:** crear evidencia de transporte, decisión geográfica explicable y comando físico conciliable.
-- **Entry criteria:** W4/W5; U08/U09/U10/U18/U20 resueltas; firmware y política offline validados.
+- **Entry criteria:** W4/W5; U08/U09/U10/U18/U20 resueltas; firmware y política offline validados. **Requiere una spec de rediseño antes de iniciar** (ver nota).
 - **Specs incluidas:** S16, S17, S18, S21.
-- **Dependencias:** S06, S07, S08, S14, S19.
+- **Dependencias:** S06, S14, S19; ~~S07, S08~~ sustituidas por el rediseño de S16 (S07/S08 están built-but-frozen).
 - **Riesgos:** apertura no autorizada, GPS falso, ACK perdido, retención y privacidad.
 - **Estado posterior:** tracking y journal append-only; geocerca versionada; outbox/ACK. Detección hasta evidencia física.
 - **Exit criteria:** replay/offline/expiración; puntos dentro/fuera/borde; banco físico o alcance explícitamente limitado.
 - **Rollback point:** negar nuevas autorizaciones, conciliar comandos pendientes; rollback nunca reabre válvula.
+
+> **Requiere rediseño antes de iniciar — no depender de `telemetry`/`devicebinding` actual.** El roadmap
+> original encadenaba W6 (S16 tracking de transporte, S17 geocerca, S18 válvula, S21 journal) a la misma
+> infraestructura de telemetría/binding/autenticación de máquina de S07/S08. Con S07/S08 congeladas por
+> decisión de producto, **W6 no puede asumir sus dependencias tal como están hoy**: la spec de S16 debe
+> rediseñarse (cómo se atribuye la evidencia de transporte a una entrega y cómo se transporta/mide) antes
+> de iniciar cualquier ticket de W6. No arrancar W6 con las dependencias actuales.
 
 ### W7 — Notificaciones, contratos, Payment y retiro
 
@@ -370,6 +384,8 @@ flowchart TD
 - **Test plan:** reloj frontera, credencial ajena, revoke/retry y traslado.
 - **Rollback strategy:** bloquear ingestión nueva; mantener historia de bindings.
 - **Definition of Done:** reglas comunes + ningún deviceId sin tenant/binding verificable.
+- **Product decision (frozen):** built-but-frozen. El código commiteado se conserva, pero no se planea más
+  desarrollo sobre `devicebinding`/telemetría IoT de sensores. W6 no debe apoyarse en esta spec tal como está (ver W6).
 
 ### S08 — Introducir ingestión de telemetría de tanque
 
@@ -390,6 +406,9 @@ flowchart TD
 - **Test plan:** falsificación, replay, backlog, reconexión, unidad y schema version.
 - **Rollback strategy:** detener adapter/consumer; conservar inbox y lecturas.
 - **Definition of Done:** reglas comunes + modo observación medible.
+- **Product decision (frozen):** built-but-frozen. El código commiteado (`telemetry`, `V14`) se conserva,
+  pero no se planea más desarrollo. La reposición automática (S09) no depende de esta spec: también se
+  dispara por carga manual de nivel.
 
 ### S09 — Añadir política de nivel bajo y episodios
 
