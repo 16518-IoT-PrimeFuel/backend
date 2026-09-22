@@ -7,4 +7,6 @@ public interface CustomerDirectory {
     boolean ownsCustomer(Long organizationId, Long customerAccountId);
 
     Optional<Long> customerIdForLegacyCompany(Long legacyCompanyId);
+
+    Optional<Long> organizationIdForCustomer(Long customerAccountId);
 }
