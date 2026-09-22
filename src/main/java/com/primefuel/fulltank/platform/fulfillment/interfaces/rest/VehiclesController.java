@@ -1,72 +1,87 @@
 package com.primefuel.fulltank.platform.fulfillment.interfaces.rest;
 
-import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Vehicle;
-import com.primefuel.fulltank.platform.fulfillment.domain.repositories.VehicleRepository;
+import com.primefuel.fulltank.platform.fleet.api.FleetCatalog;
+import com.primefuel.fulltank.platform.fleet.api.FleetRegistry;
+import com.primefuel.fulltank.platform.fleet.domain.model.commands.RegisterTankerCommand;
+import com.primefuel.fulltank.platform.fleet.domain.model.commands.UpdateTankerCommand;
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.VehicleResource;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * v1 vehicle adapter (S12/T12-A). The legacy route name stays, but the data flows through the public
+ * {@code fleet.api} (as a tanker) and authorization through {@code iam.api.TenantAccess}. Delete is a
+ * soft-disable.
+ */
 @RestController
 @RequestMapping("/api/v1/vehicles")
 public class VehiclesController {
 
-    private final VehicleRepository repository;
-    private final CurrentUserAccess currentUserAccess;
+    private final FleetCatalog fleetCatalog;
+    private final FleetRegistry fleetRegistry;
+    private final TenantAccess tenantAccess;
 
-    public VehiclesController(VehicleRepository repository, CurrentUserAccess currentUserAccess) {
-        this.repository = repository;
-        this.currentUserAccess = currentUserAccess;
+    public VehiclesController(FleetCatalog fleetCatalog, FleetRegistry fleetRegistry, TenantAccess tenantAccess) {
+        this.fleetCatalog = fleetCatalog;
+        this.fleetRegistry = fleetRegistry;
+        this.tenantAccess = tenantAccess;
     }
 
     @GetMapping
-    @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
+    @PreAuthorize("@tenantAccess.ownsProvider(#providerId)")
     public List<VehicleResource> getByProvider(@RequestParam Long providerId) {
-        return repository.findByProviderId(providerId).stream().map(VehiclesController::toResource).toList();
+        return fleetCatalog.listTankers(providerId).stream().map(VehiclesController::toResource).toList();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<VehicleResource> getById(@PathVariable Long id) {
-        return repository.findById(id)
-                .filter(vehicle -> currentUserAccess.ownsProvider(vehicle.getProviderId()))
+        return fleetCatalog.findTanker(id)
+                .filter(tanker -> tenantAccess.ownsProvider(tanker.providerId()))
                 .map(VehiclesController::toResource)
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    @PreAuthorize("@currentUserAccess.ownsProvider(#resource.providerId())")
+    @PreAuthorize("@tenantAccess.ownsProvider(#resource.providerId())")
     public ResponseEntity<VehicleResource> create(@RequestBody VehicleResource resource) {
-        var vehicle = new Vehicle(resource.providerId(), resource.licensePlate(), resource.brand(),
-                resource.model(), resource.capacity(), defaultUnit(resource.unit()),
-                defaultStatus(resource.status()));
-        return new ResponseEntity<>(toResource(repository.save(vehicle)), HttpStatus.CREATED);
+        var result = fleetRegistry.registerTanker(new RegisterTankerCommand(
+                resource.providerId(), resource.licensePlate(), resource.brand(), resource.model(),
+                resource.capacity(), defaultUnit(resource.unit()), defaultStatus(resource.status())));
+        return result.toOptional()
+                .map(VehiclesController::toResource)
+                .map(created -> new ResponseEntity<>(created, HttpStatus.CREATED))
+                .orElse(ResponseEntity.badRequest().build());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<VehicleResource> update(@PathVariable Long id, @RequestBody VehicleResource resource) {
-        var vehicle = repository.findById(id).orElse(null);
-        if (vehicle == null || !currentUserAccess.ownsProvider(vehicle.getProviderId())) {
+        var existing = fleetCatalog.findTanker(id);
+        if (existing.isEmpty() || !tenantAccess.ownsProvider(existing.get().providerId())) {
             return ResponseEntity.notFound().build();
         }
-        Long providerId = resource.providerId() != null ? resource.providerId() : vehicle.getProviderId();
-        if (!currentUserAccess.ownsProvider(providerId)) return ResponseEntity.notFound().build();
-        vehicle.update(providerId,
-                resource.licensePlate(), resource.brand(), resource.model(), resource.capacity(),
-                defaultUnit(resource.unit()), defaultStatus(resource.status()));
-        return ResponseEntity.ok(toResource(repository.save(vehicle)));
+        Long providerId = resource.providerId() != null ? resource.providerId() : existing.get().providerId();
+        if (!tenantAccess.ownsProvider(providerId)) return ResponseEntity.notFound().build();
+        var result = fleetRegistry.updateTanker(new UpdateTankerCommand(id, resource.licensePlate(),
+                resource.brand(), resource.model(), resource.capacity(),
+                defaultUnit(resource.unit()), defaultStatus(resource.status())));
+        return result.toOptional()
+                .map(VehiclesController::toResource)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.badRequest().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        var vehicle = repository.findById(id).orElse(null);
-        if (vehicle == null || !currentUserAccess.ownsProvider(vehicle.getProviderId())) {
+        var existing = fleetCatalog.findTanker(id);
+        if (existing.isEmpty() || !tenantAccess.ownsProvider(existing.get().providerId())) {
             return ResponseEntity.notFound().build();
         }
-        repository.deleteById(id);
+        fleetRegistry.deactivateTanker(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -78,9 +93,8 @@ public class VehiclesController {
         return status == null || status.isBlank() ? "AVAILABLE" : status;
     }
 
-    private static VehicleResource toResource(Vehicle vehicle) {
-        return new VehicleResource(vehicle.getId(), vehicle.getProviderId(), vehicle.getLicensePlate(),
-                vehicle.getBrand(), vehicle.getModel(), vehicle.getCapacity(), vehicle.getUnit(),
-                vehicle.getStatus());
+    private static VehicleResource toResource(FleetCatalog.TankerSnapshot tanker) {
+        return new VehicleResource(tanker.id(), tanker.providerId(), tanker.licensePlate(), tanker.brand(),
+                tanker.model(), tanker.capacity(), tanker.unit(), tanker.status());
     }
 }

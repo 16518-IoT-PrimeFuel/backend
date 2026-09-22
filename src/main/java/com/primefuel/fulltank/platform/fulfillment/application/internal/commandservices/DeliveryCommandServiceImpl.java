@@ -8,8 +8,8 @@ import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CreateD
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.DispatchDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.FailDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryRepository;
-import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DriverRepository;
-import com.primefuel.fulltank.platform.fulfillment.domain.repositories.VehicleRepository;
+import com.primefuel.fulltank.platform.fleet.domain.repositories.DriverRepository;
+import com.primefuel.fulltank.platform.fleet.domain.repositories.TankerRepository;
 import com.primefuel.fulltank.platform.inventory.domain.repositories.FuelProductRepository;
 import com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
@@ -22,20 +22,20 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
 
     private final DeliveryRepository deliveryRepository;
     private final DriverRepository driverRepository;
-    private final VehicleRepository vehicleRepository;
+    private final TankerRepository tankerRepository;
     private final FuelOrderRepository orderRepository;
     private final FuelProductRepository productRepository;
     private final EquipmentRepository equipmentRepository;
 
     public DeliveryCommandServiceImpl(DeliveryRepository deliveryRepository,
                                       DriverRepository driverRepository,
-                                      VehicleRepository vehicleRepository,
+                                      TankerRepository tankerRepository,
                                       FuelOrderRepository orderRepository,
                                       FuelProductRepository productRepository,
                                       EquipmentRepository equipmentRepository) {
         this.deliveryRepository = deliveryRepository;
         this.driverRepository = driverRepository;
-        this.vehicleRepository = vehicleRepository;
+        this.tankerRepository = tankerRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.equipmentRepository = equipmentRepository;
@@ -45,7 +45,7 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
     @Transactional
     public Result<Delivery, ApplicationError> handle(CreateDeliveryCommand command) {
         var driver = driverRepository.findById(command.driverId());
-        var vehicle = vehicleRepository.findById(command.vehicleId());
+        var vehicle = tankerRepository.findById(command.vehicleId());
         if (driver.isEmpty() || vehicle.isEmpty()) {
             return Result.failure(ApplicationError.notFound("Fulfillment resource", "driver or vehicle"));
         }
@@ -77,7 +77,7 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
         product.get().updateStock(product.get().getAvailableStock() - order.get().getRequestedQuantity());
         order.get().dispatch();
         driverRepository.save(driver.get());
-        vehicleRepository.save(vehicle.get());
+        tankerRepository.save(vehicle.get());
         productRepository.save(product.get());
         orderRepository.save(order.get());
         var delivery = new Delivery(command);
@@ -112,9 +112,9 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
             driver.setStatus("AVAILABLE");
             driverRepository.save(driver);
         });
-        vehicleRepository.findById(delivery.getVehicleId()).ifPresent(vehicle -> {
+        tankerRepository.findById(delivery.getVehicleId()).ifPresent(vehicle -> {
             vehicle.setStatus("AVAILABLE");
-            vehicleRepository.save(vehicle);
+            tankerRepository.save(vehicle);
         });
         if (order.get().getEquipmentId() != null) {
             equipmentRepository.findById(order.get().getEquipmentId()).ifPresent(equipment -> {

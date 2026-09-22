@@ -1,9 +1,9 @@
-package com.primefuel.fulltank.platform.fulfillment.infrastructure.persistence.jpa.adapters;
+package com.primefuel.fulltank.platform.fleet.infrastructure.persistence.jpa.adapters;
 
-import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Driver;
-import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DriverRepository;
-import com.primefuel.fulltank.platform.fulfillment.infrastructure.persistence.jpa.assemblers.DriverPersistenceAssembler;
-import com.primefuel.fulltank.platform.fulfillment.infrastructure.persistence.jpa.repositories.DriverPersistenceRepository;
+import com.primefuel.fulltank.platform.fleet.domain.model.aggregates.Driver;
+import com.primefuel.fulltank.platform.fleet.domain.repositories.DriverRepository;
+import com.primefuel.fulltank.platform.fleet.infrastructure.persistence.jpa.assemblers.DriverPersistenceAssembler;
+import com.primefuel.fulltank.platform.fleet.infrastructure.persistence.jpa.repositories.DriverPersistenceRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -33,10 +33,5 @@ public class DriverRepositoryImpl implements DriverRepository {
     public Driver save(Driver driver) {
         return DriverPersistenceAssembler.toDomain(
                 persistenceRepository.save(DriverPersistenceAssembler.toPersistence(driver)));
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        persistenceRepository.deleteById(id);
     }
 }

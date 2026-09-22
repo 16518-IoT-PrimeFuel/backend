@@ -1,4 +1,4 @@
-package com.primefuel.fulltank.platform.fulfillment.infrastructure.persistence.jpa.entities;
+package com.primefuel.fulltank.platform.fleet.infrastructure.persistence.jpa.entities;
 
 import com.primefuel.fulltank.platform.shared.infrastructure.persistence.jpa.entities.AuditableAbstractPersistenceEntity;
 import jakarta.persistence.Column;
@@ -8,12 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "vehicles")
 @Getter
 @Setter
 @NoArgsConstructor
-public class VehiclePersistenceEntity extends AuditableAbstractPersistenceEntity {
+public class TankerPersistenceEntity extends AuditableAbstractPersistenceEntity {
 
     @Column(nullable = false)
     private Long providerId;
@@ -35,4 +37,10 @@ public class VehiclePersistenceEntity extends AuditableAbstractPersistenceEntity
 
     @Column(nullable = false, length = 30)
     private String status;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(name = "deactivated_at")
+    private Instant deactivatedAt;
 }
