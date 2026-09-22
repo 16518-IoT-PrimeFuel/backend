@@ -77,6 +77,9 @@ public class WebSecurityConfiguration {
                                 "/api/v1/provider-companies").permitAll()
                         .requestMatchers(
                                 "/api/v1/authentication/**",
+                                // Machine ingestion authenticates with a rotating device token (T07-B), not
+                                // with the user JWT, so it is exempt from the bearer filter chain.
+                                "/api/v2/telemetry/**",
                                 "/api-docs/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
