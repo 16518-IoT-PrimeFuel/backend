@@ -99,6 +99,36 @@
         "required" : [ "address", "contactEmail", "name", "phone", "ruc", "sector" ],
         "type" : "object"
       },
+      "CreateCustomerResource" : {
+        "properties" : {
+          "address" : {
+            "type" : "string"
+          },
+          "contactEmail" : {
+            "format" : "email",
+            "type" : "string"
+          },
+          "legacyCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "ruc" : {
+            "maxLength" : 11,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "name" ],
+        "type" : "object"
+      },
       "CreateDeliveryResource" : {
         "properties" : {
           "driverId" : {
@@ -368,6 +398,94 @@
           }
         },
         "required" : [ "address", "fuelTypesOffered", "name", "phone", "ruc" ],
+        "type" : "object"
+      },
+      "CreateReplenishmentRequestResource" : {
+        "properties" : {
+          "customerAccountId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "episodeKey" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "quantity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "source" : {
+            "type" : "string"
+          },
+          "tankId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "unit" : {
+            "maxLength" : 20,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "customerAccountId", "fuelProductId", "providerId", "quantity" ],
+        "type" : "object"
+      },
+      "CreateSiteResource" : {
+        "properties" : {
+          "address" : {
+            "type" : "string"
+          },
+          "name" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "name" ],
+        "type" : "object"
+      },
+      "CustomerResource" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "contactEmail" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "legacyCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "organizationId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "ruc" : {
+            "type" : "string"
+          }
+        },
         "type" : "object"
       },
       "DeliveryResource" : {
@@ -669,6 +787,43 @@
         },
         "type" : "object"
       },
+      "IngestReadingResource" : {
+        "properties" : {
+          "capturedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "channel" : {
+            "maxLength" : 60,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "deviceId" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "level" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "schemaVersion" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "sequence" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "unit" : {
+            "maxLength" : 20,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "capturedAt", "channel", "deviceId", "level", "schemaVersion", "sequence" ],
+        "type" : "object"
+      },
       "InviteMemberResource" : {
         "properties" : {
           "email" : {
@@ -863,6 +1018,35 @@
         },
         "type" : "object"
       },
+      "ProductResource" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelType" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "pricePerUnit" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "stock" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "ProviderAnalyticsResource" : {
         "properties" : {
           "cancelledOrders" : {
@@ -949,10 +1133,114 @@
         },
         "type" : "object"
       },
+      "RegisterTankResource" : {
+        "properties" : {
+          "capacity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "customerAccountId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelType" : {
+            "maxLength" : 30,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "initialLevel" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "name" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "siteId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "unit" : {
+            "maxLength" : 20,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "capacity", "customerAccountId", "name" ],
+        "type" : "object"
+      },
       "RejectFuelRequestResource" : {
         "properties" : {
           "reason" : {
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "RejectReplenishmentRequestResource" : {
+        "properties" : {
+          "reason" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        },
+        "required" : [ "reason" ],
+        "type" : "object"
+      },
+      "ReplenishmentRequestResource" : {
+        "properties" : {
+          "customerAccountId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "organizationId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "quantity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "rejectionReason" : {
+            "type" : "string"
+          },
+          "source" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tankId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "unitPrice" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "version" : {
+            "format" : "int32",
+            "type" : "integer"
           }
         },
         "type" : "object"
@@ -996,6 +1284,80 @@
           }
         },
         "required" : [ "password", "roles", "username" ],
+        "type" : "object"
+      },
+      "SiteResource" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "customerAccountId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "organizationId" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "TankResource" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "capacity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "configurationVersion" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "currentLevel" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "customerAccountId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelType" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "levelSource" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "organizationId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "siteId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
         "type" : "object"
       },
       "UpdateEquipmentResource" : {
@@ -1714,7 +2076,7 @@
         "tags" : [ "drivers-controller" ]
       },
       "post" : {
-        "operationId" : "create_3",
+        "operationId" : "create_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2425,7 +2787,7 @@
         "tags" : [ "fuel-requests-controller" ]
       },
       "post" : {
-        "operationId" : "create_2",
+        "operationId" : "create_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2480,7 +2842,7 @@
     },
     "/api/v1/fuel-requests/{requestId}/accept" : {
       "post" : {
-        "operationId" : "accept_1",
+        "operationId" : "accept_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "requestId",
@@ -2507,7 +2869,7 @@
     },
     "/api/v1/fuel-requests/{requestId}/reject" : {
       "post" : {
-        "operationId" : "reject",
+        "operationId" : "reject_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "requestId",
@@ -3086,7 +3448,7 @@
         "tags" : [ "provider-ratings-controller" ]
       },
       "post" : {
-        "operationId" : "create_1",
+        "operationId" : "create_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3227,7 +3589,7 @@
         "tags" : [ "vehicles-controller" ]
       },
       "post" : {
-        "operationId" : "create",
+        "operationId" : "create_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3333,6 +3695,118 @@
         "tags" : [ "vehicles-controller" ]
       }
     },
+    "/api/v2/customers" : {
+      "get" : {
+        "operationId" : "listCustomers",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/CustomerResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Customers" ]
+      },
+      "post" : {
+        "operationId" : "registerCustomer",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateCustomerResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Customers" ]
+      }
+    },
+    "/api/v2/customers/{customerId}/sites" : {
+      "get" : {
+        "operationId" : "listSites",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "customerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/SiteResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Customers" ]
+      },
+      "post" : {
+        "operationId" : "registerSite",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "customerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateSiteResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Customers" ]
+      }
+    },
     "/api/v2/invitations/{invitationId}" : {
       "delete" : {
         "operationId" : "revoke",
@@ -3362,7 +3836,7 @@
     },
     "/api/v2/invitations/{token}/accept" : {
       "post" : {
-        "operationId" : "accept",
+        "operationId" : "accept_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "token",
@@ -3471,6 +3945,338 @@
         },
         "tags" : [ "Invitations" ]
       }
+    },
+    "/api/v2/products" : {
+      "get" : {
+        "operationId" : "listProducts",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "activeOnly",
+          "required" : false,
+          "schema" : {
+            "default" : true,
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProductResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Supply" ]
+      }
+    },
+    "/api/v2/products/{fuelProductId}" : {
+      "get" : {
+        "operationId" : "getProduct",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "fuelProductId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Supply" ]
+      }
+    },
+    "/api/v2/replenishment-requests" : {
+      "get" : {
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReplenishmentRequestResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Replenishment" ]
+      },
+      "post" : {
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateReplenishmentRequestResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Replenishment" ]
+      }
+    },
+    "/api/v2/replenishment-requests/{requestId}" : {
+      "get" : {
+        "operationId" : "get",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "requestId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReplenishmentRequestResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Replenishment" ]
+      }
+    },
+    "/api/v2/replenishment-requests/{requestId}/accept" : {
+      "post" : {
+        "operationId" : "accept",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "requestId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Replenishment" ]
+      }
+    },
+    "/api/v2/replenishment-requests/{requestId}/cancel" : {
+      "post" : {
+        "operationId" : "cancel",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "requestId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Replenishment" ]
+      }
+    },
+    "/api/v2/replenishment-requests/{requestId}/reject" : {
+      "post" : {
+        "operationId" : "reject",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "requestId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RejectReplenishmentRequestResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Replenishment" ]
+      }
+    },
+    "/api/v2/tanks" : {
+      "get" : {
+        "operationId" : "listTanks",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/TankResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Tanks" ]
+      },
+      "post" : {
+        "operationId" : "registerTank",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegisterTankResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Tanks" ]
+      }
+    },
+    "/api/v2/tanks/{tankId}" : {
+      "get" : {
+        "operationId" : "getTank",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TankResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Tanks" ]
+      }
+    },
+    "/api/v2/telemetry/readings" : {
+      "post" : {
+        "operationId" : "ingest",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "X-Device-Token",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IngestReadingResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Telemetry" ]
+      }
     }
   },
   "security" : [ {
@@ -3487,8 +4293,14 @@
     "description" : "Analytics and reporting endpoints",
     "name" : "Analytics"
   }, {
+    "description" : "Replenishment request lifecycle (v2)",
+    "name" : "Replenishment"
+  }, {
     "description" : "Users management endpoints",
     "name" : "Users"
+  }, {
+    "description" : "Tank assets and configuration (v2)",
+    "name" : "Tanks"
   }, {
     "description" : "Buyer company management endpoints",
     "name" : "Buyer Companies"
@@ -3502,11 +4314,20 @@
     "description" : "Equipment management endpoints",
     "name" : "Equipment"
   }, {
+    "description" : "Customer accounts and sites (v2)",
+    "name" : "Customers"
+  }, {
+    "description" : "Tenant-scoped supply catalog (v2)",
+    "name" : "Supply"
+  }, {
     "description" : "Inventory management endpoints",
     "name" : "Fuel Products"
   }, {
     "description" : "Provider company management endpoints",
     "name" : "Provider Companies"
+  }, {
+    "description" : "Device telemetry ingestion (v2, machine authenticated)",
+    "name" : "Telemetry"
   }, {
     "description" : "Payment management endpoints",
     "name" : "Payments"

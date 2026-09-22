@@ -64,24 +64,75 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       `memberships`), v2: `POST /api/v2/onboarding`, invitaciones (invitar/aceptar/revocar) con
       reglas de expiración/duplicado/revocación, `V6` validada en MySQL 8.0.46. Build 41/41 verde.
       → `docs/api-ledger/T04-B-onboarding-invitations.md`
-- [ ] T05-A — CustomerAccount y sitios
-- [ ] T05-B — Mapa y backfill de pertenencia
+- [x] **T05-A** — CustomerAccount y sitios. Agregados `CustomerAccount`/`CustomerSite`, comandos/
+      queries/servicios, persistencia (`V7`, validada en MySQL 8.0.46: `customer_accounts` con mapa
+      `legacy_company_id`, `customer_sites`), seam `equipment.api.CustomerDirectory` y v2
+      `/api/v2/customers` (+ `/sites`) con organización del principal. Build verde.
+      → `docs/api-ledger/T05-A-customer-accounts-sites.md`
+- [x] **T05-B** — Mapa y backfill de pertenencia (**cierra W2/S05**). Seam
+      `iam.api.LegacyCompanyDirectory`; `CustomerBackfillService` idempotente con cuarentena
+      explícita (`customer_mapping_quarantines`, `V8`, validada en MySQL 8.0.46); sin inferencia
+      desde favorito/última orden. Build verde.
+      → `docs/api-ledger/T05-B-customer-membership-backfill.md`
 
 ## W3 — Supply, tanques y solicitud manual (S11, S06, S10)
 
-- [ ] T11-A — Interfaz Supply y unidades
-- [ ] T11-B — Reserva y conciliación de suministro
-- [ ] T06-A — Modelo Tank e interfaz de activos
-- [ ] T06-B — Mapeo legacy y snapshot de nivel
-- [ ] T10-A — Agregado y comandos de revisión (ReplenishmentRequest)
-- [ ] T10-B — Puente FuelRequest/FuelOrder compatible
+- [x] **T11-A** — Interfaz Supply y unidades. Módulo `supply`: `Unit`/`Volume`, seam
+      `supply.api.SupplyCatalog` + adapter sobre `fuel_products` (filtro tenant/active), v2
+      `/api/v2/products`, `TenantAccess.currentProviderId()`. Sin esquema nuevo. Build verde.
+      → `docs/api-ledger/T11-A-supply-seam-units.md`
+- [x] **T11-B** — Reserva y conciliación de suministro. Agregado `SupplyReservation` con snapshot de
+      precio/unidad, `reserve`/`release`/`reconcile` idempotentes, mutex por producto con
+      `PESSIMISTIC_WRITE` (`supply_stock_locks`) para no sobrevender; `V9` validada en MySQL 8.0.46.
+      Build verde.
+      → `docs/api-ledger/T11-B-supply-reservations.md`
+- [x] **T06-A** — Modelo Tank e interfaz de activos. Agregados `Tank`/`TankConfiguration` con
+      config versionada e invariantes (0≤nivel≤capacidad, sitio del mismo cliente), `TankEligibility`,
+      seam `equipment.api.TankAssets`, v2 `/api/v2/tanks`, `V10` validada en MySQL 8.0.46.
+      `Volume`/`Unit` promovidos a `shared`. Build verde.
+      → `docs/api-ledger/T06-A-tank-model.md`
+- [x] **T06-B** — Mapeo legacy y snapshot de nivel. `TankBackfillService` idempotente (solo equipment
+      clasificable con cliente mapeado), `TankReadingService` (lectura validada no retrocede;
+      metadata manual separada) y puente v1 en `EquipmentCommandServiceImpl`. Sin esquema nuevo. Build
+      verde.
+      → `docs/api-ledger/T06-B-tank-legacy-mapping.md`
+- [x] **T10-A** — Agregado y comandos de revisión (ReplenishmentRequest). Módulo `replenishment`:
+      lifecycle único `PENDING→ACCEPTED|REJECTED|CANCELLED`, snapshots de unidad/precio,
+      `consumeAcceptance` once-only, bloqueo optimista (`@Version`), idempotencia por `episodeKey`,
+      seam `replenishment.api.ReplenishmentLookup`, v2 `/api/v2/replenishment-requests`, `V11` validada
+      en MySQL 8.0.46. Build verde.
+      → `docs/api-ledger/T10-A-replenishment-request.md`
+- [x] **T10-B** — Puente FuelRequest/FuelOrder compatible (**cierra W3**). `LegacyFuelRequestBridge`:
+      la creación v1 también crea una `ReplenishmentRequest` (clave de episodio `fuel-request:{id}`,
+      organización/cliente/tanque resueltos por seams), la aceptación consume el acceptance una sola vez
+      y conserva el `requestId` legacy correlacionando el `orderId`; el rechazo se propaga. Sin orden
+      directa v2. Sin esquema nuevo. Build verde.
+      → `docs/api-ledger/T10-B-legacy-request-bridge.md`
 
 ## W4 — Dispositivos, telemetría y reposición automática (S07, S08, S09)
 
-- [ ] T07-A — Modelo temporal de DeviceBinding
-- [ ] T07-B — Provisionamiento y revocación técnica
-- [ ] T08-A — Adapter y almacenamiento normalizado de telemetría
-- [ ] T08-B — Integración idempotente con Tank
+- [x] **T07-A** — Modelo temporal de DeviceBinding. Agregado con ventana semiabierta
+      `[validFrom, validTo)`, doble barrera contra solapamiento (check de dominio + único
+      `(device_id, channel, active_slot)`), bind/revoke/move, eventos sin credenciales y seam
+      `equipment.api.ActiveBinding`; `V12` validada en MySQL 8.0.46. Build verde.
+      → `docs/api-ledger/T07-A-device-binding-temporal.md`
+- [x] **T07-B** — Provisionamiento y revocación técnica. `DeviceCredential` + `DeviceTokenHasher`
+      (token de 32 bytes, solo SHA-256 persistido), provision/rotate/revoke, seam
+      `equipment.api.DeviceAuthentication` con outcomes de cuarentena
+      (`UNKNOWN_CREDENTIAL`/`REVOKED_CREDENTIAL`/`NO_ACTIVE_BINDING`), frontera por instante tras un move;
+      `V13` validada en MySQL 8.0.46. Build verde.
+      → `docs/api-ledger/T07-B-device-provisioning.md`
+- [x] **T08-A** — Adapter y almacenamiento normalizado de telemetría. Módulo `telemetry`: payload
+      versionado (`schemaVersion`, solo v1), normalización por `Volume`/`Unit`, dedup
+      `(device, channel, sequence)`, autenticación de máquina vía `equipment.api.DeviceAuthentication`,
+      cuarentena observable, publicación de `ValidatedTankReadingEvent` solo si se acepta; `V14`
+      validada en MySQL 8.0.46. Build verde.
+      → `docs/api-ledger/T08-A-telemetry-ingestion.md`
+- [x] **T08-B** — Integración idempotente con Tank. `ValidatedTankReadingConsumer` con inbox y
+      aplicación en la **misma transacción** (replay no duplica, crash recupera, fallo no queda consumido)
+      y `TankAssets.applyValidatedReading` que ignora lecturas desordenadas (el snapshot no retrocede).
+      Sin esquema nuevo. Build verde.
+      → `docs/api-ledger/T08-B-tank-integration.md`
 - [ ] T09-A — Regla de reposición y episodios
 - [ ] T09-B — Generación automática idempotente
 
