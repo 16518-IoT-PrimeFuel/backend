@@ -82,14 +82,12 @@ class StateLifecycleRetryCharacterizationTest {
     }
 
     @Test
-    void completingAnAlreadyDeliveredDeliveryReturns500InsteadOf409() throws Exception {
-        // known-gap: Delivery#complete() has no status guard, but the command handler also
-        // re-runs FuelOrder#receive(), which DOES guard on OrderStatus.DISPATCHED. After the
-        // first /complete the order is PENDING_PAYMENT, so the retry's receive() throws a raw
-        // IllegalStateException that again falls through to the generic 500 handler instead of a
-        // 409. The whole handler is @Transactional, so the retry's (redundant) equipment refuel
-        // and driver/vehicle status writes are rolled back with it — no double side effects
-        // survive, only the wrong status code.
+    void completingAnAlreadyDeliveredDeliveryNowReturns409() throws Exception {
+        // was known-gap (T01-B): the retry used to re-run FuelOrder#receive(), which guards on
+        // OrderStatus.DISPATCHED, so the second attempt threw a raw IllegalStateException that fell
+        // through to the generic 500 handler. T14-B routes the v1 close through the physical machine,
+        // so the second attempt is rejected by the terminal COMPLETED state as a 409 *before* any
+        // order/equipment side effect runs — no double volume, no duplicate journal rows.
         var f = new Fixture("retry-complete");
         long orderId = f.createDirectOrder();
         long deliveryId = f.createDelivery(orderId);
@@ -99,7 +97,7 @@ class StateLifecycleRetryCharacterizationTest {
                 .andExpect(jsonPath("$.status").value("DELIVERED"));
 
         mockMvc.perform(post("/api/v1/deliveries/{id}/complete", deliveryId).with(f.provider))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isConflict());
     }
 
     @Test
