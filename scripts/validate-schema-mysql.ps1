@@ -67,7 +67,11 @@ while ((Get-Date) -lt $deadline -and -not $process.HasExited) {
     if ($applied -and $text -match 'Started FullTankPlatformApplication') { break }
 }
 
-if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }
+if (-not $process.HasExited) {
+    # Kill the whole tree: mvnw spawns a separate java process for the app that would otherwise leak.
+    & taskkill /PID $process.Id /T /F 2>$null | Out-Null
+}
+Start-Sleep -Seconds 1
 Copy-Item -Path $stdout -Destination $log -Force -ErrorAction SilentlyContinue
 Remove-Item -Force $propertiesFile -ErrorAction SilentlyContinue
 
