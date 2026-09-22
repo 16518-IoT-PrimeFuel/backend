@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.fulfillment.infrastructure.persistence.jpa.entities;
 
+import com.primefuel.fulltank.platform.fulfillment.domain.model.valueobjects.DeliveryPhysicalState;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.valueobjects.DeliveryStatus;
 import com.primefuel.fulltank.platform.shared.infrastructure.persistence.jpa.entities.AuditableAbstractPersistenceEntity;
 import jakarta.persistence.*;
@@ -40,4 +41,22 @@ public class DeliveryPersistenceEntity extends AuditableAbstractPersistenceEntit
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "physical_state", length = 30)
+    private DeliveryPhysicalState physicalState;
+
+    private LocalDateTime startedAt;
+
+    private LocalDateTime arrivedAt;
+
+    private LocalDateTime deliveringAt;
+
+    private Double requestedVolume;
+
+    private Double deliveredVolume;
+
+    @Version
+    @Column(nullable = false)
+    private int version;
 }

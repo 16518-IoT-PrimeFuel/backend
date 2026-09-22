@@ -21,6 +21,13 @@ public final class DeliveryPersistenceAssembler {
         domain.setDispatchedAt(entity.getDispatchedAt());
         domain.setDeliveredAt(entity.getDeliveredAt());
         domain.setNotes(entity.getNotes());
+        domain.setPhysicalState(entity.getPhysicalState());
+        domain.setStartedAt(entity.getStartedAt());
+        domain.setArrivedAt(entity.getArrivedAt());
+        domain.setDeliveringAt(entity.getDeliveringAt());
+        domain.setRequestedVolume(entity.getRequestedVolume());
+        domain.setDeliveredVolume(entity.getDeliveredVolume());
+        domain.setVersion(entity.getVersion());
         return domain;
     }
 
@@ -39,6 +46,13 @@ public final class DeliveryPersistenceAssembler {
         entity.setDispatchedAt(domain.getDispatchedAt());
         entity.setDeliveredAt(domain.getDeliveredAt());
         entity.setNotes(domain.getNotes());
+        entity.setPhysicalState(domain.getPhysicalState());
+        entity.setStartedAt(domain.getStartedAt());
+        entity.setArrivedAt(domain.getArrivedAt());
+        entity.setDeliveringAt(domain.getDeliveringAt());
+        entity.setRequestedVolume(domain.getRequestedVolume());
+        entity.setDeliveredVolume(domain.getDeliveredVolume());
+        entity.setVersion(domain.getVersion());
         return entity;
     }
 }

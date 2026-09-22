@@ -50,4 +50,11 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
         return DeliveryPersistenceAssembler.toDomainFromPersistence(
                 deliveryPersistenceRepository.save(entity));
     }
+
+    @Override
+    public Delivery saveAndFlush(Delivery delivery) {
+        var entity = DeliveryPersistenceAssembler.toPersistenceFromDomain(delivery);
+        return DeliveryPersistenceAssembler.toDomainFromPersistence(
+                deliveryPersistenceRepository.saveAndFlush(entity));
+    }
 }

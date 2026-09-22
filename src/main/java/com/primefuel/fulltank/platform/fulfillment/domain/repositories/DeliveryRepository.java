@@ -11,4 +11,7 @@ public interface DeliveryRepository {
     List<Delivery> findByProviderId(Long providerId);
     List<Delivery> findAll();
     Delivery save(Delivery delivery);
+
+    /** Flushes immediately so optimistic-lock conflicts surface inside the caller's transaction. */
+    Delivery saveAndFlush(Delivery delivery);
 }
