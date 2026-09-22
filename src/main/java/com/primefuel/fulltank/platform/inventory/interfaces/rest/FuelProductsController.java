@@ -16,7 +16,7 @@ import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.FuelP
 import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.UpdateFuelProductCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.UpdateFuelProductStockCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -33,18 +33,18 @@ public class FuelProductsController {
 
     private final FuelProductCommandService fuelProductCommandService;
     private final FuelProductQueryService fuelProductQueryService;
-    private final CurrentUserAccess currentUserAccess;
+    private final TenantAccess tenantAccess;
 
     public FuelProductsController(FuelProductCommandService fuelProductCommandService,
                                   FuelProductQueryService fuelProductQueryService,
-                                  CurrentUserAccess currentUserAccess) {
+                                  TenantAccess tenantAccess) {
         this.fuelProductCommandService = fuelProductCommandService;
         this.fuelProductQueryService = fuelProductQueryService;
-        this.currentUserAccess = currentUserAccess;
+        this.tenantAccess = tenantAccess;
     }
 
     @PostMapping
-    @PreAuthorize("@currentUserAccess.ownsProvider(#resource.providerId())")
+    @PreAuthorize("@tenantAccess.ownsProvider(#resource.providerId())")
     public ResponseEntity<?> createFuelProduct(@RequestBody CreateFuelProductResource resource) {
         var command = CreateFuelProductCommandFromResourceAssembler.toCommandFromResource(resource);
         var result = fuelProductCommandService.handle(command);
@@ -67,7 +67,7 @@ public class FuelProductsController {
     }
 
     @GetMapping
-    @PreAuthorize("@currentUserAccess.isBuyerRole()")
+    @PreAuthorize("@tenantAccess.isBuyerRole()")
     public ResponseEntity<List<FuelProductResource>> getAllFuelProducts() {
         var products = fuelProductQueryService.handle(new GetAllFuelProductsQuery());
         var resources = products.stream().map(FuelProductResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -77,15 +77,15 @@ public class FuelProductsController {
     @GetMapping("/{fuelProductId}")
     public ResponseEntity<FuelProductResource> getFuelProductById(@PathVariable Long fuelProductId) {
         var result = fuelProductQueryService.handle(new GetFuelProductByIdQuery(fuelProductId))
-                .filter(product -> currentUserAccess.isBuyerRole()
-                        || currentUserAccess.ownsProvider(product.getProviderId()));
+                .filter(product -> tenantAccess.isBuyerRole()
+                        || tenantAccess.ownsProvider(product.getProviderId()));
         return result.map(p -> new ResponseEntity<>(
                         FuelProductResourceFromEntityAssembler.toResourceFromEntity(p), HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/provider/{providerId}")
-    @PreAuthorize("@currentUserAccess.isBuyerRole() or @currentUserAccess.ownsProvider(#providerId)")
+    @PreAuthorize("@tenantAccess.isBuyerRole() or @tenantAccess.ownsProvider(#providerId)")
     public ResponseEntity<List<FuelProductResource>> getFuelProductsByProvider(@PathVariable Long providerId) {
         var products = fuelProductQueryService.handle(new GetFuelProductsByProviderIdQuery(providerId));
         var resources = products.stream().map(FuelProductResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -117,7 +117,7 @@ public class FuelProductsController {
     private boolean ownsProduct(Long fuelProductId) {
         return fuelProductQueryService.handle(new GetFuelProductByIdQuery(fuelProductId))
                 .map(FuelProduct::getProviderId)
-                .filter(currentUserAccess::ownsProvider)
+                .filter(tenantAccess::ownsProvider)
                 .isPresent();
     }
 }
