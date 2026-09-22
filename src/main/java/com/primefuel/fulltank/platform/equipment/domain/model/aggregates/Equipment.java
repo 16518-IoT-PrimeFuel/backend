@@ -67,4 +67,9 @@ public class Equipment extends AbstractDomainAggregateRoot<Equipment> {
     public void receiveFuel(Double quantity) {
         this.currentLevel = Math.min(this.tankCapacity, this.currentLevel + quantity);
     }
+
+    /** True when the asset declares a fuel type, i.e. it can be classified as a tank. */
+    public boolean hasFuelType() {
+        return this.fuelType != null;
+    }
 }
