@@ -1,0 +1,3324 @@
+{
+  "components" : {
+    "schemas" : {
+      "BuyerAnalyticsResource" : {
+        "properties" : {
+          "companyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "completedPayments" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "monthlySpending" : {
+            "items" : {
+              "$ref" : "#/components/schemas/MonthlyAmount"
+            },
+            "type" : "array"
+          },
+          "pendingPayments" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalOrders" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalSpent" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "BuyerCompanyResource" : {
+        "properties" : {
+          "address" : {
+            "type" : "string"
+          },
+          "contactEmail" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "ruc" : {
+            "type" : "string"
+          },
+          "sector" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "CompletePaymentResource" : {
+        "properties" : {
+          "transactionReference" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateBuyerCompanyResource" : {
+        "properties" : {
+          "address" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "contactEmail" : {
+            "format" : "email",
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "name" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "phone" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "ruc" : {
+            "minLength" : 1,
+            "pattern" : "\\d{11}",
+            "type" : "string"
+          },
+          "sector" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        },
+        "required" : [ "address", "contactEmail", "name", "phone", "ruc", "sector" ],
+        "type" : "object"
+      },
+      "CreateDeliveryResource" : {
+        "properties" : {
+          "driverId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "scheduledDate" : {
+            "type" : "string"
+          },
+          "vehicleId" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateEquipmentResource" : {
+        "properties" : {
+          "autoRefill" : {
+            "type" : "boolean"
+          },
+          "companyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "currentLevel" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "equipmentType" : {
+            "enum" : [ "TRUCK", "BUS", "EXCAVATOR", "GENERATOR", "FORKLIFT", "OTHER" ],
+            "type" : "string"
+          },
+          "favoriteProviderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelType" : {
+            "enum" : [ "DIESEL", "GASOLINE", "GASOLINE_84", "GASOLINE_90", "GASOLINE_95", "GASOLINE_97", "GLP", "GNV" ],
+            "type" : "string"
+          },
+          "lastRefillDate" : {
+            "type" : "string"
+          },
+          "licensePlate" : {
+            "type" : "string"
+          },
+          "location" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "refillThreshold" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tankCapacity" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateFuelOrderResource" : {
+        "properties" : {
+          "companyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "deliveryAddress" : {
+            "type" : "string"
+          },
+          "equipmentId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "requestedQuantity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "scheduledDate" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateFuelProductResource" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "availableStock" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "capacity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "fuelType" : {
+            "enum" : [ "DIESEL", "GASOLINE", "GASOLINE_84", "GASOLINE_90", "GASOLINE_95", "GASOLINE_97", "GLP", "GNV" ],
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "pricePerUnit" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateFuelRequestResource" : {
+        "properties" : {
+          "buyerCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "deliveryAddress" : {
+            "type" : "string"
+          },
+          "deliveryDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "equipmentId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "quantity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "source" : {
+            "type" : "string"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateNotificationResource" : {
+        "properties" : {
+          "companyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "referenceId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "type" : {
+            "enum" : [ "NEW_REQUEST", "REQUEST_PENDING", "ORDER_ACCEPTED", "ORDER_REJECTED", "ORDER_DISPATCHED", "ORDER_DELIVERED", "ORDER_CONFIRMED", "ORDER_CANCELLED", "DELIVERY_DISPATCHED", "DELIVERY_COMPLETED", "DELIVERY_FAILED", "PAYMENT_RECEIVED", "PAYMENT_COMPLETED", "PAYMENT_REFUNDED", "GENERAL" ],
+            "type" : "string"
+          },
+          "userId" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "CreatePaymentResource" : {
+        "properties" : {
+          "amount" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "companyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "paymentMethod" : {
+            "enum" : [ "BANK_TRANSFER", "CREDIT_CARD", "DEBIT_CARD", "CASH" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateProviderCompanyResource" : {
+        "properties" : {
+          "address" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "fuelTypesOffered" : {
+            "items" : {
+              "type" : "string"
+            },
+            "minItems" : 1,
+            "type" : "array"
+          },
+          "name" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "phone" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "rating" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "ruc" : {
+            "minLength" : 1,
+            "pattern" : "\\d{11}",
+            "type" : "string"
+          }
+        },
+        "required" : [ "address", "fuelTypesOffered", "name", "phone", "ruc" ],
+        "type" : "object"
+      },
+      "DeliveryResource" : {
+        "properties" : {
+          "deliveredAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "dispatchedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "driverId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "scheduledDate" : {
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "SCHEDULED", "DISPATCHED", "DELIVERED", "FAILED" ],
+            "type" : "string"
+          },
+          "vehicleId" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "DriverResource" : {
+        "properties" : {
+          "email" : {
+            "type" : "string"
+          },
+          "firstName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "lastName" : {
+            "type" : "string"
+          },
+          "licenseNumber" : {
+            "type" : "string"
+          },
+          "phoneNumber" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "EquipmentResource" : {
+        "properties" : {
+          "autoRefill" : {
+            "type" : "boolean"
+          },
+          "companyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "currentLevel" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "equipmentType" : {
+            "enum" : [ "TRUCK", "BUS", "EXCAVATOR", "GENERATOR", "FORKLIFT", "OTHER" ],
+            "type" : "string"
+          },
+          "favoriteProviderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelType" : {
+            "enum" : [ "DIESEL", "GASOLINE", "GASOLINE_84", "GASOLINE_90", "GASOLINE_95", "GASOLINE_97", "GLP", "GNV" ],
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "lastRefillDate" : {
+            "type" : "string"
+          },
+          "licensePlate" : {
+            "type" : "string"
+          },
+          "location" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "refillThreshold" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tankCapacity" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "FailDeliveryResource" : {
+        "properties" : {
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "FavoriteProviderResource" : {
+        "properties" : {
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "FuelOrderResource" : {
+        "properties" : {
+          "companyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "deliveryAddress" : {
+            "type" : "string"
+          },
+          "equipmentId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "requestId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "requestedQuantity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "scheduledDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "PENDING", "CONFIRMED", "DISPATCHED", "PENDING_PAYMENT", "PAID", "IN_PROGRESS", "DELIVERED", "CANCELLED" ],
+            "type" : "string"
+          },
+          "totalPrice" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "FuelProductResource" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "availableStock" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "capacity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "fuelType" : {
+            "enum" : [ "DIESEL", "GASOLINE", "GASOLINE_84", "GASOLINE_90", "GASOLINE_95", "GASOLINE_97", "GLP", "GNV" ],
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "pricePerUnit" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "FuelRequestResource" : {
+        "properties" : {
+          "buyerCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "deliveryAddress" : {
+            "type" : "string"
+          },
+          "deliveryDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "equipmentId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelType" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "quantity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "rejectionReason" : {
+            "type" : "string"
+          },
+          "source" : {
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "PENDING", "APPROVED", "REJECTED" ],
+            "type" : "string"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "unitPrice" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "MonthlyAmount" : {
+        "properties" : {
+          "amount" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "month" : {
+            "type" : "string"
+          },
+          "monthIndex" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "NotificationResource" : {
+        "properties" : {
+          "createdAt" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "read" : {
+            "type" : "boolean"
+          },
+          "referenceId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "type" : {
+            "enum" : [ "NEW_REQUEST", "REQUEST_PENDING", "ORDER_ACCEPTED", "ORDER_REJECTED", "ORDER_DISPATCHED", "ORDER_DELIVERED", "ORDER_CONFIRMED", "ORDER_CANCELLED", "DELIVERY_DISPATCHED", "DELIVERY_COMPLETED", "DELIVERY_FAILED", "PAYMENT_RECEIVED", "PAYMENT_COMPLETED", "PAYMENT_REFUNDED", "GENERAL" ],
+            "type" : "string"
+          },
+          "userId" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "PasswordResetConfirmResource" : {
+        "properties" : {
+          "newPassword" : {
+            "maxLength" : 120,
+            "minLength" : 8,
+            "type" : "string"
+          },
+          "token" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        },
+        "required" : [ "newPassword", "token" ],
+        "type" : "object"
+      },
+      "PasswordResetRequestResource" : {
+        "properties" : {
+          "email" : {
+            "format" : "email",
+            "minLength" : 1,
+            "type" : "string"
+          }
+        },
+        "required" : [ "email" ],
+        "type" : "object"
+      },
+      "PaymentResource" : {
+        "properties" : {
+          "amount" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "companyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "paidAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "paymentMethod" : {
+            "enum" : [ "BANK_TRANSFER", "CREDIT_CARD", "DEBIT_CARD", "CASH" ],
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "PENDING", "COMPLETED", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          },
+          "transactionReference" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "PlatformSummaryResource" : {
+        "properties" : {
+          "completedDeliveries" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "pendingOrders" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalDeliveries" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalOrders" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalPayments" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalRevenue" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "ProviderAnalyticsResource" : {
+        "properties" : {
+          "cancelledOrders" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "confirmedOrders" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "monthlyRevenue" : {
+            "items" : {
+              "$ref" : "#/components/schemas/MonthlyAmount"
+            },
+            "type" : "array"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalOrders" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalRevenue" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "ProviderCompanyResource" : {
+        "properties" : {
+          "address" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "fuelTypesOffered" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "rating" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "ruc" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ProviderRatingResource" : {
+        "properties" : {
+          "companyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "rating" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "RejectFuelRequestResource" : {
+        "properties" : {
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "SignInResource" : {
+        "properties" : {
+          "password" : {
+            "type" : "string"
+          },
+          "username" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "SignUpResource" : {
+        "properties" : {
+          "buyerCompany" : {
+            "$ref" : "#/components/schemas/CreateBuyerCompanyResource"
+          },
+          "password" : {
+            "maxLength" : 120,
+            "minLength" : 8,
+            "type" : "string"
+          },
+          "providerCompany" : {
+            "$ref" : "#/components/schemas/CreateProviderCompanyResource"
+          },
+          "roles" : {
+            "items" : {
+              "type" : "string"
+            },
+            "minItems" : 1,
+            "type" : "array"
+          },
+          "username" : {
+            "format" : "email",
+            "maxLength" : 100,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "password", "roles", "username" ],
+        "type" : "object"
+      },
+      "UpdateEquipmentResource" : {
+        "properties" : {
+          "autoRefill" : {
+            "type" : "boolean"
+          },
+          "currentLevel" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "equipmentType" : {
+            "enum" : [ "TRUCK", "BUS", "EXCAVATOR", "GENERATOR", "FORKLIFT", "OTHER" ],
+            "type" : "string"
+          },
+          "favoriteProviderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelType" : {
+            "enum" : [ "DIESEL", "GASOLINE", "GASOLINE_84", "GASOLINE_90", "GASOLINE_95", "GASOLINE_97", "GLP", "GNV" ],
+            "type" : "string"
+          },
+          "lastRefillDate" : {
+            "type" : "string"
+          },
+          "licensePlate" : {
+            "type" : "string"
+          },
+          "location" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "refillThreshold" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tankCapacity" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "UpdateFuelProductResource" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "availableStock" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "capacity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "fuelType" : {
+            "enum" : [ "DIESEL", "GASOLINE", "GASOLINE_84", "GASOLINE_90", "GASOLINE_95", "GASOLINE_97", "GLP", "GNV" ],
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "pricePerUnit" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "UpdateFuelProductStockResource" : {
+        "properties" : {
+          "newStock" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "UserResource" : {
+        "properties" : {
+          "companyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "roles" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "username" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "VehicleResource" : {
+        "properties" : {
+          "brand" : {
+            "type" : "string"
+          },
+          "capacity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "licensePlate" : {
+            "type" : "string"
+          },
+          "model" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    },
+    "securitySchemes" : {
+      "bearerAuth" : {
+        "bearerFormat" : "JWT",
+        "description" : "JWT Bearer token for API authentication",
+        "name" : "bearerAuth",
+        "scheme" : "bearer",
+        "type" : "http"
+      }
+    }
+  },
+  "info" : {
+    "contact" : {
+      "email" : "support@primefuel.com",
+      "name" : "FullTank Support",
+      "url" : "https://primefuel.com/support"
+    },
+    "description" : "FullTank B2B Fuel Marketplace Platform â RESTful API built with DDD, Spring Boot 4, Java 26, and MySQL.",
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "https://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "title" : "FullTank Platform",
+    "version" : "0.0.1-SNAPSHOT"
+  },
+  "openapi" : "3.1.0",
+  "paths" : {
+    "/api/v1/analytics/buyers/{companyId}" : {
+      "get" : {
+        "operationId" : "getBuyerAnalytics",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "companyId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BuyerAnalyticsResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Analytics" ]
+      }
+    },
+    "/api/v1/analytics/platform" : {
+      "get" : {
+        "operationId" : "getPlatformSummary",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PlatformSummaryResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Analytics" ]
+      }
+    },
+    "/api/v1/analytics/providers/{providerId}" : {
+      "get" : {
+        "operationId" : "getProviderAnalytics",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderAnalyticsResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Analytics" ]
+      }
+    },
+    "/api/v1/authentication/password-reset/confirm" : {
+      "post" : {
+        "operationId" : "confirmPasswordReset",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PasswordResetConfirmResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Authentication" ]
+      }
+    },
+    "/api/v1/authentication/password-reset/request" : {
+      "post" : {
+        "operationId" : "requestPasswordReset",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PasswordResetRequestResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Authentication" ]
+      }
+    },
+    "/api/v1/authentication/sign-in" : {
+      "post" : {
+        "operationId" : "signIn",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SignInResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Authentication" ]
+      }
+    },
+    "/api/v1/authentication/sign-up" : {
+      "post" : {
+        "operationId" : "signUp",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SignUpResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Authentication" ]
+      }
+    },
+    "/api/v1/buyer-companies" : {
+      "get" : {
+        "operationId" : "getAllBuyerCompanies",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/BuyerCompanyResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Buyer Companies" ]
+      },
+      "post" : {
+        "operationId" : "createBuyerCompany",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateBuyerCompanyResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Buyer Companies" ]
+      }
+    },
+    "/api/v1/buyer-companies/{companyId}" : {
+      "get" : {
+        "operationId" : "getBuyerCompanyById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "companyId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BuyerCompanyResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Buyer Companies" ]
+      },
+      "put" : {
+        "operationId" : "updateBuyerCompany",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "companyId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateBuyerCompanyResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BuyerCompanyResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Buyer Companies" ]
+      }
+    },
+    "/api/v1/deliveries" : {
+      "get" : {
+        "operationId" : "getAllDeliveries",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Deliveries" ]
+      },
+      "post" : {
+        "operationId" : "createDelivery",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateDeliveryResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Deliveries" ]
+      }
+    },
+    "/api/v1/deliveries/order/{orderId}" : {
+      "get" : {
+        "operationId" : "getDeliveryByOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeliveryResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Deliveries" ]
+      }
+    },
+    "/api/v1/deliveries/provider/{providerId}" : {
+      "get" : {
+        "operationId" : "getDeliveriesByProvider",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Deliveries" ]
+      }
+    },
+    "/api/v1/deliveries/{deliveryId}" : {
+      "get" : {
+        "operationId" : "getDeliveryById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeliveryResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Deliveries" ]
+      }
+    },
+    "/api/v1/deliveries/{deliveryId}/complete" : {
+      "post" : {
+        "operationId" : "completeDelivery",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Deliveries" ]
+      }
+    },
+    "/api/v1/deliveries/{deliveryId}/dispatch" : {
+      "post" : {
+        "operationId" : "dispatchDelivery",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Deliveries" ]
+      }
+    },
+    "/api/v1/deliveries/{deliveryId}/fail" : {
+      "post" : {
+        "operationId" : "failDelivery",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FailDeliveryResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Deliveries" ]
+      }
+    },
+    "/api/v1/drivers" : {
+      "get" : {
+        "operationId" : "getByProvider_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "drivers-controller" ]
+      },
+      "post" : {
+        "operationId" : "create_3",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DriverResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "drivers-controller" ]
+      }
+    },
+    "/api/v1/drivers/{id}" : {
+      "delete" : {
+        "operationId" : "delete_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "drivers-controller" ]
+      },
+      "get" : {
+        "operationId" : "getById_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "drivers-controller" ]
+      },
+      "put" : {
+        "operationId" : "update_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DriverResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "drivers-controller" ]
+      }
+    },
+    "/api/v1/equipment" : {
+      "get" : {
+        "operationId" : "getAllEquipment",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/EquipmentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Equipment" ]
+      },
+      "post" : {
+        "operationId" : "createEquipment",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateEquipmentResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Equipment" ]
+      }
+    },
+    "/api/v1/equipment/company/{companyId}" : {
+      "get" : {
+        "operationId" : "getEquipmentByCompany",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "companyId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/EquipmentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Equipment" ]
+      }
+    },
+    "/api/v1/equipment/{equipmentId}" : {
+      "get" : {
+        "operationId" : "getEquipmentById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "equipmentId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EquipmentResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Equipment" ]
+      }
+    },
+    "/api/v1/equipment/{equipmentId}/favorite-provider" : {
+      "post" : {
+        "operationId" : "assignFavoriteProvider",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "equipmentId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FavoriteProviderResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EquipmentResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Equipment" ]
+      }
+    },
+    "/api/v1/equipment/{equipmentId}/update" : {
+      "post" : {
+        "operationId" : "updateEquipment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "equipmentId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateEquipmentResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Equipment" ]
+      }
+    },
+    "/api/v1/fuel-orders" : {
+      "get" : {
+        "operationId" : "getAllOrders",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelOrderResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Orders" ]
+      },
+      "post" : {
+        "operationId" : "createFuelOrder",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateFuelOrderResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Orders" ]
+      }
+    },
+    "/api/v1/fuel-orders/company/{companyId}" : {
+      "get" : {
+        "operationId" : "getOrdersByCompany",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "companyId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelOrderResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Orders" ]
+      }
+    },
+    "/api/v1/fuel-orders/provider/{providerId}" : {
+      "get" : {
+        "operationId" : "getOrdersByProvider",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelOrderResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Orders" ]
+      }
+    },
+    "/api/v1/fuel-orders/{orderId}" : {
+      "get" : {
+        "operationId" : "getOrderById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelOrderResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Orders" ]
+      }
+    },
+    "/api/v1/fuel-orders/{orderId}/cancel" : {
+      "post" : {
+        "operationId" : "cancelOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Orders" ]
+      }
+    },
+    "/api/v1/fuel-orders/{orderId}/confirm" : {
+      "post" : {
+        "operationId" : "confirmOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Orders" ]
+      }
+    },
+    "/api/v1/fuel-products" : {
+      "get" : {
+        "operationId" : "getAllFuelProducts",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelProductResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Products" ]
+      },
+      "post" : {
+        "operationId" : "createFuelProduct",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateFuelProductResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Products" ]
+      }
+    },
+    "/api/v1/fuel-products/provider/{providerId}" : {
+      "get" : {
+        "operationId" : "getFuelProductsByProvider",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelProductResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Products" ]
+      }
+    },
+    "/api/v1/fuel-products/{fuelProductId}" : {
+      "delete" : {
+        "operationId" : "deleteFuelProduct",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "fuelProductId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Products" ]
+      },
+      "get" : {
+        "operationId" : "getFuelProductById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "fuelProductId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelProductResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Products" ]
+      },
+      "put" : {
+        "operationId" : "updateFuelProduct",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "fuelProductId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateFuelProductResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Products" ]
+      }
+    },
+    "/api/v1/fuel-products/{fuelProductId}/update-stock" : {
+      "post" : {
+        "operationId" : "updateStock",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "fuelProductId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateFuelProductStockResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Fuel Products" ]
+      }
+    },
+    "/api/v1/fuel-requests" : {
+      "get" : {
+        "operationId" : "findAll",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "buyerCompanyId",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "providerId",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelRequestResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "fuel-requests-controller" ]
+      },
+      "post" : {
+        "operationId" : "create_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateFuelRequestResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelRequestResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "fuel-requests-controller" ]
+      }
+    },
+    "/api/v1/fuel-requests/{requestId}" : {
+      "get" : {
+        "operationId" : "findById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "requestId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelRequestResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "fuel-requests-controller" ]
+      }
+    },
+    "/api/v1/fuel-requests/{requestId}/accept" : {
+      "post" : {
+        "operationId" : "accept",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "requestId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "fuel-requests-controller" ]
+      }
+    },
+    "/api/v1/fuel-requests/{requestId}/reject" : {
+      "post" : {
+        "operationId" : "reject",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "requestId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RejectFuelRequestResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelRequestResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "fuel-requests-controller" ]
+      }
+    },
+    "/api/v1/notifications" : {
+      "post" : {
+        "operationId" : "createNotification",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateNotificationResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Notifications" ]
+      }
+    },
+    "/api/v1/notifications/buyer/{companyId}" : {
+      "get" : {
+        "operationId" : "getNotificationsByBuyer",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "companyId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Notifications" ]
+      }
+    },
+    "/api/v1/notifications/provider/{providerId}" : {
+      "get" : {
+        "operationId" : "getNotificationsByProvider",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Notifications" ]
+      }
+    },
+    "/api/v1/notifications/user/{userId}" : {
+      "get" : {
+        "operationId" : "getNotificationsByUser",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "userId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Notifications" ]
+      }
+    },
+    "/api/v1/notifications/user/{userId}/unread" : {
+      "get" : {
+        "operationId" : "getUnreadByUser",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "userId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Notifications" ]
+      }
+    },
+    "/api/v1/notifications/{notificationId}" : {
+      "get" : {
+        "operationId" : "getNotificationById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "notificationId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Notifications" ]
+      }
+    },
+    "/api/v1/notifications/{notificationId}/mark-as-read" : {
+      "post" : {
+        "operationId" : "markAsRead",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "notificationId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Notifications" ]
+      }
+    },
+    "/api/v1/payments" : {
+      "get" : {
+        "operationId" : "getAllPayments",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Payments" ]
+      },
+      "post" : {
+        "operationId" : "createPayment",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreatePaymentResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Payments" ]
+      }
+    },
+    "/api/v1/payments/company/{companyId}" : {
+      "get" : {
+        "operationId" : "getPaymentsByCompany",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "companyId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Payments" ]
+      }
+    },
+    "/api/v1/payments/order/{orderId}" : {
+      "get" : {
+        "operationId" : "getPaymentByOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Payments" ]
+      }
+    },
+    "/api/v1/payments/{paymentId}" : {
+      "get" : {
+        "operationId" : "getPaymentById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "paymentId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Payments" ]
+      }
+    },
+    "/api/v1/payments/{paymentId}/complete" : {
+      "post" : {
+        "operationId" : "completePayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "paymentId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompletePaymentResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Payments" ]
+      }
+    },
+    "/api/v1/payments/{paymentId}/refund" : {
+      "post" : {
+        "operationId" : "refundPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "paymentId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Payments" ]
+      }
+    },
+    "/api/v1/provider-companies" : {
+      "get" : {
+        "operationId" : "getAllProviderCompanies",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderCompanyResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Provider Companies" ]
+      },
+      "post" : {
+        "operationId" : "createProviderCompany",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateProviderCompanyResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Provider Companies" ]
+      }
+    },
+    "/api/v1/provider-companies/{providerId}" : {
+      "get" : {
+        "operationId" : "getProviderCompanyById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderCompanyResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Provider Companies" ]
+      },
+      "put" : {
+        "operationId" : "updateProviderCompany",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateProviderCompanyResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderCompanyResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Provider Companies" ]
+      }
+    },
+    "/api/v1/provider-ratings" : {
+      "get" : {
+        "operationId" : "getAll",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "companyId",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "providerId",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderRatingResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "provider-ratings-controller" ]
+      },
+      "post" : {
+        "operationId" : "create_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProviderRatingResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "provider-ratings-controller" ]
+      }
+    },
+    "/api/v1/provider-ratings/{id}" : {
+      "put" : {
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProviderRatingResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "provider-ratings-controller" ]
+      }
+    },
+    "/api/v1/users" : {
+      "get" : {
+        "operationId" : "getAllUsers",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Users" ]
+      }
+    },
+    "/api/v1/users/{userId}" : {
+      "get" : {
+        "operationId" : "getUserById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "userId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "Users" ]
+      }
+    },
+    "/api/v1/vehicles" : {
+      "get" : {
+        "operationId" : "getByProvider",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/VehicleResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "vehicles-controller" ]
+      },
+      "post" : {
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VehicleResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VehicleResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "vehicles-controller" ]
+      }
+    },
+    "/api/v1/vehicles/{id}" : {
+      "delete" : {
+        "operationId" : "delete",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "vehicles-controller" ]
+      },
+      "get" : {
+        "operationId" : "getById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VehicleResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "vehicles-controller" ]
+      },
+      "put" : {
+        "operationId" : "update",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VehicleResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VehicleResource"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "vehicles-controller" ]
+      }
+    }
+  },
+  "security" : [ {
+    "bearerAuth" : [ ]
+  } ],
+  "servers" : [ {
+    "description" : "Local Development Environment",
+    "url" : "http://localhost:8080"
+  } ],
+  "tags" : [ {
+    "description" : "Analytics and reporting endpoints",
+    "name" : "Analytics"
+  }, {
+    "description" : "Inventory management endpoints",
+    "name" : "Fuel Products"
+  }, {
+    "description" : "Provider company management endpoints",
+    "name" : "Provider Companies"
+  }, {
+    "description" : "Users management endpoints",
+    "name" : "Users"
+  }, {
+    "description" : "Buyer company management endpoints",
+    "name" : "Buyer Companies"
+  }, {
+    "description" : "Fulfillment management endpoints",
+    "name" : "Deliveries"
+  }, {
+    "description" : "Payment management endpoints",
+    "name" : "Payments"
+  }, {
+    "description" : "Authentication endpoints",
+    "name" : "Authentication"
+  }, {
+    "description" : "Ordering management endpoints",
+    "name" : "Fuel Orders"
+  }, {
+    "description" : "Notification management endpoints",
+    "name" : "Notifications"
+  }, {
+    "description" : "Equipment management endpoints",
+    "name" : "Equipment"
+  } ]
+}
