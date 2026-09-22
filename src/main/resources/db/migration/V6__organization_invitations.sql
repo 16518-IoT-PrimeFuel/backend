@@ -1,0 +1,2 @@
+create table organization_invitations (expires_at datetime(6) not null, invited_by_user_id bigint, organization_id bigint not null, created_at datetime(6) not null, id bigint not null auto_increment, updated_at datetime(6) not null, email varchar(150) not null, role VARCHAR(20) not null, status VARCHAR(20) not null, token varchar(64) not null, primary key (id)) engine=InnoDB;
+alter table organization_invitations add constraint uk_organization_invitations_token unique (token);

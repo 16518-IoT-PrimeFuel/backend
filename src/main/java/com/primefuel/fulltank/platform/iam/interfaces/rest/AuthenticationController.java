@@ -2,6 +2,8 @@ package com.primefuel.fulltank.platform.iam.interfaces.rest;
 
 import com.primefuel.fulltank.platform.iam.application.commandservices.UserCommandService;
 import com.primefuel.fulltank.platform.iam.application.internal.commandservices.PasswordResetService;
+import com.primefuel.fulltank.platform.iam.application.queryservices.MembershipQueryService;
+import com.primefuel.fulltank.platform.iam.domain.model.queries.GetMembershipsByUserIdQuery;
 import com.primefuel.fulltank.platform.iam.interfaces.rest.resources.PasswordResetConfirmResource;
 import com.primefuel.fulltank.platform.iam.interfaces.rest.resources.PasswordResetRequestResource;
 import com.primefuel.fulltank.platform.iam.interfaces.rest.resources.SignInResource;
@@ -28,10 +30,13 @@ public class AuthenticationController {
 
     private final UserCommandService userCommandService;
     private final PasswordResetService passwordResetService;
+    private final MembershipQueryService membershipQueryService;
 
-    public AuthenticationController(UserCommandService userCommandService, PasswordResetService passwordResetService) {
+    public AuthenticationController(UserCommandService userCommandService, PasswordResetService passwordResetService,
+                                    MembershipQueryService membershipQueryService) {
         this.userCommandService = userCommandService;
         this.passwordResetService = passwordResetService;
+        this.membershipQueryService = membershipQueryService;
     }
 
     @PostMapping("/sign-up")
@@ -51,7 +56,8 @@ public class AuthenticationController {
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
                 pair -> AuthenticatedUserResourceFromEntityAssembler.toResourceFromEntity(
-                        pair.getLeft(), pair.getRight()),
+                        pair.getLeft(), pair.getRight(),
+                        membershipQueryService.handle(new GetMembershipsByUserIdQuery(pair.getLeft().getId()))),
                 HttpStatus.OK);
     }
 
