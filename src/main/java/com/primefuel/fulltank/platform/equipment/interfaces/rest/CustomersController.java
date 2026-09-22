@@ -4,6 +4,7 @@ import com.primefuel.fulltank.platform.equipment.application.commandservices.Cus
 import com.primefuel.fulltank.platform.equipment.application.queryservices.CustomerQueryService;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterCustomerCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterSiteCommand;
+import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetCustomerByIdQuery;
 import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetCustomersByOrganizationQuery;
 import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetSitesByCustomerQuery;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.CreateCustomerResource;
@@ -83,6 +84,10 @@ public class CustomersController {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        var customer = customerQueryService.handle(new GetCustomerByIdQuery(customerId));
+        if (customer.isEmpty() || !customer.get().getOrganizationId().equals(organizationId.get())) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         var sites = customerQueryService.handle(new GetSitesByCustomerQuery(customerId));
         return new ResponseEntity<>(
