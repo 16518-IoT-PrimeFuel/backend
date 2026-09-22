@@ -1,10 +1,12 @@
 package com.primefuel.fulltank.platform.ordering.interfaces.rest;
 
 import com.primefuel.fulltank.platform.ordering.application.internal.commandservices.FuelRequestService;
+import com.primefuel.fulltank.platform.ordering.application.internal.commandservices.LegacyFuelRequestBridge;
 import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.entities.FuelRequestPersistenceEntity;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.*;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.transform.FuelOrderResourceFromEntityAssembler;
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,10 @@ public class FuelRequestsController {
     private final FuelRequestService service;
     private final CurrentUserAccess currentUserAccess;
 
+    /** Field-injected so the existing (frozen) controller constructor is left untouched. */
+    @Autowired
+    private LegacyFuelRequestBridge bridge;
+
     public FuelRequestsController(FuelRequestService service, CurrentUserAccess currentUserAccess) {
         this.service = service;
         this.currentUserAccess = currentUserAccess;
@@ -26,7 +32,7 @@ public class FuelRequestsController {
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsCompany(#resource.buyerCompanyId())")
     public ResponseEntity<FuelRequestResource> create(@RequestBody CreateFuelRequestResource resource) {
-        return new ResponseEntity<>(toResource(service.create(resource)), HttpStatus.CREATED);
+        return new ResponseEntity<>(toResource(bridge.create(resource)), HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -57,14 +63,14 @@ public class FuelRequestsController {
     @PostMapping("/{requestId}/accept")
     public ResponseEntity<?> accept(@PathVariable Long requestId) {
         if (!ownsRequestAsProvider(requestId)) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(FuelOrderResourceFromEntityAssembler.toResourceFromEntity(service.accept(requestId)));
+        return ResponseEntity.ok(FuelOrderResourceFromEntityAssembler.toResourceFromEntity(bridge.accept(requestId)));
     }
 
     @PostMapping("/{requestId}/reject")
     public ResponseEntity<FuelRequestResource> reject(@PathVariable Long requestId,
                                                       @RequestBody RejectFuelRequestResource resource) {
         if (!ownsRequestAsProvider(requestId)) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(toResource(service.reject(requestId, resource.reason())));
+        return ResponseEntity.ok(toResource(bridge.reject(requestId, resource.reason())));
     }
 
     private boolean ownsRequestAsProvider(Long requestId) {
