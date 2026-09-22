@@ -5,10 +5,10 @@ import com.primefuel.fulltank.platform.shared.application.result.ApplicationErro
 import com.primefuel.fulltank.platform.shared.application.result.Result;
 import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Unit;
 import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Volume;
+import com.primefuel.fulltank.platform.telemetry.api.events.ValidatedTankReadingEvent;
 import com.primefuel.fulltank.platform.telemetry.application.commandservices.TelemetryIngestService;
 import com.primefuel.fulltank.platform.telemetry.domain.model.aggregates.TelemetryReading;
 import com.primefuel.fulltank.platform.telemetry.domain.model.commands.IngestTelemetryCommand;
-import com.primefuel.fulltank.platform.telemetry.domain.model.events.ValidatedTankReadingEvent;
 import com.primefuel.fulltank.platform.telemetry.domain.model.valueobjects.ReadingQuality;
 import com.primefuel.fulltank.platform.telemetry.domain.repositories.TelemetryReadingRepository;
 import org.springframework.context.ApplicationEventPublisher;

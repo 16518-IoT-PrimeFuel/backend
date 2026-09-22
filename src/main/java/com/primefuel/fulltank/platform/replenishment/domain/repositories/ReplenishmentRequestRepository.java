@@ -9,6 +9,9 @@ public interface ReplenishmentRequestRepository {
     Optional<ReplenishmentRequest> findById(Long id);
     List<ReplenishmentRequest> findByOrganizationId(Long organizationId);
     Optional<ReplenishmentRequest> findByEpisodeKey(String episodeKey);
+
+    /** An active (still undecided) request for a tank blocks opening a new refill episode. */
+    Optional<ReplenishmentRequest> findPendingByTankId(Long tankId);
     ReplenishmentRequest save(ReplenishmentRequest request);
 
     /** Flushes immediately so optimistic-lock conflicts surface inside the caller's transaction. */

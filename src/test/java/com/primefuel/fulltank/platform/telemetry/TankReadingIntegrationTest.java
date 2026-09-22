@@ -5,8 +5,8 @@ import com.primefuel.fulltank.platform.equipment.application.commandservices.Tan
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterCustomerCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterTankCommand;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.TankRepository;
+import com.primefuel.fulltank.platform.telemetry.api.events.ValidatedTankReadingEvent;
 import com.primefuel.fulltank.platform.telemetry.application.internal.consumers.ValidatedTankReadingConsumer;
-import com.primefuel.fulltank.platform.telemetry.domain.model.events.ValidatedTankReadingEvent;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

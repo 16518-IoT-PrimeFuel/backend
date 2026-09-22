@@ -2,8 +2,10 @@ package com.primefuel.fulltank.platform.telemetry.application.internal.consumers
 
 import com.primefuel.fulltank.platform.equipment.api.TankAssets;
 import com.primefuel.fulltank.platform.shared.events.EventInbox;
-import com.primefuel.fulltank.platform.telemetry.domain.model.events.ValidatedTankReadingEvent;
+import com.primefuel.fulltank.platform.telemetry.api.events.ValidatedTankReadingEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
  * a retry re-applies it (nothing is silently lost, nothing is applied twice).
  *
  * <p>Out-of-order readings are accepted by the inbox but ignored by the tank, which keeps the newest
- * snapshot.
+ * snapshot. It runs before any policy listener so downstream consumers observe the updated snapshot.
  */
 @Service
 public class ValidatedTankReadingConsumer {
@@ -29,6 +31,7 @@ public class ValidatedTankReadingConsumer {
     }
 
     @EventListener
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @Transactional
     public void on(ValidatedTankReadingEvent event) {
         if (event.tankId() == null) {

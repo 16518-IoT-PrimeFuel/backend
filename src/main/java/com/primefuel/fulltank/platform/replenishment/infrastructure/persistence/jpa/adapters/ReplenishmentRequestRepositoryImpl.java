@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.replenishment.infrastructure.persistence.jpa.adapters;
 
 import com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.ReplenishmentRequest;
+import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.ReplenishmentStatus;
 import com.primefuel.fulltank.platform.replenishment.domain.repositories.ReplenishmentRequestRepository;
 import com.primefuel.fulltank.platform.replenishment.infrastructure.persistence.jpa.assemblers.ReplenishmentRequestPersistenceAssembler;
 import com.primefuel.fulltank.platform.replenishment.infrastructure.persistence.jpa.repositories.ReplenishmentRequestPersistenceRepository;
@@ -33,6 +34,15 @@ public class ReplenishmentRequestRepositoryImpl implements ReplenishmentRequestR
     @Override
     public Optional<ReplenishmentRequest> findByEpisodeKey(String episodeKey) {
         return persistenceRepository.findByEpisodeKey(episodeKey)
+                .map(ReplenishmentRequestPersistenceAssembler::toDomainFromPersistence);
+    }
+
+    @Override
+    public Optional<ReplenishmentRequest> findPendingByTankId(Long tankId) {
+        if (tankId == null) {
+            return Optional.empty();
+        }
+        return persistenceRepository.findFirstByTankIdAndStatus(tankId, ReplenishmentStatus.PENDING)
                 .map(ReplenishmentRequestPersistenceAssembler::toDomainFromPersistence);
     }
 

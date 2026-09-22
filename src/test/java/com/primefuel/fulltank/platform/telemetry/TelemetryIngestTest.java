@@ -4,9 +4,9 @@ import com.primefuel.fulltank.platform.equipment.devicebinding.application.comma
 import com.primefuel.fulltank.platform.equipment.devicebinding.application.commandservices.DeviceCredentialService;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.commands.BindDeviceCommand;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.commands.ProvisionDeviceCredentialCommand;
+import com.primefuel.fulltank.platform.telemetry.api.events.ValidatedTankReadingEvent;
 import com.primefuel.fulltank.platform.telemetry.application.commandservices.TelemetryIngestService;
 import com.primefuel.fulltank.platform.telemetry.domain.model.commands.IngestTelemetryCommand;
-import com.primefuel.fulltank.platform.telemetry.domain.model.events.ValidatedTankReadingEvent;
 import com.primefuel.fulltank.platform.telemetry.domain.model.valueobjects.ReadingQuality;
 import com.primefuel.fulltank.platform.telemetry.domain.repositories.TelemetryReadingRepository;
 import org.junit.jupiter.api.Test;
