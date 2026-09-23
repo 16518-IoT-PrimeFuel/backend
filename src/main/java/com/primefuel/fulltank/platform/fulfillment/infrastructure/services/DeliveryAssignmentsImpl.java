@@ -37,6 +37,15 @@ public class DeliveryAssignmentsImpl implements DeliveryAssignments {
     }
 
     @Override
+    public Result<DeliveryAssignmentSnapshot, ApplicationError> createLegacy(CreateLegacyDeliveryCommand command) {
+        var delivery = new Delivery(new CreateDeliveryCommand(command.orderId(), command.providerId(),
+                command.driverId(), command.vehicleId(), command.scheduledDate(), command.notes()));
+        delivery.setAssignmentCommandId(command.assignmentCommandId());
+        delivery.dispatch();
+        return Result.success(toSnapshot(deliveryRepository.saveAndFlush(delivery)));
+    }
+
+    @Override
     public Result<DeliveryAssignmentSnapshot, ApplicationError> createAssigned(CreateAssignedDeliveryCommand command) {
         var delivery = new Delivery(new CreateDeliveryCommand(command.orderId(), command.providerId(),
                 command.driverId(), command.vehicleId(), command.scheduledDate(), command.notes()));

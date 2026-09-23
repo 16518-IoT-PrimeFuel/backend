@@ -13,7 +13,7 @@ import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.Del
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.FailDeliveryResource;
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.transform.CreateDeliveryCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.transform.DeliveryResourceFromEntityAssembler;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import com.primefuel.fulltank.platform.ordering.application.queryservices.FuelOrderQueryService;
 import com.primefuel.fulltank.platform.ordering.domain.model.queries.GetFuelOrderByIdQuery;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
@@ -37,16 +37,16 @@ public class DeliveriesController {
     private final DeliveryCommandService deliveryCommandService;
     private final DeliveryQueryService deliveryQueryService;
     private final FuelOrderQueryService fuelOrderQueryService;
-    private final CurrentUserAccess currentUserAccess;
+    private final TenantAccess tenantAccess;
 
     public DeliveriesController(DeliveryCommandService deliveryCommandService,
                                 DeliveryQueryService deliveryQueryService,
                                 FuelOrderQueryService fuelOrderQueryService,
-                                CurrentUserAccess currentUserAccess) {
+                                TenantAccess tenantAccess) {
         this.deliveryCommandService = deliveryCommandService;
         this.deliveryQueryService = deliveryQueryService;
         this.fuelOrderQueryService = fuelOrderQueryService;
-        this.currentUserAccess = currentUserAccess;
+        this.tenantAccess = tenantAccess;
     }
 
     /**
@@ -67,7 +67,7 @@ public class DeliveriesController {
             @ApiResponse(responseCode = "409", description = "Driver/vehicle not available or not owned by the provider, insufficient capacity or stock, or a delivery already exists for the order.")
     })
     @PostMapping
-    @PreAuthorize("@currentUserAccess.ownsProvider(#resource.providerId())")
+    @PreAuthorize("@tenantAccess.ownsProvider(#resource.providerId())")
     public ResponseEntity<?> createDelivery(@RequestBody CreateDeliveryResource resource) {
         var command = CreateDeliveryCommandFromResourceAssembler.toCommandFromResource(resource);
         var result = deliveryCommandService.handle(command);
@@ -182,7 +182,7 @@ public class DeliveriesController {
             @ApiResponse(responseCode = "403", description = "Caller does not own the requested provider tenant.")
     })
     @GetMapping("/provider/{providerId}")
-    @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
+    @PreAuthorize("@tenantAccess.ownsProvider(#providerId)")
     public ResponseEntity<List<DeliveryResource>> getDeliveriesByProvider(@PathVariable Long providerId) {
         var resources = deliveryQueryService.handle(new GetAllDeliveriesQuery()).stream()
                 .filter(delivery -> providerId.equals(delivery.getProviderId()))
@@ -234,14 +234,14 @@ public class DeliveriesController {
 
     private boolean ownsDeliveryAsProvider(Long deliveryId) {
         return deliveryQueryService.handle(new GetDeliveryByIdQuery(deliveryId))
-                .filter(delivery -> currentUserAccess.ownsProvider(delivery.getProviderId()))
+                .filter(delivery -> tenantAccess.ownsProvider(delivery.getProviderId()))
                 .isPresent();
     }
 
     private boolean ownsDelivery(com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery delivery) {
-        if (currentUserAccess.ownsProvider(delivery.getProviderId())) return true;
+        if (tenantAccess.ownsProvider(delivery.getProviderId())) return true;
         return fuelOrderQueryService.handle(new GetFuelOrderByIdQuery(delivery.getOrderId()))
-                .filter(order -> currentUserAccess.ownsCompany(order.getCompanyId()))
+                .filter(order -> tenantAccess.ownsCompany(order.getCompanyId()))
                 .isPresent();
     }
 }

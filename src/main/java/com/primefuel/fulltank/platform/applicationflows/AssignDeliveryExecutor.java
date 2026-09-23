@@ -51,6 +51,16 @@ public class AssignDeliveryExecutor {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public AssignDeliveryResult execute(AssignDeliveryFlowCommand command) {
+        return execute(command, true);
+    }
+
+    /**
+     * @param consumeAcceptance whether to consume the acceptance here. The v2 path passes {@code true}; the
+     *     v1 legacy path passes {@code false} because the T10-B legacy accept bridge already consumed it when
+     *     it created the order.
+     */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public AssignDeliveryResult execute(AssignDeliveryFlowCommand command, boolean consumeAcceptance) {
         if (command.commandId() == null || command.commandId().isBlank()) {
             throw fail(ApplicationError.validationError("commandId", "A command id is required"));
         }
@@ -81,13 +91,16 @@ public class AssignDeliveryExecutor {
         }
 
         // Step 1 — consume the acceptance once-only: the gate that prevents assigning the same need twice.
-        var consumed = replenishmentAcceptance.consume(request.id());
-        if (consumed.isFailure()) {
-            throw fail(errorOf(consumed));
-        }
-        if (!consumed.getOrElse(false)) {
-            throw fail(ApplicationError.conflict("ReplenishmentRequest",
-                    "The request's acceptance was already consumed"));
+        // Skipped for the v1 legacy path, whose acceptance the T10-B accept bridge already consumed.
+        if (consumeAcceptance) {
+            var consumed = replenishmentAcceptance.consume(request.id());
+            if (consumed.isFailure()) {
+                throw fail(errorOf(consumed));
+            }
+            if (!consumed.getOrElse(false)) {
+                throw fail(ApplicationError.conflict("ReplenishmentRequest",
+                        "The request's acceptance was already consumed"));
+            }
         }
 
         // Step 2 — hold the supply (exclusive, revalidated under the product lock inside supply).

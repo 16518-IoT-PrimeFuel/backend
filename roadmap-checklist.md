@@ -239,7 +239,19 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       accesos cruzados es T15-B). Failure injection por paso + carrera real MySQL 8.0.46 (una asignación)
       verdes. `./mvnw.cmd test` 163/163 (3 skipped = IT MySQL gated).
       → `docs/api-ledger/T15-A-transactional-assignment.md`
-- [ ] T15-B — Eliminar accesos cruzados y probar carreras
+- [x] **T15-B** — Eliminar accesos cruzados y probar carreras (**cierra S15**). `fulfillment` ya no importa
+      **ningún repositorio ajeno**: los `DriverRepository`/`TankerRepository`/`FuelProductRepository`/
+      `FuelOrderRepository`/`EquipmentRepository` y el `CurrentUserAccess` (iam.infrastructure) se movieron
+      detrás del puerto `fulfillment.api.DeliveryIntegration`, implementado en `applicationflows`
+      (`LegacyDeliveryIntegration` → `LegacyDeliveryExecutor`, una TX `READ_COMMITTED`), y el controller usa
+      `iam.api.TenantAccess`. `create` v1 es **dual-mode**: order con request `ACCEPTED` → mismo orquestador de
+      reservas que v2 (hereda carrera segura + idempotencia por `commandId`); order directo → rama legacy con
+      sus efectos originales. Ambas despachan el order (el golden path a `PENDING_PAYMENT` se conserva). La
+      aceptación no se re-consume en v1 (ya la consumió el bridge de T10-B al aceptar). Guard test
+      `FulfillmentForeignRepositoryGuardTest` exige cero imports a repos/infrastructure ajenos; tests v1 de
+      retry/carrera/rollback + carrera v1 en MySQL 8.0.46 verdes. `./mvnw.cmd test` 169/169 (4 skipped = IT
+      MySQL). Sin cambio de esquema.
+      → `docs/api-ledger/T15-B-remove-cross-module-access.md`
 
 ## W6 — Tracking, safety y válvula (S16, S17, S18, S21)
 

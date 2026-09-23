@@ -21,6 +21,22 @@ public interface DeliveryAssignments {
     /** Creates the delivery already in the {@code ASSIGNED} physical state (assignment ≠ start). */
     Result<DeliveryAssignmentSnapshot, ApplicationError> createAssigned(CreateAssignedDeliveryCommand command);
 
+    /**
+     * Creates a delivery the legacy way: {@code DISPATCHED} legacy status, no physical state written (it is
+     * derived on read), for the v1 direct-order branch of {@link DeliveryIntegration}.
+     */
+    Result<DeliveryAssignmentSnapshot, ApplicationError> createLegacy(CreateLegacyDeliveryCommand command);
+
+    record CreateLegacyDeliveryCommand(
+            String assignmentCommandId,
+            Long orderId,
+            Long providerId,
+            Long driverId,
+            Long vehicleId,
+            String scheduledDate,
+            String notes) {
+    }
+
     record CreateAssignedDeliveryCommand(
             String assignmentCommandId,
             Long orderId,
