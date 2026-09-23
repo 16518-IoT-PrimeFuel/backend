@@ -14,6 +14,7 @@ public interface ReplenishmentRequestPersistenceRepository
 
     List<ReplenishmentRequestPersistenceEntity> findByOrganizationId(Long organizationId);
     Optional<ReplenishmentRequestPersistenceEntity> findByEpisodeKey(String episodeKey);
+    Optional<ReplenishmentRequestPersistenceEntity> findByOrderId(Long orderId);
     Optional<ReplenishmentRequestPersistenceEntity> findFirstByTankIdAndStatus(
             Long tankId, ReplenishmentStatus status);
 }

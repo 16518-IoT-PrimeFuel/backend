@@ -28,6 +28,14 @@ public class ReplenishmentLookupImpl implements ReplenishmentLookup {
         return repository.findByEpisodeKey(episodeKey).map(this::toView);
     }
 
+    @Override
+    public Optional<ReplenishmentView> findByOrderId(Long orderId) {
+        if (orderId == null) {
+            return Optional.empty();
+        }
+        return repository.findByOrderId(orderId).map(this::toView);
+    }
+
     private ReplenishmentView toView(com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.ReplenishmentRequest request) {
         return new ReplenishmentView(
                 request.getId(),

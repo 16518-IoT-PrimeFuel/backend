@@ -10,6 +10,9 @@ public interface ReplenishmentRequestRepository {
     List<ReplenishmentRequest> findByOrganizationId(Long organizationId);
     Optional<ReplenishmentRequest> findByEpisodeKey(String episodeKey);
 
+    /** The request correlated with a legacy order, if any. */
+    Optional<ReplenishmentRequest> findByOrderId(Long orderId);
+
     /** An active (still undecided) request for a tank blocks opening a new refill episode. */
     Optional<ReplenishmentRequest> findPendingByTankId(Long tankId);
     ReplenishmentRequest save(ReplenishmentRequest request);

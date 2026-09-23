@@ -8,6 +8,9 @@ public interface ReplenishmentLookup {
 
     Optional<ReplenishmentView> findByEpisodeKey(String episodeKey);
 
+    /** The request correlated with a legacy order (T15-A: resolve the acceptance behind an order). */
+    Optional<ReplenishmentView> findByOrderId(Long orderId);
+
     record ReplenishmentView(
             Long id,
             Long organizationId,
