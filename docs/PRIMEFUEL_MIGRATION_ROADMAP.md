@@ -226,6 +226,11 @@ flowchart TD
 > rediseñarse (cómo se atribuye la evidencia de transporte a una entrega y cómo se transporta/mide) antes
 > de iniciar cualquier ticket de W6. No arrancar W6 con las dependencias actuales.
 
+> **Rediseño aprobado (2026-09-23)** → `docs/api-ledger/W6-REDESIGN-transport-evidence.md`. Evidencia de
+> transporte reportada por la app del conductor (autenticado vía `iam.api`, como cualquier endpoint v2), no
+> por `devicebinding`/sensor IoT. S18 (válvula) queda explícitamente `detection-only` sin hardware real. W6
+> ya puede iniciar con T16-A bajo este rediseño.
+
 ### W7 — Notificaciones, contratos, Payment y retiro
 
 - **Objetivo:** cerrar compatibilidad, aislar cobros y retirar solo legado con evidencia de no uso.
