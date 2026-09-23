@@ -255,11 +255,19 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 
 ## W6 — Tracking, safety y válvula (S16, S17, S18, S21)
 
-> **Requiere rediseño antes de iniciar — no depender de `telemetry`/`devicebinding` actual.** Con S07/S08
-> congeladas, W6 no puede asumir sus dependencias tal como están hoy; la spec de S16 (y lo que la encadena)
-> debe rediseñarse antes de arrancar cualquier ticket de W6.
+> **Rediseño aprobado (2026-09-23)** — ver `docs/api-ledger/W6-REDESIGN-transport-evidence.md`. W6 ya no
+> depende de `telemetry`/`devicebinding` (S07/S08, congeladas); la evidencia de transporte la reporta la app
+> del conductor, autenticada vía `iam.api`/`fleet.api`. Desbloqueado, en ejecución.
 
-- [ ] T16-A — Contrato de telemetría de transporte
+- [x] **T16-A** — Contrato de evidencia de transporte (driver-app, rediseño W6). Módulo nuevo `tracking`
+      (`tracking.api.TransportEvidenceRecorder` como única seam pública). Endpoint
+      `POST /api/v2/deliveries/{deliveryId}/transport-evidence` (posición o hito de carga). Auth resuelta
+      server-side: caller → `fulfillment.api.DeliveryTrackingLookup` (driver asignado) →
+      `fleet.api.FleetCatalog` (tenant del driver); nunca se lee `driverId` del body. Invariantes: mismo
+      tenant, muestra tardía no retrocede el latest (empate = tardío) pero sí queda como evidencia cruda,
+      evento `DeliveryTelemetryReceived` publicado en la misma TX. Migración aditiva `V21`. **Asunción abierta
+      U10/U18 (retención GPS/PII) heredada por T16-B, no bloqueaba T16-A.** Build no verificado en esta
+      máquina — pendiente de verificación por el usuario. → `docs/api-ledger/T16-A-transport-evidence-contract.md`
 - [ ] T16-B — Proyección y consulta de seguimiento
 - [ ] T17-A — Modelo y validación de geocerca
 - [ ] T17-B — Decisión safety y evidencia versionada
