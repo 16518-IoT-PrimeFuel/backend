@@ -268,7 +268,12 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       evento `DeliveryTelemetryReceived` publicado en la misma TX. Migración aditiva `V21`. **Asunción abierta
       U10/U18 (retención GPS/PII) heredada por T16-B, no bloqueaba T16-A.** Build no verificado en esta
       máquina — pendiente de verificación por el usuario. → `docs/api-ledger/T16-A-transport-evidence-contract.md`
-- [ ] T16-B — Proyección y consulta de seguimiento
+- [x] T16-B — Proyección y consulta de seguimiento
+    - Módulo `tracking`: `GET /api/v2/deliveries/{id}/tracking` y `.../tracking/samples` (proveedor dueño o driver
+      asignado), `TrackingProjectionRebuilder` determinista (jitter de POSITION y LOAD, tolerante a evidencia LOAD
+      cronológicamente imposible), y `DELETE`/`GET .../export` de admin reservados (501) por U18 hasta
+      `T24-PRE-ADMIN`. U10: sin límite de retención de `transport_evidence_samples`. **Build no verificado en esta
+      máquina — pendiente de verificación por el usuario.** → `docs/api-ledger/T16-B-tracking-query-and-retention.md`
 - [ ] T17-A — Modelo y validación de geocerca
 - [ ] T17-B — Decisión safety y evidencia versionada
 - [ ] T18-A — Protocolo y outbox de comandos de válvula
