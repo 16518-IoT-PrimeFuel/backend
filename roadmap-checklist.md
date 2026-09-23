@@ -226,7 +226,19 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       verde; known-gap de T01-B #3 resuelto.
       (**build no verificado en esta máquina — pendiente de verificación por el usuario**).
       → `docs/api-ledger/T14-B-legacy-delivery-lifecycle.md`
-- [ ] T15-A — Interfaz de asignación transaccional
+- [x] **T15-A** — Interfaz de asignación transaccional. `AssignDelivery` en `applicationflows` (composition
+      root): `AssignDeliveryFlow` (no-tx) + `AssignDeliveryExecutor` (una **TX local** `READ_COMMITTED`) que
+      orquesta `ConsumeAcceptance` (`replenishment.api`, nuevo: `ReplenishmentAcceptance` +
+      `ReplenishmentLookup.findByOrderId`) → `ReserveSupply` (`supply.api.SupplyReservations`, nuevo) →
+      `ReserveFleet` (`fleet.api`, T13-B) → crea el delivery **ASSIGNED** vía
+      `fulfillment.api.DeliveryAssignments` (nuevo, enrutado por la máquina física T14-A; asignar ≠ iniciar).
+      Fallo en cualquier paso: se **lanza** y la TX revierte todo (compensar = rollback), cero estado parcial.
+      Idempotencia por `commandId` (`deliveries.assignment_command_id` único, `V19`, validada en MySQL 8.0.46):
+      retry = mismo delivery, sin re-reservar. `providerId` siempre desde `iam.api.TenantAccess`; create v2
+      `POST /api/v2/deliveries` exige un order con request **aceptada** (si no, 404/403). v1 intacto (retirar
+      accesos cruzados es T15-B). Failure injection por paso + carrera real MySQL 8.0.46 (una asignación)
+      verdes. `./mvnw.cmd test` 163/163 (3 skipped = IT MySQL gated).
+      → `docs/api-ledger/T15-A-transactional-assignment.md`
 - [ ] T15-B — Eliminar accesos cruzados y probar carreras
 
 ## W6 — Tracking, safety y válvula (S16, S17, S18, S21)

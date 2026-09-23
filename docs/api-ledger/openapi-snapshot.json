@@ -1,6 +1,40 @@
 {
   "components" : {
     "schemas" : {
+      "AssignDeliveryResource" : {
+        "properties" : {
+          "commandId" : {
+            "type" : "string"
+          },
+          "driverId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "scheduledDate" : {
+            "type" : "string"
+          },
+          "tankerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "windowEnd" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "windowStart" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "BuyerAnalyticsResource" : {
         "properties" : {
           "companyId" : {
@@ -5666,6 +5700,76 @@
         "tags" : [ "Customers" ]
       }
     },
+    "/api/v2/deliveries" : {
+      "post" : {
+        "description" : "Consumes the order's replenishment acceptance, reserves supply and fleet, and creates the assigned delivery in one transaction; idempotent per commandId.",
+        "operationId" : "assign",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AssignDeliveryResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery assigned (or the existing delivery for the commandId returned)."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The command is missing its commandId/orderId or the window/volume is invalid."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated as a provider tenant."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "No replenishment request accepted by the caller's provider backs the order."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The request is not accepted, its acceptance was already consumed, or the supply/fleet resource is unavailable."
+          }
+        },
+        "summary" : "Assign a delivery for an accepted order",
+        "tags" : [ "Delivery assignment" ]
+      }
+    },
     "/api/v2/deliveries/{deliveryId}" : {
       "get" : {
         "description" : "Returns the delivery (with both legacy status and physical state) owned by the caller's provider tenant.",
@@ -5757,7 +5861,7 @@
     "/api/v2/deliveries/{deliveryId}/assign" : {
       "post" : {
         "description" : "Materialises the assigned state of a delivery owned by the caller's provider tenant; idempotent when already assigned.",
-        "operationId" : "assign",
+        "operationId" : "assign_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "deliveryId",
@@ -7935,6 +8039,9 @@
   }, {
     "description" : "Tenant-scoped supply catalog (v2)",
     "name" : "Supply"
+  }, {
+    "description" : "Transactional assignment after acceptance (v2)",
+    "name" : "Delivery assignment"
   }, {
     "description" : "Inventory management endpoints",
     "name" : "Fuel Products"
