@@ -12,7 +12,16 @@ public interface FleetReservationRepository {
 
     Optional<FleetReservation> findById(Long id);
 
+    /** The unique holder of the given idempotency key, whatever its status, or empty if never used. */
+    Optional<FleetReservation> findByReference(String reference);
+
     List<FleetReservation> findActiveByProvider(Long providerId);
+
+    /**
+     * Active reservations whose half-open window has already ended at {@code now}. The deterministic input
+     * to the expiry sweep; an empty list means nothing to expire.
+     */
+    List<FleetReservation> findActivePastDue(Instant now);
 
     /**
      * Active reservations of {@code providerId} that use the given driver or tanker and whose window

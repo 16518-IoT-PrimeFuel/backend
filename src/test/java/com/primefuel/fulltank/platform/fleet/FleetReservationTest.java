@@ -6,6 +6,9 @@ import com.primefuel.fulltank.platform.fleet.api.FleetReservations;
 import com.primefuel.fulltank.platform.fleet.domain.model.commands.RegisterDriverCommand;
 import com.primefuel.fulltank.platform.fleet.domain.model.commands.RegisterTankerCommand;
 import com.primefuel.fulltank.platform.fleet.domain.model.commands.ReserveFleetCommand;
+import com.primefuel.fulltank.platform.fleet.domain.model.valueobjects.FleetReservationStatus;
+import com.primefuel.fulltank.platform.fleet.domain.repositories.FleetReservationRepository;
+import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +20,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * T13-A: the reservation model and its calculation — window/volume, usable-capacity check (with unit
- * conversion, U05) and overlap revalidation, all through the {@code fleet.api} seam. The concurrent barrier
- * (two races → one winner) and release/expiry are T13-B and are deliberately not asserted here.
+ * The reservation model and its calculation — window/volume, usable-capacity check (with unit conversion,
+ * U05) and overlap revalidation, all through the {@code fleet.api} seam (T13-A). T13-B adds the
+ * {@code reference} idempotency and the release/expiry lifecycle here; the true concurrent barrier is
+ * proved against real MySQL in {@link FleetReservationConcurrencyMySqlTest}.
  */
 @SpringBootTest(properties = {
         "spring.profiles.active=test",
@@ -44,6 +48,9 @@ class FleetReservationTest {
 
     @Autowired
     private FleetReservations fleetReservations;
+
+    @Autowired
+    private FleetReservationRepository reservationRepository;
 
     private long driver(long providerId) {
         int sequence = SEQUENCE.incrementAndGet();
@@ -173,5 +180,99 @@ class FleetReservationTest {
                 .isFailure()).isTrue();
         assertThat(fleetReservations.reserve(reserve(providerId, driverId, tankerId, T0, T1, 0.0, "LITRE"))
                 .isFailure()).isTrue();
+    }
+
+    @Test
+    void replaysTheSameReferenceWithTheSameParametersAsOneReservation() {
+        long providerId = 1L;
+        long driverId = driver(providerId);
+        long tankerId = tanker(providerId, 1000.0, "LITRE");
+
+        var first = fleetReservations.reserve(
+                reserveRef(providerId, driverId, tankerId, "order-replay", T0, T2, 100.0, "LITRE"));
+        var replay = fleetReservations.reserve(
+                reserveRef(providerId, driverId, tankerId, "order-replay", T0, T2, 100.0, "LITRE"));
+
+        assertThat(first.isSuccess()).isTrue();
+        assertThat(replay.isSuccess()).isTrue();
+        assertThat(replay.getOrElse(null).id()).isEqualTo(first.getOrElse(null).id());
+        assertThat(replay.getOrElse(null).status()).isEqualTo("ACTIVE");
+        // The replay created no second hold on the same resource.
+        assertThat(reservationRepository.findActiveByProvider(providerId).stream()
+                .filter(reservation -> driverId == reservation.getDriverId()).count()).isEqualTo(1);
+    }
+
+    @Test
+    void rejectsAReferenceReplayWhoseParametersDiffer() {
+        long providerId = 1L;
+        long driverId = driver(providerId);
+        long tankerId = tanker(providerId, 1000.0, "LITRE");
+        assertThat(fleetReservations.reserve(
+                reserveRef(providerId, driverId, tankerId, "order-mismatch", T0, T2, 100.0, "LITRE"))
+                .isSuccess()).isTrue();
+
+        // The same reference with a different window is a real conflict, not a replay.
+        Result<?, ApplicationError> conflict = fleetReservations.reserve(
+                reserveRef(providerId, driverId, tankerId, "order-mismatch", T1, T3, 100.0, "LITRE"));
+
+        assertThat(conflict.isFailure()).isTrue();
+        assertThat(((Result.Failure<?, ApplicationError>) conflict).error().code())
+                .isEqualTo("FLEETRESERVATION_CONFLICT");
+    }
+
+    @Test
+    void releasesIdempotentlyAndFreesTheWindow() {
+        long providerId = 1L;
+        long driverId = driver(providerId);
+        long tankerId = tanker(providerId, 1000.0, "LITRE");
+        assertThat(fleetReservations.reserve(
+                reserveRef(providerId, driverId, tankerId, "order-release", T0, T2, 100.0, "LITRE"))
+                .isSuccess()).isTrue();
+
+        var released = fleetReservations.release("order-release");
+        assertThat(released.isSuccess()).isTrue();
+        assertThat(released.getOrElse(null).status()).isEqualTo("RELEASED");
+
+        var releasedAgain = fleetReservations.release("order-release");
+        assertThat(releasedAgain.isSuccess()).isTrue();
+        assertThat(releasedAgain.getOrElse(null).id()).isEqualTo(released.getOrElse(null).id());
+        assertThat(releasedAgain.getOrElse(null).status()).isEqualTo("RELEASED");
+
+        // Once released, the window is free again for a different reference.
+        assertThat(fleetReservations.reserve(
+                reserveRef(providerId, driverId, tankerId, "order-after-release", T0, T2, 100.0, "LITRE"))
+                .isSuccess()).isTrue();
+    }
+
+    @Test
+    void releasingAnUnknownReferenceIsANotFound() {
+        Result<?, ApplicationError> result = fleetReservations.release("order-never-reserved");
+
+        assertThat(result.isFailure()).isTrue();
+        assertThat(((Result.Failure<?, ApplicationError>) result).error().code())
+                .isEqualTo("FLEETRESERVATION_NOT_FOUND");
+    }
+
+    @Test
+    void expiresOverdueReservationsIdempotently() {
+        long providerId = 1L;
+        long driverId = driver(providerId);
+        long tankerId = tanker(providerId, 1000.0, "LITRE");
+        var end = Instant.now().minusSeconds(3600);
+        var start = end.minusSeconds(3600);
+        assertThat(fleetReservations.reserve(
+                reserveRef(providerId, driverId, tankerId, "overdue-1", start, end, 100.0, "LITRE"))
+                .isSuccess()).isTrue();
+
+        assertThat(fleetReservations.expireOverdue().getOrElse(-1)).isEqualTo(1);
+        assertThat(reservationRepository.findByReference("overdue-1").orElseThrow().getStatus())
+                .isEqualTo(FleetReservationStatus.EXPIRED);
+        // Idempotent: nothing left to expire.
+        assertThat(fleetReservations.expireOverdue().getOrElse(-1)).isZero();
+    }
+
+    private static ReserveFleetCommand reserveRef(long providerId, long driverId, long tankerId, String reference,
+                                                  Instant start, Instant end, double volume, String unit) {
+        return new ReserveFleetCommand(providerId, driverId, tankerId, reference, start, end, volume, unit);
     }
 }

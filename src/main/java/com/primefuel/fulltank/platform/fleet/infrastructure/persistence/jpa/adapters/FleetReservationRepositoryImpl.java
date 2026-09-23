@@ -32,10 +32,22 @@ public class FleetReservationRepositoryImpl implements FleetReservationRepositor
     }
 
     @Override
+    public Optional<FleetReservation> findByReference(String reference) {
+        return persistenceRepository.findByReference(reference).map(FleetReservationPersistenceAssembler::toDomain);
+    }
+
+    @Override
     public List<FleetReservation> findActiveByProvider(Long providerId) {
         return persistenceRepository.findByProviderId(providerId).stream()
                 .map(FleetReservationPersistenceAssembler::toDomain)
                 .filter(FleetReservation::isActive)
+                .toList();
+    }
+
+    @Override
+    public List<FleetReservation> findActivePastDue(Instant now) {
+        return persistenceRepository.findActivePastDue(FleetReservationStatus.ACTIVE, now).stream()
+                .map(FleetReservationPersistenceAssembler::toDomain)
                 .toList();
     }
 

@@ -8,11 +8,25 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface FleetReservationPersistenceRepository
         extends JpaRepository<FleetReservationPersistenceEntity, Long> {
 
     List<FleetReservationPersistenceEntity> findByProviderId(Long providerId);
+
+    /** Backed by {@code uk_fleet_reservations_reference}, so at most one row can match. */
+    Optional<FleetReservationPersistenceEntity> findByReference(String reference);
+
+    /**
+     * Active reservations whose half-open window has already ended at {@code now} ({@code window_end <=
+     * now}). This is the read behind the deterministic expiry sweep.
+     */
+    @Query("select r from FleetReservationPersistenceEntity r "
+            + "where r.status = :status and r.windowEnd <= :now")
+    List<FleetReservationPersistenceEntity> findActivePastDue(
+            @Param("status") FleetReservationStatus status,
+            @Param("now") Instant now);
 
     /**
      * Half-open overlap: an existing reservation overlaps {@code [windowStart, windowEnd)} when it starts
