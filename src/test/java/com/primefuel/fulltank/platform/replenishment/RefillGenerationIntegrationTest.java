@@ -112,8 +112,10 @@ class RefillGenerationIntegrationTest {
     }
 
     private void read(Long tankId, long sequence, Instant at) {
+        // Device id includes the tank so the (device, channel, sequence) dedup key in EventInbox
+        // can't collide across test methods sharing the same Spring context and H2 schema.
         consumer.on(new ValidatedTankReadingEvent(
-                sequence, DEVICE, CHANNEL, sequence, tankId, ORGANIZATION, 0.0, "LITRE", at));
+                sequence, DEVICE + "-" + tankId, CHANNEL, sequence, tankId, ORGANIZATION, 0.0, "LITRE", at));
     }
 
     private List<ReplenishmentRequest> requestsFor(Long tankId) {

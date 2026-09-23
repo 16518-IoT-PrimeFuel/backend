@@ -36,6 +36,8 @@ public class RefillPolicy extends AbstractDomainAggregateRoot<RefillPolicy> {
         if (command.organizationId() == null) {
             throw new IllegalArgumentException("An organization is required");
         }
+        this.tankId = command.tankId();
+        this.organizationId = command.organizationId();
         apply(command);
         this.policyVersion = 1;
         this.version = 0;
