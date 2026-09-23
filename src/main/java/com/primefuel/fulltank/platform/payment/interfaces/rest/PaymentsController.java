@@ -13,9 +13,8 @@ import com.primefuel.fulltank.platform.payment.interfaces.rest.resources.CreateP
 import com.primefuel.fulltank.platform.payment.interfaces.rest.resources.PaymentResource;
 import com.primefuel.fulltank.platform.payment.interfaces.rest.transform.CreatePaymentCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.payment.interfaces.rest.transform.PaymentResourceFromEntityAssembler;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
-import com.primefuel.fulltank.platform.ordering.application.queryservices.FuelOrderQueryService;
-import com.primefuel.fulltank.platform.ordering.domain.model.queries.GetFuelOrderByIdQuery;
+import com.primefuel.fulltank.platform.iam.api.TenantAccess;
+import com.primefuel.fulltank.platform.ordering.api.OrderLookup;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -36,17 +35,17 @@ public class PaymentsController {
 
     private final PaymentCommandService paymentCommandService;
     private final PaymentQueryService paymentQueryService;
-    private final FuelOrderQueryService fuelOrderQueryService;
-    private final CurrentUserAccess currentUserAccess;
+    private final OrderLookup orderLookup;
+    private final TenantAccess tenantAccess;
 
     public PaymentsController(PaymentCommandService paymentCommandService,
                               PaymentQueryService paymentQueryService,
-                              FuelOrderQueryService fuelOrderQueryService,
-                              CurrentUserAccess currentUserAccess) {
+                              OrderLookup orderLookup,
+                              TenantAccess tenantAccess) {
         this.paymentCommandService = paymentCommandService;
         this.paymentQueryService = paymentQueryService;
-        this.fuelOrderQueryService = fuelOrderQueryService;
-        this.currentUserAccess = currentUserAccess;
+        this.orderLookup = orderLookup;
+        this.tenantAccess = tenantAccess;
     }
 
     /**
@@ -65,16 +64,17 @@ public class PaymentsController {
             @ApiResponse(responseCode = "409", description = "A payment already exists for the order.")
     })
     @PostMapping
-    @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
     public ResponseEntity<?> createPayment(@RequestBody CreatePaymentResource resource) {
+        // T23-B (fixes T23-A finding F1): the presence checks run BEFORE authorization, so a null
+        // order/company answers the documented 400 instead of the previous 403; ownership of the declared
+        // company is then enforced explicitly (403). The remaining invariants (order exists + belongs to the
+        // company, amount positive and matching the order snapshot, one payment per order) live in the
+        // application layer (PaymentCommandServiceImpl).
         if (resource.orderId() == null || resource.companyId() == null) {
             return ResponseEntity.badRequest().body("Order and buyer company are required");
         }
-        var order = fuelOrderQueryService.handle(new GetFuelOrderByIdQuery(resource.orderId()))
-                .filter(found -> resource.companyId().equals(found.getCompanyId()));
-        if (order.isEmpty()) return ResponseEntity.notFound().build();
-        if (resource.amount() == null || !resource.amount().equals(order.get().getTotalPrice())) {
-            return ResponseEntity.badRequest().body("Payment amount must match the order total");
+        if (!tenantAccess.ownsCompany(resource.companyId())) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         var command = CreatePaymentCommandFromResourceAssembler.toCommandFromResource(resource);
         var result = paymentCommandService.handle(command);
@@ -165,7 +165,7 @@ public class PaymentsController {
     @GetMapping("/{paymentId}")
     public ResponseEntity<PaymentResource> getPaymentById(@PathVariable Long paymentId) {
         var result = paymentQueryService.handle(new GetPaymentByIdQuery(paymentId))
-                .filter(payment -> currentUserAccess.ownsCompany(payment.getCompanyId())
+                .filter(payment -> tenantAccess.ownsCompany(payment.getCompanyId())
                         || ownsOrderAsProvider(payment.getOrderId()));
         return result.map(p -> new ResponseEntity<>(
                         PaymentResourceFromEntityAssembler.toResourceFromEntity(p), HttpStatus.OK))
@@ -187,7 +187,7 @@ public class PaymentsController {
     @GetMapping("/order/{orderId}")
     public ResponseEntity<PaymentResource> getPaymentByOrder(@PathVariable Long orderId) {
         var result = paymentQueryService.handle(new GetPaymentByOrderIdQuery(orderId))
-                .filter(payment -> currentUserAccess.ownsCompany(payment.getCompanyId())
+                .filter(payment -> tenantAccess.ownsCompany(payment.getCompanyId())
                         || ownsOrderAsProvider(orderId));
         return result.map(p -> new ResponseEntity<>(
                         PaymentResourceFromEntityAssembler.toResourceFromEntity(p), HttpStatus.OK))
@@ -206,7 +206,7 @@ public class PaymentsController {
             @ApiResponse(responseCode = "403", description = "Caller does not own the requested company.")
     })
     @GetMapping("/company/{companyId}")
-    @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
+    @PreAuthorize("@tenantAccess.ownsCompany(#companyId)")
     public ResponseEntity<List<PaymentResource>> getPaymentsByCompany(@PathVariable Long companyId) {
         var payments = paymentQueryService.handle(new GetPaymentsByCompanyIdQuery(companyId));
         var resources = payments.stream().map(PaymentResourceFromEntityAssembler::toResourceFromEntity).toList();
@@ -215,14 +215,14 @@ public class PaymentsController {
 
     private boolean ownsPayment(Long paymentId) {
         return paymentQueryService.handle(new GetPaymentByIdQuery(paymentId))
-                .filter(payment -> currentUserAccess.ownsCompany(payment.getCompanyId())
+                .filter(payment -> tenantAccess.ownsCompany(payment.getCompanyId())
                         || ownsOrderAsProvider(payment.getOrderId()))
                 .isPresent();
     }
 
     private boolean ownsOrderAsProvider(Long orderId) {
-        return fuelOrderQueryService.handle(new GetFuelOrderByIdQuery(orderId))
-                .map(order -> currentUserAccess.ownsProvider(order.getProviderId()))
+        return orderLookup.findById(orderId)
+                .map(order -> tenantAccess.ownsProvider(order.providerId()))
                 .orElse(false);
     }
 }
