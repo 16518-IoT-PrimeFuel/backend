@@ -599,6 +599,18 @@ flowchart TD
 - **Rollback strategy:** detener proyección; conservar raw telemetry.
 - **Definition of Done:** reglas comunes + U10/U18 sobre retención registradas.
 
+> **U10/U18 resueltas (2026-09-23, decisión de producto — cierra la DoD de S16, implementa T16-B).**
+> - **U10 (retención de muestras crudas):** **sin límite de tiempo** — `transport_evidence_samples` no se
+>   purga automáticamente. Se prioriza tener el histórico completo disponible para auditoría/disputas de
+>   entrega sobre minimizar storage. Sin job de purga en T16-B.
+> - **U18 (acceso/borrado de GPS bajo demanda):** el endpoint de exportar/borrar evidencia GPS de un
+>   conductor queda **restringido a `ROLE_ADMIN`**, atado al mecanismo que define **U19/T24-PRE-ADMIN**. Como
+>   `T24-PRE-ADMIN` todavía no está construido (`ROLE_ADMIN` sigue inasignable), **T16-B reserva el contrato
+>   del endpoint (forma/ruta) pero no lo expone operativo hasta que `T24-PRE-ADMIN` aterrice** — mismo
+>   tratamiento que T16-A le dio a `ValveStateObserved` para T18.
+> - **El journal de negocio (T21, hechos append-only) no se ve afectado:** el borrado/export de U18 aplica
+>   solo a `transport_evidence_samples`/`delivery_tracking` (tracking), nunca al journal de S21.
+
 ### S17 — Introducir política geográfica de seguridad
 
 - **SPEC-ID / Título:** S17 / Introducir política geográfica de seguridad.
