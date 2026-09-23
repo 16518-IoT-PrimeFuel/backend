@@ -270,13 +270,77 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 
 ## W7 — Notificaciones, contratos, billing y retiro (S20, S22, S23, S24)
 
-- [ ] T20-A — Destinatarios y suscriptores
-- [ ] T20-B — Bandeja compatible y reintentos
-- [ ] T22-A — Auditoría de consumidores y contratos v2
-- [ ] T22-B — Adapters y plan de sunset verificado
-- [ ] T23-A — Decisión documentada de cobros (ADR)
-- [ ] T23-B — Aislamiento de Payment y estado físico
-- [ ] T24-A — Limpieza de marcadores y docs
+- [x] **T20-A** — Destinatarios y suscriptores (S20). **U17 = canal inicial in-app** (`NotificationChannel.IN_APP`).
+      Fuente de eventos: `JpaEventPublicationRegistry.publish` ahora **emite el `EventEnvelope` in-process**
+      además del outbox (un cambio en `shared`, cero cambios en productores de delivery), y
+      `ReplenishmentCommandServiceImpl` **publica** `replenishment.accepted.v1`/`rejected.v1` con scope =
+      `request.organizationId` (la organización cliente). Destinatarios vía nuevo seam
+      **`iam.api.MembershipDirectory.activeMemberUserIds(org)`** (sólo miembros activos → revocado no recibe).
+      `NotificationFanoutListener` mapea eventType→notificación y hace fanout **idempotente**:
+      `EventInbox` (por evento) + unique **`uk_notifications_event_recipient_channel(event_id,user_id,channel)`**
+      (`V20`, validada en MySQL 8.0.46). `notifications` gana organization_id/event_id/channel/delivery_status/
+      attempts/last_attempt_at. v1 GET/POST intactos (eso es T20-B). Limitación documentada: los eventos de
+      delivery usan `organizationId = providerId` (espacio legacy) → hoy no resuelven destinatarios.
+      `NotificationFanoutTest` (4): fanout a todos los miembros, reject, replay sin duplicar, revocado sin nuevo
+      fanout. `./mvnw.cmd test` 191/191.
+      → `docs/api-ledger/T20-A-notification-fanout.md`
+- [x] **T20-B** — Bandeja compatible y reintentos (**cierra S20**). `MeNotificationsController` agrega
+      `/api/v2/me/notifications` (`GET`, `GET /unread`, `POST /{id}/read`), scoped al usuario del principal
+      (`iam.api.MembershipAccess.currentUserId()`, sin id en la ruta → privacidad: cada uno solo su bandeja;
+      404 si es de otro). v1 GET **sin cambios** (compatible); `POST /api/v1/notifications` **deprecado, no
+      roto** (`@Deprecated` + `@Operation(deprecated=true)`, mismo comportamiento; su retiro es S22/T24-B).
+      Marcar leída es idempotente. `MeNotificationsControllerTest` (2): privacidad entre dos miembros, read
+      idempotente, POST v1 sigue 201. `./mvnw.cmd test` 193/193. Sin cambio de esquema.
+      → `docs/api-ledger/T20-B-me-inbox-and-deprecation.md`
+- [x] **T22-A** — Auditoría de consumidores y contratos v2 (**U14 resuelta ruta por ruta**). 77/77 rutas
+      clasificadas con acción o blocker en `T22-A-consumer-audit-and-v2-contracts.md`: `KEEP`/`V2`/`REDESIGN`
+      donde ya existe v2 (deliveries, drivers/tankers, replenishment-requests, `/me/notifications`, supply/fleet
+      APIs), `DEPRECATE` (provider-ratings, favorite-provider, directorio global, orden directa/confirm,
+      notifications POST), y **BLOCKER** donde no hay evidencia: (1) **`ROLE_ADMIN` es inasignable** (Roles sólo
+      BUYER/PROVIDER) → todas las rutas admin son inalcanzables; (2) **ledger externo `UNKNOWN`** (sin repo
+      cliente) → ningún `SUNSET` aprobable. No se inventaron consumidores. Sin cambios de código.
+      → `docs/api-ledger/T22-A-consumer-audit-and-v2-contracts.md`
+- [x] **T22-B** — Adapters y plan de sunset verificado. **No se retiró ningún endpoint** (preparación, no
+      ejecución). Golden contracts v1/v2 verdes (golden path, T14-B mapping, T15-B dual-mode, delivery v2,
+      `/me`) + nuevo `V1V2CoexistenceGoldenTest` (un delivery creado por v1 se lee/opera por v2). Registro de
+      sunset por familia (destino/prerequisito/owner/ventana/**no ejecutado**) y plan de métricas por versión
+      (`path.version` + `count`/`last_seen`/`distinct_callers`) documentados. Sunset **bloqueado** hasta cerrar
+      ledger externo + decidir rol plataforma (blockers de T22-A). → `docs/api-ledger/T22-B-sunset-plan.md`
+- [x] **T23-A** — Caracterización y decisión de Payment (ADR). **Caracterización + ADR, sin refactor** (0
+      cambios en `src/main/java/.../payment`). `PaymentCharacterizationTest` (18 tests) reproduce las 7 rutas
+      v1, su máquina de estados **sin guardas** y los permisos reales. **ADR resuelve U12 = Opción A
+      (registro financiero operativo):** `registered` = fila creada por la company compradora (hoy `PENDING`);
+      `authorized` = confirmación manual por comprador o provider con referencia (hoy `COMPLETED`); `settled`
+      = NO representable hoy (sin pasarela) y el sistema no debe afirmarlo; `refunded` = marcado por actor
+      autorizado (hoy no revierte la orden). Hallazgos (bugs reales, NO corregidos): F1 `createPayment`
+      `@PreAuthorize` antes del null-check → 403 en vez del 400 documentado; F2 create no valida
+      `order.status` (pago sobre orden cancelada); F3 complete de orden cancelada → 500; F4 refund sin guarda
+      ni motivo/fecha y no revierte la orden; F5 complete repetido sobrescribe ref/paidAt y complete después
+      de refund es aceptado; F6 `GET /payments` exige `ROLE_ADMIN` que el modelo de roles no puede otorgar →
+      403 siempre; F8 sin unique en `payments.order_id` y create no transaccional. Inventario de accesos
+      cross-module para T23-B: `PaymentCommandServiceImpl → FuelOrderRepository` (escritura; el que se quita),
+      controller → `FuelOrderQueryService` + `CurrentUserAccess`. Consumer real: `AnalyticsQueryServiceImpl`
+      (revenue = suma de `COMPLETED`). → `docs/api-ledger/T23-A-payment-characterization.md`
+- [x] **T23-B** — Aislamiento de Payment y estado físico (**cierra S23**). `PaymentCommandServiceImpl` ya **no
+      importa `FuelOrderRepository`**: `complete` publica **`payment.completed.v1`** y un adapter de ordering
+      (`OrderingPaymentCompletionAdapter`) marca su propia orden `PAID` → v1 preservado sin que payment escriba
+      ordering. Invariantes movidos al **application layer** (order+company presentes; orden existe y es de esa
+      company; `amount` positivo y consistente con el snapshot; uno por orden) usando el nuevo seam
+      **`ordering.api.OrderLookup`** (elimina además la dependencia a `ordering.domain.model.queries`).
+      Corregido **F1**: `createPayment` valida presencia **antes** de autorizar → `companyId` null responde 400
+      (antes 403); controller pasa a `iam.api.TenantAccess`. `PaymentCompleted`/`DeliveryCompleted` independientes.
+      `PaymentForeignRepositoryGuardTest` (cero repos ajenos en payment) + `PaymentOrderDecouplingTest` verdes;
+      `PaymentCharacterizationTest` ajustado a 400 para F1. Quedan documentados como siguientes pasos: guards de
+      transición/idempotencia, motivo de refund, BigDecimal+moneda, unique(order_id), matriz de permisos.
+      `./mvnw.cmd test` 196/196. Sin cambio de esquema.
+      → `docs/api-ledger/T23-B-payment-isolation.md`
+- [x] **T24-A** — Limpieza de marcadores y docs. Borradas **solo** las 6 clases vacías confirmadas (leídas +
+      búsqueda repo-wide: cero usos/reflection): `FulfillmentController`, `DirectoryController`,
+      `InventoryController`, `OrderingController`, `PaymentController`, `NotificationController`. Docs
+      alineadas: T01-A ledger (nota de placeholders), ARCHITECTURE_REPORT, checklist Swagger, T23-A F9
+      (resuelto), y 6 diagramas `.puml` (nodos y relación eliminados). Snapshot OpenAPI regenerado por test;
+      **77/77 rutas intactas**. No se tocó T24-B (retiro real, sigue bloqueado).
+      `./mvnw.cmd test` verde. → `docs/api-ledger/T24-A-marker-cleanup.md`
 - [ ] T24-B — Retiro controlado de endpoints confirmados
 
 ## Documentación Swagger (OpenAPI + javadoc de REST)
@@ -284,8 +348,9 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 Documentación de los **125 métodos REST** de los **27 controllers activos** con
 `@Operation(summary, description)` + `@ApiResponses`/`@ApiResponse` (un código por respuesta real del
 método) y un javadoc por método que aporta invariantes/tenant/ownership sin repetir el texto de Swagger.
-Cambio de documentación pura: **sin** tocar lógica, validaciones ni códigos HTTP existentes. Se excluyen
-los 3 placeholders vacíos (`FulfillmentController`, `DirectoryController`, `InventoryController`). Los
+Cambio de documentación pura: **sin** tocar lógica, validaciones ni códigos HTTP existentes. (Los
+placeholders vacíos `FulfillmentController`, `DirectoryController`, `InventoryController`,
+`NotificationController`, `OrderingController` y `PaymentController` fueron **eliminados** en T24-A.) Los
 códigos por método se derivaron de los `ApplicationError` del `CommandService`/`QueryService` invocado +
 los chequeos manuales de forbidden/not-found del propio método + el `@PreAuthorize` (403); no se
 documentó 401 (filtro bearer global, uniforme en todos los endpoints autenticados).
