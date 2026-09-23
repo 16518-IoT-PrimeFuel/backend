@@ -191,7 +191,17 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       quedan para T13-B.
       (**build no verificado en esta máquina — pendiente de verificación por el usuario**).
       → `docs/api-ledger/T13-A-fleet-reservation-model.md`
-- [ ] T13-B — Reserva concurrente y liberación
+- [x] **T13-B** — Reserva concurrente y liberación. Cierra A1–A4 de T13-A. **A1:** sin endpoint REST v2
+      (T15-A consume `fleet.api` in-process). **A4:** `providerId` se transporta en el comando pero debe
+      resolverlo el caller desde `iam.api.TenantAccess` (documentado; no hay superficie HTTP). **A2:**
+      `FleetReservations.release(reference)` idempotente + `expireOverdue()` determinista con `Clock`
+      inyectado (agregado `expireIfPast(Instant)`). **A3:** idempotencia por `reference` (replay devuelve la
+      misma reserva; params distintos → 409), leída post-lock en TX `READ_COMMITTED`. **Carrera:** lock
+      `PESSIMISTIC_WRITE` driver→tanker, prueba real contra **MySQL 8.0.46** (gated `FLEET_MYSQL_IT=1`):
+      dos conexiones solapadas → una gana, la otra 409, sin deadlock ni holds duplicados; failure injection
+      verifica rollback y liberación de locks. Sin cambios de esquema (`V18` intacta). `./mvnw.cmd test`
+      156/156 verde (2 skipped = IT MySQL gated).
+      → `docs/api-ledger/T13-B-fleet-reservation-concurrency.md`
 - [x] **T14-A** — Lifecycle y comandos de ejecución de Delivery (prepara S14). Máquina física
       `ASSIGNED→STARTED→ARRIVED→DELIVERING→COMPLETED` + salidas terminales `FAILED`/`CANCELLED`
       (`DeliveryPhysicalState`, transición inválida → 409); `physical_state` en columna nueva (el `status`
@@ -244,3 +254,33 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 - [ ] T23-B — Aislamiento de Payment y estado físico
 - [ ] T24-A — Limpieza de marcadores y docs
 - [ ] T24-B — Retiro controlado de endpoints confirmados
+
+## Documentación Swagger (OpenAPI + javadoc de REST)
+
+Documentación de los **125 métodos REST** de los **27 controllers activos** con
+`@Operation(summary, description)` + `@ApiResponses`/`@ApiResponse` (un código por respuesta real del
+método) y un javadoc por método que aporta invariantes/tenant/ownership sin repetir el texto de Swagger.
+Cambio de documentación pura: **sin** tocar lógica, validaciones ni códigos HTTP existentes. Se excluyen
+los 3 placeholders vacíos (`FulfillmentController`, `DirectoryController`, `InventoryController`). Los
+códigos por método se derivaron de los `ApplicationError` del `CommandService`/`QueryService` invocado +
+los chequeos manuales de forbidden/not-found del propio método + el `@PreAuthorize` (403); no se
+documentó 401 (filtro bearer global, uniforme en todos los endpoints autenticados).
+
+- [x] **Swagger T1 — IAM** (7 controllers, 19 métodos): `Authentication`, `BuyerCompanies`,
+      `Invitations`, `MyOrganizations`, `Onboarding`, `ProviderCompanies`, `Users`.
+- [x] **Swagger T2 — Equipment + Supply + Catalog + Reporting** (6 controllers, 21 métodos):
+      `Customers`, `Equipment`, `Tanks`, `Products`, `ProviderRatings`, `Analytics`.
+- [x] **Swagger T3 — Inventory + Replenishment** (3 controllers, 16 métodos): `FuelProducts`,
+      `RefillPolicies`, `ReplenishmentRequests`.
+- [x] **Swagger T4 — Ordering** (2 controllers, 12 métodos): `FuelOrders`, `FuelRequests`.
+- [x] **Swagger T5 — Fulfillment/Fleet** (6 controllers, 42 métodos): `Deliveries`, `DeliveriesV2`,
+      `Drivers`, `Vehicles`, `DriversV2`, `TankersV2`.
+- [x] **Swagger T6 — Payment + Notification + Telemetry** (3 controllers, 15 métodos): `Payments`,
+      `Notifications`, `Telemetry`.
+
+Build final **156/156 verde** (`mvnw test`; incluye los tests concurrentes de T13-B). Sin cambios de
+comportamiento. Hallazgos de mapeo de códigos (documentados, **no** corregidos — "characterize ≠ fix"):
+`POST /api/v1/buyer-companies|provider-companies` sin `@Valid` (input inválido → 500 en vez de 400);
+`ProviderRatings{create,update}` devuelve 400 para referencias inexistentes (convención esperaría 404);
+transiciones de estado inválidas en `fuel-requests accept`/`payments complete`/`payments refund` caen en
+500 en vez de 409; varios gates de ownership devuelven 403 en lugar de 404 (y al revés) según el controller.
