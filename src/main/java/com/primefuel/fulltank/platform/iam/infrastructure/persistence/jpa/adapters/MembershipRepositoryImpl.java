@@ -38,6 +38,14 @@ public class MembershipRepositoryImpl implements MembershipRepository {
     }
 
     @Override
+    public List<Membership> findActiveByOrganizationId(Long organizationId) {
+        return membershipPersistenceRepository.findByOrganizationIdAndActiveTrueOrderByUserIdAsc(organizationId)
+                .stream()
+                .map(MembershipPersistenceAssembler::toDomainFromPersistence)
+                .toList();
+    }
+
+    @Override
     public Membership save(Membership membership) {
         var entity = MembershipPersistenceAssembler.toPersistenceFromDomain(membership);
         return MembershipPersistenceAssembler.toDomainFromPersistence(

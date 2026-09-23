@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface MembershipPersistenceRepository extends JpaRepository<MembershipPersistenceEntity, Long> {
     List<MembershipPersistenceEntity> findByUserId(Long userId);
     Optional<MembershipPersistenceEntity> findByOrganizationIdAndUserId(Long organizationId, Long userId);
+    List<MembershipPersistenceEntity> findByOrganizationIdAndActiveTrueOrderByUserIdAsc(Long organizationId);
 }

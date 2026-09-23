@@ -9,5 +9,9 @@ public interface MembershipRepository {
     Optional<Membership> findById(Long id);
     List<Membership> findByUserId(Long userId);
     Optional<Membership> findByOrganizationIdAndUserId(Long organizationId, Long userId);
+
+    /** Active (non-revoked) memberships of an organization — the notification fanout recipients. */
+    List<Membership> findActiveByOrganizationId(Long organizationId);
+
     Membership save(Membership membership);
 }
