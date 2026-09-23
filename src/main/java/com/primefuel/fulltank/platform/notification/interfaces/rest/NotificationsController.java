@@ -51,9 +51,15 @@ public class NotificationsController {
      * <p>Exactly one of userId/companyId/providerId must be supplied, and the caller must own the
      * referenced recipient (user, company or provider). A company/provider recipient is resolved to its
      * user; when that user does not exist the request is rejected as a bad request.</p>
+     *
+     * <p><strong>Deprecated (S20/T20-B):</strong> the frontend must no longer fabricate notifications;
+     * the inbox is generated from events (T20-A) and read through {@code /api/v2/me/notifications}. The
+     * route is kept working (not removed) until the consumer ledger proves no caller (S22/T24-B).</p>
      */
+    @Deprecated
     @Operation(summary = "Create a notification",
-            description = "Creates a notification addressed to exactly one owned recipient (user, company or provider).")
+            description = "Deprecated: prefer the event-driven inbox and /api/v2/me/notifications. Creates a notification addressed to exactly one owned recipient (user, company or provider).",
+            deprecated = true)
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Notification created."),
             @ApiResponse(responseCode = "400", description = "Not exactly one recipient was supplied, or the referenced recipient user does not exist."),

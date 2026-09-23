@@ -4196,7 +4196,8 @@
     },
     "/api/v1/notifications" : {
       "post" : {
-        "description" : "Creates a notification addressed to exactly one owned recipient (user, company or provider).",
+        "deprecated" : true,
+        "description" : "Deprecated: prefer the event-driven inbox and /api/v2/me/notifications. Creates a notification addressed to exactly one owned recipient (user, company or provider).",
         "operationId" : "createNotification",
         "requestBody" : {
           "content" : {
@@ -4476,7 +4477,7 @@
     "/api/v1/notifications/{notificationId}/mark-as-read" : {
       "post" : {
         "description" : "Marks the given notification as read when it belongs to the caller.",
-        "operationId" : "markAsRead",
+        "operationId" : "markAsRead_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "notificationId",
@@ -6678,6 +6679,127 @@
         "tags" : [ "Invitations" ]
       }
     },
+    "/api/v2/me/notifications" : {
+      "get" : {
+        "description" : "Returns the in-app notifications of the authenticated user.",
+        "operationId" : "list_3",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Notifications returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated."
+          }
+        },
+        "summary" : "List my notifications",
+        "tags" : [ "My notifications" ]
+      }
+    },
+    "/api/v2/me/notifications/unread" : {
+      "get" : {
+        "description" : "Returns the unread in-app notifications of the authenticated user.",
+        "operationId" : "listUnread",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Unread notifications returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated."
+          }
+        },
+        "summary" : "List my unread notifications",
+        "tags" : [ "My notifications" ]
+      }
+    },
+    "/api/v2/me/notifications/{notificationId}/read" : {
+      "post" : {
+        "description" : "Marks the notification as read when it belongs to the authenticated user; idempotent.",
+        "operationId" : "markAsRead",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "notificationId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Notification marked as read."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Notification does not exist or does not belong to the caller."
+          }
+        },
+        "summary" : "Mark one of my notifications as read",
+        "tags" : [ "My notifications" ]
+      }
+    },
     "/api/v2/me/organizations" : {
       "get" : {
         "description" : "Returns the organizations the authenticated caller is an active member of, with the caller's role in each.",
@@ -8004,26 +8126,8 @@
     "description" : "Organization onboarding endpoints (v2)",
     "name" : "Onboarding"
   }, {
-    "description" : "Analytics and reporting endpoints",
-    "name" : "Analytics"
-  }, {
-    "description" : "Replenishment request lifecycle (v2)",
-    "name" : "Replenishment"
-  }, {
-    "description" : "Users management endpoints",
-    "name" : "Users"
-  }, {
     "description" : "Tank assets and configuration (v2)",
     "name" : "Tanks"
-  }, {
-    "description" : "Buyer company management endpoints",
-    "name" : "Buyer Companies"
-  }, {
-    "description" : "Fulfillment management endpoints",
-    "name" : "Deliveries"
-  }, {
-    "description" : "Low-level policy and refill episodes (v2)",
-    "name" : "Refill policy"
   }, {
     "description" : "Organization membership invitations (v2)",
     "name" : "Invitations"
@@ -8031,17 +8135,8 @@
     "description" : "Physical delivery state machine (v2)",
     "name" : "Delivery lifecycle"
   }, {
-    "description" : "Equipment management endpoints",
-    "name" : "Equipment"
-  }, {
-    "description" : "Customer accounts and sites (v2)",
-    "name" : "Customers"
-  }, {
     "description" : "Tenant-scoped supply catalog (v2)",
     "name" : "Supply"
-  }, {
-    "description" : "Transactional assignment after acceptance (v2)",
-    "name" : "Delivery assignment"
   }, {
     "description" : "Inventory management endpoints",
     "name" : "Fuel Products"
@@ -8055,22 +8150,52 @@
     "description" : "Payment management endpoints",
     "name" : "Payments"
   }, {
-    "description" : "Authentication endpoints",
-    "name" : "Authentication"
-  }, {
     "description" : "Ordering management endpoints",
     "name" : "Fuel Orders"
-  }, {
-    "description" : "Organizations the authenticated user belongs to (v2)",
-    "name" : "Organizations"
   }, {
     "description" : "Tanker catalog and lifecycle (v2)",
     "name" : "Fleet tankers"
   }, {
-    "description" : "Notification management endpoints",
-    "name" : "Notifications"
-  }, {
     "description" : "Driver catalog and lifecycle (v2)",
     "name" : "Fleet drivers"
+  }, {
+    "description" : "Analytics and reporting endpoints",
+    "name" : "Analytics"
+  }, {
+    "description" : "Replenishment request lifecycle (v2)",
+    "name" : "Replenishment"
+  }, {
+    "description" : "Users management endpoints",
+    "name" : "Users"
+  }, {
+    "description" : "Current user's in-app notification inbox (v2)",
+    "name" : "My notifications"
+  }, {
+    "description" : "Buyer company management endpoints",
+    "name" : "Buyer Companies"
+  }, {
+    "description" : "Fulfillment management endpoints",
+    "name" : "Deliveries"
+  }, {
+    "description" : "Low-level policy and refill episodes (v2)",
+    "name" : "Refill policy"
+  }, {
+    "description" : "Equipment management endpoints",
+    "name" : "Equipment"
+  }, {
+    "description" : "Customer accounts and sites (v2)",
+    "name" : "Customers"
+  }, {
+    "description" : "Transactional assignment after acceptance (v2)",
+    "name" : "Delivery assignment"
+  }, {
+    "description" : "Authentication endpoints",
+    "name" : "Authentication"
+  }, {
+    "description" : "Organizations the authenticated user belongs to (v2)",
+    "name" : "Organizations"
+  }, {
+    "description" : "Notification management endpoints",
+    "name" : "Notifications"
   } ]
 }
