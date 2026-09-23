@@ -14,6 +14,9 @@ import com.primefuel.fulltank.platform.ordering.interfaces.rest.transform.Create
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.transform.FuelOrderResourceFromEntityAssembler;
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,6 +43,20 @@ public class FuelOrdersController {
         this.currentUserAccess = currentUserAccess;
     }
 
+    /**
+     * Creates a fuel order for the caller's buyer company.
+     *
+     * <p>The company in the body must be the caller's own, the fuel product must belong to the
+     * requested provider, and any referenced equipment must belong to the same company; those
+     * cross-tenant checks are the ones added by the R01 hotfix.</p>
+     */
+    @Operation(summary = "Create a fuel order",
+            description = "Creates a fuel order for the caller's company, validating provider/product and company/equipment ownership.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Fuel order created."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the company, or the product/equipment does not belong to the referenced provider/company."),
+            @ApiResponse(responseCode = "404", description = "The referenced fuel product or equipment does not exist.")
+    })
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
     public ResponseEntity<?> createFuelOrder(@RequestBody CreateFuelOrderResource resource) {
@@ -51,6 +68,18 @@ public class FuelOrdersController {
                 HttpStatus.CREATED);
     }
 
+    /**
+     * Confirms a fuel order.
+     *
+     * <p>Only the buyer company that owns the order may confirm it. The transition is not guarded by
+     * order state, so it is accepted from any current status.</p>
+     */
+    @Operation(summary = "Confirm a fuel order",
+            description = "Moves the given fuel order to the confirmed status on behalf of its owning buyer company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fuel order confirmed."),
+            @ApiResponse(responseCode = "404", description = "Fuel order does not exist or belongs to another buyer company.")
+    })
     @PostMapping("/{orderId}/confirm")
     public ResponseEntity<?> confirmOrder(@PathVariable Long orderId) {
         if (!ownsOrderAsBuyer(orderId)) return ResponseEntity.notFound().build();
@@ -61,6 +90,18 @@ public class FuelOrdersController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Cancels a fuel order.
+     *
+     * <p>Either the buyer company or the provider tenant of the order may cancel it. The transition is
+     * not guarded by order state, so it is accepted from any current status.</p>
+     */
+    @Operation(summary = "Cancel a fuel order",
+            description = "Moves the given fuel order to the cancelled status on behalf of its buyer company or provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fuel order cancelled."),
+            @ApiResponse(responseCode = "404", description = "Fuel order does not exist or is not owned by the caller.")
+    })
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
         if (!ownsOrder(orderId)) return ResponseEntity.notFound().build();
@@ -71,6 +112,17 @@ public class FuelOrdersController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Lists every fuel order in the platform.
+     *
+     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     */
+    @Operation(summary = "List all fuel orders",
+            description = "Returns every registered fuel order. Restricted to administrators.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fuel orders returned."),
+            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+    })
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<FuelOrderResource>> getAllOrders() {
@@ -79,6 +131,18 @@ public class FuelOrdersController {
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
+    /**
+     * Retrieves a single fuel order.
+     *
+     * <p>Readable by the buyer company or the provider tenant of the order; anything else is reported
+     * as not found.</p>
+     */
+    @Operation(summary = "Get a fuel order by id",
+            description = "Returns the fuel order identified by the path id when the caller is its buyer company or provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fuel order returned."),
+            @ApiResponse(responseCode = "404", description = "Fuel order does not exist or is not owned by the caller.")
+    })
     @GetMapping("/{orderId}")
     public ResponseEntity<FuelOrderResource> getOrderById(@PathVariable Long orderId) {
         var result = fuelOrderQueryService.handle(new GetFuelOrderByIdQuery(orderId))
@@ -88,6 +152,17 @@ public class FuelOrdersController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * Lists the fuel orders of a buyer company.
+     *
+     * <p>Only the owning company may list them.</p>
+     */
+    @Operation(summary = "List fuel orders by company",
+            description = "Returns all fuel orders of the given buyer company when it matches the caller's own company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fuel orders returned."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the requested company.")
+    })
     @GetMapping("/company/{companyId}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<List<FuelOrderResource>> getOrdersByCompany(@PathVariable Long companyId) {
@@ -96,6 +171,17 @@ public class FuelOrdersController {
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
+    /**
+     * Lists the fuel orders of a provider tenant.
+     *
+     * <p>Only the owning provider tenant may list them.</p>
+     */
+    @Operation(summary = "List fuel orders by provider",
+            description = "Returns all fuel orders of the given provider when it matches the caller's own provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fuel orders returned."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the requested provider tenant.")
+    })
     @GetMapping("/provider/{providerId}")
     @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<List<FuelOrderResource>> getOrdersByProvider(@PathVariable Long providerId) {

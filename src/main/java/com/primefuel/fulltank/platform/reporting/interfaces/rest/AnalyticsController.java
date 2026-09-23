@@ -10,6 +10,9 @@ import com.primefuel.fulltank.platform.reporting.interfaces.rest.resources.Provi
 import com.primefuel.fulltank.platform.reporting.interfaces.rest.transform.BuyerAnalyticsResourceFromValueObjectAssembler;
 import com.primefuel.fulltank.platform.reporting.interfaces.rest.transform.PlatformSummaryResourceFromValueObjectAssembler;
 import com.primefuel.fulltank.platform.reporting.interfaces.rest.transform.ProviderAnalyticsResourceFromValueObjectAssembler;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,6 +34,17 @@ public class AnalyticsController {
         this.analyticsQueryService = analyticsQueryService;
     }
 
+    /**
+     * Returns the platform-wide summary.
+     *
+     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     */
+    @Operation(summary = "Get the platform summary",
+            description = "Returns aggregated platform-wide metrics. Restricted to administrators.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Platform summary returned."),
+            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+    })
     @GetMapping("/platform")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<PlatformSummaryResource> getPlatformSummary() {
@@ -40,6 +54,18 @@ public class AnalyticsController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Returns the analytics of a provider company.
+     *
+     * <p>Only the provider that owns the requested company may read its analytics; results are
+     * computed for the whole provider tenant.</p>
+     */
+    @Operation(summary = "Get provider analytics",
+            description = "Returns the aggregated metrics of the given provider company when the caller owns it.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Provider analytics returned."),
+            @ApiResponse(responseCode = "403", description = "Caller is not the owner of this provider company.")
+    })
     @GetMapping("/providers/{providerId}")
     @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<ProviderAnalyticsResource> getProviderAnalytics(@PathVariable Long providerId) {
@@ -49,6 +75,17 @@ public class AnalyticsController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Returns the analytics of a buyer company.
+     *
+     * <p>Only the buyer that owns the requested company may read its analytics.</p>
+     */
+    @Operation(summary = "Get buyer analytics",
+            description = "Returns the aggregated metrics of the given buyer company when the caller owns it.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Buyer analytics returned."),
+            @ApiResponse(responseCode = "403", description = "Caller is not the owner of this buyer company.")
+    })
     @GetMapping("/buyers/{companyId}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<BuyerAnalyticsResource> getBuyerAnalytics(@PathVariable Long companyId) {

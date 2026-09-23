@@ -15,6 +15,9 @@ import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.Updat
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.EquipmentRepository;
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -44,6 +47,19 @@ public class EquipmentController {
         this.currentUserAccess = currentUserAccess;
     }
 
+    /**
+     * Sets the favorite provider of a piece of equipment.
+     *
+     * <p>Only a buyer may call this, and only for equipment that belongs to its own company; a piece
+     * of equipment owned by another company is reported as not found.</p>
+     */
+    @Operation(summary = "Assign a favorite provider to equipment",
+            description = "Sets the preferred provider for the given equipment owned by the caller's company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Favorite provider assigned."),
+            @ApiResponse(responseCode = "403", description = "Caller does not hold the buyer role."),
+            @ApiResponse(responseCode = "404", description = "Equipment does not exist or belongs to another company.")
+    })
     @PostMapping("/{equipmentId}/favorite-provider")
     @PreAuthorize("@currentUserAccess.isBuyerRole()")
     public ResponseEntity<EquipmentResource> assignFavoriteProvider(
@@ -58,6 +74,17 @@ public class EquipmentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Creates a piece of equipment for the caller's company.
+     *
+     * <p>The company id in the body must match the caller's own company.</p>
+     */
+    @Operation(summary = "Create equipment",
+            description = "Creates equipment for the caller's company; the supplied companyId must be the caller's own.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Equipment created."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the company in the request body.")
+    })
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
     public ResponseEntity<?> createEquipment(@RequestBody CreateEquipmentResource resource) {
@@ -69,6 +96,19 @@ public class EquipmentController {
                 HttpStatus.CREATED);
     }
 
+    /**
+     * Updates a piece of equipment.
+     *
+     * <p>The caller must own the equipment; other companies (including existing equipment of another
+     * tenant) are answered as not found. A level supplied here is mirrored to a mapped tank as a
+     * manual reading.</p>
+     */
+    @Operation(summary = "Update equipment",
+            description = "Applies field changes to the given equipment when it belongs to the caller's company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Equipment updated."),
+            @ApiResponse(responseCode = "404", description = "Equipment does not exist or belongs to another company.")
+    })
     @PostMapping("/{equipmentId}/update")
     public ResponseEntity<?> updateEquipment(@PathVariable Long equipmentId,
                                              @RequestBody UpdateEquipmentResource resource) {
@@ -84,6 +124,17 @@ public class EquipmentController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Lists every piece of equipment in the platform.
+     *
+     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     */
+    @Operation(summary = "List all equipment",
+            description = "Returns every registered piece of equipment. Restricted to administrators.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Equipment returned."),
+            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+    })
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<EquipmentResource>> getAllEquipment() {
@@ -92,6 +143,17 @@ public class EquipmentController {
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
+    /**
+     * Retrieves a single piece of equipment.
+     *
+     * <p>Only the owning company may read the record; anything else is reported as not found.</p>
+     */
+    @Operation(summary = "Get equipment by id",
+            description = "Returns the equipment identified by the path id when it belongs to the caller's company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Equipment returned."),
+            @ApiResponse(responseCode = "404", description = "Equipment does not exist or belongs to another company.")
+    })
     @GetMapping("/{equipmentId}")
     public ResponseEntity<EquipmentResource> getEquipmentById(@PathVariable Long equipmentId) {
         var result = equipmentQueryService.handle(new GetEquipmentByIdQuery(equipmentId))
@@ -101,6 +163,17 @@ public class EquipmentController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * Lists the equipment of a specific company.
+     *
+     * <p>Only the owning company may list its own equipment.</p>
+     */
+    @Operation(summary = "List equipment by company",
+            description = "Returns all equipment of the given company when it matches the caller's own company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Equipment returned."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the requested company.")
+    })
     @GetMapping("/company/{companyId}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<List<EquipmentResource>> getEquipmentByCompany(@PathVariable Long companyId) {

@@ -17,6 +17,9 @@ import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.serv
 import com.primefuel.fulltank.platform.ordering.application.queryservices.FuelOrderQueryService;
 import com.primefuel.fulltank.platform.ordering.domain.model.queries.GetFuelOrderByIdQuery;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,6 +49,23 @@ public class DeliveriesController {
         this.currentUserAccess = currentUserAccess;
     }
 
+    /**
+     * Creates a delivery for an order on behalf of the caller's provider tenant.
+     *
+     * <p>The provider in the body must be the caller's own. The driver, the vehicle and the order must
+     * all belong to that provider, the driver/vehicle must be available, the vehicle capacity must be
+     * sufficient and the product must have enough stock; several of those preconditions answer 409.
+     * Creating the delivery assigns the driver, routes the vehicle, decrements stock and dispatches the
+     * order, all in one transaction.</p>
+     */
+    @Operation(summary = "Create a delivery",
+            description = "Creates a delivery for a provider order after validating fleet availability, vehicle capacity, stock and ownership.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Delivery created and order dispatched."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the provider in the request body."),
+            @ApiResponse(responseCode = "404", description = "The driver/vehicle or the fuel order could not be found for the provider."),
+            @ApiResponse(responseCode = "409", description = "Driver/vehicle not available or not owned by the provider, insufficient capacity or stock, or a delivery already exists for the order.")
+    })
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsProvider(#resource.providerId())")
     public ResponseEntity<?> createDelivery(@RequestBody CreateDeliveryResource resource) {
@@ -57,6 +77,20 @@ public class DeliveriesController {
                 HttpStatus.CREATED);
     }
 
+    /**
+     * Dispatches a delivery.
+     *
+     * <p>Only the owning provider tenant may advance it; a foreign or missing delivery is reported as not
+     * found. Dispatch is routed through the physical machine and is idempotent for an already-assigned
+     * delivery.</p>
+     */
+    @Operation(summary = "Dispatch a delivery",
+            description = "Moves a delivery to the assigned/dispatched state on behalf of its owning provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Delivery dispatched."),
+            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller."),
+            @ApiResponse(responseCode = "409", description = "The delivery cannot be dispatched from its current physical state.")
+    })
     @PostMapping("/{deliveryId}/dispatch")
     public ResponseEntity<?> dispatchDelivery(@PathVariable Long deliveryId) {
         if (!ownsDeliveryAsProvider(deliveryId)) return ResponseEntity.notFound().build();
@@ -67,6 +101,22 @@ public class DeliveriesController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Completes a delivery.
+     *
+     * <p>Only the owning provider tenant may close it. The v1 close carries no delivered volume, so the
+     * adapter uses the order's requested quantity as evidence and materialises the intermediate states
+     * v1 never recorded before closing; this keeps the legacy contract while the physical machine still
+     * enforces its invariant.</p>
+     */
+    @Operation(summary = "Complete a delivery",
+            description = "Closes a delivery on behalf of its owning provider tenant, using the order's requested quantity as delivered evidence.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Delivery completed."),
+            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller."),
+            @ApiResponse(responseCode = "409", description = "The delivery cannot be completed from its current physical state."),
+            @ApiResponse(responseCode = "422", description = "The requested volume of the order could not be resolved to serve as close evidence.")
+    })
     @PostMapping("/{deliveryId}/complete")
     public ResponseEntity<?> completeDelivery(@PathVariable Long deliveryId) {
         if (!ownsDeliveryAsProvider(deliveryId)) return ResponseEntity.notFound().build();
@@ -77,6 +127,19 @@ public class DeliveriesController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Fails a delivery.
+     *
+     * <p>Only the owning provider tenant may fail it; the reason is recorded. Failure is routed through
+     * the physical machine.</p>
+     */
+    @Operation(summary = "Fail a delivery",
+            description = "Moves a delivery to the failed state on behalf of its owning provider tenant, recording a reason.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Delivery failed."),
+            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller."),
+            @ApiResponse(responseCode = "409", description = "The delivery cannot be failed from its current physical state.")
+    })
     @PostMapping("/{deliveryId}/fail")
     public ResponseEntity<?> failDelivery(@PathVariable Long deliveryId,
                                           @RequestBody FailDeliveryResource resource) {
@@ -88,6 +151,17 @@ public class DeliveriesController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Lists every delivery in the platform.
+     *
+     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     */
+    @Operation(summary = "List all deliveries",
+            description = "Returns every registered delivery. Restricted to administrators.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Deliveries returned."),
+            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+    })
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<DeliveryResource>> getAllDeliveries() {
@@ -96,6 +170,17 @@ public class DeliveriesController {
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
+    /**
+     * Lists the deliveries of a provider tenant.
+     *
+     * <p>Only the owning provider tenant may list them.</p>
+     */
+    @Operation(summary = "List deliveries by provider",
+            description = "Returns the deliveries of the given provider tenant when it matches the caller's own provider.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Deliveries returned."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the requested provider tenant.")
+    })
     @GetMapping("/provider/{providerId}")
     @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<List<DeliveryResource>> getDeliveriesByProvider(@PathVariable Long providerId) {
@@ -106,6 +191,18 @@ public class DeliveriesController {
         return ResponseEntity.ok(resources);
     }
 
+    /**
+     * Retrieves a single delivery.
+     *
+     * <p>Readable by the delivery's provider tenant or by the buyer company of its order; anything else
+     * is reported as not found.</p>
+     */
+    @Operation(summary = "Get a delivery by id",
+            description = "Returns the delivery identified by the path id when the caller is its provider tenant or its order's buyer company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Delivery returned."),
+            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not visible to the caller.")
+    })
     @GetMapping("/{deliveryId}")
     public ResponseEntity<DeliveryResource> getDeliveryById(@PathVariable Long deliveryId) {
         var result = deliveryQueryService.handle(new GetDeliveryByIdQuery(deliveryId))
@@ -115,6 +212,18 @@ public class DeliveriesController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * Retrieves the delivery of an order.
+     *
+     * <p>Readable by the delivery's provider tenant or by the buyer company of the order; anything else
+     * is reported as not found.</p>
+     */
+    @Operation(summary = "Get the delivery of an order",
+            description = "Returns the delivery attached to the given order when the caller is its provider tenant or the order's buyer company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Delivery returned."),
+            @ApiResponse(responseCode = "404", description = "No delivery exists for the order or it is not visible to the caller.")
+    })
     @GetMapping("/order/{orderId}")
     public ResponseEntity<DeliveryResource> getDeliveryByOrder(@PathVariable Long orderId) {
         var result = deliveryQueryService.handle(new GetDeliveryByOrderIdQuery(orderId));

@@ -5,6 +5,9 @@ import com.primefuel.fulltank.platform.catalog.domain.repositories.ProviderRatin
 import com.primefuel.fulltank.platform.catalog.interfaces.rest.resources.ProviderRatingResource;
 import com.primefuel.fulltank.platform.iam.domain.repositories.BuyerCompanyRepository;
 import com.primefuel.fulltank.platform.iam.domain.repositories.ProviderCompanyRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +31,17 @@ public class ProviderRatingsController {
         this.providerCompanyRepository = providerCompanyRepository;
     }
 
+    /**
+     * Lists provider ratings.
+     *
+     * <p>Any authenticated caller may list ratings; the optional filters narrow the result by buyer
+     * company and/or provider company. Results are not tenant-scoped.</p>
+     */
+    @Operation(summary = "List provider ratings",
+            description = "Returns provider ratings, optionally filtered by buyer company and/or provider company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ratings returned.")
+    })
     @GetMapping
     public List<ProviderRatingResource> getAll(
             @RequestParam(required = false) Long companyId,
@@ -36,6 +50,21 @@ public class ProviderRatingsController {
                 .map(ProviderRatingsController::toResource).toList();
     }
 
+    /**
+     * Creates a rating from a buyer company to a provider company.
+     *
+     * <p>Only the buyer company named in the body may create the rating, and it may rate a given
+     * provider only once. The referenced buyer and provider companies must both exist; a missing
+     * reference is answered as a bad request rather than a not found.</p>
+     */
+    @Operation(summary = "Create a provider rating",
+            description = "Records a 1-to-5 rating from the caller's buyer company to a provider company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Rating created."),
+            @ApiResponse(responseCode = "400", description = "The rating, company or provider is invalid, or the referenced company/provider does not exist."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the buyer company in the request body."),
+            @ApiResponse(responseCode = "409", description = "The buyer company has already rated this provider.")
+    })
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
     public ResponseEntity<?> create(@RequestBody ProviderRatingResource resource) {
@@ -54,6 +83,20 @@ public class ProviderRatingsController {
         }
     }
 
+    /**
+     * Updates the score of an existing rating.
+     *
+     * <p>Only the owning buyer company may update; the buyer and provider of a rating are immutable,
+     * so changing either is rejected as a bad request.</p>
+     */
+    @Operation(summary = "Update a provider rating",
+            description = "Changes the score of an existing rating owned by the caller's buyer company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Rating updated."),
+            @ApiResponse(responseCode = "400", description = "The rating is invalid, the referenced company/provider does not exist, or the buyer/provider of the rating was changed."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the buyer company in the request body."),
+            @ApiResponse(responseCode = "404", description = "Rating does not exist.")
+    })
     @PutMapping("/{id}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody ProviderRatingResource resource) {

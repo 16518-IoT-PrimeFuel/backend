@@ -13,6 +13,9 @@ import com.primefuel.fulltank.platform.notification.interfaces.rest.transform.No
 import com.primefuel.fulltank.platform.iam.domain.repositories.UserRepository;
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -42,6 +45,21 @@ public class NotificationsController {
         this.currentUserAccess = currentUserAccess;
     }
 
+    /**
+     * Creates a notification for exactly one recipient.
+     *
+     * <p>Exactly one of userId/companyId/providerId must be supplied, and the caller must own the
+     * referenced recipient (user, company or provider). A company/provider recipient is resolved to its
+     * user; when that user does not exist the request is rejected as a bad request.</p>
+     */
+    @Operation(summary = "Create a notification",
+            description = "Creates a notification addressed to exactly one owned recipient (user, company or provider).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Notification created."),
+            @ApiResponse(responseCode = "400", description = "Not exactly one recipient was supplied, or the referenced recipient user does not exist."),
+            @ApiResponse(responseCode = "403", description = "Caller owns none of the referenced user/company/provider."),
+            @ApiResponse(responseCode = "404", description = "The referenced recipient is not owned by the caller.")
+    })
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsUser(#resource.userId()) or @currentUserAccess.ownsCompany(#resource.companyId()) or @currentUserAccess.ownsProvider(#resource.providerId())")
     public ResponseEntity<?> createNotification(@RequestBody CreateNotificationResource resource) {
@@ -68,6 +86,18 @@ public class NotificationsController {
                 HttpStatus.CREATED);
     }
 
+    /**
+     * Marks a notification as read.
+     *
+     * <p>Only the user the notification belongs to may change it; anything else is reported as not
+     * found.</p>
+     */
+    @Operation(summary = "Mark a notification as read",
+            description = "Marks the given notification as read when it belongs to the caller.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Notification marked as read."),
+            @ApiResponse(responseCode = "404", description = "Notification does not exist or does not belong to the caller.")
+    })
     @PostMapping("/{notificationId}/mark-as-read")
     public ResponseEntity<?> markAsRead(@PathVariable Long notificationId) {
         var notification = notificationQueryService.handle(new GetNotificationByIdQuery(notificationId));
@@ -81,6 +111,17 @@ public class NotificationsController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Retrieves a single notification.
+     *
+     * <p>Only the user it belongs to may read it; anything else is reported as not found.</p>
+     */
+    @Operation(summary = "Get a notification by id",
+            description = "Returns the notification identified by the path id when it belongs to the caller.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Notification returned."),
+            @ApiResponse(responseCode = "404", description = "Notification does not exist or does not belong to the caller.")
+    })
     @GetMapping("/{notificationId}")
     public ResponseEntity<NotificationResource> getNotificationById(@PathVariable Long notificationId) {
         var result = notificationQueryService.handle(new GetNotificationByIdQuery(notificationId))
@@ -90,6 +131,17 @@ public class NotificationsController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * Lists the notifications of a user.
+     *
+     * <p>A caller may only list their own notifications.</p>
+     */
+    @Operation(summary = "List notifications by user",
+            description = "Returns the notifications of the given user when it is the caller.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Notifications returned."),
+            @ApiResponse(responseCode = "403", description = "Caller is not the requested user.")
+    })
     @GetMapping("/user/{userId}")
     @PreAuthorize("@currentUserAccess.ownsUser(#userId)")
     public ResponseEntity<List<NotificationResource>> getNotificationsByUser(@PathVariable Long userId) {
@@ -98,6 +150,18 @@ public class NotificationsController {
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
+    /**
+     * Lists the notifications addressed to a buyer company.
+     *
+     * <p>Only the owning company may list them; the company is resolved to its user. A company without a
+     * user yields an empty list rather than an error.</p>
+     */
+    @Operation(summary = "List notifications by buyer company",
+            description = "Returns the notifications addressed to the given buyer company's user when the caller owns the company.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Notifications returned (possibly empty)."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the requested company.")
+    })
     @GetMapping("/buyer/{companyId}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<List<NotificationResource>> getNotificationsByBuyer(@PathVariable Long companyId) {
@@ -106,6 +170,18 @@ public class NotificationsController {
                 .orElse(ResponseEntity.ok(List.of()));
     }
 
+    /**
+     * Lists the notifications addressed to a provider tenant.
+     *
+     * <p>Only the owning provider may list them; the provider is resolved to its user. A provider without a
+     * user yields an empty list rather than an error.</p>
+     */
+    @Operation(summary = "List notifications by provider",
+            description = "Returns the notifications addressed to the given provider tenant's user when the caller owns the provider.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Notifications returned (possibly empty)."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the requested provider tenant.")
+    })
     @GetMapping("/provider/{providerId}")
     @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<List<NotificationResource>> getNotificationsByProvider(@PathVariable Long providerId) {
@@ -114,6 +190,17 @@ public class NotificationsController {
                 .orElse(ResponseEntity.ok(List.of()));
     }
 
+    /**
+     * Lists the unread notifications of a user.
+     *
+     * <p>A caller may only list their own unread notifications.</p>
+     */
+    @Operation(summary = "List unread notifications by user",
+            description = "Returns the unread notifications of the given user when it is the caller.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Unread notifications returned."),
+            @ApiResponse(responseCode = "403", description = "Caller is not the requested user.")
+    })
     @GetMapping("/user/{userId}/unread")
     @PreAuthorize("@currentUserAccess.ownsUser(#userId)")
     public ResponseEntity<List<NotificationResource>> getUnreadByUser(@PathVariable Long userId) {

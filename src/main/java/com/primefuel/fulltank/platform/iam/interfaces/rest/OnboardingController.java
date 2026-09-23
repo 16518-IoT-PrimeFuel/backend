@@ -9,6 +9,9 @@ import com.primefuel.fulltank.platform.iam.interfaces.rest.resources.OnboardOrga
 import com.primefuel.fulltank.platform.iam.interfaces.rest.transform.OrganizationResourceFromDomainAssembler;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -33,6 +36,21 @@ public class OnboardingController {
         this.membershipAccess = membershipAccess;
     }
 
+    /**
+     * Creates a new organization owned by the authenticated user.
+     *
+     * <p>The caller must be authenticated; the owner is taken from the principal, never from the
+     * request body. The type must be a known organization type, the RUC must be unique, and the
+     * creator is granted an OWNER membership on the new organization.</p>
+     */
+    @Operation(summary = "Onboard an organization",
+            description = "Creates an organization owned by the authenticated caller and grants the caller the OWNER membership.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Organization created and ownership granted."),
+            @ApiResponse(responseCode = "400", description = "Request body failed validation, the type is unknown, or no owner could be resolved."),
+            @ApiResponse(responseCode = "403", description = "Caller is not authenticated."),
+            @ApiResponse(responseCode = "409", description = "An organization with the same RUC already exists, or ownership could not be granted.")
+    })
     @PostMapping
     public ResponseEntity<?> onboard(@Valid @RequestBody OnboardOrganizationResource resource) {
         var ownerUserId = membershipAccess.currentUserId();

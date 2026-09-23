@@ -10,6 +10,9 @@ import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.TankerInp
 import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.TankerV2Resource;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -43,6 +46,18 @@ public class TankersV2Controller {
         this.tenantAccess = tenantAccess;
     }
 
+    /**
+     * Registers a tanker in the caller's provider tenant.
+     *
+     * <p>The provider always comes from the principal, never the body.</p>
+     */
+    @Operation(summary = "Register a tanker",
+            description = "Creates a tanker in the caller's provider tenant; the tenant is taken from the principal.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Tanker created."),
+            @ApiResponse(responseCode = "400", description = "Request body failed validation or the tanker data is invalid."),
+            @ApiResponse(responseCode = "403", description = "Caller has no provider identity.")
+    })
     @PostMapping
     public ResponseEntity<?> register(@Valid @RequestBody TankerInputResource resource) {
         var providerId = tenantAccess.currentProviderId();
@@ -56,6 +71,17 @@ public class TankersV2Controller {
                 result, TankersV2Controller::toResource, HttpStatus.CREATED);
     }
 
+    /**
+     * Lists the tankers of the caller's provider tenant.
+     *
+     * <p>Always tenant-scoped through the principal.</p>
+     */
+    @Operation(summary = "List tankers",
+            description = "Returns all tankers of the caller's provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tankers returned."),
+            @ApiResponse(responseCode = "403", description = "Caller has no provider identity.")
+    })
     @GetMapping
     public ResponseEntity<List<TankerV2Resource>> list() {
         var providerId = tenantAccess.currentProviderId();
@@ -66,6 +92,18 @@ public class TankersV2Controller {
                 .map(TankersV2Controller::toResource).toList(), HttpStatus.OK);
     }
 
+    /**
+     * Retrieves a single tanker.
+     *
+     * <p>Tenant-scoped through the principal; a tanker of another tenant is reported as not found.</p>
+     */
+    @Operation(summary = "Get a tanker by id",
+            description = "Returns the tanker identified by the path id when it belongs to the caller's provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tanker returned."),
+            @ApiResponse(responseCode = "403", description = "Caller has no provider identity."),
+            @ApiResponse(responseCode = "404", description = "Tanker does not exist or belongs to another provider tenant.")
+    })
     @GetMapping("/{tankerId}")
     public ResponseEntity<TankerV2Resource> get(@PathVariable Long tankerId) {
         var providerId = tenantAccess.currentProviderId();
@@ -78,6 +116,19 @@ public class TankersV2Controller {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * Updates a tanker.
+     *
+     * <p>Only the owning provider tenant may update it; a foreign or missing tanker is reported as not
+     * found and invalid data as a bad request.</p>
+     */
+    @Operation(summary = "Update a tanker",
+            description = "Applies field changes to a tanker owned by the caller's provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tanker updated."),
+            @ApiResponse(responseCode = "400", description = "Request body failed validation or the tanker data is invalid."),
+            @ApiResponse(responseCode = "404", description = "Tanker does not exist or is not owned by the caller.")
+    })
     @PutMapping("/{tankerId}")
     public ResponseEntity<?> update(@PathVariable Long tankerId,
                                     @Valid @RequestBody TankerInputResource resource) {
@@ -91,6 +142,18 @@ public class TankersV2Controller {
                 result, TankersV2Controller::toResource, HttpStatus.OK);
     }
 
+    /**
+     * Disables a tanker.
+     *
+     * <p>Only the owning provider tenant may disable it. Disabling never deletes the row; it flips the
+     * lifecycle flag and publishes a resource-disabled event.</p>
+     */
+    @Operation(summary = "Disable a tanker",
+            description = "Soft-disables a tanker owned by the caller's provider tenant, preserving the record.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tanker disabled."),
+            @ApiResponse(responseCode = "404", description = "Tanker does not exist or is not owned by the caller.")
+    })
     @PostMapping("/{tankerId}/deactivate")
     public ResponseEntity<?> deactivate(@PathVariable Long tankerId) {
         if (!owns(tankerId)) {
@@ -100,6 +163,17 @@ public class TankersV2Controller {
                 fleetRegistry.deactivateTanker(tankerId), TankersV2Controller::toResource, HttpStatus.OK);
     }
 
+    /**
+     * Enables a previously disabled tanker.
+     *
+     * <p>Only the owning provider tenant may enable it; this publishes a resource-enabled event.</p>
+     */
+    @Operation(summary = "Enable a tanker",
+            description = "Re-enables a disabled tanker owned by the caller's provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tanker enabled."),
+            @ApiResponse(responseCode = "404", description = "Tanker does not exist or is not owned by the caller.")
+    })
     @PostMapping("/{tankerId}/activate")
     public ResponseEntity<?> activate(@PathVariable Long tankerId) {
         if (!owns(tankerId)) {
@@ -109,7 +183,18 @@ public class TankersV2Controller {
                 fleetRegistry.activateTanker(tankerId), TankersV2Controller::toResource, HttpStatus.OK);
     }
 
-    /** Only the tankers this tenant may actually be suggested (U07: available + active + same tenant). */
+    /**
+     * Lists the tankers that may actually be suggested for a delivery.
+     *
+     * <p>U07: eligible = allowed status + active + same tenant. Tankers that are busy are excluded from
+     * this suggestion list.</p>
+     */
+    @Operation(summary = "List eligible tankers",
+            description = "Returns the tankers of the caller's provider tenant that are currently eligible to be suggested.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Eligible tankers returned."),
+            @ApiResponse(responseCode = "403", description = "Caller has no provider identity.")
+    })
     @GetMapping("/eligible")
     public ResponseEntity<List<TankerV2Resource>> listEligible() {
         var providerId = tenantAccess.currentProviderId();
@@ -120,6 +205,19 @@ public class TankersV2Controller {
                 .map(TankersV2Controller::toResource).toList(), HttpStatus.OK);
     }
 
+    /**
+     * Assesses the eligibility of a single tanker.
+     *
+     * <p>Returns a three-valued outcome (eligible / busy / ineligible) with a reason. Tenant-scoped
+     * through the principal; a foreign or missing tanker is reported as not found.</p>
+     */
+    @Operation(summary = "Assess tanker eligibility",
+            description = "Returns the eligibility outcome and reason for a tanker owned by the caller's provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Eligibility assessment returned."),
+            @ApiResponse(responseCode = "403", description = "Caller has no provider identity."),
+            @ApiResponse(responseCode = "404", description = "Tanker does not exist or belongs to another provider tenant.")
+    })
     @GetMapping("/{tankerId}/eligibility")
     public ResponseEntity<EligibilityResource> eligibility(@PathVariable Long tankerId) {
         var providerId = tenantAccess.currentProviderId();

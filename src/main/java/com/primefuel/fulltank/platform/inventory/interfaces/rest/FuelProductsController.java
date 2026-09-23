@@ -17,6 +17,9 @@ import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.Updat
 import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.UpdateFuelProductStockCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -43,6 +46,17 @@ public class FuelProductsController {
         this.tenantAccess = tenantAccess;
     }
 
+    /**
+     * Creates a fuel product for a provider tenant.
+     *
+     * <p>The provider id in the body must be the caller's own provider tenant.</p>
+     */
+    @Operation(summary = "Create a fuel product",
+            description = "Creates a fuel product owned by the caller's provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Fuel product created."),
+            @ApiResponse(responseCode = "403", description = "Caller does not own the provider in the request body.")
+    })
     @PostMapping
     @PreAuthorize("@tenantAccess.ownsProvider(#resource.providerId())")
     public ResponseEntity<?> createFuelProduct(@RequestBody CreateFuelProductResource resource) {
@@ -54,6 +68,18 @@ public class FuelProductsController {
                 HttpStatus.CREATED);
     }
 
+    /**
+     * Updates the stock of a fuel product.
+     *
+     * <p>Only the owning provider tenant may change the stock. A product that does not exist or belongs
+     * to another tenant is reported as not found.</p>
+     */
+    @Operation(summary = "Update fuel product stock",
+            description = "Sets the available stock of a fuel product owned by the caller's provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Stock updated."),
+            @ApiResponse(responseCode = "404", description = "Fuel product does not exist or belongs to another provider tenant.")
+    })
     @PostMapping("/{fuelProductId}/update-stock")
     public ResponseEntity<?> updateStock(@PathVariable Long fuelProductId,
                                          @RequestBody UpdateFuelProductStockResource resource) {
@@ -66,6 +92,17 @@ public class FuelProductsController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Lists every fuel product in the platform.
+     *
+     * <p>Restricted to the buyer role (the procurement side).</p>
+     */
+    @Operation(summary = "List all fuel products",
+            description = "Returns every registered fuel product. Restricted to buyers.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fuel products returned."),
+            @ApiResponse(responseCode = "403", description = "Caller does not hold the buyer role.")
+    })
     @GetMapping
     @PreAuthorize("@tenantAccess.isBuyerRole()")
     public ResponseEntity<List<FuelProductResource>> getAllFuelProducts() {
@@ -74,6 +111,18 @@ public class FuelProductsController {
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
+    /**
+     * Retrieves a single fuel product.
+     *
+     * <p>Readable by any buyer, or by the provider tenant that owns the product; anything else is
+     * reported as not found.</p>
+     */
+    @Operation(summary = "Get a fuel product by id",
+            description = "Returns the fuel product identified by the path id to a buyer or its owning provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fuel product returned."),
+            @ApiResponse(responseCode = "404", description = "Fuel product does not exist or is not visible to the caller.")
+    })
     @GetMapping("/{fuelProductId}")
     public ResponseEntity<FuelProductResource> getFuelProductById(@PathVariable Long fuelProductId) {
         var result = fuelProductQueryService.handle(new GetFuelProductByIdQuery(fuelProductId))
@@ -84,6 +133,17 @@ public class FuelProductsController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * Lists the fuel products of a provider tenant.
+     *
+     * <p>Available to any buyer or to the owning provider tenant.</p>
+     */
+    @Operation(summary = "List fuel products by provider",
+            description = "Returns all fuel products of the given provider to a buyer or to its owning provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fuel products returned."),
+            @ApiResponse(responseCode = "403", description = "Caller is neither a buyer nor the owner of the provider tenant.")
+    })
     @GetMapping("/provider/{providerId}")
     @PreAuthorize("@tenantAccess.isBuyerRole() or @tenantAccess.ownsProvider(#providerId)")
     public ResponseEntity<List<FuelProductResource>> getFuelProductsByProvider(@PathVariable Long providerId) {
@@ -92,6 +152,18 @@ public class FuelProductsController {
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
+    /**
+     * Updates a fuel product.
+     *
+     * <p>Only the owning provider tenant may update it; a product that does not exist or belongs to
+     * another tenant is reported as not found.</p>
+     */
+    @Operation(summary = "Update a fuel product",
+            description = "Applies field changes to a fuel product owned by the caller's provider tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fuel product updated."),
+            @ApiResponse(responseCode = "404", description = "Fuel product does not exist or belongs to another provider tenant.")
+    })
     @PutMapping("/{fuelProductId}")
     public ResponseEntity<?> updateFuelProduct(@PathVariable Long fuelProductId,
                                                @RequestBody UpdateFuelProductResource resource) {
@@ -104,6 +176,19 @@ public class FuelProductsController {
                 HttpStatus.OK);
     }
 
+    /**
+     * Deletes a fuel product.
+     *
+     * <p>Only the owning provider tenant may delete it. A product still referenced by existing
+     * requests or orders cannot be removed and is reported as a conflict.</p>
+     */
+    @Operation(summary = "Delete a fuel product",
+            description = "Removes a fuel product owned by the caller's provider tenant when it is not referenced by other records.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Fuel product deleted; no content returned."),
+            @ApiResponse(responseCode = "404", description = "Fuel product does not exist or belongs to another provider tenant."),
+            @ApiResponse(responseCode = "409", description = "Fuel product is still referenced by existing requests or orders.")
+    })
     @DeleteMapping("/{fuelProductId}")
     public ResponseEntity<?> deleteFuelProduct(@PathVariable Long fuelProductId) {
         if (!ownsProduct(fuelProductId)) return ResponseEntity.notFound().build();

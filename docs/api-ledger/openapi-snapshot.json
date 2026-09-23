@@ -59,10 +59,47 @@
         },
         "type" : "object"
       },
+      "CompleteDeliveryResource" : {
+        "properties" : {
+          "deliveredVolume" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
       "CompletePaymentResource" : {
         "properties" : {
           "transactionReference" : {
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ConfigureRefillPolicyResource" : {
+        "properties" : {
+          "autoGenerateEnabled" : {
+            "type" : "boolean"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "hysteresisPercent" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "lowLevelPercent" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "targetLevelPercent" : {
+            "format" : "double",
+            "type" : "number"
           }
         },
         "type" : "object"
@@ -531,6 +568,139 @@
         },
         "type" : "object"
       },
+      "DeliveryTransitionResource" : {
+        "properties" : {
+          "aggregateVersion" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fromState" : {
+            "enum" : [ "ASSIGNED", "STARTED", "ARRIVED", "DELIVERING", "COMPLETED", "FAILED", "CANCELLED" ],
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "occurredAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "toState" : {
+            "enum" : [ "ASSIGNED", "STARTED", "ARRIVED", "DELIVERING", "COMPLETED", "FAILED", "CANCELLED" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "DeliveryV2Resource" : {
+        "properties" : {
+          "arrivedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "deliveredAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "deliveredVolume" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "deliveringAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "dispatchedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "driverId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "legacyStatus" : {
+            "enum" : [ "SCHEDULED", "DISPATCHED", "DELIVERED", "FAILED" ],
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "physicalState" : {
+            "enum" : [ "ASSIGNED", "STARTED", "ARRIVED", "DELIVERING", "COMPLETED", "FAILED", "CANCELLED" ],
+            "type" : "string"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "requestedVolume" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "startedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "vehicleId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "version" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "DriverInputResource" : {
+        "properties" : {
+          "email" : {
+            "maxLength" : 160,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "firstName" : {
+            "maxLength" : 80,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "lastName" : {
+            "maxLength" : 80,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "licenseNumber" : {
+            "maxLength" : 60,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "phoneNumber" : {
+            "maxLength" : 30,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "status" : {
+            "maxLength" : 30,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "userId" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "email", "firstName", "lastName", "licenseNumber", "phoneNumber" ],
+        "type" : "object"
+      },
       "DriverResource" : {
         "properties" : {
           "email" : {
@@ -557,6 +727,55 @@
             "type" : "integer"
           },
           "status" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "DriverV2Resource" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "firstName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "lastName" : {
+            "type" : "string"
+          },
+          "licenseNumber" : {
+            "type" : "string"
+          },
+          "phoneNumber" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "EligibilityResource" : {
+        "properties" : {
+          "outcome" : {
+            "type" : "string"
+          },
+          "reason" : {
             "type" : "string"
           }
         },
@@ -1133,6 +1352,123 @@
         },
         "type" : "object"
       },
+      "RefillEpisodeResource" : {
+        "properties" : {
+          "closedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "closedLevelPercent" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "episodeKey" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "openedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "openedLevel" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "openedLevelPercent" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "organizationId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "policyVersion" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "requestEmitted" : {
+            "type" : "boolean"
+          },
+          "requestId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "requestedVolume" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tankId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "targetLevel" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "version" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "RefillPolicyResource" : {
+        "properties" : {
+          "autoGenerateEnabled" : {
+            "type" : "boolean"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "hysteresisPercent" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "lowLevelPercent" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "organizationId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "policyVersion" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "tankId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "targetLevelPercent" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "version" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
       "RegisterTankResource" : {
         "properties" : {
           "capacity" : {
@@ -1360,6 +1696,76 @@
         },
         "type" : "object"
       },
+      "TankerInputResource" : {
+        "properties" : {
+          "brand" : {
+            "maxLength" : 80,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "capacity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "licensePlate" : {
+            "maxLength" : 20,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "model" : {
+            "maxLength" : 80,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "status" : {
+            "maxLength" : 30,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "unit" : {
+            "maxLength" : 20,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "brand", "licensePlate", "model" ],
+        "type" : "object"
+      },
+      "TankerV2Resource" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "brand" : {
+            "type" : "string"
+          },
+          "capacity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "licensePlate" : {
+            "type" : "string"
+          },
+          "model" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "UpdateEquipmentResource" : {
         "properties" : {
           "autoRefill" : {
@@ -1533,6 +1939,7 @@
   "paths" : {
     "/api/v1/analytics/buyers/{companyId}" : {
       "get" : {
+        "description" : "Returns the aggregated metrics of the given buyer company when the caller owns it.",
         "operationId" : "getBuyerAnalytics",
         "parameters" : [ {
           "in" : "path",
@@ -1552,14 +1959,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Buyer analytics returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BuyerAnalyticsResource"
+                }
+              }
+            },
+            "description" : "Caller is not the owner of this buyer company."
           }
         },
+        "summary" : "Get buyer analytics",
         "tags" : [ "Analytics" ]
       }
     },
     "/api/v1/analytics/platform" : {
       "get" : {
+        "description" : "Returns aggregated platform-wide metrics. Restricted to administrators.",
         "operationId" : "getPlatformSummary",
         "responses" : {
           "200" : {
@@ -1570,14 +1989,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Platform summary returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PlatformSummaryResource"
+                }
+              }
+            },
+            "description" : "Caller does not hold the ROLE_ADMIN authority."
           }
         },
+        "summary" : "Get the platform summary",
         "tags" : [ "Analytics" ]
       }
     },
     "/api/v1/analytics/providers/{providerId}" : {
       "get" : {
+        "description" : "Returns the aggregated metrics of the given provider company when the caller owns it.",
         "operationId" : "getProviderAnalytics",
         "parameters" : [ {
           "in" : "path",
@@ -1597,14 +2028,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Provider analytics returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderAnalyticsResource"
+                }
+              }
+            },
+            "description" : "Caller is not the owner of this provider company."
           }
         },
+        "summary" : "Get provider analytics",
         "tags" : [ "Analytics" ]
       }
     },
     "/api/v1/authentication/password-reset/confirm" : {
       "post" : {
+        "description" : "Applies the new password when the reset token is valid, single-use and not expired.",
         "operationId" : "confirmPasswordReset",
         "requestBody" : {
           "content" : {
@@ -1617,7 +2060,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "204" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1625,14 +2068,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Password updated; no content returned."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The token is missing, expired or already used, or the new password is invalid."
           }
         },
+        "summary" : "Confirm a password reset",
         "tags" : [ "Authentication" ]
       }
     },
     "/api/v1/authentication/password-reset/request" : {
       "post" : {
+        "description" : "Sends reset instructions to the address if an account exists, without revealing whether the account is registered.",
         "operationId" : "requestPasswordReset",
         "requestBody" : {
           "content" : {
@@ -1645,7 +2100,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "202" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1653,14 +2108,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Reset request accepted."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The email field failed validation."
           }
         },
+        "summary" : "Request a password reset",
         "tags" : [ "Authentication" ]
       }
     },
     "/api/v1/authentication/sign-in" : {
       "post" : {
+        "description" : "Verifies the supplied credentials and returns the authenticated user together with a JWT.",
         "operationId" : "signIn",
         "requestBody" : {
           "content" : {
@@ -1681,14 +2148,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Credentials accepted; token issued."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The username or password is incorrect."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "No user matches the given username."
           }
         },
+        "summary" : "Authenticate a user",
         "tags" : [ "Authentication" ]
       }
     },
     "/api/v1/authentication/sign-up" : {
       "post" : {
+        "description" : "Creates a user account together with its organization and owner membership, validating that the selected role matches the business profile supplied.",
         "operationId" : "signUp",
         "requestBody" : {
           "content" : {
@@ -1701,7 +2190,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1709,14 +2198,56 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Account and organization created."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation or the role/profile combination is invalid."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "One of the referenced roles does not exist."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The username, buyer RUC, provider RUC or organization RUC already exists."
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Unexpected error while bootstrapping the organization or membership."
           }
         },
+        "summary" : "Register a new account",
         "tags" : [ "Authentication" ]
       }
     },
     "/api/v1/buyer-companies" : {
       "get" : {
+        "description" : "Returns every registered buyer company. Restricted to administrators.",
         "operationId" : "getAllBuyerCompanies",
         "responses" : {
           "200" : {
@@ -1730,12 +2261,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Buyer companies returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/BuyerCompanyResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not hold the ROLE_ADMIN authority."
           }
         },
+        "summary" : "List all buyer companies",
         "tags" : [ "Buyer Companies" ]
       },
       "post" : {
+        "description" : "Persists a new buyer company profile. This registration endpoint is open to unauthenticated callers.",
         "operationId" : "createBuyerCompany",
         "requestBody" : {
           "content" : {
@@ -1748,7 +2294,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1756,14 +2302,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Buyer company created."
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Unexpected error while persisting the buyer company."
           }
         },
+        "summary" : "Create a buyer company",
         "tags" : [ "Buyer Companies" ]
       }
     },
     "/api/v1/buyer-companies/{companyId}" : {
       "get" : {
+        "description" : "Returns the buyer company identified by the path id when the caller owns it.",
         "operationId" : "getBuyerCompanyById",
         "parameters" : [ {
           "in" : "path",
@@ -1783,12 +2341,34 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Buyer company returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BuyerCompanyResource"
+                }
+              }
+            },
+            "description" : "Caller is not the owner of this buyer company."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BuyerCompanyResource"
+                }
+              }
+            },
+            "description" : "Buyer company does not exist."
           }
         },
+        "summary" : "Get a buyer company by id",
         "tags" : [ "Buyer Companies" ]
       },
       "put" : {
+        "description" : "Replaces the editable fields of the buyer company identified by the path id.",
         "operationId" : "updateBuyerCompany",
         "parameters" : [ {
           "in" : "path",
@@ -1818,14 +2398,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Buyer company updated."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BuyerCompanyResource"
+                }
+              }
+            },
+            "description" : "Caller is not the owner of this buyer company."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BuyerCompanyResource"
+                }
+              }
+            },
+            "description" : "Buyer company does not exist."
           }
         },
+        "summary" : "Update a buyer company",
         "tags" : [ "Buyer Companies" ]
       }
     },
     "/api/v1/deliveries" : {
       "get" : {
+        "description" : "Returns every registered delivery. Restricted to administrators.",
         "operationId" : "getAllDeliveries",
         "responses" : {
           "200" : {
@@ -1839,12 +2441,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Deliveries returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not hold the ROLE_ADMIN authority."
           }
         },
+        "summary" : "List all deliveries",
         "tags" : [ "Deliveries" ]
       },
       "post" : {
+        "description" : "Creates a delivery for a provider order after validating fleet availability, vehicle capacity, stock and ownership.",
         "operationId" : "createDelivery",
         "requestBody" : {
           "content" : {
@@ -1857,7 +2474,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1865,14 +2482,46 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Delivery created and order dispatched."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller does not own the provider in the request body."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The driver/vehicle or the fuel order could not be found for the provider."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Driver/vehicle not available or not owned by the provider, insufficient capacity or stock, or a delivery already exists for the order."
           }
         },
+        "summary" : "Create a delivery",
         "tags" : [ "Deliveries" ]
       }
     },
     "/api/v1/deliveries/order/{orderId}" : {
       "get" : {
+        "description" : "Returns the delivery attached to the given order when the caller is its provider tenant or the order's buyer company.",
         "operationId" : "getDeliveryByOrder",
         "parameters" : [ {
           "in" : "path",
@@ -1892,14 +2541,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Delivery returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeliveryResource"
+                }
+              }
+            },
+            "description" : "No delivery exists for the order or it is not visible to the caller."
           }
         },
+        "summary" : "Get the delivery of an order",
         "tags" : [ "Deliveries" ]
       }
     },
     "/api/v1/deliveries/provider/{providerId}" : {
       "get" : {
+        "description" : "Returns the deliveries of the given provider tenant when it matches the caller's own provider.",
         "operationId" : "getDeliveriesByProvider",
         "parameters" : [ {
           "in" : "path",
@@ -1922,14 +2583,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Deliveries returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not own the requested provider tenant."
           }
         },
+        "summary" : "List deliveries by provider",
         "tags" : [ "Deliveries" ]
       }
     },
     "/api/v1/deliveries/{deliveryId}" : {
       "get" : {
+        "description" : "Returns the delivery identified by the path id when the caller is its provider tenant or its order's buyer company.",
         "operationId" : "getDeliveryById",
         "parameters" : [ {
           "in" : "path",
@@ -1949,14 +2625,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Delivery returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeliveryResource"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not visible to the caller."
           }
         },
+        "summary" : "Get a delivery by id",
         "tags" : [ "Deliveries" ]
       }
     },
     "/api/v1/deliveries/{deliveryId}/complete" : {
       "post" : {
+        "description" : "Closes a delivery on behalf of its owning provider tenant, using the order's requested quantity as delivered evidence.",
         "operationId" : "completeDelivery",
         "parameters" : [ {
           "in" : "path",
@@ -1976,14 +2664,46 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Delivery completed."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery cannot be completed from its current physical state."
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The requested volume of the order could not be resolved to serve as close evidence."
           }
         },
+        "summary" : "Complete a delivery",
         "tags" : [ "Deliveries" ]
       }
     },
     "/api/v1/deliveries/{deliveryId}/dispatch" : {
       "post" : {
+        "description" : "Moves a delivery to the assigned/dispatched state on behalf of its owning provider tenant.",
         "operationId" : "dispatchDelivery",
         "parameters" : [ {
           "in" : "path",
@@ -2003,14 +2723,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Delivery dispatched."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery cannot be dispatched from its current physical state."
           }
         },
+        "summary" : "Dispatch a delivery",
         "tags" : [ "Deliveries" ]
       }
     },
     "/api/v1/deliveries/{deliveryId}/fail" : {
       "post" : {
+        "description" : "Moves a delivery to the failed state on behalf of its owning provider tenant, recording a reason.",
         "operationId" : "failDelivery",
         "parameters" : [ {
           "in" : "path",
@@ -2040,14 +2782,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Delivery failed."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery cannot be failed from its current physical state."
           }
         },
+        "summary" : "Fail a delivery",
         "tags" : [ "Deliveries" ]
       }
     },
     "/api/v1/drivers" : {
       "get" : {
+        "description" : "Returns the drivers of the given provider tenant when it matches the caller's own provider.",
         "operationId" : "getByProvider_1",
         "parameters" : [ {
           "in" : "query",
@@ -2070,12 +2834,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Drivers returned."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not own the requested provider tenant."
           }
         },
+        "summary" : "List drivers by provider",
         "tags" : [ "drivers-controller" ]
       },
       "post" : {
+        "description" : "Registers a driver under the caller's provider tenant.",
         "operationId" : "create_4",
         "requestBody" : {
           "content" : {
@@ -2088,7 +2867,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2096,14 +2875,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Driver created."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "The driver data is invalid."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "Caller does not own the provider in the request body."
           }
         },
+        "summary" : "Create a driver",
         "tags" : [ "drivers-controller" ]
       }
     },
     "/api/v1/drivers/{id}" : {
       "delete" : {
+        "description" : "Soft-disables a driver owned by the caller's provider tenant, preserving the record.",
         "operationId" : "delete_1",
         "parameters" : [ {
           "in" : "path",
@@ -2115,13 +2916,18 @@
           }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK"
+          "204" : {
+            "description" : "Driver disabled; no content returned."
+          },
+          "404" : {
+            "description" : "Driver does not exist or is not owned by the caller."
           }
         },
+        "summary" : "Disable a driver",
         "tags" : [ "drivers-controller" ]
       },
       "get" : {
+        "description" : "Returns the driver identified by the path id when it belongs to the caller's provider tenant.",
         "operationId" : "getById_1",
         "parameters" : [ {
           "in" : "path",
@@ -2141,13 +2947,25 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Driver returned."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "Driver does not exist or belongs to another provider tenant."
           }
         },
+        "summary" : "Get a driver by id",
         "tags" : [ "drivers-controller" ]
       },
       "put" : {
-        "operationId" : "update_2",
+        "description" : "Applies field changes to a driver owned by the caller's provider tenant.",
+        "operationId" : "update_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2176,14 +2994,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Driver updated."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "The driver data is invalid."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "Driver does not exist or is not owned by the caller."
           }
         },
+        "summary" : "Update a driver",
         "tags" : [ "drivers-controller" ]
       }
     },
     "/api/v1/equipment" : {
       "get" : {
+        "description" : "Returns every registered piece of equipment. Restricted to administrators.",
         "operationId" : "getAllEquipment",
         "responses" : {
           "200" : {
@@ -2197,12 +3037,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Equipment returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/EquipmentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not hold the ROLE_ADMIN authority."
           }
         },
+        "summary" : "List all equipment",
         "tags" : [ "Equipment" ]
       },
       "post" : {
+        "description" : "Creates equipment for the caller's company; the supplied companyId must be the caller's own.",
         "operationId" : "createEquipment",
         "requestBody" : {
           "content" : {
@@ -2215,7 +3070,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2223,14 +3078,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Equipment created."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller does not own the company in the request body."
           }
         },
+        "summary" : "Create equipment",
         "tags" : [ "Equipment" ]
       }
     },
     "/api/v1/equipment/company/{companyId}" : {
       "get" : {
+        "description" : "Returns all equipment of the given company when it matches the caller's own company.",
         "operationId" : "getEquipmentByCompany",
         "parameters" : [ {
           "in" : "path",
@@ -2253,14 +3120,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Equipment returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/EquipmentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not own the requested company."
           }
         },
+        "summary" : "List equipment by company",
         "tags" : [ "Equipment" ]
       }
     },
     "/api/v1/equipment/{equipmentId}" : {
       "get" : {
+        "description" : "Returns the equipment identified by the path id when it belongs to the caller's company.",
         "operationId" : "getEquipmentById",
         "parameters" : [ {
           "in" : "path",
@@ -2280,14 +3162,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Equipment returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EquipmentResource"
+                }
+              }
+            },
+            "description" : "Equipment does not exist or belongs to another company."
           }
         },
+        "summary" : "Get equipment by id",
         "tags" : [ "Equipment" ]
       }
     },
     "/api/v1/equipment/{equipmentId}/favorite-provider" : {
       "post" : {
+        "description" : "Sets the preferred provider for the given equipment owned by the caller's company.",
         "operationId" : "assignFavoriteProvider",
         "parameters" : [ {
           "in" : "path",
@@ -2317,14 +3211,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Favorite provider assigned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EquipmentResource"
+                }
+              }
+            },
+            "description" : "Caller does not hold the buyer role."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EquipmentResource"
+                }
+              }
+            },
+            "description" : "Equipment does not exist or belongs to another company."
           }
         },
+        "summary" : "Assign a favorite provider to equipment",
         "tags" : [ "Equipment" ]
       }
     },
     "/api/v1/equipment/{equipmentId}/update" : {
       "post" : {
+        "description" : "Applies field changes to the given equipment when it belongs to the caller's company.",
         "operationId" : "updateEquipment",
         "parameters" : [ {
           "in" : "path",
@@ -2354,14 +3270,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Equipment updated."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Equipment does not exist or belongs to another company."
           }
         },
+        "summary" : "Update equipment",
         "tags" : [ "Equipment" ]
       }
     },
     "/api/v1/fuel-orders" : {
       "get" : {
+        "description" : "Returns every registered fuel order. Restricted to administrators.",
         "operationId" : "getAllOrders",
         "responses" : {
           "200" : {
@@ -2375,12 +3303,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel orders returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelOrderResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not hold the ROLE_ADMIN authority."
           }
         },
+        "summary" : "List all fuel orders",
         "tags" : [ "Fuel Orders" ]
       },
       "post" : {
+        "description" : "Creates a fuel order for the caller's company, validating provider/product and company/equipment ownership.",
         "operationId" : "createFuelOrder",
         "requestBody" : {
           "content" : {
@@ -2393,7 +3336,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2401,14 +3344,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel order created."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller does not own the company, or the product/equipment does not belong to the referenced provider/company."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The referenced fuel product or equipment does not exist."
           }
         },
+        "summary" : "Create a fuel order",
         "tags" : [ "Fuel Orders" ]
       }
     },
     "/api/v1/fuel-orders/company/{companyId}" : {
       "get" : {
+        "description" : "Returns all fuel orders of the given buyer company when it matches the caller's own company.",
         "operationId" : "getOrdersByCompany",
         "parameters" : [ {
           "in" : "path",
@@ -2431,14 +3396,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel orders returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelOrderResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not own the requested company."
           }
         },
+        "summary" : "List fuel orders by company",
         "tags" : [ "Fuel Orders" ]
       }
     },
     "/api/v1/fuel-orders/provider/{providerId}" : {
       "get" : {
+        "description" : "Returns all fuel orders of the given provider when it matches the caller's own provider tenant.",
         "operationId" : "getOrdersByProvider",
         "parameters" : [ {
           "in" : "path",
@@ -2461,14 +3441,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel orders returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelOrderResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not own the requested provider tenant."
           }
         },
+        "summary" : "List fuel orders by provider",
         "tags" : [ "Fuel Orders" ]
       }
     },
     "/api/v1/fuel-orders/{orderId}" : {
       "get" : {
+        "description" : "Returns the fuel order identified by the path id when the caller is its buyer company or provider tenant.",
         "operationId" : "getOrderById",
         "parameters" : [ {
           "in" : "path",
@@ -2488,14 +3483,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel order returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelOrderResource"
+                }
+              }
+            },
+            "description" : "Fuel order does not exist or is not owned by the caller."
           }
         },
+        "summary" : "Get a fuel order by id",
         "tags" : [ "Fuel Orders" ]
       }
     },
     "/api/v1/fuel-orders/{orderId}/cancel" : {
       "post" : {
+        "description" : "Moves the given fuel order to the cancelled status on behalf of its buyer company or provider tenant.",
         "operationId" : "cancelOrder",
         "parameters" : [ {
           "in" : "path",
@@ -2515,14 +3522,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel order cancelled."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Fuel order does not exist or is not owned by the caller."
           }
         },
+        "summary" : "Cancel a fuel order",
         "tags" : [ "Fuel Orders" ]
       }
     },
     "/api/v1/fuel-orders/{orderId}/confirm" : {
       "post" : {
+        "description" : "Moves the given fuel order to the confirmed status on behalf of its owning buyer company.",
         "operationId" : "confirmOrder",
         "parameters" : [ {
           "in" : "path",
@@ -2542,14 +3561,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel order confirmed."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Fuel order does not exist or belongs to another buyer company."
           }
         },
+        "summary" : "Confirm a fuel order",
         "tags" : [ "Fuel Orders" ]
       }
     },
     "/api/v1/fuel-products" : {
       "get" : {
+        "description" : "Returns every registered fuel product. Restricted to buyers.",
         "operationId" : "getAllFuelProducts",
         "responses" : {
           "200" : {
@@ -2563,12 +3594,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel products returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelProductResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not hold the buyer role."
           }
         },
+        "summary" : "List all fuel products",
         "tags" : [ "Fuel Products" ]
       },
       "post" : {
+        "description" : "Creates a fuel product owned by the caller's provider tenant.",
         "operationId" : "createFuelProduct",
         "requestBody" : {
           "content" : {
@@ -2581,7 +3627,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2589,14 +3635,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel product created."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller does not own the provider in the request body."
           }
         },
+        "summary" : "Create a fuel product",
         "tags" : [ "Fuel Products" ]
       }
     },
     "/api/v1/fuel-products/provider/{providerId}" : {
       "get" : {
+        "description" : "Returns all fuel products of the given provider to a buyer or to its owning provider tenant.",
         "operationId" : "getFuelProductsByProvider",
         "parameters" : [ {
           "in" : "path",
@@ -2619,14 +3677,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel products returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelProductResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is neither a buyer nor the owner of the provider tenant."
           }
         },
+        "summary" : "List fuel products by provider",
         "tags" : [ "Fuel Products" ]
       }
     },
     "/api/v1/fuel-products/{fuelProductId}" : {
       "delete" : {
+        "description" : "Removes a fuel product owned by the caller's provider tenant when it is not referenced by other records.",
         "operationId" : "deleteFuelProduct",
         "parameters" : [ {
           "in" : "path",
@@ -2638,7 +3711,7 @@
           }
         } ],
         "responses" : {
-          "200" : {
+          "204" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2646,12 +3719,34 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel product deleted; no content returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Fuel product does not exist or belongs to another provider tenant."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Fuel product is still referenced by existing requests or orders."
           }
         },
+        "summary" : "Delete a fuel product",
         "tags" : [ "Fuel Products" ]
       },
       "get" : {
+        "description" : "Returns the fuel product identified by the path id to a buyer or its owning provider tenant.",
         "operationId" : "getFuelProductById",
         "parameters" : [ {
           "in" : "path",
@@ -2671,12 +3766,24 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel product returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelProductResource"
+                }
+              }
+            },
+            "description" : "Fuel product does not exist or is not visible to the caller."
           }
         },
+        "summary" : "Get a fuel product by id",
         "tags" : [ "Fuel Products" ]
       },
       "put" : {
+        "description" : "Applies field changes to a fuel product owned by the caller's provider tenant.",
         "operationId" : "updateFuelProduct",
         "parameters" : [ {
           "in" : "path",
@@ -2706,14 +3813,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel product updated."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Fuel product does not exist or belongs to another provider tenant."
           }
         },
+        "summary" : "Update a fuel product",
         "tags" : [ "Fuel Products" ]
       }
     },
     "/api/v1/fuel-products/{fuelProductId}/update-stock" : {
       "post" : {
+        "description" : "Sets the available stock of a fuel product owned by the caller's provider tenant.",
         "operationId" : "updateStock",
         "parameters" : [ {
           "in" : "path",
@@ -2743,14 +3862,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Stock updated."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Fuel product does not exist or belongs to another provider tenant."
           }
         },
+        "summary" : "Update fuel product stock",
         "tags" : [ "Fuel Products" ]
       }
     },
     "/api/v1/fuel-requests" : {
       "get" : {
+        "description" : "Returns fuel requests for a single owned dimension: either the caller's buyer company or its provider tenant.",
         "operationId" : "findAll",
         "parameters" : [ {
           "in" : "query",
@@ -2781,12 +3912,40 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel requests returned."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelRequestResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Both buyerCompanyId and providerId were supplied."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/FuelRequestResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Neither filter was supplied, or the supplied filter is not owned by the caller."
           }
         },
+        "summary" : "List fuel requests",
         "tags" : [ "fuel-requests-controller" ]
       },
       "post" : {
+        "description" : "Creates a legacy fuel request (and its linked replenishment review) for the caller's buyer company.",
         "operationId" : "create_3",
         "requestBody" : {
           "content" : {
@@ -2799,7 +3958,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2807,14 +3966,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel request created."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelRequestResource"
+                }
+              }
+            },
+            "description" : "The referenced fuel product does not exist or does not belong to the requested provider."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelRequestResource"
+                }
+              }
+            },
+            "description" : "Caller does not own the buyer company in the request body."
           }
         },
+        "summary" : "Create a fuel request",
         "tags" : [ "fuel-requests-controller" ]
       }
     },
     "/api/v1/fuel-requests/{requestId}" : {
       "get" : {
+        "description" : "Returns the fuel request identified by the path id when the caller is its buyer company or provider tenant.",
         "operationId" : "findById",
         "parameters" : [ {
           "in" : "path",
@@ -2834,14 +4015,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel request returned."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelRequestResource"
+                }
+              }
+            },
+            "description" : "Fuel request does not exist or is not owned by the caller."
           }
         },
+        "summary" : "Get a fuel request by id",
         "tags" : [ "fuel-requests-controller" ]
       }
     },
     "/api/v1/fuel-requests/{requestId}/accept" : {
       "post" : {
+        "description" : "Accepts a pending fuel request on behalf of the addressed provider tenant, creating the resulting fuel order.",
         "operationId" : "accept_2",
         "parameters" : [ {
           "in" : "path",
@@ -2861,14 +4054,46 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel request accepted and fuel order created."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The request or its fuel product could not be found while materialising the order."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Fuel request does not exist or is not addressed to the caller's provider tenant."
+          },
+          "500" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The request was already accepted or the linked review could not be accepted."
           }
         },
+        "summary" : "Accept a fuel request",
         "tags" : [ "fuel-requests-controller" ]
       }
     },
     "/api/v1/fuel-requests/{requestId}/reject" : {
       "post" : {
+        "description" : "Rejects a pending fuel request on behalf of the addressed provider tenant, recording a reason.",
         "operationId" : "reject_1",
         "parameters" : [ {
           "in" : "path",
@@ -2898,14 +4123,46 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Fuel request rejected."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelRequestResource"
+                }
+              }
+            },
+            "description" : "The rejection reason is missing or the request could not be found."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelRequestResource"
+                }
+              }
+            },
+            "description" : "Fuel request does not exist or is not addressed to the caller's provider tenant."
+          },
+          "500" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FuelRequestResource"
+                }
+              }
+            },
+            "description" : "The request is not pending and cannot be rejected."
           }
         },
+        "summary" : "Reject a fuel request",
         "tags" : [ "fuel-requests-controller" ]
       }
     },
     "/api/v1/notifications" : {
       "post" : {
+        "description" : "Creates a notification addressed to exactly one owned recipient (user, company or provider).",
         "operationId" : "createNotification",
         "requestBody" : {
           "content" : {
@@ -2918,7 +4175,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2926,14 +4183,46 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Notification created."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Not exactly one recipient was supplied, or the referenced recipient user does not exist."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller owns none of the referenced user/company/provider."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The referenced recipient is not owned by the caller."
           }
         },
+        "summary" : "Create a notification",
         "tags" : [ "Notifications" ]
       }
     },
     "/api/v1/notifications/buyer/{companyId}" : {
       "get" : {
+        "description" : "Returns the notifications addressed to the given buyer company's user when the caller owns the company.",
         "operationId" : "getNotificationsByBuyer",
         "parameters" : [ {
           "in" : "path",
@@ -2956,14 +4245,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Notifications returned (possibly empty)."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not own the requested company."
           }
         },
+        "summary" : "List notifications by buyer company",
         "tags" : [ "Notifications" ]
       }
     },
     "/api/v1/notifications/provider/{providerId}" : {
       "get" : {
+        "description" : "Returns the notifications addressed to the given provider tenant's user when the caller owns the provider.",
         "operationId" : "getNotificationsByProvider",
         "parameters" : [ {
           "in" : "path",
@@ -2986,14 +4290,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Notifications returned (possibly empty)."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not own the requested provider tenant."
           }
         },
+        "summary" : "List notifications by provider",
         "tags" : [ "Notifications" ]
       }
     },
     "/api/v1/notifications/user/{userId}" : {
       "get" : {
+        "description" : "Returns the notifications of the given user when it is the caller.",
         "operationId" : "getNotificationsByUser",
         "parameters" : [ {
           "in" : "path",
@@ -3016,14 +4335,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Notifications returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is not the requested user."
           }
         },
+        "summary" : "List notifications by user",
         "tags" : [ "Notifications" ]
       }
     },
     "/api/v1/notifications/user/{userId}/unread" : {
       "get" : {
+        "description" : "Returns the unread notifications of the given user when it is the caller.",
         "operationId" : "getUnreadByUser",
         "parameters" : [ {
           "in" : "path",
@@ -3046,14 +4380,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Unread notifications returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is not the requested user."
           }
         },
+        "summary" : "List unread notifications by user",
         "tags" : [ "Notifications" ]
       }
     },
     "/api/v1/notifications/{notificationId}" : {
       "get" : {
+        "description" : "Returns the notification identified by the path id when it belongs to the caller.",
         "operationId" : "getNotificationById",
         "parameters" : [ {
           "in" : "path",
@@ -3073,14 +4422,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Notification returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationResource"
+                }
+              }
+            },
+            "description" : "Notification does not exist or does not belong to the caller."
           }
         },
+        "summary" : "Get a notification by id",
         "tags" : [ "Notifications" ]
       }
     },
     "/api/v1/notifications/{notificationId}/mark-as-read" : {
       "post" : {
+        "description" : "Marks the given notification as read when it belongs to the caller.",
         "operationId" : "markAsRead",
         "parameters" : [ {
           "in" : "path",
@@ -3100,14 +4461,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Notification marked as read."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Notification does not exist or does not belong to the caller."
           }
         },
+        "summary" : "Mark a notification as read",
         "tags" : [ "Notifications" ]
       }
     },
     "/api/v1/payments" : {
       "get" : {
+        "description" : "Returns every registered payment. Restricted to administrators.",
         "operationId" : "getAllPayments",
         "responses" : {
           "200" : {
@@ -3121,12 +4494,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Payments returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not hold the ROLE_ADMIN authority."
           }
         },
+        "summary" : "List all payments",
         "tags" : [ "Payments" ]
       },
       "post" : {
+        "description" : "Creates a payment for the caller's order after checking ownership and that the amount matches the order total.",
         "operationId" : "createPayment",
         "requestBody" : {
           "content" : {
@@ -3139,7 +4527,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3147,14 +4535,56 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Payment created."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The order/company is missing or the amount does not match the order total."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller does not own the buyer company in the request body."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The referenced order does not exist or does not belong to the given company."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A payment already exists for the order."
           }
         },
+        "summary" : "Create a payment",
         "tags" : [ "Payments" ]
       }
     },
     "/api/v1/payments/company/{companyId}" : {
       "get" : {
+        "description" : "Returns the payments of the given buyer company when it matches the caller's own company.",
         "operationId" : "getPaymentsByCompany",
         "parameters" : [ {
           "in" : "path",
@@ -3177,14 +4607,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Payments returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not own the requested company."
           }
         },
+        "summary" : "List payments by company",
         "tags" : [ "Payments" ]
       }
     },
     "/api/v1/payments/order/{orderId}" : {
       "get" : {
+        "description" : "Returns the payment attached to the given order when the caller is its buyer company or the order's provider.",
         "operationId" : "getPaymentByOrder",
         "parameters" : [ {
           "in" : "path",
@@ -3204,14 +4649,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Payment returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentResource"
+                }
+              }
+            },
+            "description" : "No payment exists for the order or it is not visible to the caller."
           }
         },
+        "summary" : "Get the payment of an order",
         "tags" : [ "Payments" ]
       }
     },
     "/api/v1/payments/{paymentId}" : {
       "get" : {
+        "description" : "Returns the payment identified by the path id when the caller is its buyer company or its order's provider.",
         "operationId" : "getPaymentById",
         "parameters" : [ {
           "in" : "path",
@@ -3231,14 +4688,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Payment returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentResource"
+                }
+              }
+            },
+            "description" : "Payment does not exist or is not visible to the caller."
           }
         },
+        "summary" : "Get a payment by id",
         "tags" : [ "Payments" ]
       }
     },
     "/api/v1/payments/{paymentId}/complete" : {
       "post" : {
+        "description" : "Marks the payment as completed with a transaction reference and moves its order to paid.",
         "operationId" : "completePayment",
         "parameters" : [ {
           "in" : "path",
@@ -3268,14 +4737,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Payment completed and order marked paid."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Payment or its order does not exist, or the caller is not allowed to see it."
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The order cannot be paid (for example, it was cancelled)."
           }
         },
+        "summary" : "Complete a payment",
         "tags" : [ "Payments" ]
       }
     },
     "/api/v1/payments/{paymentId}/refund" : {
       "post" : {
+        "description" : "Marks the payment as refunded; the operation is idempotent with respect to payment state.",
         "operationId" : "refundPayment",
         "parameters" : [ {
           "in" : "path",
@@ -3295,14 +4786,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Payment refunded."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Payment does not exist or the caller is not allowed to see it."
           }
         },
+        "summary" : "Refund a payment",
         "tags" : [ "Payments" ]
       }
     },
     "/api/v1/provider-companies" : {
       "get" : {
+        "description" : "Returns every registered provider company. Available to buyer and provider roles.",
         "operationId" : "getAllProviderCompanies",
         "responses" : {
           "200" : {
@@ -3316,12 +4819,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Provider companies returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderCompanyResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller holds neither the buyer nor the provider role."
           }
         },
+        "summary" : "List all provider companies",
         "tags" : [ "Provider Companies" ]
       },
       "post" : {
+        "description" : "Persists a new provider company profile. This registration endpoint is open to unauthenticated callers.",
         "operationId" : "createProviderCompany",
         "requestBody" : {
           "content" : {
@@ -3334,7 +4852,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3342,14 +4860,26 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Provider company created."
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Unexpected error while persisting the provider company."
           }
         },
+        "summary" : "Create a provider company",
         "tags" : [ "Provider Companies" ]
       }
     },
     "/api/v1/provider-companies/{providerId}" : {
       "get" : {
+        "description" : "Returns the provider company identified by the path id to a buyer or its owning provider.",
         "operationId" : "getProviderCompanyById",
         "parameters" : [ {
           "in" : "path",
@@ -3369,12 +4899,34 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Provider company returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderCompanyResource"
+                }
+              }
+            },
+            "description" : "Caller is neither a buyer nor the owner of this provider company."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderCompanyResource"
+                }
+              }
+            },
+            "description" : "Provider company does not exist."
           }
         },
+        "summary" : "Get a provider company by id",
         "tags" : [ "Provider Companies" ]
       },
       "put" : {
+        "description" : "Replaces the editable fields of the provider company identified by the path id.",
         "operationId" : "updateProviderCompany",
         "parameters" : [ {
           "in" : "path",
@@ -3404,14 +4956,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Provider company updated."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderCompanyResource"
+                }
+              }
+            },
+            "description" : "Caller is not the owner of this provider company."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderCompanyResource"
+                }
+              }
+            },
+            "description" : "Provider company does not exist."
           }
         },
+        "summary" : "Update a provider company",
         "tags" : [ "Provider Companies" ]
       }
     },
     "/api/v1/provider-ratings" : {
       "get" : {
+        "description" : "Returns provider ratings, optionally filtered by buyer company and/or provider company.",
         "operationId" : "getAll",
         "parameters" : [ {
           "in" : "query",
@@ -3442,12 +5016,14 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Ratings returned."
           }
         },
+        "summary" : "List provider ratings",
         "tags" : [ "provider-ratings-controller" ]
       },
       "post" : {
+        "description" : "Records a 1-to-5 rating from the caller's buyer company to a provider company.",
         "operationId" : "create_2",
         "requestBody" : {
           "content" : {
@@ -3460,7 +5036,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3468,15 +5044,47 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Rating created."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The rating, company or provider is invalid, or the referenced company/provider does not exist."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller does not own the buyer company in the request body."
+          },
+          "409" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The buyer company has already rated this provider."
           }
         },
+        "summary" : "Create a provider rating",
         "tags" : [ "provider-ratings-controller" ]
       }
     },
     "/api/v1/provider-ratings/{id}" : {
       "put" : {
-        "operationId" : "update_1",
+        "description" : "Changes the score of an existing rating owned by the caller's buyer company.",
+        "operationId" : "update_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3505,14 +5113,46 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Rating updated."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The rating is invalid, the referenced company/provider does not exist, or the buyer/provider of the rating was changed."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller does not own the buyer company in the request body."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Rating does not exist."
           }
         },
+        "summary" : "Update a provider rating",
         "tags" : [ "provider-ratings-controller" ]
       }
     },
     "/api/v1/users" : {
       "get" : {
+        "description" : "Returns every registered user. Restricted to administrators.",
         "operationId" : "getAllUsers",
         "responses" : {
           "200" : {
@@ -3526,14 +5166,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Users returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not hold the ROLE_ADMIN authority."
           }
         },
+        "summary" : "List all users",
         "tags" : [ "Users" ]
       }
     },
     "/api/v1/users/{userId}" : {
       "get" : {
+        "description" : "Returns the user identified by the path id when the caller is that same user.",
         "operationId" : "getUserById",
         "parameters" : [ {
           "in" : "path",
@@ -3553,14 +5208,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "User returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResource"
+                }
+              }
+            },
+            "description" : "Caller is not the requested user."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResource"
+                }
+              }
+            },
+            "description" : "User does not exist."
           }
         },
+        "summary" : "Get a user by id",
         "tags" : [ "Users" ]
       }
     },
     "/api/v1/vehicles" : {
       "get" : {
+        "description" : "Returns the tankers of the given provider tenant when it matches the caller's own provider.",
         "operationId" : "getByProvider",
         "parameters" : [ {
           "in" : "query",
@@ -3583,12 +5260,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Vehicles returned."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/VehicleResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller does not own the requested provider tenant."
           }
         },
+        "summary" : "List vehicles by provider",
         "tags" : [ "vehicles-controller" ]
       },
       "post" : {
+        "description" : "Registers a tanker under the caller's provider tenant.",
         "operationId" : "create_1",
         "requestBody" : {
           "content" : {
@@ -3601,7 +5293,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3609,14 +5301,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Vehicle created."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VehicleResource"
+                }
+              }
+            },
+            "description" : "The vehicle data is invalid."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VehicleResource"
+                }
+              }
+            },
+            "description" : "Caller does not own the provider in the request body."
           }
         },
+        "summary" : "Create a vehicle",
         "tags" : [ "vehicles-controller" ]
       }
     },
     "/api/v1/vehicles/{id}" : {
       "delete" : {
+        "description" : "Soft-disables a tanker owned by the caller's provider tenant, preserving the record.",
         "operationId" : "delete",
         "parameters" : [ {
           "in" : "path",
@@ -3628,13 +5342,18 @@
           }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK"
+          "204" : {
+            "description" : "Vehicle disabled; no content returned."
+          },
+          "404" : {
+            "description" : "Vehicle does not exist or is not owned by the caller."
           }
         },
+        "summary" : "Disable a vehicle",
         "tags" : [ "vehicles-controller" ]
       },
       "get" : {
+        "description" : "Returns the tanker identified by the path id when it belongs to the caller's provider tenant.",
         "operationId" : "getById",
         "parameters" : [ {
           "in" : "path",
@@ -3654,13 +5373,25 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Vehicle returned."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VehicleResource"
+                }
+              }
+            },
+            "description" : "Vehicle does not exist or belongs to another provider tenant."
           }
         },
+        "summary" : "Get a vehicle by id",
         "tags" : [ "vehicles-controller" ]
       },
       "put" : {
-        "operationId" : "update",
+        "description" : "Applies field changes to a tanker owned by the caller's provider tenant.",
+        "operationId" : "update_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3689,14 +5420,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Vehicle updated."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VehicleResource"
+                }
+              }
+            },
+            "description" : "The vehicle data is invalid."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VehicleResource"
+                }
+              }
+            },
+            "description" : "Vehicle does not exist or is not owned by the caller."
           }
         },
+        "summary" : "Update a vehicle",
         "tags" : [ "vehicles-controller" ]
       }
     },
     "/api/v2/customers" : {
       "get" : {
+        "description" : "Returns the customer accounts belonging to the caller's organization.",
         "operationId" : "listCustomers",
         "responses" : {
           "200" : {
@@ -3710,12 +5463,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Customer accounts returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/CustomerResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated or has no active organization."
           }
         },
+        "summary" : "List customer accounts",
         "tags" : [ "Customers" ]
       },
       "post" : {
+        "description" : "Creates a customer account owned by the caller's organization.",
         "operationId" : "registerCustomer",
         "requestBody" : {
           "content" : {
@@ -3728,7 +5496,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3736,14 +5504,46 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Customer account created."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation or no organization was resolved."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated or has no active organization."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A customer with the same RUC already exists for this organization."
           }
         },
+        "summary" : "Register a customer account",
         "tags" : [ "Customers" ]
       }
     },
     "/api/v2/customers/{customerId}/sites" : {
       "get" : {
+        "description" : "Returns the sites registered under a customer account owned by the caller's organization.",
         "operationId" : "listSites",
         "parameters" : [ {
           "in" : "path",
@@ -3766,12 +5566,40 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Sites returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/SiteResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated or has no active organization."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/SiteResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Customer account does not exist or belongs to another organization."
           }
         },
+        "summary" : "List sites of a customer",
         "tags" : [ "Customers" ]
       },
       "post" : {
+        "description" : "Creates a site under the given customer account, which must belong to the caller's organization.",
         "operationId" : "registerSite",
         "parameters" : [ {
           "in" : "path",
@@ -3793,6 +5621,104 @@
           "required" : true
         },
         "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Site created."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation or no organization was resolved."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated, has no active organization, or the customer belongs to another organization."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Customer account does not exist."
+          }
+        },
+        "summary" : "Register a site for a customer",
+        "tags" : [ "Customers" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}" : {
+      "get" : {
+        "description" : "Returns the delivery (with both legacy status and physical state) owned by the caller's provider tenant.",
+        "operationId" : "get_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeliveryV2Resource"
+                }
+              }
+            },
+            "description" : "Delivery returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeliveryV2Resource"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+          }
+        },
+        "summary" : "Get a delivery",
+        "tags" : [ "Delivery lifecycle" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}/arrive" : {
+      "post" : {
+        "description" : "Moves a delivery owned by the caller's provider tenant to the arrived state.",
+        "operationId" : "arrive",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
           "200" : {
             "content" : {
               "application/json" : {
@@ -3801,14 +5727,729 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Delivery marked as arrived."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery cannot arrive from its current physical state."
           }
         },
-        "tags" : [ "Customers" ]
+        "summary" : "Mark a delivery as arrived",
+        "tags" : [ "Delivery lifecycle" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}/assign" : {
+      "post" : {
+        "description" : "Materialises the assigned state of a delivery owned by the caller's provider tenant; idempotent when already assigned.",
+        "operationId" : "assign",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery assigned (or already assigned)."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery cannot be assigned from its current physical state."
+          }
+        },
+        "summary" : "Assign a delivery",
+        "tags" : [ "Delivery lifecycle" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}/cancel" : {
+      "post" : {
+        "description" : "Moves a delivery owned by the caller's provider tenant to the cancelled terminal state, recording a reason.",
+        "operationId" : "cancel_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FailDeliveryResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery cancelled."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery cannot be cancelled from its current physical state, or it was advanced concurrently."
+          }
+        },
+        "summary" : "Cancel a delivery",
+        "tags" : [ "Delivery lifecycle" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}/complete" : {
+      "post" : {
+        "description" : "Closes a delivery owned by the caller's provider tenant, recording the delivered volume as evidence.",
+        "operationId" : "complete",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompleteDeliveryResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery completed."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivered volume is not a valid evidence quantity."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery cannot be completed from its current physical state, or it was advanced concurrently."
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The requested volume of the order could not be resolved to serve as close evidence."
+          }
+        },
+        "summary" : "Complete a delivery",
+        "tags" : [ "Delivery lifecycle" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}/fail" : {
+      "post" : {
+        "description" : "Moves a delivery owned by the caller's provider tenant to the failed terminal state, recording a reason.",
+        "operationId" : "fail",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FailDeliveryResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery failed."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery cannot be failed from its current physical state, or it was advanced concurrently."
+          }
+        },
+        "summary" : "Fail a delivery",
+        "tags" : [ "Delivery lifecycle" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}/start" : {
+      "post" : {
+        "description" : "Moves a delivery owned by the caller's provider tenant to the started state.",
+        "operationId" : "start",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery started."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery cannot be started from its current physical state."
+          }
+        },
+        "summary" : "Start a delivery",
+        "tags" : [ "Delivery lifecycle" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}/transitions" : {
+      "get" : {
+        "description" : "Returns the append-only journal of physical state transitions of a delivery owned by the caller's provider tenant.",
+        "operationId" : "transitions",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryTransitionResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Transitions returned."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryTransitionResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+          }
+        },
+        "summary" : "List a delivery's state transitions",
+        "tags" : [ "Delivery lifecycle" ]
+      }
+    },
+    "/api/v2/drivers" : {
+      "get" : {
+        "description" : "Returns all drivers of the caller's provider tenant.",
+        "operationId" : "list_2",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverV2Resource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Drivers returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverV2Resource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
+          }
+        },
+        "summary" : "List drivers",
+        "tags" : [ "Fleet drivers" ]
+      },
+      "post" : {
+        "description" : "Creates a driver in the caller's provider tenant; the tenant is taken from the principal.",
+        "operationId" : "register_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DriverInputResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Driver created."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation or the driver data is invalid."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
+          }
+        },
+        "summary" : "Register a driver",
+        "tags" : [ "Fleet drivers" ]
+      }
+    },
+    "/api/v2/drivers/eligible" : {
+      "get" : {
+        "description" : "Returns the drivers of the caller's provider tenant that are currently eligible to be suggested.",
+        "operationId" : "listEligible_1",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverV2Resource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Eligible drivers returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverV2Resource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
+          }
+        },
+        "summary" : "List eligible drivers",
+        "tags" : [ "Fleet drivers" ]
+      }
+    },
+    "/api/v2/drivers/{driverId}" : {
+      "get" : {
+        "description" : "Returns the driver identified by the path id when it belongs to the caller's provider tenant.",
+        "operationId" : "get_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "driverId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverV2Resource"
+                }
+              }
+            },
+            "description" : "Driver returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverV2Resource"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverV2Resource"
+                }
+              }
+            },
+            "description" : "Driver does not exist or belongs to another provider tenant."
+          }
+        },
+        "summary" : "Get a driver by id",
+        "tags" : [ "Fleet drivers" ]
+      },
+      "put" : {
+        "description" : "Applies field changes to a driver owned by the caller's provider tenant.",
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "driverId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DriverInputResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Driver updated."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation or the driver data is invalid."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Driver does not exist or is not owned by the caller."
+          }
+        },
+        "summary" : "Update a driver",
+        "tags" : [ "Fleet drivers" ]
+      }
+    },
+    "/api/v2/drivers/{driverId}/activate" : {
+      "post" : {
+        "description" : "Re-enables a disabled driver owned by the caller's provider tenant.",
+        "operationId" : "activate_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "driverId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Driver enabled."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Driver does not exist or is not owned by the caller."
+          }
+        },
+        "summary" : "Enable a driver",
+        "tags" : [ "Fleet drivers" ]
+      }
+    },
+    "/api/v2/drivers/{driverId}/deactivate" : {
+      "post" : {
+        "description" : "Soft-disables a driver owned by the caller's provider tenant, preserving the record.",
+        "operationId" : "deactivate_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "driverId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Driver disabled."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Driver does not exist or is not owned by the caller."
+          }
+        },
+        "summary" : "Disable a driver",
+        "tags" : [ "Fleet drivers" ]
+      }
+    },
+    "/api/v2/drivers/{driverId}/eligibility" : {
+      "get" : {
+        "description" : "Returns the eligibility outcome and reason for a driver owned by the caller's provider tenant.",
+        "operationId" : "eligibility_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "driverId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EligibilityResource"
+                }
+              }
+            },
+            "description" : "Eligibility assessment returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EligibilityResource"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EligibilityResource"
+                }
+              }
+            },
+            "description" : "Driver does not exist or belongs to another provider tenant."
+          }
+        },
+        "summary" : "Assess driver eligibility",
+        "tags" : [ "Fleet drivers" ]
       }
     },
     "/api/v2/invitations/{invitationId}" : {
       "delete" : {
+        "description" : "Revokes a pending invitation owned by the caller's organization.",
         "operationId" : "revoke",
         "parameters" : [ {
           "in" : "path",
@@ -3828,14 +6469,46 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Invitation revoked."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller does not belong to the invitation's organization."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Invitation does not exist."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The invitation is not pending and cannot be revoked."
           }
         },
+        "summary" : "Revoke an invitation",
         "tags" : [ "Invitations" ]
       }
     },
     "/api/v2/invitations/{token}/accept" : {
       "post" : {
+        "description" : "Accepts the invitation identified by its token and grants the invited membership to the caller.",
         "operationId" : "accept_1",
         "parameters" : [ {
           "in" : "path",
@@ -3854,14 +6527,56 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Invitation accepted and membership granted."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "No invitation matches the given token."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A membership conflict occurred while granting access."
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The invitation is expired, already accepted or revoked."
           }
         },
+        "summary" : "Accept an invitation",
         "tags" : [ "Invitations" ]
       }
     },
     "/api/v2/me/organizations" : {
       "get" : {
+        "description" : "Returns the organizations the authenticated caller is an active member of, with the caller's role in each.",
         "operationId" : "getMyOrganizations",
         "responses" : {
           "200" : {
@@ -3875,14 +6590,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Memberships returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated."
           }
         },
+        "summary" : "List my organizations",
         "tags" : [ "Organizations" ]
       }
     },
     "/api/v2/onboarding" : {
       "post" : {
+        "description" : "Creates an organization owned by the authenticated caller and grants the caller the OWNER membership.",
         "operationId" : "onboard",
         "requestBody" : {
           "content" : {
@@ -3895,7 +6625,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3903,14 +6633,46 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Organization created and ownership granted."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation, the type is unknown, or no owner could be resolved."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "An organization with the same RUC already exists, or ownership could not be granted."
           }
         },
+        "summary" : "Onboard an organization",
         "tags" : [ "Onboarding" ]
       }
     },
     "/api/v2/organizations/{organizationId}/invitations" : {
       "post" : {
+        "description" : "Creates a pending membership invitation for the given email and role in the target organization.",
         "operationId" : "invite",
         "parameters" : [ {
           "in" : "path",
@@ -3932,7 +6694,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3940,14 +6702,56 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Invitation created."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation or the role is not a known membership role."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller does not belong to the target organization."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Organization does not exist."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A pending invitation already exists for this email."
           }
         },
+        "summary" : "Invite a member to an organization",
         "tags" : [ "Invitations" ]
       }
     },
     "/api/v2/products" : {
       "get" : {
+        "description" : "Returns the fuel products of the caller's provider tenant, optionally including inactive ones.",
         "operationId" : "listProducts",
         "parameters" : [ {
           "in" : "query",
@@ -3970,14 +6774,29 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Products returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProductResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
           }
         },
+        "summary" : "List fuel products",
         "tags" : [ "Supply" ]
       }
     },
     "/api/v2/products/{fuelProductId}" : {
       "get" : {
+        "description" : "Returns the fuel product identified by the path id when it belongs to the caller's provider tenant.",
         "operationId" : "getProduct",
         "parameters" : [ {
           "in" : "path",
@@ -3997,15 +6816,37 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Product returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductResource"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductResource"
+                }
+              }
+            },
+            "description" : "Product does not exist or belongs to another provider tenant."
           }
         },
+        "summary" : "Get a fuel product by id",
         "tags" : [ "Supply" ]
       }
     },
     "/api/v2/replenishment-requests" : {
       "get" : {
-        "operationId" : "list",
+        "description" : "Returns the replenishment requests belonging to the caller's organization.",
+        "operationId" : "list_1",
         "responses" : {
           "200" : {
             "content" : {
@@ -4018,12 +6859,27 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Replenishment requests returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReplenishmentRequestResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated or has no active organization."
           }
         },
+        "summary" : "List replenishment requests",
         "tags" : [ "Replenishment" ]
       },
       "post" : {
+        "description" : "Creates a replenishment request owned by the caller's organization; creation is idempotent per episodeKey.",
         "operationId" : "create",
         "requestBody" : {
           "content" : {
@@ -4036,7 +6892,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -4044,15 +6900,47 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Replenishment request created (or the existing episode request returned)."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation, no organization was resolved, or a field value (e.g. source) is invalid."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated or has no active organization."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The referenced fuel product is not available for the given provider."
           }
         },
+        "summary" : "Create a replenishment request",
         "tags" : [ "Replenishment" ]
       }
     },
     "/api/v2/replenishment-requests/{requestId}" : {
       "get" : {
-        "operationId" : "get",
+        "description" : "Returns the replenishment request identified by the path id when it belongs to the caller's organization.",
+        "operationId" : "get_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "requestId",
@@ -4071,14 +6959,36 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Replenishment request returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReplenishmentRequestResource"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated or has no active organization."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReplenishmentRequestResource"
+                }
+              }
+            },
+            "description" : "Replenishment request does not exist or belongs to another organization."
           }
         },
+        "summary" : "Get a replenishment request by id",
         "tags" : [ "Replenishment" ]
       }
     },
     "/api/v2/replenishment-requests/{requestId}/accept" : {
       "post" : {
+        "description" : "Accepts a pending replenishment request on behalf of the addressed provider tenant.",
         "operationId" : "accept",
         "parameters" : [ {
           "in" : "path",
@@ -4098,14 +7008,56 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Replenishment request accepted."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The request could not be accepted because its state or arguments are invalid."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not the addressed provider tenant, or the request does not exist."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Replenishment request does not exist."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The request is not pending or was decided concurrently."
           }
         },
+        "summary" : "Accept a replenishment request",
         "tags" : [ "Replenishment" ]
       }
     },
     "/api/v2/replenishment-requests/{requestId}/cancel" : {
       "post" : {
+        "description" : "Cancels a pending replenishment request on behalf of the owning organization.",
         "operationId" : "cancel",
         "parameters" : [ {
           "in" : "path",
@@ -4125,14 +7077,46 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Replenishment request cancelled."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller has no active organization, does not own the request, or the request does not exist."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Replenishment request does not exist."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The request is not pending or was decided concurrently."
           }
         },
+        "summary" : "Cancel a replenishment request",
         "tags" : [ "Replenishment" ]
       }
     },
     "/api/v2/replenishment-requests/{requestId}/reject" : {
       "post" : {
+        "description" : "Rejects a pending replenishment request on behalf of the addressed provider tenant, recording a reason.",
         "operationId" : "reject",
         "parameters" : [ {
           "in" : "path",
@@ -4162,39 +7146,238 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Replenishment request rejected."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation or the request could not be rejected."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not the addressed provider tenant, or the request does not exist."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Replenishment request does not exist."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The request is not pending or was decided concurrently."
           }
         },
+        "summary" : "Reject a replenishment request",
         "tags" : [ "Replenishment" ]
       }
     },
-    "/api/v2/tanks" : {
+    "/api/v2/tankers" : {
       "get" : {
-        "operationId" : "listTanks",
+        "description" : "Returns all tankers of the caller's provider tenant.",
+        "operationId" : "list",
         "responses" : {
           "200" : {
             "content" : {
               "application/json" : {
                 "schema" : {
                   "items" : {
-                    "$ref" : "#/components/schemas/TankResource"
+                    "$ref" : "#/components/schemas/TankerV2Resource"
                   },
                   "type" : "array"
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Tankers returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/TankerV2Resource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
           }
         },
-        "tags" : [ "Tanks" ]
+        "summary" : "List tankers",
+        "tags" : [ "Fleet tankers" ]
       },
       "post" : {
-        "operationId" : "registerTank",
+        "description" : "Creates a tanker in the caller's provider tenant; the tenant is taken from the principal.",
+        "operationId" : "register",
         "requestBody" : {
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/RegisterTankResource"
+                "$ref" : "#/components/schemas/TankerInputResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanker created."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation or the tanker data is invalid."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
+          }
+        },
+        "summary" : "Register a tanker",
+        "tags" : [ "Fleet tankers" ]
+      }
+    },
+    "/api/v2/tankers/eligible" : {
+      "get" : {
+        "description" : "Returns the tankers of the caller's provider tenant that are currently eligible to be suggested.",
+        "operationId" : "listEligible",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/TankerV2Resource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Eligible tankers returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/TankerV2Resource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
+          }
+        },
+        "summary" : "List eligible tankers",
+        "tags" : [ "Fleet tankers" ]
+      }
+    },
+    "/api/v2/tankers/{tankerId}" : {
+      "get" : {
+        "description" : "Returns the tanker identified by the path id when it belongs to the caller's provider tenant.",
+        "operationId" : "get_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TankerV2Resource"
+                }
+              }
+            },
+            "description" : "Tanker returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TankerV2Resource"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TankerV2Resource"
+                }
+              }
+            },
+            "description" : "Tanker does not exist or belongs to another provider tenant."
+          }
+        },
+        "summary" : "Get a tanker by id",
+        "tags" : [ "Fleet tankers" ]
+      },
+      "put" : {
+        "description" : "Applies field changes to a tanker owned by the caller's provider tenant.",
+        "operationId" : "update",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TankerInputResource"
               }
             }
           },
@@ -4209,14 +7392,257 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Tanker updated."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation or the tanker data is invalid."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanker does not exist or is not owned by the caller."
           }
         },
+        "summary" : "Update a tanker",
+        "tags" : [ "Fleet tankers" ]
+      }
+    },
+    "/api/v2/tankers/{tankerId}/activate" : {
+      "post" : {
+        "description" : "Re-enables a disabled tanker owned by the caller's provider tenant.",
+        "operationId" : "activate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanker enabled."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanker does not exist or is not owned by the caller."
+          }
+        },
+        "summary" : "Enable a tanker",
+        "tags" : [ "Fleet tankers" ]
+      }
+    },
+    "/api/v2/tankers/{tankerId}/deactivate" : {
+      "post" : {
+        "description" : "Soft-disables a tanker owned by the caller's provider tenant, preserving the record.",
+        "operationId" : "deactivate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanker disabled."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanker does not exist or is not owned by the caller."
+          }
+        },
+        "summary" : "Disable a tanker",
+        "tags" : [ "Fleet tankers" ]
+      }
+    },
+    "/api/v2/tankers/{tankerId}/eligibility" : {
+      "get" : {
+        "description" : "Returns the eligibility outcome and reason for a tanker owned by the caller's provider tenant.",
+        "operationId" : "eligibility",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EligibilityResource"
+                }
+              }
+            },
+            "description" : "Eligibility assessment returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EligibilityResource"
+                }
+              }
+            },
+            "description" : "Caller has no provider identity."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EligibilityResource"
+                }
+              }
+            },
+            "description" : "Tanker does not exist or belongs to another provider tenant."
+          }
+        },
+        "summary" : "Assess tanker eligibility",
+        "tags" : [ "Fleet tankers" ]
+      }
+    },
+    "/api/v2/tanks" : {
+      "get" : {
+        "description" : "Returns the tanks belonging to the caller's organization.",
+        "operationId" : "listTanks",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/TankResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Tanks returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/TankResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated or has no active organization."
+          }
+        },
+        "summary" : "List tanks",
+        "tags" : [ "Tanks" ]
+      },
+      "post" : {
+        "description" : "Creates a tank under a customer of the caller's organization, validating customer, site and capacity invariants.",
+        "operationId" : "registerTank",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegisterTankResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tank created."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation, no organization was resolved, or the customer/site/capacity invariants are violated."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated or has no active organization."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The referenced legacy equipment is already mapped to a tank."
+          }
+        },
+        "summary" : "Register a tank",
         "tags" : [ "Tanks" ]
       }
     },
     "/api/v2/tanks/{tankId}" : {
       "get" : {
+        "description" : "Returns the tank identified by the path id when it belongs to the caller's organization.",
         "operationId" : "getTank",
         "parameters" : [ {
           "in" : "path",
@@ -4236,14 +7662,187 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Tank returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TankResource"
+                }
+              }
+            },
+            "description" : "Caller is not authenticated or has no active organization."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TankResource"
+                }
+              }
+            },
+            "description" : "Tank does not exist or belongs to another organization."
           }
         },
+        "summary" : "Get a tank by id",
         "tags" : [ "Tanks" ]
+      }
+    },
+    "/api/v2/tanks/{tankId}/refill-episodes" : {
+      "get" : {
+        "description" : "Returns the refill episodes recorded for a tank owned by the caller's organization.",
+        "operationId" : "episodes",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/RefillEpisodeResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Refill episodes returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/RefillEpisodeResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller has no active organization or does not own the tank."
+          }
+        },
+        "summary" : "List refill episodes of a tank",
+        "tags" : [ "Refill policy" ]
+      }
+    },
+    "/api/v2/tanks/{tankId}/refill-policy" : {
+      "get" : {
+        "description" : "Returns the current refill policy of a tank owned by the caller's organization.",
+        "operationId" : "get",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RefillPolicyResource"
+                }
+              }
+            },
+            "description" : "Refill policy returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RefillPolicyResource"
+                }
+              }
+            },
+            "description" : "Caller has no active organization or does not own the tank."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RefillPolicyResource"
+                }
+              }
+            },
+            "description" : "The tank has no refill policy configured."
+          }
+        },
+        "summary" : "Get a tank refill policy",
+        "tags" : [ "Refill policy" ]
+      },
+      "put" : {
+        "description" : "Creates or updates the refill policy of a tank owned by the caller's organization, with optional overrides over the global defaults.",
+        "operationId" : "configure",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConfigureRefillPolicyResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Refill policy created or updated."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation or a policy value is invalid."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller has no active organization, does not own the tank, or the policy belongs to another organization."
+          }
+        },
+        "summary" : "Configure a tank refill policy",
+        "tags" : [ "Refill policy" ]
       }
     },
     "/api/v2/telemetry/readings" : {
       "post" : {
+        "description" : "Accepts a versioned, machine-authenticated telemetry reading; quarantine or duplicate readings are acknowledged rather than rejected.",
         "operationId" : "ingest",
         "parameters" : [ {
           "in" : "header",
@@ -4264,7 +7863,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "202" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -4272,9 +7871,20 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Reading accepted (or acknowledged as quarantine/duplicate)."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Request body failed validation, the schema version is unsupported, or a required field/value is invalid."
           }
         },
+        "summary" : "Ingest a device reading",
         "tags" : [ "Telemetry" ]
       }
     }
@@ -4308,8 +7918,14 @@
     "description" : "Fulfillment management endpoints",
     "name" : "Deliveries"
   }, {
+    "description" : "Low-level policy and refill episodes (v2)",
+    "name" : "Refill policy"
+  }, {
     "description" : "Organization membership invitations (v2)",
     "name" : "Invitations"
+  }, {
+    "description" : "Physical delivery state machine (v2)",
+    "name" : "Delivery lifecycle"
   }, {
     "description" : "Equipment management endpoints",
     "name" : "Equipment"
@@ -4341,7 +7957,13 @@
     "description" : "Organizations the authenticated user belongs to (v2)",
     "name" : "Organizations"
   }, {
+    "description" : "Tanker catalog and lifecycle (v2)",
+    "name" : "Fleet tankers"
+  }, {
     "description" : "Notification management endpoints",
     "name" : "Notifications"
+  }, {
+    "description" : "Driver catalog and lifecycle (v2)",
+    "name" : "Fleet drivers"
   } ]
 }

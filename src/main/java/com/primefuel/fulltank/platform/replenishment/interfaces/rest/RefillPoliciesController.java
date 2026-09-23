@@ -13,6 +13,9 @@ import com.primefuel.fulltank.platform.replenishment.interfaces.rest.resources.R
 import com.primefuel.fulltank.platform.replenishment.interfaces.rest.transform.RefillEpisodeResourceFromDomainAssembler;
 import com.primefuel.fulltank.platform.replenishment.interfaces.rest.transform.RefillPolicyResourceFromDomainAssembler;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -46,6 +49,21 @@ public class RefillPoliciesController {
         this.tankAssets = tankAssets;
     }
 
+    /**
+     * Creates or reconfigures the refill policy of a tank.
+     *
+     * <p>The tank must belong to the caller's organization. All policy fields are optional and fall
+     * back to the approved global defaults; an existing policy is reconfigured in place. The tank is
+     * first checked through {@link TankAssets}, so a tank that is missing or foreign is refused as
+     * forbidden rather than reported as not found.</p>
+     */
+    @Operation(summary = "Configure a tank refill policy",
+            description = "Creates or updates the refill policy of a tank owned by the caller's organization, with optional overrides over the global defaults.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Refill policy created or updated."),
+            @ApiResponse(responseCode = "400", description = "Request body failed validation or a policy value is invalid."),
+            @ApiResponse(responseCode = "403", description = "Caller has no active organization, does not own the tank, or the policy belongs to another organization.")
+    })
     @PutMapping("/refill-policy")
     public ResponseEntity<?> configure(@PathVariable Long tankId,
                                        @Valid @RequestBody ConfigureRefillPolicyResource resource) {
@@ -61,6 +79,19 @@ public class RefillPoliciesController {
                 result, RefillPolicyResourceFromDomainAssembler::toResourceFromDomain, HttpStatus.OK);
     }
 
+    /**
+     * Retrieves the refill policy of a tank.
+     *
+     * <p>The tank must belong to the caller's organization (otherwise forbidden); a tank without a
+     * configured policy yet is reported as not found.</p>
+     */
+    @Operation(summary = "Get a tank refill policy",
+            description = "Returns the current refill policy of a tank owned by the caller's organization.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Refill policy returned."),
+            @ApiResponse(responseCode = "403", description = "Caller has no active organization or does not own the tank."),
+            @ApiResponse(responseCode = "404", description = "The tank has no refill policy configured.")
+    })
     @GetMapping("/refill-policy")
     public ResponseEntity<RefillPolicyResource> get(@PathVariable Long tankId) {
         var organizationId = membershipAccess.currentOrganizationId();
@@ -73,6 +104,18 @@ public class RefillPoliciesController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * Lists the refill episodes recorded for a tank.
+     *
+     * <p>The tank must belong to the caller's organization; episodes are the shadow decisions taken by
+     * the evaluator on that tank.</p>
+     */
+    @Operation(summary = "List refill episodes of a tank",
+            description = "Returns the refill episodes recorded for a tank owned by the caller's organization.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Refill episodes returned."),
+            @ApiResponse(responseCode = "403", description = "Caller has no active organization or does not own the tank.")
+    })
     @GetMapping("/refill-episodes")
     public ResponseEntity<List<RefillEpisodeResource>> episodes(@PathVariable Long tankId) {
         var organizationId = membershipAccess.currentOrganizationId();
