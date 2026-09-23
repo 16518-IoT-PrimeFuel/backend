@@ -11,6 +11,7 @@ import com.primefuel.fulltank.platform.replenishment.domain.model.commands.Rejec
 import com.primefuel.fulltank.platform.replenishment.domain.repositories.ReplenishmentRequestRepository;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
+import com.primefuel.fulltank.platform.shared.events.EventPublicationRegistry;
 import com.primefuel.fulltank.platform.supply.api.SupplyCatalog;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -19,13 +20,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandService {
 
+    private static final String AGGREGATE_TYPE = "ReplenishmentRequest";
+
     private final ReplenishmentRequestRepository repository;
     private final SupplyCatalog supplyCatalog;
+    private final EventPublicationRegistry publicationRegistry;
 
     public ReplenishmentCommandServiceImpl(ReplenishmentRequestRepository repository,
-                                           SupplyCatalog supplyCatalog) {
+                                           SupplyCatalog supplyCatalog,
+                                           EventPublicationRegistry publicationRegistry) {
         this.repository = repository;
         this.supplyCatalog = supplyCatalog;
+        this.publicationRegistry = publicationRegistry;
     }
 
     @Override
@@ -56,13 +62,35 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
     @Override
     @Transactional
     public Result<ReplenishmentRequest, ApplicationError> handle(AcceptReplenishmentRequestCommand command) {
-        return transition(command.requestId(), request -> request.accept(null));
+        return transition(command.requestId(), request -> request.accept(null))
+                .map(request -> {
+                    publishDecision(request, "replenishment.accepted.v1");
+                    return request;
+                });
     }
 
     @Override
     @Transactional
     public Result<ReplenishmentRequest, ApplicationError> handle(RejectReplenishmentRequestCommand command) {
-        return transition(command.requestId(), request -> request.reject(command.reason()));
+        return transition(command.requestId(), request -> request.reject(command.reason()))
+                .map(request -> {
+                    publishDecision(request, "replenishment.rejected.v1");
+                    return request;
+                });
+    }
+
+    /**
+     * S20/T20-A: the decision is published (durable outbox + in-process envelope) so the notification
+     * fanout can reach the members of the requesting organization. The scope is the request's
+     * organizationId — the client to be informed — not a trusted client-supplied value.
+     */
+    private void publishDecision(ReplenishmentRequest request, String eventType) {
+        publicationRegistry.publish(eventType, AGGREGATE_TYPE, String.valueOf(request.getId()),
+                request.getOrganizationId(), (long) request.getVersion(),
+                "{\"requestId\":" + request.getId()
+                        + ",\"organizationId\":" + request.getOrganizationId()
+                        + ",\"providerId\":" + request.getProviderId()
+                        + ",\"status\":\"" + request.getStatus().name() + "\"}");
     }
 
     @Override
