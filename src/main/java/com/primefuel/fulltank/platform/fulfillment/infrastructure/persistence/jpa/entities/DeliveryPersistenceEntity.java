@@ -11,7 +11,10 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "deliveries")
+@Table(
+        name = "deliveries",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_deliveries_assignment_command_id", columnNames = "assignment_command_id"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -59,4 +62,7 @@ public class DeliveryPersistenceEntity extends AuditableAbstractPersistenceEntit
     @Version
     @Column(nullable = false)
     private int version;
+
+    @Column(name = "assignment_command_id", length = 120)
+    private String assignmentCommandId;
 }

@@ -44,6 +44,13 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
     private Double deliveredVolume;
     private int version;
 
+    /**
+     * The correlation id of the orchestrated assignment that created this delivery (T15-A), unique when
+     * present. A retry of the same command finds the delivery here instead of creating a second one; legacy
+     * (v1) deliveries carry none.
+     */
+    private String assignmentCommandId;
+
     public Delivery(CreateDeliveryCommand command) {
         this.orderId = command.orderId();
         this.providerId = command.providerId();

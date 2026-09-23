@@ -28,6 +28,7 @@ public final class DeliveryPersistenceAssembler {
         domain.setRequestedVolume(entity.getRequestedVolume());
         domain.setDeliveredVolume(entity.getDeliveredVolume());
         domain.setVersion(entity.getVersion());
+        domain.setAssignmentCommandId(entity.getAssignmentCommandId());
         return domain;
     }
 
@@ -53,6 +54,7 @@ public final class DeliveryPersistenceAssembler {
         entity.setRequestedVolume(domain.getRequestedVolume());
         entity.setDeliveredVolume(domain.getDeliveredVolume());
         entity.setVersion(domain.getVersion());
+        entity.setAssignmentCommandId(domain.getAssignmentCommandId());
         return entity;
     }
 }
