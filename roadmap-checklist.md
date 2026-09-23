@@ -341,7 +341,19 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       (resuelto), y 6 diagramas `.puml` (nodos y relación eliminados). Snapshot OpenAPI regenerado por test;
       **77/77 rutas intactas**. No se tocó T24-B (retiro real, sigue bloqueado).
       `./mvnw.cmd test` verde. → `docs/api-ledger/T24-A-marker-cleanup.md`
-- [ ] T24-B — Retiro controlado de endpoints confirmados
+- [ ] T24-PRE-ADMIN — Asignación de rol de plataforma (U19, nuevo, desbloquea T24-B). `ROLE_ADMIN` era un
+      string en `@Secured` de 7 controllers sin existir en `Roles` ni en ningún flujo de asignación — no
+      existía forma de tener un usuario admin. Resuelto con el usuario (2026-09-23): endpoint protegido
+      `POST /api/v2/admin/users/{id}/promote` (solo-admin) + seed manual en BD para el primer admin (bootstrap).
+      Ver callout U19 en el roadmap, sección S24.
+- [ ] T24-PRE-METRICS — Métricas de tráfico por versión (v1/v2), nuevo, desbloquea T24-B. Implementa el plan ya
+      documentado en `docs/api-ledger/T22-B-sunset-plan.md` sección 2 (instrumentar `path.version` +
+      `controller#method`, contador por ruta, reporte semanal `count`/`last_seen`/`distinct_callers`). El
+      usuario decidió (2026-09-23) implementar esto antes de aprobar cualquier sunset — no se puede probar
+      "cero uso" de ninguna ruta v1 sin esta instrumentación (el ledger externo de consumidores sigue `UNKNOWN`
+      aparte).
+- [ ] T24-B — Retiro controlado de endpoints confirmados. Bloqueado por: (1) T24-PRE-METRICS + ventana de
+      medición real, (2) T24-PRE-ADMIN, (3) ledger externo de consumidores `UNKNOWN` (fuera de este repo).
 
 ## Documentación Swagger (OpenAPI + javadoc de REST)
 

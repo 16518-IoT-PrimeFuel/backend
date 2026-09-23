@@ -784,6 +784,18 @@ flowchart TD
 - **Rollback strategy:** reactivar adapter; contract irreversible solo con restore/forward-fix.
 - **Definition of Done:** reglas comunes + decisión explícita por L01–L12.
 
+> **U19 resuelta (2026-09-23, decisión de producto — desbloquea T24-B).** `ROLE_ADMIN` existía como string en
+> `@Secured` de 7 controllers pero no en `iam.domain.model.valueobjects.Roles` (solo `ROLE_BUYER`/
+> `ROLE_PROVIDER`) ni en ningún flujo de asignación — era literalmente imposible tener un usuario admin.
+> - **Mecanismo de asignación:** endpoint protegido `POST /api/v2/admin/users/{id}/promote` (o equivalente),
+>   invocable únicamente por un usuario que ya tenga `ROLE_ADMIN`.
+> - **Bootstrap (huevo y gallina):** el primer admin no puede auto-crearse vía endpoint; se resuelve con un
+>   **seed manual en BD** (script/migración controlada, sin endpoint público), una única vez, para dar de alta
+>   al primer admin. Cualquier promoción posterior pasa por el endpoint protegido.
+> - **Ticket propio antes de T24-B:** este diseño se implementa como **T24-PRE-ADMIN** (nuevo, no numerado en
+>   el DAG original), dependencia dura de T24-B para las 6 familias administrativas del sunset. No se incluye
+>   dentro del alcance de T24-B directamente.
+
 ## 6. Catálogo de tickets
 
 Cada ticket tiene un solo intento arquitectónico. `A` establece contrato/modelo/migración aditiva; `B` integra el flujo, conserva compatibilidad y demuestra el spec. No se fusionan A+B cuando B cambia comportamiento o datos.
@@ -839,7 +851,9 @@ Cada ticket tiene un solo intento arquitectónico. `A` establece contrato/modelo
 | T23-A | S23 | Caracterización y decisión de Payment | Definir qué significa registrar, completar y reembolsar. | payment application/domain/REST, data/consumer inventory | T01-B, T02-B, T04-B, T14-B + U12 | Caracterizar rutas/transiciones/permisos; auditar datos/consumers; aprobar ADR sin borrar ni renombrar. |
 | T23-B | S23 | Desacoplamiento de Payment y estado físico | Quitar mutación cross-domain preservando histórico y nombre. | payment services/API, ordering compatibility adapter | T23-A | Mover invariantes al application layer; quitar FuelOrderRepository; conservar v1; probar histórico e idempotencia. |
 | T24-A | S24 | Limpieza de marcadores y docs | Retirar solo clases vacías confirmadas y corregir docs. | six empty controllers, diagrams, README | T22-B, T23-B, T03-B | Buscar refs/reflection; borrar candidatos seguros; regenerar docs; build. |
-| T24-B | S24 | Retiro controlado de endpoints confirmados | Ejecutar sunset y contract de datos autorizado. | legacy adapters/routes/migrations | T24-A + register aprobado | Verificar no uso/backup; retirar una familia; probar restore; actualizar OpenAPI. |
+| T24-PRE-ADMIN | S24 | Asignación de rol de plataforma (U19) | Hacer `ROLE_ADMIN` asignable: seed inicial + endpoint de promoción. | `iam.domain.model.valueobjects.Roles`, `iam.application`, migración de seed | T02-B + U19 | Agregar `ROLE_ADMIN` al enum; endpoint `POST /api/v2/admin/users/{id}/promote` solo-admin; script de seed del primer admin. |
+| T24-PRE-METRICS | S24 | Métricas de tráfico por versión (v1/v2) | Implementar el plan ya documentado en T22-B §2: instrumentar `path.version` y contadores por ruta. | filtro/interceptor HTTP, event/registro interno T19-A, reporte semanal | T19-A, T22-B | Etiquetar cada request con versión + `controller#method`; persistir contadores; exponer reporte por ruta (`count`, `last_seen`, `distinct_callers`). |
+| T24-B | S24 | Retiro controlado de endpoints confirmados | Ejecutar sunset y contract de datos autorizado. | legacy adapters/routes/migrations | T24-A, T24-PRE-ADMIN, T24-PRE-METRICS + register aprobado + ventana de medición real | Verificar no uso/backup; retirar una familia; probar restore; actualizar OpenAPI. |
 
 ### 6.2 Aceptación, dependencias y paralelismo
 
