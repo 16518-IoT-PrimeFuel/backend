@@ -100,7 +100,7 @@ class TransportEvidenceControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"POSITION","latitude":10.5,"longitude":-66.9,"accuracyMeters":8.0,
-                                 "recordedAt":"2026-10-01T10:00:00Z"}""")))
+                                 "recordedAt":"2026-09-01T10:00:00Z"}""")))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.kind").value("POSITION"))
                 .andExpect(jsonPath("$.latestAdvanced").value(true))
@@ -109,7 +109,7 @@ class TransportEvidenceControllerTest {
         var tracking = trackingRepository.findByDeliveryId(deliveryId).orElseThrow();
         assertThat(tracking.getLastLatitude()).isEqualTo(10.5);
         assertThat(tracking.getLastLongitude()).isEqualTo(-66.9);
-        assertThat(tracking.getLastPositionAt()).isEqualTo(Instant.parse("2026-10-01T10:00:00Z"));
+        assertThat(tracking.getLastPositionAt()).isEqualTo(Instant.parse("2026-09-01T10:00:00Z"));
         assertThat(tracking.getDriverId()).isEqualTo(driverId);
         assertThat(sampleRepository.countByDeliveryId(deliveryId)).isEqualTo(1);
     }
@@ -127,7 +127,7 @@ class TransportEvidenceControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"POSITION","latitude":1.0,"longitude":2.0,
-                                 "recordedAt":"2026-10-01T10:00:00Z"}""")))
+                                 "recordedAt":"2026-09-01T10:00:00Z"}""")))
                 .andExpect(status().isForbidden());
 
         assertThat(sampleRepository.countByDeliveryId(deliveryId)).isZero();
@@ -148,7 +148,7 @@ class TransportEvidenceControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"POSITION","latitude":1.0,"longitude":2.0,
-                                 "recordedAt":"2026-10-01T10:00:00Z"}""")))
+                                 "recordedAt":"2026-09-01T10:00:00Z"}""")))
                 .andExpect(status().isForbidden());
 
         assertThat(sampleRepository.countByDeliveryId(deliveryId)).isZero();
@@ -165,7 +165,7 @@ class TransportEvidenceControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"POSITION","latitude":20.0,"longitude":30.0,
-                                 "recordedAt":"2026-10-01T10:10:00Z"}""")))
+                                 "recordedAt":"2026-09-01T10:10:00Z"}""")))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.latestAdvanced").value(true));
 
@@ -174,12 +174,12 @@ class TransportEvidenceControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"POSITION","latitude":21.0,"longitude":31.0,
-                                 "recordedAt":"2026-10-01T10:05:00Z"}""")))
+                                 "recordedAt":"2026-09-01T10:05:00Z"}""")))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.latestAdvanced").value(false));
 
         var tracking = trackingRepository.findByDeliveryId(deliveryId).orElseThrow();
-        assertThat(tracking.getLastPositionAt()).isEqualTo(Instant.parse("2026-10-01T10:10:00Z"));
+        assertThat(tracking.getLastPositionAt()).isEqualTo(Instant.parse("2026-09-01T10:10:00Z"));
         assertThat(tracking.getLastLatitude()).isEqualTo(20.0);
         // Both samples are preserved as raw evidence.
         assertThat(sampleRepository.countByDeliveryId(deliveryId)).isEqualTo(2);
@@ -196,7 +196,7 @@ class TransportEvidenceControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"LOAD","milestone":"LOADED","volume":120.0,"unit":"LITRE",
-                                 "recordedAt":"2026-10-01T09:00:00Z"}""")))
+                                 "recordedAt":"2026-09-01T09:00:00Z"}""")))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.kind").value("LOAD"))
                 .andExpect(jsonPath("$.milestone").value("LOADED"));
@@ -204,7 +204,7 @@ class TransportEvidenceControllerTest {
         mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"type":"LOAD","milestone":"UNLOADED","recordedAt":"2026-10-01T12:00:00Z"}""")))
+                                {"type":"LOAD","milestone":"UNLOADED","recordedAt":"2026-09-01T12:00:00Z"}""")))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.milestone").value("UNLOADED"));
 

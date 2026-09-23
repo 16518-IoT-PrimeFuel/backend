@@ -96,14 +96,14 @@ class DeliveryTrackingQueryControllerTest {
         long driverUserId = 111L;
         long driverId = driver(providerId, driverUserId);
         long deliveryId = delivery(providerId, driverId);
-        position(deliveryId, providerId, driverId, 10.5, "2026-10-01T10:00:00Z");
+        position(deliveryId, providerId, driverId, 10.5, "2026-09-01T10:00:00Z");
 
         // Assigned driver.
         mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(driverUserId, providerId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.lastLatitude").value(10.5))
-                .andExpect(jsonPath("$.lastPositionAt").value("2026-10-01T10:00:00Z"));
+                .andExpect(jsonPath("$.lastPositionAt").value("2026-09-01T10:00:00Z"));
 
         // The assigned driver is allowed through identity alone, even without a provider identity.
         mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
@@ -126,9 +126,9 @@ class DeliveryTrackingQueryControllerTest {
         long deliveryId = delivery(providerId, driverId);
 
         // Arrival order is 10:10, then 10:00, then 10:05 (jitter); latitude identifies each observation.
-        position(deliveryId, providerId, driverId, 30.0, "2026-10-01T10:10:00Z");
-        position(deliveryId, providerId, driverId, 10.0, "2026-10-01T10:00:00Z");
-        position(deliveryId, providerId, driverId, 20.0, "2026-10-01T10:05:00Z");
+        position(deliveryId, providerId, driverId, 30.0, "2026-09-01T10:10:00Z");
+        position(deliveryId, providerId, driverId, 10.0, "2026-09-01T10:00:00Z");
+        position(deliveryId, providerId, driverId, 20.0, "2026-09-01T10:05:00Z");
 
         mockMvc.perform(get("/api/v2/deliveries/{id}/tracking/samples", deliveryId)
                         .with(authFor(driverUserId, providerId)))
@@ -136,13 +136,13 @@ class DeliveryTrackingQueryControllerTest {
                 .andExpect(jsonPath("$.length()").value(3))
                 // Ordered by recordedAt, not by arrival.
                 .andExpect(jsonPath("$[0].latitude").value(10.0))
-                .andExpect(jsonPath("$[0].recordedAt").value("2026-10-01T10:00:00Z"))
+                .andExpect(jsonPath("$[0].recordedAt").value("2026-09-01T10:00:00Z"))
                 .andExpect(jsonPath("$[0].latestAdvanced").value(false))
                 .andExpect(jsonPath("$[1].latitude").value(20.0))
-                .andExpect(jsonPath("$[1].recordedAt").value("2026-10-01T10:05:00Z"))
+                .andExpect(jsonPath("$[1].recordedAt").value("2026-09-01T10:05:00Z"))
                 .andExpect(jsonPath("$[1].latestAdvanced").value(false))
                 .andExpect(jsonPath("$[2].latitude").value(30.0))
-                .andExpect(jsonPath("$[2].recordedAt").value("2026-10-01T10:10:00Z"))
+                .andExpect(jsonPath("$[2].recordedAt").value("2026-09-01T10:10:00Z"))
                 .andExpect(jsonPath("$[2].latestAdvanced").value(true));
 
         // The latest is the newest recordedAt, regardless of arrival order.
@@ -150,7 +150,7 @@ class DeliveryTrackingQueryControllerTest {
                         .with(authFor(driverUserId, providerId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.lastLatitude").value(30.0))
-                .andExpect(jsonPath("$.lastPositionAt").value("2026-10-01T10:10:00Z"));
+                .andExpect(jsonPath("$.lastPositionAt").value("2026-09-01T10:10:00Z"));
     }
 
     @Test
@@ -158,7 +158,7 @@ class DeliveryTrackingQueryControllerTest {
         long providerId = 13L;
         long driverId = driver(providerId, 113L);
         long deliveryId = delivery(providerId, driverId);
-        position(deliveryId, providerId, driverId, 1.0, "2026-10-01T10:00:00Z");
+        position(deliveryId, providerId, driverId, 1.0, "2026-09-01T10:00:00Z");
 
         mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(777L, 999L)))
@@ -184,7 +184,7 @@ class DeliveryTrackingQueryControllerTest {
         long providerId = 15L;
         long driverId = driver(providerId, 115L);
         long deliveryId = delivery(providerId, driverId);
-        position(deliveryId, providerId, driverId, 42.0, "2026-10-01T10:00:00Z");
+        position(deliveryId, providerId, driverId, 42.0, "2026-09-01T10:00:00Z");
 
         mockMvc.perform(delete("/api/v2/admin/deliveries/{id}/transport-evidence", deliveryId)
                         .with(authFor(115L, providerId)))
@@ -207,7 +207,7 @@ class DeliveryTrackingQueryControllerTest {
         long deliveryId = delivery(providerId, driverId);
 
         assertThat(recorder.recordLoad(new RecordLoadEvidenceCommand(deliveryId, providerId, driverId,
-                LoadMilestone.LOADED, 120.0, "LITRE", Instant.parse("2026-10-01T09:00:00Z"))).isSuccess()).isTrue();
+                LoadMilestone.LOADED, 120.0, "LITRE", Instant.parse("2026-09-01T09:00:00Z"))).isSuccess()).isTrue();
 
         mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(driverUserId, providerId)))

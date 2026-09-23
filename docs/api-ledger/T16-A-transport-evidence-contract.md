@@ -231,3 +231,15 @@ El **Definition of Done de S16 completo** (no el de T16-A) exige, según la spec
 - **T17-A/B** — geocerca y decisión de safety (consumen la proyección de posición).
 - **T18-A/B** — `ValveStateObserved`, comando/outbox/ACK de válvula (**detection-only**, sin hardware).
 - **T21-A/B** — journal/timeline de negocio.
+
+---
+
+## Addendum (2026-09-23, hallazgo de la auditoría de T17-A) — cota de reloj
+
+`TransportEvidenceRecorderImpl` **rechaza (400 `validationError`)** una muestra (`POSITION` o `LOAD`) cuyo
+`recordedAt` sea posterior a `now + 2 min` (skew tolerado). Sin cota superior, un timestamp futuro (p. ej.
+2030) quedaba como “latest” para siempre —toda posición real posterior sería “tardía”— y `safety` jamás lo vería
+como `STALE`. El skew de 2 min es el mismo que usa `GeofenceDecisionEvaluator` (`MAX_CLOCK_SKEW`); están
+duplicados a propósito (módulos separados, sin importar internals). Los tests de `tracking` que fijaban
+`recordedAt` en octubre de 2026 con reloj real pasaron a septiembre de 2026 (pasado) para no caer en el rechazo.
+Build no verificado.

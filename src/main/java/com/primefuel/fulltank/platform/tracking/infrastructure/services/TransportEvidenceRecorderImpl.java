@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 
 /**
@@ -38,6 +39,7 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
 
     private static final String AGGREGATE_TYPE = "DeliveryTracking";
     static final String TELEMETRY_EVENT_TYPE = "delivery.telemetry.received.v1";
+    private static final Duration MAX_CLOCK_SKEW = Duration.ofMinutes(2);
 
     private final DeliveryTrackingRepository trackingRepository;
     private final TransportEvidenceSampleRepository sampleRepository;
@@ -72,6 +74,9 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
         }
 
         var receivedAt = clock.instant();
+        if (isBeyondClockSkew(command.recordedAt(), receivedAt)) {
+            return Result.failure(futureTimestamp("recordedAt"));
+        }
         try {
             var tracking = loadOrCreate(command.deliveryId(), command.providerId(), command.driverId());
             boolean advanced = tracking.recordPosition(position, command.recordedAt());
@@ -119,6 +124,9 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
             }
         }
         var recordedAt = command.recordedAt() != null ? command.recordedAt() : clock.instant();
+        if (isBeyondClockSkew(recordedAt, clock.instant())) {
+            return Result.failure(futureTimestamp("recordedAt"));
+        }
 
         try {
             var tracking = loadOrCreate(command.deliveryId(), command.providerId(), command.driverId());
@@ -158,6 +166,17 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
                     return existing;
                 })
                 .orElseGet(() -> new DeliveryTracking(deliveryId, providerId, driverId));
+    }
+
+    /** A client clock ahead of the server beyond the skew would pin itself as the latest sample forever. */
+    private static boolean isBeyondClockSkew(Instant recordedAt, Instant now) {
+        return recordedAt.isAfter(now.plus(MAX_CLOCK_SKEW));
+    }
+
+    private static ApplicationError futureTimestamp(String field) {
+        return ApplicationError.validationError(field,
+                "The timestamp is in the future beyond the tolerated clock skew of " + MAX_CLOCK_SKEW.toMinutes()
+                        + " minutes");
     }
 
     private static Result<EvidenceAck, ApplicationError> concurrent() {
