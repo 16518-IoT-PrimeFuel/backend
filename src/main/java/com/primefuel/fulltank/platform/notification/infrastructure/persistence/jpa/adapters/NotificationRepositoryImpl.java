@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.notification.infrastructure.persistence.jpa.adapters;
 
 import com.primefuel.fulltank.platform.notification.domain.model.aggregates.Notification;
+import com.primefuel.fulltank.platform.notification.domain.model.valueobjects.NotificationChannel;
 import com.primefuel.fulltank.platform.notification.domain.repositories.NotificationRepository;
 import com.primefuel.fulltank.platform.notification.infrastructure.persistence.jpa.assemblers.NotificationPersistenceAssembler;
 import com.primefuel.fulltank.platform.notification.infrastructure.persistence.jpa.repositories.NotificationPersistenceRepository;
@@ -36,6 +37,13 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         return notificationPersistenceRepository.findByUserIdAndReadFalse(userId).stream()
                 .map(NotificationPersistenceAssembler::toDomainFromPersistence)
                 .toList();
+    }
+
+    @Override
+    public Optional<Notification> findByEventIdAndUserIdAndChannel(
+            String eventId, Long userId, NotificationChannel channel) {
+        return notificationPersistenceRepository.findByEventIdAndUserIdAndChannel(eventId, userId, channel)
+                .map(NotificationPersistenceAssembler::toDomainFromPersistence);
     }
 
     @Override
