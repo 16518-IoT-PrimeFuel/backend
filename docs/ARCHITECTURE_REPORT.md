@@ -263,7 +263,7 @@ Configuración principal: perfil por defecto `dev`, MySQL configurable con `DATA
 - La API usa `Double` para precios, cantidades e ingresos. Para dinero conviene `BigDecimal`.
 - `application-dev.properties` deja `spring.jpa.open-in-view=true`, mientras MySQL lo desactiva; el comportamiento cambia por perfil.
 - `ddl-auto=update` puede alterar el esquema automáticamente y no hay evidencia de migraciones Flyway/Liquibase.
-- Existen clases vacías (`InventoryController`, `OrderingController`, `FulfillmentController`, `NotificationController`) y diagramas PlantUML por contexto; son marcadores/documentación, no endpoints.
+- Las clases vacías que existían como marcadores (`InventoryController`, `OrderingController`, `FulfillmentController`, `NotificationController`, `DirectoryController`, `PaymentController`) fueron **eliminadas en T24-A** por no tener referencias ni endpoints; se conservan los diagramas PlantUML por contexto, ya sin esos nodos.
 
 ## 7. Pruebas y estado del proyecto
 

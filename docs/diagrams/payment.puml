@@ -20,7 +20,6 @@ skinparam package {
 ' =========================== INTERFACES ===========================
 package "interfaces.rest" <<interfaces>> {
   class PaymentsController
-  class PaymentController
 
   package "resources" {
     class CreatePaymentResource <<record>>

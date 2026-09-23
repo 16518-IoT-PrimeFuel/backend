@@ -22,7 +22,6 @@ package "interfaces.rest" <<interfaces>> {
   class DeliveriesController
   class DriversController
   class VehiclesController
-  class FulfillmentController
 
   package "resources" {
     class CreateDeliveryResource <<record>>

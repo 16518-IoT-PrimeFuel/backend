@@ -24,7 +24,6 @@ package "interfaces.rest" <<interfaces>> {
   class UsersController
   class BuyerCompaniesController
   class ProviderCompaniesController
-  class DirectoryController
 
   package "resources" {
     class SignUpResource <<record>>
@@ -189,7 +188,6 @@ AuthenticationController ..> UserCommandService
 UsersController ..> UserQueryService
 BuyerCompaniesController ..> BuyerCompanyCommandService
 ProviderCompaniesController ..> ProviderCompanyCommandService
-DirectoryController ..> ProviderCompanyQueryService
 IamContextFacade ..> UserQueryService
 
 ' application impls

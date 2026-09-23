@@ -21,7 +21,6 @@ skinparam package {
 package "interfaces.rest" <<interfaces>> {
   class FuelOrdersController
   class FuelRequestsController
-  class OrderingController
 
   package "resources" {
     class CreateFuelOrderResource <<record>>

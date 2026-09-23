@@ -21,7 +21,6 @@ skinparam package {
 ' =========================== INTERFACES ===========================
 package "interfaces.rest" <<interfaces>> {
   class FuelProductsController
-  class InventoryController
 
   package "resources" {
     class CreateFuelProductResource <<record>>

@@ -11,9 +11,10 @@ checks used instead of `@PreAuthorize` on several endpoints). Cross-checked agai
 `RequestMappingHandlerMapping` registrations by `ApiLedgerSelfCheckTest`, and against the
 springdoc `/api-docs` document by `OpenApiSnapshotTest`. 3 of the 21 controller classes under
 `interfaces/rest` (`FulfillmentController`, `DirectoryController`, `InventoryController`,
-`NotificationController`, `OrderingController`, `PaymentController`) are empty placeholder
-classes with zero `@RequestMapping` methods — they contribute 0 operations and are not counted
-below (`known-gap`: dead placeholder classes left over from module scaffolding).
+`NotificationController`, `OrderingController`, `PaymentController`) were empty placeholder
+classes with zero `@RequestMapping` methods — they contributed 0 operations and are not counted
+below. **T24-A resolved this known-gap: all six were deleted** (verified empty and unreferenced);
+the live mapping count below (77) is unchanged.
 
 Auth column legend: `public` = matched by `permitAll()` in `WebSecurityConfiguration`;
 `@PreAuthorize(expr)` = declared on the method; `manual: <check>` = no `@PreAuthorize`, the

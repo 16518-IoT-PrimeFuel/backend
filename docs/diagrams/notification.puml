@@ -20,7 +20,6 @@ skinparam package {
 ' =========================== INTERFACES ===========================
 package "interfaces.rest" <<interfaces>> {
   class NotificationsController
-  class NotificationController
 
   package "resources" {
     class CreateNotificationResource <<record>>
