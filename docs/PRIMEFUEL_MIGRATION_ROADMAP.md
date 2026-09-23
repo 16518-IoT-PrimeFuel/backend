@@ -631,6 +631,20 @@ flowchart TD
 - **Rollback strategy:** modo detección/deny; preservar decisiones.
 - **Definition of Done:** reglas comunes + U09 aprobada.
 
+> **U09 resuelta (2026-09-23, decisión de producto).**
+> - **Geometría:** círculo de radio fijo alrededor del sitio del cliente (no polígono). Radio configurable
+>   por sitio (`equipment`/customer site), no hardcodeado globalmente.
+> - **Freshness:** una posición con `recordedAt` de más de **5 minutos** de antigüedad respecto al momento de
+>   evaluación se considera `stale` y la decisión deniega por incertidumbre (invariante ya establecido:
+>   "incertidumbre deniega").
+> - **Accuracy máximo:** `accuracyMeters ≤ 50`. Una posición con `accuracyMeters > 50` deniega igual que una
+>   `stale`.
+> - **Regla de borde:** si el círculo de incertidumbre de la posición (posición ± `accuracyMeters`) se solapa
+>   con el borde de la geocerca, se trata como **fuera** (deny) — mismo criterio conservador que el resto de
+>   S17.
+> - **Fuente de la posición:** la última posición confiable de `tracking.api.DeliveryTrackingQuery.latest`
+>   (S16/T16-B), no un dato nuevo — S17 evalúa sobre lo que T16-B ya expone.
+
 ### S18 — Ejecutar autorización de válvula con ACK verificable
 
 - **SPEC-ID / Título:** S18 / Ejecutar autorización de válvula con ACK verificable.
