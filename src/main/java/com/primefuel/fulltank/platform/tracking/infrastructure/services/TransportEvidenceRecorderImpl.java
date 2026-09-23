@@ -122,21 +122,26 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
 
         try {
             var tracking = loadOrCreate(command.deliveryId(), command.providerId(), command.driverId());
+            boolean advanced;
             try {
-                tracking.recordLoad(command.milestone(), volume, recordedAt);
+                advanced = tracking.recordLoad(command.milestone(), volume, recordedAt);
             } catch (IllegalStateException exception) {
                 return Result.failure(ApplicationError.businessRuleViolation("transportEvidence.load",
                         exception.getMessage()));
             }
 
+            // The raw sample is always kept, exactly like a position sample; only an advancing one is linked
+            // as the source of the projection's latest load state.
             var sample = sampleRepository.save(TransportEvidenceSample.load(
                     command.deliveryId(), command.providerId(), command.driverId(), command.milestone(),
-                    volume, recordedAt, clock.instant()));
-            tracking.linkLoadEvidence(sample.getId());
+                    volume, recordedAt, clock.instant(), advanced));
+            if (advanced) {
+                tracking.linkLoadEvidence(sample.getId());
+            }
             tracking = trackingRepository.save(tracking);
 
             return Result.success(new EvidenceAck(sample.getId(), command.deliveryId(), "LOAD",
-                    command.milestone().name(), true, recordedAt));
+                    command.milestone().name(), advanced, recordedAt));
         } catch (OptimisticLockingFailureException exception) {
             return concurrent();
         }

@@ -13,13 +13,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * The two invariants of the tracking projection in isolation (S16/T16-A): a late sample never regresses the
- * latest trusted value, and a load milestone cannot be reported out of order.
+ * The invariants of the tracking projection in isolation (S16/T16-A): a late sample never regresses the
+ * latest trusted value — for positions <em>and</em> for load milestones (T16-B fix) — and a load milestone
+ * cannot be reported out of order unless it is late (in which case it does not advance and is not validated).
  */
 class DeliveryTrackingTest {
 
     private static final Instant T0 = Instant.parse("2026-10-01T10:00:00Z");
     private static final Instant T1 = Instant.parse("2026-10-01T10:05:00Z");
+    private static final Instant T2 = Instant.parse("2026-10-01T10:10:00Z");
 
     @Test
     void aNewerSampleAdvancesTheLatestAndAnOlderOneDoesNot() {
@@ -54,12 +56,43 @@ class DeliveryTrackingTest {
         assertThatThrownBy(() -> tracking.recordLoad(LoadMilestone.UNLOADED, null, T0))
                 .isInstanceOf(IllegalStateException.class);
 
-        tracking.recordLoad(LoadMilestone.LOADED, Volume.of(100.0, Unit.LITRE), T0);
+        assertThat(tracking.recordLoad(LoadMilestone.LOADED, Volume.of(100.0, Unit.LITRE), T0)).isTrue();
         assertThat(tracking.isLoaded()).isTrue();
         assertThat(tracking.getLastLoadVolume()).isEqualTo(100.0);
 
-        tracking.recordLoad(LoadMilestone.UNLOADED, null, T1);
+        assertThat(tracking.recordLoad(LoadMilestone.UNLOADED, null, T1)).isTrue();
         assertThat(tracking.isLoaded()).isFalse();
+        assertThat(tracking.getLastLoadMilestone()).isEqualTo(LoadMilestone.UNLOADED);
+    }
+
+    @Test
+    void aLateLoadMilestoneDoesNotRegressTheLatest() {
+        var tracking = new DeliveryTracking(1L, 10L, 100L);
+        assertThat(tracking.recordLoad(LoadMilestone.LOADED, Volume.of(100.0, Unit.LITRE), T1)).isTrue();
+
+        // Late (earlier recordedAt): returns false, mutates nothing.
+        assertThat(tracking.recordLoad(LoadMilestone.UNLOADED, Volume.of(999.0, Unit.LITRE), T0)).isFalse();
+        assertThat(tracking.isLoaded()).isTrue();
+        assertThat(tracking.getLastLoadMilestone()).isEqualTo(LoadMilestone.LOADED);
+        assertThat(tracking.getLastLoadAt()).isEqualTo(T1);
+        assertThat(tracking.getLastLoadVolume()).isEqualTo(100.0);
+        assertThat(tracking.getLastLoadUnit()).isEqualTo("LITRE");
+    }
+
+    @Test
+    void aLateLoadThatWouldBreakTheSequenceIsNotRejected() {
+        var tracking = new DeliveryTracking(1L, 10L, 100L);
+        assertThat(tracking.recordLoad(LoadMilestone.LOADED, Volume.of(50.0, Unit.LITRE), T0)).isTrue();
+        // Advances to unloaded; the latest is now T2.
+        assertThat(tracking.recordLoad(LoadMilestone.UNLOADED, null, T2)).isTrue();
+        assertThat(tracking.isLoaded()).isFalse();
+
+        // A late UNLOADED whose recordedAt (T1) precedes the applied milestone would break the sequence if it
+        // were validated (UNLOADED with loaded=false). Because it is late, it is neither validated nor throws:
+        // it simply does not advance.
+        assertThat(tracking.recordLoad(LoadMilestone.UNLOADED, null, T1)).isFalse();
+        assertThat(tracking.isLoaded()).isFalse();
+        assertThat(tracking.getLastLoadAt()).isEqualTo(T2);
         assertThat(tracking.getLastLoadMilestone()).isEqualTo(LoadMilestone.UNLOADED);
     }
 }

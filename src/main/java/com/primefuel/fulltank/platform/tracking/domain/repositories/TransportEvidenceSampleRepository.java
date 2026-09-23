@@ -13,7 +13,15 @@ public interface TransportEvidenceSampleRepository {
 
     TransportEvidenceSample save(TransportEvidenceSample sample);
 
+    /** The delivery's samples in reception order (as they arrived at the platform). */
     List<TransportEvidenceSample> findByDeliveryId(Long deliveryId);
+
+    /**
+     * The delivery's samples ordered by the <em>device</em> clock ({@code recordedAt}) — the timeline a
+     * tracker is read in — with reception order as the tie-breaker (T16-B). This is what makes a late
+     * sample visible in its chronological place instead of at the end where it arrived.
+     */
+    List<TransportEvidenceSample> findByDeliveryIdOrderedByRecordedAt(Long deliveryId);
 
     long countByDeliveryId(Long deliveryId);
 }

@@ -83,11 +83,26 @@ public class DeliveryTracking extends AbstractDomainAggregateRoot<DeliveryTracki
     }
 
     /**
-     * Records a discrete load milestone. {@code UNLOADED} is only valid after a {@code LOADED} (a truck
-     * cannot discharge what was never loaded); the declared volume is optional and, when present, replaces
-     * the last declared one.
+     * Records a discrete load milestone and reports whether it moved the latest trusted load state. It
+     * mirrors {@link #recordPosition}: a sample whose {@code recordedAt} is not strictly after the current
+     * {@link #getLastLoadAt()} is <em>late</em> — the projection is left untouched ({@code false}) so the
+     * caller stores the sample as raw evidence only.
+     *
+     * <p>Consequence, and the reason it is checked <em>before</em> the sequence rule: a late sample is never
+     * validated against the {@code LOADED}/{@code UNLOADED} sequence. Only the sample that would actually
+     * advance the latest is validated, against the current {@code loaded} flag; a late sample — even an
+     * {@code UNLOADED} that would be impossible from the current state — does not throw, it simply returns
+     * {@code false}. The declared volume is optional and, when present, replaces the last declared one.
+     *
+     * @return {@code true} when the milestone advanced the latest load state, {@code false} when it was late
      */
-    public void recordLoad(LoadMilestone milestone, Volume volume, Instant recordedAt) {
+    public boolean recordLoad(LoadMilestone milestone, Volume volume, Instant recordedAt) {
+        if (recordedAt == null) {
+            throw new IllegalArgumentException("A load timestamp is required");
+        }
+        if (lastLoadAt != null && !recordedAt.isAfter(lastLoadAt)) {
+            return false;
+        }
         if (milestone == LoadMilestone.UNLOADED && !loaded) {
             throw new IllegalStateException("The truck cannot be unloaded before it was loaded");
         }
@@ -98,10 +113,31 @@ public class DeliveryTracking extends AbstractDomainAggregateRoot<DeliveryTracki
             this.lastLoadVolume = volume.amount();
             this.lastLoadUnit = volume.unit().name();
         }
+        return true;
     }
 
     /** Points the projection at the raw evidence row that produced the latest load milestone. */
     public void linkLoadEvidence(Long evidenceId) {
         this.lastLoadEvidenceId = evidenceId;
+    }
+
+    /**
+     * Clears the projected latest values while keeping the row identity (id, delivery, tenant, driver,
+     * version). It is the entry point of a rebuild (T16-B): the raw samples are replayed, in
+     * {@code recordedAt} order, from this reset state so the projection is reconstructed from evidence
+     * instead of trusted as-is.
+     */
+    public void reset() {
+        this.lastLatitude = null;
+        this.lastLongitude = null;
+        this.lastAccuracyMeters = null;
+        this.lastPositionAt = null;
+        this.lastPositionEvidenceId = null;
+        this.loaded = false;
+        this.lastLoadMilestone = null;
+        this.lastLoadAt = null;
+        this.lastLoadVolume = null;
+        this.lastLoadUnit = null;
+        this.lastLoadEvidenceId = null;
     }
 }

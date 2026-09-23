@@ -79,9 +79,9 @@ public class TransportEvidenceSample {
 
     public static TransportEvidenceSample load(Long deliveryId, Long providerId, Long driverId,
                                                LoadMilestone milestone, Volume volume, Instant recordedAt,
-                                               Instant receivedAt) {
+                                               Instant receivedAt, boolean latestAdvanced) {
         var sample = new TransportEvidenceSample(TransportEvidenceKind.LOAD, deliveryId, providerId, driverId,
-                recordedAt, receivedAt, true);
+                recordedAt, receivedAt, latestAdvanced);
         sample.milestone = milestone.name();
         if (volume != null) {
             sample.volume = volume.amount();

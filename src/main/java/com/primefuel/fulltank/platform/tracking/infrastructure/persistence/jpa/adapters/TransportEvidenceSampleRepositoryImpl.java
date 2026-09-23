@@ -32,6 +32,13 @@ public class TransportEvidenceSampleRepositoryImpl implements TransportEvidenceS
     }
 
     @Override
+    public List<TransportEvidenceSample> findByDeliveryIdOrderedByRecordedAt(Long deliveryId) {
+        return persistenceRepository.findByDeliveryIdOrderByRecordedAtAscReceivedAtAscIdAsc(deliveryId).stream()
+                .map(TransportEvidenceSamplePersistenceAssembler::toDomain)
+                .toList();
+    }
+
+    @Override
     public long countByDeliveryId(Long deliveryId) {
         return persistenceRepository.countByDeliveryId(deliveryId);
     }

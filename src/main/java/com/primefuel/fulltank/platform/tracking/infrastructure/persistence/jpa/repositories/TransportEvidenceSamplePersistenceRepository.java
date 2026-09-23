@@ -10,5 +10,12 @@ public interface TransportEvidenceSamplePersistenceRepository
 
     List<TransportEvidenceSamplePersistenceEntity> findByDeliveryIdOrderByReceivedAtAsc(Long deliveryId);
 
+    /**
+     * Chronological (device-clock) order with reception order (and id) as a deterministic tie-breaker, so the
+     * timeline is stable even when two samples carry the same {@code recordedAt}.
+     */
+    List<TransportEvidenceSamplePersistenceEntity> findByDeliveryIdOrderByRecordedAtAscReceivedAtAscIdAsc(
+            Long deliveryId);
+
     long countByDeliveryId(Long deliveryId);
 }
