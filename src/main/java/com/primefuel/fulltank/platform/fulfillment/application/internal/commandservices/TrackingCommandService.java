@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.fulfillment.application.internal.commandservices;
 
 import com.primefuel.fulltank.platform.fulfillment.application.ports.TrackingStore;
+import com.primefuel.fulltank.platform.fulfillment.application.ports.DeliveryJournalStore;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.valueobjects.DeliveryStatus;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryRepository;
 import org.springframework.stereotype.Service;
@@ -12,10 +13,12 @@ import java.time.Instant;
 public class TrackingCommandService {
     private final DeliveryRepository deliveries;
     private final TrackingStore tracking;
+    private final DeliveryJournalStore journal;
 
-    public TrackingCommandService(DeliveryRepository deliveries, TrackingStore tracking) {
+    public TrackingCommandService(DeliveryRepository deliveries, TrackingStore tracking, DeliveryJournalStore journal) {
         this.deliveries = deliveries;
         this.tracking = tracking;
+        this.journal = journal;
     }
 
     @Transactional
@@ -30,6 +33,11 @@ public class TrackingCommandService {
                 || (speedKph != null && speedKph < 0)) {
             throw new IllegalArgumentException("Invalid tracking coordinates or speed");
         }
-        return tracking.append(eventId, deliveryId, recordedAt, latitude, longitude, speedKph);
+        var accepted = tracking.append(eventId, deliveryId, recordedAt, latitude, longitude, speedKph);
+        if (accepted) {
+            journal.append(eventId, deliveryId, "TRACKING_POINT", recordedAt,
+                    "latitude=" + latitude + ",longitude=" + longitude);
+        }
+        return accepted;
     }
 }
