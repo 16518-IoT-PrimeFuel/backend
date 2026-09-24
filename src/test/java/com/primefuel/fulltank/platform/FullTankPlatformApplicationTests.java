@@ -179,6 +179,16 @@ class FullTankPlatformApplicationTests {
     }
 
     @Test
+    void generatedOpenApiContainsLegacyAndReplenishmentContracts() throws Exception {
+        mockMvc.perform(get("/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/api/v1/fuel-requests']").exists())
+                .andExpect(jsonPath("$.paths['/api/v2/buyer-companies/{companyId}/replenishment-requests']").exists())
+                .andExpect(jsonPath("$.paths['/api/v2/provider-companies/{providerId}/replenishment-requests/{requestId}/accept']").exists())
+                .andExpect(jsonPath("$.paths['/api/v2/telemetry/readings']").exists());
+    }
+
+    @Test
     void emptyDatabaseMaterializesTheDeclaredLegacyTables() {
         var expectedTables = Set.of(
                 "USERS", "ROLES", "BUYER_COMPANIES", "PROVIDER_COMPANIES", "PASSWORD_RESET_TOKENS",
