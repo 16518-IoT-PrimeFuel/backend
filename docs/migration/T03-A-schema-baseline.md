@@ -65,6 +65,9 @@ Total declarado: **17 tablas**.
 - la migración H2 sintética pasa un test reproducible;
 - los datos mock están aislados en `src/test/resources` y no se despliegan;
 - T03-C debe reconciliar V1/V15 contra un snapshot MySQL autorizado.
+- `SchemaContractReconciliationTest` valida la misma superficie contractual en
+  el baseline sintético; `scripts/mysql-reconcile-v15.sql` es el reporte de
+  solo lectura para el snapshot MySQL autorizado.
 
 ## Rollback
 
