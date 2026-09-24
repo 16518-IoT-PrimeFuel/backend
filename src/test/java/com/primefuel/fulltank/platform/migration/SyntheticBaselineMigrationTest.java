@@ -25,9 +25,10 @@ class SyntheticBaselineMigrationTest {
             assertEquals(2, count(connection, "roles"));
             assertEquals(1, count(connection, "customer_accounts"));
             assertEquals(1, count(connection, "customer_sites"));
+            assertEquals(2, count(connection, "organizations"));
             assertEquals(35, tableCount(connection));
         }
-        assertTrue(flyway.info().current().getVersion().getVersion().equals("14"));
+        assertTrue(flyway.info().current().getVersion().getVersion().equals("15"));
     }
 
     private static int count(java.sql.Connection connection, String table) throws Exception {

@@ -1,6 +1,6 @@
 # T04-A — Organizaciones y memberships tenant
 
-Estado: expansión aditiva implementada y verificada el 2026-09-24.
+Estado: expansión aditiva y backfill idempotente implementados y verificados.
 
 Se añadieron `organizations` y `memberships` con estado `ACTIVE/INACTIVE`,
 roles de membership y referencias explícitas a `legacy_buyer_company_id` y
@@ -26,5 +26,5 @@ legacy ni cambia los contratos v1.
 
 ## Pendiente
 
-Faltan el backfill idempotente desde las tablas actuales y fixtures persistentes
-A/B antes de retirar el fallback.
+El fallback legacy se conserva deliberadamente hasta validar la conciliación en
+la base MySQL real y completar fixtures persistentes A/B.

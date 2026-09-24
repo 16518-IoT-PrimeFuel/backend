@@ -63,7 +63,7 @@ Total declarado: **17 tablas**.
 - Flyway elegido y conectado al runtime;
 - la migración H2 sintética pasa un test reproducible;
 - los datos mock están aislados en `src/test/resources` y no se despliegan;
-- T03-C debe reconciliar V1 contra un snapshot MySQL autorizado.
+- T03-C debe reconciliar V1/V15 contra un snapshot MySQL autorizado.
 
 ## Rollback
 

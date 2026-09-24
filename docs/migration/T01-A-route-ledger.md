@@ -4,14 +4,15 @@ Estado: baseline caracterizado el 2026-09-23.
 
 ## Baseline
 
-- Commit verificado: `cef9bf2` (`feat/integrate-mobile-backend`, merge de `develop`).
-- Fuentes Java: 314.
-- Pruebas existentes: 10; resultado: 10 verdes.
+- Commit verificado: `6eed6d6` (`feat/integrate-mobile-backend`).
+- Fuentes Java: 431.
+- Suite actual: resultado verde con Flyway V15 y prueba de contexto Spring.
 - Java usado: 26.0.2.1.
 - API documentada: `/api/v1`.
-- Inventario estático actual: 77 mappings REST detectados en controllers.
-- El roadmap declara 77 operaciones; el conteo estático coincide. Falta
-  reconciliarlo con mappings runtime y OpenAPI generado.
+- Inventario runtime actual: 77 mappings `/api/v1`, protegido por una prueba
+  de conteo; los endpoints `/api/v2` son aditivos.
+- La reconciliación OpenAPI completa sigue siendo una tarea separada porque el
+  contrato generado no está versionado en el repositorio.
 
 ## Inventario por bounded context actual
 
@@ -51,12 +52,12 @@ como `known-gap`.
 | Notification | `/notifications` | `partial` |
 | Reporting | `/analytics` | `partial` |
 
-## Gaps bloqueantes antes de T02
+## Gaps que permanecen fuera del baseline sintético
 
-1. Generar snapshot runtime de Spring MVC y reconciliarlo con el número 77.
+1. Versionar un snapshot de schemas OpenAPI generado en CI.
 2. Añadir contratos de smoke para ordering, payment y fulfillment; hoy las
    pruebas de aplicación cubren principalmente IAM.
-3. Añadir fixtures sintéticos de dos tenants y distinguir respuestas
+3. Añadir fixtures sintéticos persistentes de dos tenants y distinguir respuestas
    `known-gap` de invariantes deseadas.
 
 ## Rollback
