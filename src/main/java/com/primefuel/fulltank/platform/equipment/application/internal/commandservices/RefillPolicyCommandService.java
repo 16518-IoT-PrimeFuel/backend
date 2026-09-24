@@ -60,7 +60,7 @@ public class RefillPolicyCommandService {
         var key = "tank:" + tankId + ":episode:" + capturedAt.toEpochMilli();
         var episode = policies.saveEpisode(new RefillEpisodeData(key, tankId, capturedAt, null, "OPEN", null));
         var request = requests.create(new CreateFuelRequestCommand(policy.buyerCompanyId(), policy.providerId(), tankId,
-                policy.fuelProductId(), policy.targetVolume(), null, policy.deliveryAddress(), LocalDate.now().plusDays(1), "AUTOMATIC"));
+                policy.fuelProductId(), policy.targetVolume(), null, policy.deliveryAddress(), LocalDate.now().plusDays(1), "AUTOMATIC"), key);
         policies.saveEpisode(new RefillEpisodeData(episode.episodeKey(), tankId, capturedAt, Instant.now(), "REQUESTED", request.id()));
         events.publish(new DurableEvent("low-level:" + key, "LowLevelThresholdReached", "Tank", tankId.toString(),
                 "episodeKey=" + key + ";requestId=" + request.id(), Instant.now()));

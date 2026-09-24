@@ -12,6 +12,7 @@ import com.primefuel.fulltank.platform.shared.application.events.DurableEvent;
 import com.primefuel.fulltank.platform.shared.application.events.DurableEventPublisher;
 import com.primefuel.fulltank.platform.inventory.application.ports.SupplyReservationStore;
 import com.primefuel.fulltank.platform.iam.application.ports.UserRecipientLookup;
+import com.primefuel.fulltank.platform.ordering.application.ports.ReplenishmentLifecycleStore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,23 +29,36 @@ public class FuelRequestService implements com.primefuel.fulltank.platform.order
     private final DurableEventPublisher events;
     private final SupplyReservationStore reservations;
     private final UserRecipientLookup recipients;
+    private final ReplenishmentLifecycleStore lifecycle;
 
     public FuelRequestService(FuelRequestStore requests,
                               FuelProductRepository products,
                               FuelOrderRepository orders,
                               DurableEventPublisher events,
                               SupplyReservationStore reservations,
-                              UserRecipientLookup recipients) {
+                              UserRecipientLookup recipients,
+                              ReplenishmentLifecycleStore lifecycle) {
         this.requests = requests;
         this.products = products;
         this.orders = orders;
         this.events = events;
         this.reservations = reservations;
         this.recipients = recipients;
+        this.lifecycle = lifecycle;
     }
 
     @Transactional
     public FuelRequestData create(CreateFuelRequestCommand command) {
+        return create(command, null);
+    }
+
+    @Override
+    @Transactional
+    public FuelRequestData create(CreateFuelRequestCommand command, String idempotencyKey) {
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            var existingId = lifecycle.findRequestIdByIdempotencyKey(idempotencyKey);
+            if (existingId.isPresent()) return requests.findById(existingId.get()).orElseThrow();
+        }
         var product = products.findById(command.fuelProductId())
                 .orElseThrow(() -> new IllegalArgumentException("Fuel product not found"));
         if (!Boolean.TRUE.equals(product.getActive())) {
@@ -68,6 +82,7 @@ public class FuelRequestService implements com.primefuel.fulltank.platform.order
                 product.getPricePerUnit(), command.deliveryAddress(), command.deliveryDate(), RequestStatus.PENDING,
                 command.source() == null ? "MANUAL" : command.source().toUpperCase(), null, null, null);
         var saved = requests.save(request);
+        lifecycle.create(saved.id(), idempotencyKey == null ? "manual:" + saved.id() : idempotencyKey);
         var providerUserId = recipients.findByProviderId(saved.providerId()).orElse(null);
         events.publish(new DurableEvent("fuel-request:" + saved.id() + ":created", "FuelRequestCreated",
                 "FuelRequest", saved.id().toString(), payload(providerUserId, "requestId=" + saved.id()), Instant.now()));
@@ -90,6 +105,9 @@ public class FuelRequestService implements com.primefuel.fulltank.platform.order
                 .orElseThrow(() -> new IllegalArgumentException("Fuel request not found"));
         if (request.status() != RequestStatus.PENDING) {
             throw new IllegalStateException("Only pending requests can be accepted");
+        }
+        if (!lifecycle.transition(requestId, "PENDING", "ACCEPTED")) {
+            throw new IllegalStateException("Request was already reviewed");
         }
         var product = products.findById(request.fuelProductId())
                 .orElseThrow(() -> new IllegalArgumentException("Fuel product not found"));
@@ -116,6 +134,9 @@ public class FuelRequestService implements com.primefuel.fulltank.platform.order
         if (request.status() != RequestStatus.PENDING) {
             throw new IllegalStateException("Only pending requests can be rejected");
         }
+        if (!lifecycle.transition(requestId, "PENDING", "REJECTED")) {
+            throw new IllegalStateException("Request was already reviewed");
+        }
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Rejection reason is required");
         }
@@ -124,6 +145,21 @@ public class FuelRequestService implements com.primefuel.fulltank.platform.order
         events.publish(new DurableEvent("fuel-request:" + requestId + ":rejected", "FuelRequestRejected",
                 "FuelRequest", requestId.toString(), payload(buyerUserId, "reason=" + reason.trim()), Instant.now()));
         return rejected;
+    }
+
+    @Transactional
+    public FuelRequestData cancel(Long requestId) {
+        var request = requests.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Fuel request not found"));
+        if (request.status() != RequestStatus.PENDING || !lifecycle.transition(requestId, "PENDING", "CANCELLED")) {
+            throw new IllegalStateException("Only pending requests can be cancelled");
+        }
+        return requests.save(withStatus(request, RequestStatus.CANCELLED, "Cancelled by buyer"));
+    }
+
+    @Transactional
+    public boolean consumeAcceptance(Long requestId, Long orderId) {
+        return lifecycle.consume(requestId, orderId);
     }
 
     private static FuelRequestData withStatus(FuelRequestData request, RequestStatus status, String reason) {

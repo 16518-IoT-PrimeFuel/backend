@@ -70,7 +70,7 @@ class DeviceBindingAndTelemetryTest {
         when(policyStore.findPolicy(30L)).thenReturn(java.util.Optional.of(policy));
         when(policyStore.findOpenEpisode(30L)).thenReturn(java.util.Optional.empty(), java.util.Optional.of(episode));
         when(policyStore.saveEpisode(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(requestCreator.create(any())).thenReturn(new FuelRequestData(44L, 20L, 40L, 30L, 50L,
+        when(requestCreator.create(any(com.primefuel.fulltank.platform.ordering.domain.model.commands.CreateFuelRequestCommand.class), anyString())).thenReturn(new FuelRequestData(44L, 20L, 40L, 30L, 50L,
                 "DIESEL", "Diesel", 80D, "L", 1D, "Lima", java.time.LocalDate.now(),
                 RequestStatus.PENDING, "AUTOMATIC", null, null, null));
         var service = new RefillPolicyCommandService(sites, tanks, policyStore, requestCreator, events);
@@ -78,6 +78,6 @@ class DeviceBindingAndTelemetryTest {
         service.evaluate(30L, 10, "GOOD", firstReading);
         service.evaluate(30L, 9, "GOOD", firstReading.plusSeconds(60));
 
-        verify(requestCreator, times(1)).create(any());
+        verify(requestCreator, times(1)).create(any(com.primefuel.fulltank.platform.ordering.domain.model.commands.CreateFuelRequestCommand.class), anyString());
     }
 }

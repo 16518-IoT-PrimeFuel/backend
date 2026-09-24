@@ -39,6 +39,18 @@ public class ReplenishmentRequestsController {
         }
     }
 
+    @PostMapping("/{requestId}/cancel")
+    @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
+    public ResponseEntity<FuelRequestResource> cancel(@PathVariable Long companyId, @PathVariable Long requestId) {
+        try {
+            var request = service.findById(requestId).filter(item -> companyId.equals(item.buyerCompanyId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Request is outside buyer company"));
+            return ResponseEntity.ok(toResource(service.cancel(request.id())));
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     private static FuelRequestResource toResource(com.primefuel.fulltank.platform.ordering.application.ports.FuelRequestData r) {
         return new FuelRequestResource(r.id(), r.buyerCompanyId(), r.providerId(), r.equipmentId(),
                 r.fuelProductId(), r.fuelType(), r.productName(), r.quantity(), r.unit(), r.unitPrice(),
