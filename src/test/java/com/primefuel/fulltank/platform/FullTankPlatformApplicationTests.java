@@ -9,6 +9,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
@@ -16,6 +18,8 @@ import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -41,6 +45,9 @@ class FullTankPlatformApplicationTests {
 
     @Autowired
     private RequestMappingHandlerMapping requestMappingHandlerMapping;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
     private JavaMailSender mailSender;
@@ -93,6 +100,26 @@ class FullTankPlatformApplicationTests {
                 .count();
 
         org.junit.jupiter.api.Assertions.assertEquals(77, routeCount);
+    }
+
+    @Test
+    void emptyDatabaseMaterializesTheDeclaredLegacyTables() {
+        var expectedTables = Set.of(
+                "USERS", "ROLES", "BUYER_COMPANIES", "PROVIDER_COMPANIES", "PASSWORD_RESET_TOKENS",
+                "FUEL_PRODUCTS", "EQUIPMENT", "FUEL_REQUESTS", "FUEL_ORDERS", "PAYMENTS",
+                "DRIVERS", "VEHICLES", "DELIVERIES", "NOTIFICATIONS", "PROVIDER_RATINGS",
+                "USER_ROLES", "PROVIDER_COMPANY_FUEL_TYPES");
+        var actualTables = jdbcTemplate.execute((ConnectionCallback<Set<String>>) connection -> {
+            var tables = new HashSet<String>();
+            try (var result = connection.getMetaData().getTables(null, "PUBLIC", "%", new String[] {"TABLE"})) {
+                while (result.next()) tables.add(result.getString("TABLE_NAME"));
+            }
+            return tables;
+        });
+
+        org.junit.jupiter.api.Assertions.assertTrue(actualTables.containsAll(expectedTables),
+                () -> "Missing legacy tables: " + expectedTables.stream()
+                        .filter(table -> !actualTables.contains(table)).toList());
     }
 
     @Test
