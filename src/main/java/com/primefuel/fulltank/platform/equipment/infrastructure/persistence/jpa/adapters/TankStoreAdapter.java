@@ -5,6 +5,8 @@ import com.primefuel.fulltank.platform.equipment.infrastructure.persistence.jpa.
 import com.primefuel.fulltank.platform.equipment.infrastructure.persistence.jpa.repositories.TankJpaRepository;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+
 @Component
 public class TankStoreAdapter implements TankStore {
     private final TankJpaRepository repository;
@@ -24,5 +26,15 @@ public class TankStoreAdapter implements TankStore {
         tank.setCurrentLevel(currentLevel);
         tank.setStatus("ACTIVE");
         return repository.save(tank).getId();
+    }
+
+    @Override
+    public boolean belongsToSite(Long tankId, Long siteId) {
+        return repository.existsByIdAndCustomerSiteId(tankId, siteId);
+    }
+
+    @Override
+    public boolean applyValidatedReading(Long tankId, double level, Instant capturedAt) {
+        return repository.applyValidatedReading(tankId, level, capturedAt) > 0;
     }
 }
