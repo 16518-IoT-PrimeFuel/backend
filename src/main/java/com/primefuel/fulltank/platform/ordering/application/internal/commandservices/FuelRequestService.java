@@ -11,6 +11,7 @@ import com.primefuel.fulltank.platform.ordering.application.ports.FuelRequestSto
 import com.primefuel.fulltank.platform.shared.application.events.DurableEvent;
 import com.primefuel.fulltank.platform.shared.application.events.DurableEventPublisher;
 import com.primefuel.fulltank.platform.inventory.application.ports.SupplyReservationStore;
+import com.primefuel.fulltank.platform.iam.application.ports.UserRecipientLookup;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,17 +27,20 @@ public class FuelRequestService {
     private final FuelOrderRepository orders;
     private final DurableEventPublisher events;
     private final SupplyReservationStore reservations;
+    private final UserRecipientLookup recipients;
 
     public FuelRequestService(FuelRequestStore requests,
                               FuelProductRepository products,
                               FuelOrderRepository orders,
                               DurableEventPublisher events,
-                              SupplyReservationStore reservations) {
+                              SupplyReservationStore reservations,
+                              UserRecipientLookup recipients) {
         this.requests = requests;
         this.products = products;
         this.orders = orders;
         this.events = events;
         this.reservations = reservations;
+        this.recipients = recipients;
     }
 
     @Transactional
@@ -64,8 +68,9 @@ public class FuelRequestService {
                 product.getPricePerUnit(), command.deliveryAddress(), command.deliveryDate(), RequestStatus.PENDING,
                 command.source() == null ? "MANUAL" : command.source().toUpperCase(), null, null, null);
         var saved = requests.save(request);
+        var providerUserId = recipients.findByProviderId(saved.providerId()).orElse(null);
         events.publish(new DurableEvent("fuel-request:" + saved.id() + ":created", "FuelRequestCreated",
-                "FuelRequest", saved.id().toString(), "requestId=" + saved.id(), Instant.now()));
+                "FuelRequest", saved.id().toString(), payload(providerUserId, "requestId=" + saved.id()), Instant.now()));
         return saved;
     }
 
@@ -98,8 +103,9 @@ public class FuelRequestService {
         order.setRequestId(requestId);
         order = orders.save(order);
         requests.save(withStatus(request, RequestStatus.APPROVED, null));
+        var buyerUserId = recipients.findByCompanyId(request.buyerCompanyId()).orElse(null);
         events.publish(new DurableEvent("fuel-request:" + requestId + ":approved", "FuelRequestApproved",
-                "FuelRequest", requestId.toString(), "orderId=" + order.getId(), Instant.now()));
+                "FuelRequest", requestId.toString(), payload(buyerUserId, "orderId=" + order.getId()), Instant.now()));
         return order;
     }
 
@@ -114,8 +120,9 @@ public class FuelRequestService {
             throw new IllegalArgumentException("Rejection reason is required");
         }
         var rejected = requests.save(withStatus(request, RequestStatus.REJECTED, reason.trim()));
+        var buyerUserId = recipients.findByCompanyId(request.buyerCompanyId()).orElse(null);
         events.publish(new DurableEvent("fuel-request:" + requestId + ":rejected", "FuelRequestRejected",
-                "FuelRequest", requestId.toString(), "reason=" + reason.trim(), Instant.now()));
+                "FuelRequest", requestId.toString(), payload(buyerUserId, "reason=" + reason.trim()), Instant.now()));
         return rejected;
     }
 
@@ -124,5 +131,9 @@ public class FuelRequestService {
                 request.fuelProductId(), request.fuelType(), request.productName(), request.quantity(), request.unit(),
                 request.unitPrice(), request.deliveryAddress(), request.deliveryDate(), status, request.source(),
                 reason, request.createdAt(), request.updatedAt());
+    }
+
+    private static String payload(Long userId, String value) {
+        return "userId=" + (userId == null ? "" : userId) + ";" + value;
     }
 }

@@ -9,6 +9,7 @@ import com.primefuel.fulltank.platform.iam.domain.model.aggregates.User;
 import com.primefuel.fulltank.platform.iam.domain.model.queries.GetBuyerCompanyByIdQuery;
 import com.primefuel.fulltank.platform.iam.domain.model.queries.GetProviderCompanyByIdQuery;
 import com.primefuel.fulltank.platform.iam.domain.model.queries.GetUserByIdQuery;
+import com.primefuel.fulltank.platform.iam.domain.model.queries.GetAllUsersQuery;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -30,6 +31,16 @@ public class IamContextFacade {
 
     public Optional<User> fetchUserById(Long userId) {
         return userQueryService.handle(new GetUserByIdQuery(userId));
+    }
+
+    public Optional<User> fetchUserByCompanyId(Long companyId) {
+        return userQueryService.handle(new GetAllUsersQuery()).stream()
+                .filter(user -> companyId.equals(user.getCompanyId())).findFirst();
+    }
+
+    public Optional<User> fetchUserByProviderId(Long providerId) {
+        return userQueryService.handle(new GetAllUsersQuery()).stream()
+                .filter(user -> providerId.equals(user.getProviderId())).findFirst();
     }
 
     public Optional<BuyerCompany> fetchBuyerCompanyById(Long companyId) {
