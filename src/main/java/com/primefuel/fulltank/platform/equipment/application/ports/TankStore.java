@@ -5,5 +5,7 @@ public interface TankStore {
 
     boolean belongsToSite(Long tankId, Long siteId);
 
+    java.util.Optional<Double> capacity(Long tankId);
+
     boolean applyValidatedReading(Long tankId, double level, java.time.Instant capturedAt);
 }

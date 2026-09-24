@@ -21,7 +21,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 @Service
-public class FuelRequestService {
+public class FuelRequestService implements com.primefuel.fulltank.platform.ordering.application.ports.AutomaticReplenishmentRequest {
     private final FuelRequestStore requests;
     private final FuelProductRepository products;
     private final FuelOrderRepository orders;

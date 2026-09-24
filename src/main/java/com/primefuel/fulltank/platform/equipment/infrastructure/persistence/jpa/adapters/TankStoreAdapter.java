@@ -34,6 +34,11 @@ public class TankStoreAdapter implements TankStore {
     }
 
     @Override
+    public java.util.Optional<Double> capacity(Long tankId) {
+        return repository.findById(tankId).map(TankPersistenceEntity::getCapacity);
+    }
+
+    @Override
     public boolean applyValidatedReading(Long tankId, double level, Instant capturedAt) {
         return repository.applyValidatedReading(tankId, level, capturedAt) > 0;
     }
