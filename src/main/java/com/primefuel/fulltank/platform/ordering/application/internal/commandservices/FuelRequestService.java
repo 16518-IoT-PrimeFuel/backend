@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Service
 public class FuelRequestService {
@@ -38,8 +39,17 @@ public class FuelRequestService {
     public FuelRequestData create(CreateFuelRequestCommand command) {
         var product = products.findById(command.fuelProductId())
                 .orElseThrow(() -> new IllegalArgumentException("Fuel product not found"));
+        if (!Boolean.TRUE.equals(product.getActive())) {
+            throw new IllegalArgumentException("Fuel product is inactive");
+        }
         if (!product.getProviderId().equals(command.providerId())) {
             throw new IllegalArgumentException("Fuel product does not belong to provider");
+        }
+        if (command.quantity() == null || command.quantity() <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than zero");
+        }
+        if (command.deliveryDate() == null || command.deliveryDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Delivery date cannot be in the past");
         }
         var request = new FuelRequestData(null, command.buyerCompanyId(), command.providerId(),
                 command.equipmentId(), command.fuelProductId(), product.getFuelType().name(), product.getName(),
