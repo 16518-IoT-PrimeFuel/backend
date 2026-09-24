@@ -8,6 +8,10 @@ roles de membership y referencias explícitas a `legacy_buyer_company_id` y
 el usuario ya tiene alguna; usuarios aún no migrados conservan el fallback a
 los IDs legacy del principal.
 
+También se añadieron endpoints v2 aditivos para invitar y revocar usuarios
+existentes bajo `/api/v2/provider-companies/{providerId}/memberships`. Ambos
+requieren que el principal sea dueño del proveedor indicado.
+
 Esto permite backfill gradual y evita inferir una relación desde la última
 orden o desde `favoriteProviderId`. La migración todavía no elimina columnas
 legacy ni cambia los contratos v1.
@@ -22,5 +26,5 @@ legacy ni cambia los contratos v1.
 
 ## Pendiente
 
-Crear el caso de uso/API de invitación y revocación, backfill idempotente desde
-las tablas actuales y fixtures persistentes A/B antes de retirar el fallback.
+Faltan el backfill idempotente desde las tablas actuales y fixtures persistentes
+A/B antes de retirar el fallback.

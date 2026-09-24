@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface OrganizationMembershipJpaRepository extends JpaRepository<MembershipPersistenceEntity, Long> {
+    java.util.Optional<MembershipPersistenceEntity> findByUserIdAndOrganizationId(Long userId, Long organizationId);
     @Query(value = "select count(*) > 0 from memberships m join organizations o on o.id = m.organization_id "
             + "where m.user_id = :userId and m.status = 'ACTIVE' and o.status = 'ACTIVE'", nativeQuery = true)
     boolean hasActiveMemberships(@Param("userId") Long userId);
