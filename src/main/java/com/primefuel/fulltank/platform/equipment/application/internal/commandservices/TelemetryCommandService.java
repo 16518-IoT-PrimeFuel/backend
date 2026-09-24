@@ -3,6 +3,7 @@ package com.primefuel.fulltank.platform.equipment.application.internal.commandse
 import com.primefuel.fulltank.platform.equipment.application.ports.TankStore;
 import com.primefuel.fulltank.platform.equipment.application.ports.TelemetryReadingData;
 import com.primefuel.fulltank.platform.equipment.application.ports.TelemetryStore;
+import com.primefuel.fulltank.platform.equipment.application.ports.TelemetryInboxStore;
 import com.primefuel.fulltank.platform.shared.application.events.DurableEvent;
 import com.primefuel.fulltank.platform.shared.application.events.DurableEventPublisher;
 import org.springframework.stereotype.Service;
@@ -17,17 +18,20 @@ public class TelemetryCommandService {
     private final TankStore tanks;
     private final DurableEventPublisher events;
     private final RefillPolicyCommandService refillPolicies;
+    private final TelemetryInboxStore inbox;
 
     public TelemetryCommandService(DeviceBindingCommandService bindings, TelemetryStore readings,
-                                   TankStore tanks, DurableEventPublisher events, RefillPolicyCommandService refillPolicies) {
+                                   TankStore tanks, DurableEventPublisher events, RefillPolicyCommandService refillPolicies,
+                                   TelemetryInboxStore inbox) {
         this.bindings = bindings;
         this.readings = readings;
         this.tanks = tanks;
         this.events = events;
         this.refillPolicies = refillPolicies;
+        this.inbox = inbox;
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = IllegalArgumentException.class)
     public boolean ingest(String deviceId, String channel, String credential, long sequenceNumber,
                           String eventId, String schemaVersion, Instant capturedAt, double levelValue,
                           String unit, String quality) {
@@ -37,12 +41,19 @@ public class TelemetryCommandService {
             throw new IllegalArgumentException("Invalid telemetry payload");
         }
         var receivedAt = Instant.now();
-        var binding = bindings.resolve(deviceId, channel, credential, capturedAt);
+        if (!inbox.claim(eventId, deviceId, channel, sequenceNumber, receivedAt)) return false;
+        final var binding = bindings.resolve(deviceId, channel, credential, capturedAt);
         var reading = new TelemetryReadingData(eventId, deviceId, channel, sequenceNumber, binding.tankId(),
                 schemaVersion, capturedAt == null ? receivedAt : capturedAt, receivedAt, levelValue, unit, quality);
-        if (!readings.saveIfAbsent(reading)) return false;
+        if (!readings.saveIfAbsent(reading)) {
+            inbox.complete(eventId, "ACCEPTED", null);
+            inbox.advanceCheckpoint(deviceId, channel, sequenceNumber);
+            return false;
+        }
         tanks.applyValidatedReading(binding.tankId(), levelValue, reading.capturedAt());
         refillPolicies.evaluate(binding.tankId(), levelValue, quality, reading.capturedAt());
+        inbox.complete(eventId, "ACCEPTED", null);
+        inbox.advanceCheckpoint(deviceId, channel, sequenceNumber);
         events.publish(new DurableEvent("telemetry:" + eventId, "ValidatedTankReading", "Tank",
                 binding.tankId().toString(), "eventId=" + eventId + ";deviceId=" + deviceId
                         + ";capturedAt=" + reading.capturedAt(), receivedAt));

@@ -52,11 +52,33 @@ class DeviceBindingAndTelemetryTest {
     void telemetryRejectsNonFiniteLevelsBeforePersistence() {
         var telemetry = mock(TelemetryStore.class);
         var service = new TelemetryCommandService(mock(DeviceBindingCommandService.class), telemetry, tanks, events,
-                mock(com.primefuel.fulltank.platform.equipment.application.internal.commandservices.RefillPolicyCommandService.class));
+                mock(com.primefuel.fulltank.platform.equipment.application.internal.commandservices.RefillPolicyCommandService.class),
+                mock(com.primefuel.fulltank.platform.equipment.application.ports.TelemetryInboxStore.class));
 
         assertThrows(IllegalArgumentException.class, () -> service.ingest("sensor-1", "level", "secret", 1,
                 "event-1", "v1", Instant.now(), Double.NaN, "L", "GOOD"));
         verifyNoInteractions(telemetry);
+    }
+
+    @Test
+    void telemetryInboxMakesReplayAcknowledgeWithoutReapplyingTank() {
+        var telemetry = mock(TelemetryStore.class);
+        var inbox = mock(com.primefuel.fulltank.platform.equipment.application.ports.TelemetryInboxStore.class);
+        var bindingService = mock(DeviceBindingCommandService.class);
+        var refillPolicies = mock(RefillPolicyCommandService.class);
+        when(inbox.claim(eq("event-1"), eq("sensor-1"), eq("level"), eq(7L), any())).thenReturn(true, false);
+        when(bindingService.resolve("sensor-1", "level", "secret", Instant.EPOCH))
+                .thenReturn(new DeviceBindingData(1L, "sensor-1", "level", 30L, 20L, "hash",
+                        Instant.EPOCH, null, "ACTIVE"));
+        when(telemetry.saveIfAbsent(any())).thenReturn(true);
+        var service = new TelemetryCommandService(bindingService, telemetry, tanks, events, refillPolicies, inbox);
+
+        org.junit.jupiter.api.Assertions.assertTrue(service.ingest("sensor-1", "level", "secret", 7,
+                "event-1", "v1", Instant.EPOCH, 40, "L", "GOOD"));
+        org.junit.jupiter.api.Assertions.assertFalse(service.ingest("sensor-1", "level", "secret", 7,
+                "event-1", "v1", Instant.EPOCH, 40, "L", "GOOD"));
+        verify(telemetry, times(1)).saveIfAbsent(any());
+        verify(tanks, times(1)).applyValidatedReading(eq(30L), eq(40D), any());
     }
 
     @Test
