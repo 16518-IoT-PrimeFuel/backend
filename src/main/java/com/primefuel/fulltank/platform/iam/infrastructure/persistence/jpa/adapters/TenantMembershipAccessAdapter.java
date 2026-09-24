@@ -1,16 +1,19 @@
 package com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.adapters;
 
 import com.primefuel.fulltank.platform.iam.application.ports.TenantMembershipAccess;
+import com.primefuel.fulltank.platform.iam.application.ports.TenantMembershipCommandStore;
+import com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.entities.MembershipPersistenceEntity;
+import com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.repositories.OrganizationJpaRepository;
 import com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.repositories.OrganizationMembershipJpaRepository;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TenantMembershipAccessAdapter implements TenantMembershipAccess, com.primefuel.fulltank.platform.iam.application.ports.TenantMembershipCommandStore {
+public class TenantMembershipAccessAdapter implements TenantMembershipAccess, TenantMembershipCommandStore {
     private final OrganizationMembershipJpaRepository repository;
-    private final com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.repositories.OrganizationJpaRepository organizations;
+    private final OrganizationJpaRepository organizations;
 
     public TenantMembershipAccessAdapter(OrganizationMembershipJpaRepository repository,
-                                         com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.repositories.OrganizationJpaRepository organizations) {
+                                         OrganizationJpaRepository organizations) {
         this.repository = repository;
         this.organizations = organizations;
     }
@@ -35,7 +38,7 @@ public class TenantMembershipAccessAdapter implements TenantMembershipAccess, co
         var organization = organizations.findByLegacyProviderCompanyId(providerId)
                 .orElseThrow(() -> new IllegalArgumentException("Provider organization not found"));
         var membership = repository.findByUserIdAndOrganizationId(userId, organization.getId())
-                .orElseGet(com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.entities.MembershipPersistenceEntity::new);
+                .orElseGet(MembershipPersistenceEntity::new);
         membership.setUserId(userId);
         membership.setOrganizationId(organization.getId());
         membership.setRole(role);
