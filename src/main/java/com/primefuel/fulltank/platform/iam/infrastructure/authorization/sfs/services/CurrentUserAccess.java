@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
+import com.primefuel.fulltank.platform.iam.application.ports.TenantMembershipAccess;
 import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -8,6 +9,16 @@ import org.springframework.stereotype.Component;
 
 @Component("currentUserAccess")
 public class CurrentUserAccess implements TenantAccess {
+    private final TenantMembershipAccess memberships;
+
+    public CurrentUserAccess() {
+        this.memberships = null;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public CurrentUserAccess(TenantMembershipAccess memberships) {
+        this.memberships = memberships;
+    }
 
     public boolean isBuyer() {
         return hasAuthority("ROLE_BUYER") && current().getCompanyId() != null;
@@ -18,11 +29,15 @@ public class CurrentUserAccess implements TenantAccess {
     }
 
     public boolean ownsCompany(Long companyId) {
-        return isBuyer() && companyId != null && companyId.equals(current().getCompanyId());
+        if (!isBuyer() || companyId == null) return false;
+        return usesMemberships() ? memberships.ownsBuyerCompany(current().getUserId(), companyId)
+                : companyId.equals(current().getCompanyId());
     }
 
     public boolean ownsProvider(Long providerId) {
-        return isProvider() && providerId != null && providerId.equals(current().getProviderId());
+        if (!isProvider() || providerId == null) return false;
+        return usesMemberships() ? memberships.ownsProviderCompany(current().getUserId(), providerId)
+                : providerId.equals(current().getProviderId());
     }
 
     public boolean ownsUser(Long userId) {
@@ -57,5 +72,9 @@ public class CurrentUserAccess implements TenantAccess {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl principal
                 ? principal : null;
+    }
+
+    private boolean usesMemberships() {
+        return memberships != null && memberships.hasActiveMemberships(current().getUserId());
     }
 }

@@ -23,9 +23,9 @@ class SyntheticBaselineMigrationTest {
         try (var connection = DriverManager.getConnection(url, "sa", "")) {
             assertEquals(1, count(connection, "fuel_products"));
             assertEquals(2, count(connection, "roles"));
-            assertEquals(18, tableCount(connection));
+            assertEquals(20, tableCount(connection));
         }
-        assertTrue(flyway.info().current().getVersion().getVersion().equals("3"));
+        assertTrue(flyway.info().current().getVersion().getVersion().equals("4"));
     }
 
     private static int count(java.sql.Connection connection, String table) throws Exception {

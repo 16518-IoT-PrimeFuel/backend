@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import com.primefuel.fulltank.platform.shared.application.events.DurableEvent;
 import com.primefuel.fulltank.platform.shared.application.events.DurableEventPublisher;
+import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 
 import java.time.Instant;
 
@@ -60,6 +61,9 @@ class FullTankPlatformApplicationTests {
     @Autowired
     private DurableEventPublisher durableEventPublisher;
 
+    @Autowired
+    private TenantAccess tenantAccess;
+
     @MockitoBean
     private JavaMailSender mailSender;
 
@@ -75,6 +79,22 @@ class FullTankPlatformApplicationTests {
         assertFalse(durableEventPublisher.publish(event));
         assertEquals(1, jdbcTemplate.queryForObject(
                 "select count(*) from outbox_events where event_key = ?", Integer.class, event.eventKey()));
+    }
+
+    @Test
+    void activeMembershipControlsTenantAccessWhenPresent() {
+        jdbcTemplate.update("insert into organizations (created_at, updated_at, name, type, legacy_buyer_company_id, status) values (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?, ?, ?, ?)",
+                "Membership Buyer", "BUYER", 731L, "ACTIVE");
+        jdbcTemplate.update("insert into memberships (created_at, updated_at, user_id, organization_id, role, status) values (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?, ?, ?, ?)",
+                731L, jdbcTemplate.queryForObject("select id from organizations where legacy_buyer_company_id = 731", Long.class), "MEMBER", "ACTIVE");
+        var principal = new UserDetailsImpl(731L, "membership-user", "encoded", 999L, null,
+                List.of(new SimpleGrantedAuthority("ROLE_BUYER")));
+        var token = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(token);
+
+        assertTrue(tenantAccess.ownsCompany(731L));
+        assertFalse(tenantAccess.ownsCompany(999L));
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
     }
 
     @Test
