@@ -33,6 +33,7 @@ import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.mode
 import com.primefuel.fulltank.platform.shared.application.events.DurableEvent;
 import com.primefuel.fulltank.platform.shared.application.events.DurableEventPublisher;
 import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
+import com.primefuel.fulltank.platform.inventory.application.ports.SupplyReservationStore;
 
 import java.time.Instant;
 
@@ -63,6 +64,9 @@ class FullTankPlatformApplicationTests {
 
     @Autowired
     private TenantAccess tenantAccess;
+
+    @Autowired
+    private SupplyReservationStore supplyReservations;
 
     @MockitoBean
     private JavaMailSender mailSender;
@@ -95,6 +99,20 @@ class FullTankPlatformApplicationTests {
         assertTrue(tenantAccess.ownsCompany(731L));
         assertFalse(tenantAccess.ownsCompany(999L));
         org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void supplyReservationIsAtomicAndIdempotent() {
+        jdbcTemplate.update("insert into fuel_products (id, created_at, updated_at, name, fuel_type, price_per_unit, unit, available_stock, provider_id, active) values (?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?)",
+                901L, "Reservation Diesel", "DIESEL", 10.0, "L", 100.0, 501L, true);
+
+        assertTrue(supplyReservations.reserve(801L, 901L, 40.0));
+        assertTrue(supplyReservations.reserve(801L, 901L, 40.0));
+        assertFalse(supplyReservations.reserve(802L, 901L, 70.0));
+        assertEquals(60.0, jdbcTemplate.queryForObject(
+                "select available_stock from fuel_products where id = 901", Double.class));
+        assertEquals(1, jdbcTemplate.queryForObject(
+                "select count(*) from supply_reservations where request_id = 801", Integer.class));
     }
 
     @Test

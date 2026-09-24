@@ -10,6 +10,7 @@ import com.primefuel.fulltank.platform.ordering.application.ports.FuelRequestDat
 import com.primefuel.fulltank.platform.ordering.application.ports.FuelRequestStore;
 import com.primefuel.fulltank.platform.shared.application.events.DurableEvent;
 import com.primefuel.fulltank.platform.shared.application.events.DurableEventPublisher;
+import com.primefuel.fulltank.platform.inventory.application.ports.SupplyReservationStore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,15 +25,18 @@ public class FuelRequestService {
     private final FuelProductRepository products;
     private final FuelOrderRepository orders;
     private final DurableEventPublisher events;
+    private final SupplyReservationStore reservations;
 
     public FuelRequestService(FuelRequestStore requests,
                               FuelProductRepository products,
                               FuelOrderRepository orders,
-                              DurableEventPublisher events) {
+                              DurableEventPublisher events,
+                              SupplyReservationStore reservations) {
         this.requests = requests;
         this.products = products;
         this.orders = orders;
         this.events = events;
+        this.reservations = reservations;
     }
 
     @Transactional
@@ -87,6 +91,9 @@ public class FuelRequestService {
         var command = new CreateFuelOrderCommand(request.buyerCompanyId(), request.providerId(),
                 request.fuelProductId(), request.equipmentId(), request.quantity(),
                 request.deliveryAddress(), request.deliveryDate());
+        if (!reservations.reserve(requestId, request.fuelProductId(), request.quantity())) {
+            throw new IllegalStateException("Fuel supply is no longer available");
+        }
         var order = new FuelOrder(command, product.getPricePerUnit() * request.quantity());
         order.setRequestId(requestId);
         order = orders.save(order);
