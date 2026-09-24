@@ -24,9 +24,9 @@ falla si aparece una violación nueva.
 
 ## Deuda AS-IS congelada
 
-Actualmente hay cinco cruces internos conocidos:
+Tras extraer el puerto de tokens de password reset, quedan tres cruces
+internos conocidos:
 
-- `iam.application.PasswordResetService` importa entidad y repositorio JPA.
 - `ordering.application.FuelRequestService` importa entidad y repositorio JPA.
 - `ordering.application.FuelRequestService` importa un resource REST.
 

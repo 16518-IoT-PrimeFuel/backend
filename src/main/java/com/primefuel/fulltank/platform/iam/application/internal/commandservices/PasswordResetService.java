@@ -1,9 +1,9 @@
 package com.primefuel.fulltank.platform.iam.application.internal.commandservices;
 
 import com.primefuel.fulltank.platform.iam.application.internal.outboundservices.hashing.HashingService;
+import com.primefuel.fulltank.platform.iam.application.ports.PasswordResetToken;
+import com.primefuel.fulltank.platform.iam.application.ports.PasswordResetTokenStore;
 import com.primefuel.fulltank.platform.iam.domain.repositories.UserRepository;
-import com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.entities.PasswordResetTokenEntity;
-import com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.repositories.PasswordResetTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
@@ -26,13 +26,13 @@ public class PasswordResetService {
     private static final int TOKEN_BYTES = 32;
 
     private final UserRepository users;
-    private final PasswordResetTokenRepository tokens;
+    private final PasswordResetTokenStore tokens;
     private final HashingService hashing;
     private final JavaMailSender mailSender;
     private final String resetLink;
     private final String mailFrom;
 
-    public PasswordResetService(UserRepository users, PasswordResetTokenRepository tokens,
+    public PasswordResetService(UserRepository users, PasswordResetTokenStore tokens,
             HashingService hashing, JavaMailSender mailSender,
             @Value("${app.password-reset.link}") String resetLink,
             @Value("${app.password-reset.from}") String mailFrom) {
@@ -54,10 +54,11 @@ public class PasswordResetService {
         var raw = new byte[TOKEN_BYTES];
         RANDOM.nextBytes(raw);
         var token = HexFormat.of().formatHex(raw);
-        var reset = new PasswordResetTokenEntity();
-        reset.setUserId(user.get().getId());
-        reset.setTokenHash(hash(token));
-        reset.setExpiresAt(Instant.now().plus(30, ChronoUnit.MINUTES));
+        var reset = new PasswordResetToken(
+                null,
+                user.get().getId(),
+                hash(token),
+                Instant.now().plus(30, ChronoUnit.MINUTES));
         tokens.save(reset);
 
         var message = new SimpleMailMessage();
@@ -79,12 +80,12 @@ public class PasswordResetService {
         var entity = tokens.lockValidToken(hash(token), Instant.now())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Invalid or expired reset request"));
-        var user = users.findById(entity.getUserId())
+        var user = users.findById(entity.userId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Invalid or expired reset request"));
         user.setPassword(hashing.encode(newPassword));
         users.save(user);
-        tokens.delete(entity);
+        tokens.deleteById(entity.id());
     }
 
     private static String hash(String token) {

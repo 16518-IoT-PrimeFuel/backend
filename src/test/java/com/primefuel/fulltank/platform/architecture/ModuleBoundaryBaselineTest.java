@@ -16,8 +16,6 @@ class ModuleBoundaryBaselineTest {
     private static final Path SOURCE_ROOT = Path.of("src/main/java/com/primefuel/fulltank/platform");
 
     private static final Set<String> KNOWN_VIOLATIONS = Set.of(
-            "iam/application/internal/commandservices/PasswordResetService.java:import com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.entities.PasswordResetTokenEntity;",
-            "iam/application/internal/commandservices/PasswordResetService.java:import com.primefuel.fulltank.platform.iam.infrastructure.persistence.jpa.repositories.PasswordResetTokenRepository;",
             "ordering/application/internal/commandservices/FuelRequestService.java:import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.entities.FuelRequestPersistenceEntity;",
             "ordering/application/internal/commandservices/FuelRequestService.java:import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.repositories.FuelRequestPersistenceRepository;",
             "ordering/application/internal/commandservices/FuelRequestService.java:import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.CreateFuelRequestResource;"
