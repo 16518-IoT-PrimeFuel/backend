@@ -48,6 +48,9 @@ public class FuelRequestService {
         if (command.quantity() == null || command.quantity() <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than zero");
         }
+        if (product.getAvailableStock() == null || command.quantity() > product.getAvailableStock()) {
+            throw new IllegalArgumentException("Requested quantity exceeds available stock");
+        }
         if (command.deliveryDate() == null || command.deliveryDate().isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Delivery date cannot be in the past");
         }
