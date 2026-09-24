@@ -8,6 +8,8 @@ Estado: implementado y verificado el 2026-09-24.
   modelo JPA actual.
 - `V2__synthetic_reference_data.sql`: fixture exclusivo de tests con roles,
   una empresa compradora, un proveedor y un producto Diesel B5.
+- `V3__durable_outbox.sql`: tabla de eventos durables con `event_key` único e
+  idempotencia de publicación.
 - `SyntheticBaselineMigrationTest`: ejecuta ambas migraciones sobre H2 en modo
   MySQL y comprueba el número de tablas y registros.
 
@@ -28,4 +30,5 @@ Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
 ```
 
 El test específico confirma 17 tablas y 2 roles de referencia, además de un
-producto mock.
+producto mock. La suite de aplicación confirma que publicar dos veces la misma
+clave deja un solo evento en `outbox_events`.

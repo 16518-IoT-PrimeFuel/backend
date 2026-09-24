@@ -8,24 +8,30 @@ import com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.Reques
 import com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository;
 import com.primefuel.fulltank.platform.ordering.application.ports.FuelRequestData;
 import com.primefuel.fulltank.platform.ordering.application.ports.FuelRequestStore;
+import com.primefuel.fulltank.platform.shared.application.events.DurableEvent;
+import com.primefuel.fulltank.platform.shared.application.events.DurableEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Instant;
 
 @Service
 public class FuelRequestService {
     private final FuelRequestStore requests;
     private final FuelProductRepository products;
     private final FuelOrderRepository orders;
+    private final DurableEventPublisher events;
 
     public FuelRequestService(FuelRequestStore requests,
                               FuelProductRepository products,
-                              FuelOrderRepository orders) {
+                              FuelOrderRepository orders,
+                              DurableEventPublisher events) {
         this.requests = requests;
         this.products = products;
         this.orders = orders;
+        this.events = events;
     }
 
     @Transactional
@@ -40,7 +46,10 @@ public class FuelRequestService {
                 command.quantity(), command.unit() == null ? product.getUnit() : command.unit(),
                 product.getPricePerUnit(), command.deliveryAddress(), command.deliveryDate(), RequestStatus.PENDING,
                 command.source() == null ? "MANUAL" : command.source().toUpperCase(), null, null, null);
-        return requests.save(request);
+        var saved = requests.save(request);
+        events.publish(new DurableEvent("fuel-request:" + saved.id() + ":created", "FuelRequestCreated",
+                "FuelRequest", saved.id().toString(), "requestId=" + saved.id(), Instant.now()));
+        return saved;
     }
 
     public List<FuelRequestData> findAll(Long buyerCompanyId, Long providerId) {
@@ -69,6 +78,8 @@ public class FuelRequestService {
         order.setRequestId(requestId);
         order = orders.save(order);
         requests.save(withStatus(request, RequestStatus.APPROVED, null));
+        events.publish(new DurableEvent("fuel-request:" + requestId + ":approved", "FuelRequestApproved",
+                "FuelRequest", requestId.toString(), "orderId=" + order.getId(), Instant.now()));
         return order;
     }
 
@@ -82,7 +93,10 @@ public class FuelRequestService {
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Rejection reason is required");
         }
-        return requests.save(withStatus(request, RequestStatus.REJECTED, reason.trim()));
+        var rejected = requests.save(withStatus(request, RequestStatus.REJECTED, reason.trim()));
+        events.publish(new DurableEvent("fuel-request:" + requestId + ":rejected", "FuelRequestRejected",
+                "FuelRequest", requestId.toString(), "reason=" + reason.trim(), Instant.now()));
+        return rejected;
     }
 
     private static FuelRequestData withStatus(FuelRequestData request, RequestStatus status, String reason) {

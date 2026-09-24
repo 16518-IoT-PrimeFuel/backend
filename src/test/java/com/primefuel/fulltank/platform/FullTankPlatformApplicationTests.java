@@ -16,6 +16,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Set;
@@ -27,6 +30,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
+import com.primefuel.fulltank.platform.shared.application.events.DurableEvent;
+import com.primefuel.fulltank.platform.shared.application.events.DurableEventPublisher;
+
+import java.time.Instant;
 
 @SpringBootTest(properties = {
         "spring.profiles.active=test",
@@ -50,11 +57,24 @@ class FullTankPlatformApplicationTests {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private DurableEventPublisher durableEventPublisher;
+
     @MockitoBean
     private JavaMailSender mailSender;
 
     @Test
     void contextLoads() {
+    }
+
+    @Test
+    void durableEventPublicationIsIdempotent() {
+        var event = new DurableEvent("test:event:1", "TestEvent", "Test", "1", "ok", Instant.now());
+
+        assertTrue(durableEventPublisher.publish(event));
+        assertFalse(durableEventPublisher.publish(event));
+        assertEquals(1, jdbcTemplate.queryForObject(
+                "select count(*) from outbox_events where event_key = ?", Integer.class, event.eventKey()));
     }
 
     @Test
