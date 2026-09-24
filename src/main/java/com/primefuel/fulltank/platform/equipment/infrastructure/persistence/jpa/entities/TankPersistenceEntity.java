@@ -39,4 +39,7 @@ public class TankPersistenceEntity extends AuditableAbstractPersistenceEntity {
 
     @Column(name = "last_reading_at")
     private Instant lastReadingAt;
+
+    @Column(name = "legacy_equipment_id", unique = true)
+    private Long legacyEquipmentId;
 }
