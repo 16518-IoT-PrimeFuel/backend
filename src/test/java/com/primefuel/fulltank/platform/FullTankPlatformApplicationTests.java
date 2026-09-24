@@ -162,6 +162,23 @@ class FullTankPlatformApplicationTests {
     }
 
     @Test
+    void runtimeV1ContractFingerprintIsStable() throws Exception {
+        var contract = requestMappingHandlerMapping.getHandlerMethods().keySet().stream()
+                .flatMap(mapping -> mapping.getMethodsCondition().getMethods().stream()
+                        .flatMap(method -> mapping.getPatternValues().stream()
+                                .filter(pattern -> pattern.startsWith("/api/v1/")
+                                        && method != org.springframework.web.bind.annotation.RequestMethod.OPTIONS)
+                                .map(pattern -> method.name() + " " + pattern)))
+                .sorted()
+                .collect(java.util.stream.Collectors.joining("\n"));
+        var digest = java.security.MessageDigest.getInstance("SHA-256")
+                .digest(contract.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        org.junit.jupiter.api.Assertions.assertEquals(
+                "79bd6b0a28b3aa535749263f2c5bc3d8cff0cb18d63cd031cd77d95a448434c6",
+                java.util.HexFormat.of().formatHex(digest));
+    }
+
+    @Test
     void emptyDatabaseMaterializesTheDeclaredLegacyTables() {
         var expectedTables = Set.of(
                 "USERS", "ROLES", "BUYER_COMPANIES", "PROVIDER_COMPANIES", "PASSWORD_RESET_TOKENS",

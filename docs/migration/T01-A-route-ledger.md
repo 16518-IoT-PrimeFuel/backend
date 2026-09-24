@@ -11,8 +11,10 @@ Estado: baseline caracterizado el 2026-09-23.
 - API documentada: `/api/v1`.
 - Inventario runtime actual: 77 mappings `/api/v1`, protegido por una prueba
   de conteo; los endpoints `/api/v2` son aditivos.
-- La reconciliación OpenAPI completa sigue siendo una tarea separada porque el
-  contrato generado no está versionado en el repositorio.
+- La huella SHA-256 runtime de método+ruta v1 es
+  `79bd6b0a28b3aa535749263f2c5bc3d8cff0cb18d63cd031cd77d95a448434c6`.
+- La reconciliación de schemas OpenAPI sigue siendo una tarea separada porque
+  el contrato generado no está versionado en el repositorio.
 
 ## Inventario por bounded context actual
 
