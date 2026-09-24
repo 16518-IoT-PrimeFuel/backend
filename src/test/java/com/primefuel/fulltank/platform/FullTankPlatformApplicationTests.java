@@ -8,6 +8,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
@@ -38,6 +39,9 @@ class FullTankPlatformApplicationTests {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private RequestMappingHandlerMapping requestMappingHandlerMapping;
+
     @MockitoBean
     private JavaMailSender mailSender;
 
@@ -55,6 +59,40 @@ class FullTankPlatformApplicationTests {
         mockMvc.perform(get("/api/v1/buyer-companies/99")
                         .with(authentication(token)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void buyerTenantCannotReadAnotherBuyerCompany() throws Exception {
+        var buyer = new UserDetailsImpl(1L, "buyer-a", "encoded", 31L, null,
+                List.of(new SimpleGrantedAuthority("ROLE_BUYER")));
+        var token = new UsernamePasswordAuthenticationToken(
+                buyer, null, buyer.getAuthorities());
+
+        mockMvc.perform(get("/api/v1/buyer-companies/32")
+                        .with(authentication(token)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void providerTenantCannotReadAnotherProviderCompany() throws Exception {
+        var provider = new UserDetailsImpl(2L, "provider-a", "encoded", null, 41L,
+                List.of(new SimpleGrantedAuthority("ROLE_PROVIDER")));
+        var token = new UsernamePasswordAuthenticationToken(
+                provider, null, provider.getAuthorities());
+
+        mockMvc.perform(get("/api/v1/provider-companies/42")
+                        .with(authentication(token)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void runtimeV1RouteCountMatchesTheBaselineLedger() {
+        var routeCount = requestMappingHandlerMapping.getHandlerMethods().keySet().stream()
+                .flatMap(mapping -> mapping.getPatternValues().stream())
+                .filter(pattern -> pattern.startsWith("/api/v1/"))
+                .count();
+
+        org.junit.jupiter.api.Assertions.assertEquals(77, routeCount);
     }
 
     @Test
