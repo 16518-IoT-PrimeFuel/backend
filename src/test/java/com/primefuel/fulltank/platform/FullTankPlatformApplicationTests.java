@@ -35,6 +35,7 @@ import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.mode
         "spring.datasource.username=sa",
         "spring.datasource.password=",
         "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.flyway.enabled=false",
         "authorization.jwt.secret=0123456789abcdef0123456789abcdef"
 })
 @AutoConfigureMockMvc

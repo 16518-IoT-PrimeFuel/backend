@@ -1,15 +1,12 @@
 # T03-A — Inventario de esquema y baseline
 
-Estado: inventario aprobado para implementación el 2026-09-23.
+Estado: inventario aprobado; baseline sintético implementado en T03-B el 2026-09-24.
 
 ## Decisión de migrador
 
-Se usará Flyway en el siguiente ticket. El esquema actual es relacional y el
-DDL requerido es SQL explícito; Flyway permite versionar el baseline, ejecutar
-expansiones y cambiar Hibernate a `validate` sin introducir una abstracción de
-migración mayor que el problema.
-
-No se añade la dependencia ni se cambia el runtime en T03-A.
+Se usa Flyway. El esquema actual es relacional y el DDL requerido es SQL
+explícito; Flyway versiona el baseline y permite que Hibernate valide el
+esquema sin `update`.
 
 ## Esquema AS-IS declarado por JPA
 
@@ -44,8 +41,8 @@ Total declarado: **17 tablas**.
 
 | Fuente | Perfil/condición | Mutación |
 |---|---|---|
-| Hibernate | `dev` | `spring.jpa.hibernate.ddl-auto=update` |
-| Hibernate | `mysql` | `spring.jpa.hibernate.ddl-auto=update` |
+| Flyway | `dev`/`mysql` | ejecuta `db/migration/V1__synthetic_legacy_baseline.sql` |
+| Hibernate | `dev`/`mysql` | `spring.jpa.hibernate.ddl-auto=validate` |
 | Hibernate | `test` | `spring.jpa.hibernate.ddl-auto=create-drop` |
 | `MySqlSchemaCompatibilityInitializer` | MySQL en `ApplicationReadyEvent` | `fuel_orders.status` → `VARCHAR(30)` |
 | `MySqlSchemaCompatibilityInitializer` | MySQL en `ApplicationReadyEvent` | `notifications.type` → `VARCHAR(40)` |
@@ -56,18 +53,20 @@ Total declarado: **17 tablas**.
 - `update` puede producir drift entre entornos.
 - El initializer ejecuta DDL después de iniciar la aplicación.
 - No existe snapshot autorizado de un MySQL real en este workspace.
-- El baseline productivo debe generarse desde metadata/backup autorizado; no se
-  debe inventar un esquema productivo a partir de H2.
+- El baseline actual es sintético: representa el modelo JPA, pero no sustituye
+  la reconciliación contra metadata/backup autorizado de MySQL.
 
 ## Gate T03-A
 
 - inventario de 15 entidades y 17 tablas documentado;
 - mutaciones implícitas identificadas;
-- Flyway elegido sin modificar todavía el runtime;
-- T03-B queda bloqueado hasta disponer de snapshot MySQL autorizado y plan de
-  restore.
+- Flyway elegido y conectado al runtime;
+- la migración H2 sintética pasa un test reproducible;
+- los datos mock están aislados en `src/test/resources` y no se despliegan;
+- T03-C debe reconciliar V1 contra un snapshot MySQL autorizado.
 
 ## Rollback
 
-Este ticket solo añade documentación. No hay cambios de datos ni migraciones
-que revertir.
+El runtime debe volver temporalmente a `ddl-auto=update` y desactivar Flyway si
+se necesita operar contra una base existente aún no reconciliada. No ejecutar
+`flyway clean` en una base compartida.
