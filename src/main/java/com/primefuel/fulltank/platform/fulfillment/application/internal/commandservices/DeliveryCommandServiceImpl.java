@@ -10,7 +10,7 @@ import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.FailDel
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryRepository;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DriverRepository;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.VehicleRepository;
-import com.primefuel.fulltank.platform.inventory.domain.repositories.FuelProductRepository;
+import com.primefuel.fulltank.platform.inventory.application.ports.SupplyReservationStore;
 import com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
@@ -24,20 +24,20 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
     private final DriverRepository driverRepository;
     private final VehicleRepository vehicleRepository;
     private final FuelOrderRepository orderRepository;
-    private final FuelProductRepository productRepository;
+    private final SupplyReservationStore supplyReservations;
     private final EquipmentRepository equipmentRepository;
 
     public DeliveryCommandServiceImpl(DeliveryRepository deliveryRepository,
                                       DriverRepository driverRepository,
                                       VehicleRepository vehicleRepository,
                                       FuelOrderRepository orderRepository,
-                                      FuelProductRepository productRepository,
+                                      SupplyReservationStore supplyReservations,
                                       EquipmentRepository equipmentRepository) {
         this.deliveryRepository = deliveryRepository;
         this.driverRepository = driverRepository;
         this.vehicleRepository = vehicleRepository;
         this.orderRepository = orderRepository;
-        this.productRepository = productRepository;
+        this.supplyReservations = supplyReservations;
         this.equipmentRepository = equipmentRepository;
     }
 
@@ -64,24 +64,22 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
         if (vehicle.get().getCapacity() < order.get().getRequestedQuantity()) {
             return Result.failure(ApplicationError.conflict("Delivery", "Vehicle capacity is insufficient"));
         }
-        var product = productRepository.findById(order.get().getFuelProductId());
-        if (product.isEmpty() || product.get().getAvailableStock() < order.get().getRequestedQuantity()) {
-            return Result.failure(ApplicationError.conflict("Delivery", "Insufficient inventory stock"));
-        }
         if (deliveryRepository.findByOrderId(command.orderId()).isPresent()) {
             return Result.failure(ApplicationError.conflict("Delivery",
                     "A delivery already exists for order " + command.orderId()));
         }
         driver.get().setStatus("ASSIGNED");
         vehicle.get().setStatus("IN_ROUTE");
-        product.get().updateStock(product.get().getAvailableStock() - order.get().getRequestedQuantity());
         order.get().dispatch();
+        var reservationKey = order.get().getRequestId() != null ? order.get().getRequestId() : order.get().getId();
+        if (!supplyReservations.reserve(reservationKey, order.get().getFuelProductId(),
+                order.get().getRequestedQuantity())) {
+            return Result.failure(ApplicationError.conflict("Delivery", "Insufficient inventory stock"));
+        }
         driverRepository.save(driver.get());
         vehicleRepository.save(vehicle.get());
-        productRepository.save(product.get());
         orderRepository.save(order.get());
         var delivery = new Delivery(command);
-        delivery.dispatch();
         return Result.success(deliveryRepository.save(delivery));
     }
 
@@ -92,8 +90,12 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
             return Result.failure(ApplicationError.notFound("Delivery", command.deliveryId().toString()));
         }
         var delivery = existing.get();
-        delivery.dispatch();
-        return Result.success(deliveryRepository.save(delivery));
+        try {
+            delivery.dispatch();
+            return Result.success(deliveryRepository.save(delivery));
+        } catch (IllegalStateException exception) {
+            return Result.failure(ApplicationError.conflict("Delivery", exception.getMessage()));
+        }
     }
 
     @Override
@@ -124,8 +126,12 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
         }
         order.get().receive();
         orderRepository.save(order.get());
-        delivery.complete();
-        return Result.success(deliveryRepository.save(delivery));
+        try {
+            delivery.complete();
+            return Result.success(deliveryRepository.save(delivery));
+        } catch (IllegalStateException exception) {
+            return Result.failure(ApplicationError.conflict("Delivery", exception.getMessage()));
+        }
     }
 
     @Override

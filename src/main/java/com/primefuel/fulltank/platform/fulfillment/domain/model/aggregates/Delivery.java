@@ -36,11 +36,17 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
     }
 
     public void dispatch() {
+        if (this.status != DeliveryStatus.SCHEDULED) {
+            throw new IllegalStateException("Only scheduled deliveries can be dispatched");
+        }
         this.status = DeliveryStatus.DISPATCHED;
         this.dispatchedAt = LocalDateTime.now();
     }
 
     public void complete() {
+        if (this.status != DeliveryStatus.DISPATCHED) {
+            throw new IllegalStateException("Only dispatched deliveries can be completed");
+        }
         this.status = DeliveryStatus.DELIVERED;
         this.deliveredAt = LocalDateTime.now();
     }
