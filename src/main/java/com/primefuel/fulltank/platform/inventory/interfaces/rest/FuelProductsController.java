@@ -16,7 +16,7 @@ import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.FuelP
 import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.UpdateFuelProductCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.inventory.interfaces.rest.transform.UpdateFuelProductStockCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -33,11 +33,11 @@ public class FuelProductsController {
 
     private final FuelProductCommandService fuelProductCommandService;
     private final FuelProductQueryService fuelProductQueryService;
-    private final CurrentUserAccess currentUserAccess;
+    private final TenantAccess currentUserAccess;
 
     public FuelProductsController(FuelProductCommandService fuelProductCommandService,
                                   FuelProductQueryService fuelProductQueryService,
-                                  CurrentUserAccess currentUserAccess) {
+                                  TenantAccess currentUserAccess) {
         this.fuelProductCommandService = fuelProductCommandService;
         this.fuelProductQueryService = fuelProductQueryService;
         this.currentUserAccess = currentUserAccess;

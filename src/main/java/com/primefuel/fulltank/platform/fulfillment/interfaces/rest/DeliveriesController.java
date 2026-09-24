@@ -13,7 +13,7 @@ import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.Del
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.FailDeliveryResource;
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.transform.CreateDeliveryCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.transform.DeliveryResourceFromEntityAssembler;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 import com.primefuel.fulltank.platform.ordering.application.queryservices.FuelOrderQueryService;
 import com.primefuel.fulltank.platform.ordering.domain.model.queries.GetFuelOrderByIdQuery;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
@@ -34,12 +34,12 @@ public class DeliveriesController {
     private final DeliveryCommandService deliveryCommandService;
     private final DeliveryQueryService deliveryQueryService;
     private final FuelOrderQueryService fuelOrderQueryService;
-    private final CurrentUserAccess currentUserAccess;
+    private final TenantAccess currentUserAccess;
 
     public DeliveriesController(DeliveryCommandService deliveryCommandService,
                                 DeliveryQueryService deliveryQueryService,
                                 FuelOrderQueryService fuelOrderQueryService,
-                                CurrentUserAccess currentUserAccess) {
+                                TenantAccess currentUserAccess) {
         this.deliveryCommandService = deliveryCommandService;
         this.deliveryQueryService = deliveryQueryService;
         this.fuelOrderQueryService = fuelOrderQueryService;

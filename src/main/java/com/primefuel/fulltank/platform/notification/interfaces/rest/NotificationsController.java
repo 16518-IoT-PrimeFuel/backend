@@ -11,7 +11,7 @@ import com.primefuel.fulltank.platform.notification.interfaces.rest.resources.No
 import com.primefuel.fulltank.platform.notification.interfaces.rest.transform.CreateNotificationCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.notification.interfaces.rest.transform.NotificationResourceFromEntityAssembler;
 import com.primefuel.fulltank.platform.iam.domain.repositories.UserRepository;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
@@ -30,12 +30,12 @@ public class NotificationsController {
     private final NotificationCommandService notificationCommandService;
     private final NotificationQueryService notificationQueryService;
     private final UserRepository userRepository;
-    private final CurrentUserAccess currentUserAccess;
+    private final TenantAccess currentUserAccess;
 
     public NotificationsController(NotificationCommandService notificationCommandService,
                                    NotificationQueryService notificationQueryService,
                                    UserRepository userRepository,
-                                   CurrentUserAccess currentUserAccess) {
+                                   TenantAccess currentUserAccess) {
         this.notificationCommandService = notificationCommandService;
         this.notificationQueryService = notificationQueryService;
         this.userRepository = userRepository;

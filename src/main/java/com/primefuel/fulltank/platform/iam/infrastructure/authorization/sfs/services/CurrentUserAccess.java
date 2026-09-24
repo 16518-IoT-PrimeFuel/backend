@@ -1,12 +1,13 @@
 package com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
+import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component("currentUserAccess")
-public class CurrentUserAccess {
+public class CurrentUserAccess implements TenantAccess {
 
     public boolean isBuyer() {
         return hasAuthority("ROLE_BUYER") && current().getCompanyId() != null;

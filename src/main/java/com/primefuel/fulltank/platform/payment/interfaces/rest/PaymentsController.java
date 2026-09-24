@@ -13,7 +13,7 @@ import com.primefuel.fulltank.platform.payment.interfaces.rest.resources.CreateP
 import com.primefuel.fulltank.platform.payment.interfaces.rest.resources.PaymentResource;
 import com.primefuel.fulltank.platform.payment.interfaces.rest.transform.CreatePaymentCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.payment.interfaces.rest.transform.PaymentResourceFromEntityAssembler;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 import com.primefuel.fulltank.platform.ordering.application.queryservices.FuelOrderQueryService;
 import com.primefuel.fulltank.platform.ordering.domain.model.queries.GetFuelOrderByIdQuery;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
@@ -34,12 +34,12 @@ public class PaymentsController {
     private final PaymentCommandService paymentCommandService;
     private final PaymentQueryService paymentQueryService;
     private final FuelOrderQueryService fuelOrderQueryService;
-    private final CurrentUserAccess currentUserAccess;
+    private final TenantAccess currentUserAccess;
 
     public PaymentsController(PaymentCommandService paymentCommandService,
                               PaymentQueryService paymentQueryService,
                               FuelOrderQueryService fuelOrderQueryService,
-                              CurrentUserAccess currentUserAccess) {
+                              TenantAccess currentUserAccess) {
         this.paymentCommandService = paymentCommandService;
         this.paymentQueryService = paymentQueryService;
         this.fuelOrderQueryService = fuelOrderQueryService;

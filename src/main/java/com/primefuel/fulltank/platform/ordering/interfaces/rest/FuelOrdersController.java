@@ -12,7 +12,7 @@ import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.Create
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.FuelOrderResource;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.transform.CreateFuelOrderCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.transform.FuelOrderResourceFromEntityAssembler;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
@@ -30,11 +30,11 @@ public class FuelOrdersController {
 
     private final FuelOrderCommandService fuelOrderCommandService;
     private final FuelOrderQueryService fuelOrderQueryService;
-    private final CurrentUserAccess currentUserAccess;
+    private final TenantAccess currentUserAccess;
 
     public FuelOrdersController(FuelOrderCommandService fuelOrderCommandService,
                                 FuelOrderQueryService fuelOrderQueryService,
-                                CurrentUserAccess currentUserAccess) {
+                                TenantAccess currentUserAccess) {
         this.fuelOrderCommandService = fuelOrderCommandService;
         this.fuelOrderQueryService = fuelOrderQueryService;
         this.currentUserAccess = currentUserAccess;

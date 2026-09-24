@@ -3,7 +3,7 @@ package com.primefuel.fulltank.platform.fulfillment.interfaces.rest;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Vehicle;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.VehicleRepository;
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.VehicleResource;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +16,9 @@ import java.util.List;
 public class VehiclesController {
 
     private final VehicleRepository repository;
-    private final CurrentUserAccess currentUserAccess;
+    private final TenantAccess currentUserAccess;
 
-    public VehiclesController(VehicleRepository repository, CurrentUserAccess currentUserAccess) {
+    public VehiclesController(VehicleRepository repository, TenantAccess currentUserAccess) {
         this.repository = repository;
         this.currentUserAccess = currentUserAccess;
     }

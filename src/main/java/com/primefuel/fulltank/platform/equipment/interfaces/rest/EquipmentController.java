@@ -14,7 +14,7 @@ import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.Equip
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.UpdateEquipmentCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.EquipmentRepository;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,12 +32,12 @@ public class EquipmentController {
     private final EquipmentCommandService equipmentCommandService;
     private final EquipmentQueryService equipmentQueryService;
     private final EquipmentRepository equipmentRepository;
-    private final CurrentUserAccess currentUserAccess;
+    private final TenantAccess currentUserAccess;
 
     public EquipmentController(EquipmentCommandService equipmentCommandService,
                                EquipmentQueryService equipmentQueryService,
                                EquipmentRepository equipmentRepository,
-                               CurrentUserAccess currentUserAccess) {
+                               TenantAccess currentUserAccess) {
         this.equipmentCommandService = equipmentCommandService;
         this.equipmentQueryService = equipmentQueryService;
         this.equipmentRepository = equipmentRepository;

@@ -4,7 +4,7 @@ import com.primefuel.fulltank.platform.ordering.application.internal.commandserv
 import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.entities.FuelRequestPersistenceEntity;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.*;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.transform.FuelOrderResourceFromEntityAssembler;
-import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.services.CurrentUserAccess;
+import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +16,9 @@ import java.util.List;
 @RequestMapping("/api/v1/fuel-requests")
 public class FuelRequestsController {
     private final FuelRequestService service;
-    private final CurrentUserAccess currentUserAccess;
+    private final TenantAccess currentUserAccess;
 
-    public FuelRequestsController(FuelRequestService service, CurrentUserAccess currentUserAccess) {
+    public FuelRequestsController(FuelRequestService service, TenantAccess currentUserAccess) {
         this.service = service;
         this.currentUserAccess = currentUserAccess;
     }
