@@ -2,12 +2,12 @@ package com.primefuel.fulltank.platform.ordering.application.internal.commandser
 
 import com.primefuel.fulltank.platform.inventory.domain.repositories.FuelProductRepository;
 import com.primefuel.fulltank.platform.ordering.domain.model.aggregates.FuelOrder;
+import com.primefuel.fulltank.platform.ordering.domain.model.commands.CreateFuelRequestCommand;
 import com.primefuel.fulltank.platform.ordering.domain.model.commands.CreateFuelOrderCommand;
 import com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.RequestStatus;
 import com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository;
-import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.entities.FuelRequestPersistenceEntity;
-import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.repositories.FuelRequestPersistenceRepository;
-import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.CreateFuelRequestResource;
+import com.primefuel.fulltank.platform.ordering.application.ports.FuelRequestData;
+import com.primefuel.fulltank.platform.ordering.application.ports.FuelRequestStore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,11 +16,11 @@ import java.util.Optional;
 
 @Service
 public class FuelRequestService {
-    private final FuelRequestPersistenceRepository requests;
+    private final FuelRequestStore requests;
     private final FuelProductRepository products;
     private final FuelOrderRepository orders;
 
-    public FuelRequestService(FuelRequestPersistenceRepository requests,
+    public FuelRequestService(FuelRequestStore requests,
                               FuelProductRepository products,
                               FuelOrderRepository orders) {
         this.requests = requests;
@@ -29,36 +29,27 @@ public class FuelRequestService {
     }
 
     @Transactional
-    public FuelRequestPersistenceEntity create(CreateFuelRequestResource resource) {
-        var product = products.findById(resource.fuelProductId())
+    public FuelRequestData create(CreateFuelRequestCommand command) {
+        var product = products.findById(command.fuelProductId())
                 .orElseThrow(() -> new IllegalArgumentException("Fuel product not found"));
-        if (!product.getProviderId().equals(resource.providerId())) {
+        if (!product.getProviderId().equals(command.providerId())) {
             throw new IllegalArgumentException("Fuel product does not belong to provider");
         }
-        var request = new FuelRequestPersistenceEntity();
-        request.setBuyerCompanyId(resource.buyerCompanyId());
-        request.setProviderId(resource.providerId());
-        request.setEquipmentId(resource.equipmentId());
-        request.setFuelProductId(resource.fuelProductId());
-        request.setFuelType(product.getFuelType().name());
-        request.setProductName(product.getName());
-        request.setQuantity(resource.quantity());
-        request.setUnit(resource.unit() == null ? product.getUnit() : resource.unit());
-        request.setUnitPrice(product.getPricePerUnit());
-        request.setDeliveryAddress(resource.deliveryAddress());
-        request.setDeliveryDate(resource.deliveryDate());
-        request.setStatus(RequestStatus.PENDING);
-        request.setSource(resource.source() == null ? "MANUAL" : resource.source().toUpperCase());
+        var request = new FuelRequestData(null, command.buyerCompanyId(), command.providerId(),
+                command.equipmentId(), command.fuelProductId(), product.getFuelType().name(), product.getName(),
+                command.quantity(), command.unit() == null ? product.getUnit() : command.unit(),
+                product.getPricePerUnit(), command.deliveryAddress(), command.deliveryDate(), RequestStatus.PENDING,
+                command.source() == null ? "MANUAL" : command.source().toUpperCase(), null, null, null);
         return requests.save(request);
     }
 
-    public List<FuelRequestPersistenceEntity> findAll(Long buyerCompanyId, Long providerId) {
+    public List<FuelRequestData> findAll(Long buyerCompanyId, Long providerId) {
         if (buyerCompanyId != null) return requests.findByBuyerCompanyId(buyerCompanyId);
         if (providerId != null) return requests.findByProviderId(providerId);
         return requests.findAll();
     }
 
-    public Optional<FuelRequestPersistenceEntity> findById(Long requestId) {
+    public Optional<FuelRequestData> findById(Long requestId) {
         return requests.findById(requestId);
     }
 
@@ -66,34 +57,38 @@ public class FuelRequestService {
     public FuelOrder accept(Long requestId) {
         var request = requests.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Fuel request not found"));
-        if (request.getStatus() != RequestStatus.PENDING) {
+        if (request.status() != RequestStatus.PENDING) {
             throw new IllegalStateException("Only pending requests can be accepted");
         }
-        var product = products.findById(request.getFuelProductId())
+        var product = products.findById(request.fuelProductId())
                 .orElseThrow(() -> new IllegalArgumentException("Fuel product not found"));
-        var command = new CreateFuelOrderCommand(request.getBuyerCompanyId(), request.getProviderId(),
-                request.getFuelProductId(), request.getEquipmentId(), request.getQuantity(),
-                request.getDeliveryAddress(), request.getDeliveryDate());
-        var order = new FuelOrder(command, product.getPricePerUnit() * request.getQuantity());
+        var command = new CreateFuelOrderCommand(request.buyerCompanyId(), request.providerId(),
+                request.fuelProductId(), request.equipmentId(), request.quantity(),
+                request.deliveryAddress(), request.deliveryDate());
+        var order = new FuelOrder(command, product.getPricePerUnit() * request.quantity());
         order.setRequestId(requestId);
         order = orders.save(order);
-        request.setStatus(RequestStatus.APPROVED);
-        requests.save(request);
+        requests.save(withStatus(request, RequestStatus.APPROVED, null));
         return order;
     }
 
     @Transactional
-    public FuelRequestPersistenceEntity reject(Long requestId, String reason) {
+    public FuelRequestData reject(Long requestId, String reason) {
         var request = requests.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Fuel request not found"));
-        if (request.getStatus() != RequestStatus.PENDING) {
+        if (request.status() != RequestStatus.PENDING) {
             throw new IllegalStateException("Only pending requests can be rejected");
         }
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Rejection reason is required");
         }
-        request.setStatus(RequestStatus.REJECTED);
-        request.setRejectionReason(reason.trim());
-        return requests.save(request);
+        return requests.save(withStatus(request, RequestStatus.REJECTED, reason.trim()));
+    }
+
+    private static FuelRequestData withStatus(FuelRequestData request, RequestStatus status, String reason) {
+        return new FuelRequestData(request.id(), request.buyerCompanyId(), request.providerId(), request.equipmentId(),
+                request.fuelProductId(), request.fuelType(), request.productName(), request.quantity(), request.unit(),
+                request.unitPrice(), request.deliveryAddress(), request.deliveryDate(), status, request.source(),
+                reason, request.createdAt(), request.updatedAt());
     }
 }

@@ -1,7 +1,8 @@
 package com.primefuel.fulltank.platform.ordering.interfaces.rest;
 
 import com.primefuel.fulltank.platform.ordering.application.internal.commandservices.FuelRequestService;
-import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.entities.FuelRequestPersistenceEntity;
+import com.primefuel.fulltank.platform.ordering.application.ports.FuelRequestData;
+import com.primefuel.fulltank.platform.ordering.domain.model.commands.CreateFuelRequestCommand;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.*;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.transform.FuelOrderResourceFromEntityAssembler;
 import com.primefuel.fulltank.platform.iam.interfaces.acl.TenantAccess;
@@ -26,7 +27,10 @@ public class FuelRequestsController {
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsCompany(#resource.buyerCompanyId())")
     public ResponseEntity<FuelRequestResource> create(@RequestBody CreateFuelRequestResource resource) {
-        return new ResponseEntity<>(toResource(service.create(resource)), HttpStatus.CREATED);
+        var command = new CreateFuelRequestCommand(resource.buyerCompanyId(), resource.providerId(),
+                resource.equipmentId(), resource.fuelProductId(), resource.quantity(), resource.unit(),
+                resource.deliveryAddress(), resource.deliveryDate(), resource.source());
+        return new ResponseEntity<>(toResource(service.create(command)), HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -49,7 +53,7 @@ public class FuelRequestsController {
     public ResponseEntity<FuelRequestResource> findById(@PathVariable Long requestId) {
         return service.findById(requestId)
                 .filter(request -> currentUserAccess.ownsCompanyOrProvider(
-                        request.getBuyerCompanyId(), request.getProviderId()))
+                        request.buyerCompanyId(), request.providerId()))
                 .map(request -> ResponseEntity.ok(toResource(request)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -69,14 +73,14 @@ public class FuelRequestsController {
 
     private boolean ownsRequestAsProvider(Long requestId) {
         return service.findById(requestId)
-                .filter(request -> currentUserAccess.ownsProvider(request.getProviderId()))
+                .filter(request -> currentUserAccess.ownsProvider(request.providerId()))
                 .isPresent();
     }
 
-    private static FuelRequestResource toResource(FuelRequestPersistenceEntity r) {
-        return new FuelRequestResource(r.getId(), r.getBuyerCompanyId(), r.getProviderId(), r.getEquipmentId(),
-                r.getFuelProductId(), r.getFuelType(), r.getProductName(), r.getQuantity(), r.getUnit(),
-                r.getUnitPrice(), r.getDeliveryAddress(), r.getDeliveryDate(), r.getStatus(), r.getSource(),
-                r.getRejectionReason(), r.getCreatedAt(), r.getUpdatedAt());
+    private static FuelRequestResource toResource(FuelRequestData r) {
+        return new FuelRequestResource(r.id(), r.buyerCompanyId(), r.providerId(), r.equipmentId(),
+                r.fuelProductId(), r.fuelType(), r.productName(), r.quantity(), r.unit(), r.unitPrice(),
+                r.deliveryAddress(), r.deliveryDate(), r.status(), r.source(), r.rejectionReason(),
+                r.createdAt(), r.updatedAt());
     }
 }

@@ -24,11 +24,10 @@ falla si aparece una violación nueva.
 
 ## Deuda AS-IS congelada
 
-Tras extraer el puerto de tokens de password reset, quedan tres cruces
-internos conocidos:
-
-- `ordering.application.FuelRequestService` importa entidad y repositorio JPA.
-- `ordering.application.FuelRequestService` importa un resource REST.
+Los cruces internos conocidos de `application`/`domain` quedaron en cero tras
+extraer los puertos de password reset y fuel requests. Los cruces entre
+bounded contexts todavía existen como deuda de diseño y se resolverán con las
+seams públicas de S04/S05/S10/S11.
 
 Estos cruces no se corrigen en T02-A; quedan para los tickets de extracción del
 bounded context dueño. La prueba impide que aumenten.
