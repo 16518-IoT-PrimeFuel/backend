@@ -1,6 +1,6 @@
 # T03-B — Baseline sintético y datos de referencia
 
-Estado: implementado y verificado el 2026-09-24.
+Estado: implementado y verificado hasta Flyway V15.
 
 ## Qué se creó
 
@@ -10,6 +10,9 @@ Estado: implementado y verificado el 2026-09-24.
   una empresa compradora, un proveedor y un producto Diesel B5.
 - `V3__durable_outbox.sql`: tabla de eventos durables con `event_key` único e
   idempotencia de publicación.
+- `V4`–`V15`: memberships, customer assets/tanks, reservations, delivery
+  evidence, valve ACK, device/telemetry, refill lifecycle y backfills
+  idempotentes desde legacy.
 - `SyntheticBaselineMigrationTest`: ejecuta ambas migraciones sobre H2 en modo
   MySQL y comprueba el número de tablas y registros.
 
@@ -26,9 +29,10 @@ relaciones JPA. La comparación con MySQL real sigue siendo el gate de T03-C.
 ## Verificación
 
 ```text
-Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
+Suite completa: verde; el test de migración valida Flyway V15, 35 tablas,
+cuentas/sitios backfilled y dos organizaciones.
 ```
 
-El test específico confirma 17 tablas y 2 roles de referencia, además de un
-producto mock. La suite de aplicación confirma que publicar dos veces la misma
+El test específico confirma el baseline legacy, los artefactos nuevos y los
+datos mock. La suite de aplicación confirma que publicar dos veces la misma
 clave deja un solo evento en `outbox_events`.

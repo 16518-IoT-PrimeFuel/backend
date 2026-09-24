@@ -1,6 +1,7 @@
 # T03-A — Inventario de esquema y baseline
 
-Estado: inventario aprobado; baseline sintético implementado en T03-B el 2026-09-24.
+Estado: inventario aprobado; baseline sintético y migraciones aditivas hasta
+V15 implementados.
 
 ## Decisión de migrador
 
