@@ -1,0 +1,98 @@
+@startuml iam-layer-overview
+title FullTank - IAM Layer Overview
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam linetype ortho
+
+skinparam package {
+  BackgroundColor<<interfaces>> #FFF1E6
+  BorderColor<<interfaces>> #C2410C
+  BackgroundColor<<application>> #E8F1FF
+  BorderColor<<application>> #2563EB
+  BackgroundColor<<domain>> #EAF7EE
+  BorderColor<<domain>> #15803D
+  BackgroundColor<<infrastructure>> #F5EAFE
+  BorderColor<<infrastructure>> #7E22CE
+}
+
+package "Interfaces" <<interfaces>> {
+  class AuthenticationController
+  class UsersController
+  class BuyerCompaniesController
+  class ProviderCompaniesController
+  class DirectoryController
+  class "REST resources + assemblers" as RestDtos
+  interface IamContextFacade
+}
+package "Application" <<application>> {
+  interface UserCommandService
+  interface UserQueryService
+  interface BuyerCompanyCommandService
+  interface ProviderCompanyCommandService
+  class UserCommandServiceImpl
+  class UserQueryServiceImpl
+  class BuyerCompanyCommandServiceImpl
+  class ProviderCompanyCommandServiceImpl
+  class PasswordResetService
+  interface HashingService
+  interface TokenService
+}
+package "Domain" <<domain>> {
+  class User
+  class BuyerCompany
+  class ProviderCompany
+  class Role
+  enum Roles
+  class "Commands + Queries" as DomainMessages
+  interface UserRepository
+  interface BuyerCompanyRepository
+  interface ProviderCompanyRepository
+  interface RoleRepository
+}
+package "Infrastructure" <<infrastructure>> {
+  class "JPA repository adapters" as JpaAdapters
+  class "JPA entities + assemblers" as JpaModel
+  class "Spring Data repositories" as SpringData
+  class WebSecurityConfiguration
+  class BearerAuthorizationRequestFilter
+  class CurrentUserAccess
+  class HashingServiceImpl
+  class TokenServiceImpl
+  class PasswordResetTokenEntity
+}
+
+AuthenticationController ..> UserCommandService
+AuthenticationController ..> PasswordResetService
+UsersController ..> UserQueryService
+BuyerCompaniesController ..> BuyerCompanyCommandService
+ProviderCompaniesController ..> ProviderCompanyCommandService
+DirectoryController ..> UserQueryService
+UserCommandServiceImpl ..|> UserCommandService
+UserQueryServiceImpl ..|> UserQueryService
+BuyerCompanyCommandServiceImpl ..|> BuyerCompanyCommandService
+ProviderCompanyCommandServiceImpl ..|> ProviderCompanyCommandService
+UserCommandServiceImpl ..> UserRepository
+UserCommandServiceImpl ..> BuyerCompanyRepository
+UserCommandServiceImpl ..> ProviderCompanyRepository
+UserCommandServiceImpl ..> HashingService
+UserCommandServiceImpl ..> TokenService
+PasswordResetService ..> UserRepository
+PasswordResetService ..> HashingService
+User "1" o-- "*" Role
+Role --> Roles
+JpaAdapters ..|> UserRepository
+JpaAdapters ..|> BuyerCompanyRepository
+JpaAdapters ..|> ProviderCompanyRepository
+JpaAdapters ..|> RoleRepository
+JpaAdapters ..> SpringData
+JpaAdapters ..> JpaModel
+WebSecurityConfiguration ..> BearerAuthorizationRequestFilter
+BearerAuthorizationRequestFilter ..> TokenService
+CurrentUserAccess ..> User
+HashingServiceImpl ..|> HashingService
+TokenServiceImpl ..|> TokenService
+PasswordResetService ..> PasswordResetTokenEntity
+@enduml

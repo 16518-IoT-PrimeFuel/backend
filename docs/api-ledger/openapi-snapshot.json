@@ -382,6 +382,24 @@
         },
         "type" : "object"
       },
+      "CreateGeofencePolicyResource" : {
+        "properties" : {
+          "centerLatitude" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "centerLongitude" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "radiusMeters" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "required" : [ "centerLatitude", "centerLongitude", "radiusMeters" ],
+        "type" : "object"
+      },
       "CreateNotificationResource" : {
         "properties" : {
           "companyId" : {
@@ -866,6 +884,20 @@
           "tankCapacity" : {
             "format" : "double",
             "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "ErrorResource" : {
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "details" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
           }
         },
         "type" : "object"
@@ -1798,6 +1830,42 @@
             "type" : "string"
           }
         },
+        "type" : "object"
+      },
+      "TransportEvidenceResource" : {
+        "properties" : {
+          "accuracyMeters" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "latitude" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "longitude" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "milestone" : {
+            "type" : "string"
+          },
+          "recordedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "type" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "volume" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "required" : [ "type" ],
         "type" : "object"
       },
       "UpdateEquipmentResource" : {
@@ -2889,7 +2957,7 @@
       },
       "post" : {
         "description" : "Registers a driver under the caller's provider tenant.",
-        "operationId" : "create_4",
+        "operationId" : "create_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3980,7 +4048,7 @@
       },
       "post" : {
         "description" : "Creates a legacy fuel request (and its linked replenishment review) for the caller's buyer company.",
-        "operationId" : "create_3",
+        "operationId" : "create_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5059,7 +5127,7 @@
       },
       "post" : {
         "description" : "Records a 1-to-5 rating from the caller's buyer company to a provider company.",
-        "operationId" : "create_2",
+        "operationId" : "create_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5316,7 +5384,7 @@
       },
       "post" : {
         "description" : "Registers a tanker under the caller's provider tenant.",
-        "operationId" : "create_1",
+        "operationId" : "create_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5480,6 +5548,64 @@
         },
         "summary" : "Update a vehicle",
         "tags" : [ "vehicles-controller" ]
+      }
+    },
+    "/api/v2/admin/deliveries/{deliveryId}/transport-evidence" : {
+      "delete" : {
+        "description" : "Reserved contract (U18). Not operative; answers 501 until the platform admin role exists (T24-PRE-ADMIN).",
+        "operationId" : "delete_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "501" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResource"
+                }
+              }
+            },
+            "description" : "The operation is reserved but not implemented."
+          }
+        },
+        "summary" : "Reserved: delete transport evidence",
+        "tags" : [ "Transport evidence retention (reserved)" ]
+      }
+    },
+    "/api/v2/admin/deliveries/{deliveryId}/transport-evidence/export" : {
+      "get" : {
+        "description" : "Reserved contract (U18). Not operative; answers 501 until the platform admin role exists (T24-PRE-ADMIN).",
+        "operationId" : "export",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "501" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResource"
+                }
+              }
+            },
+            "description" : "The operation is reserved but not implemented."
+          }
+        },
+        "summary" : "Reserved: export transport evidence",
+        "tags" : [ "Transport evidence retention (reserved)" ]
       }
     },
     "/api/v2/customers" : {
@@ -6105,6 +6231,85 @@
         "tags" : [ "Delivery lifecycle" ]
       }
     },
+    "/api/v2/deliveries/{deliveryId}/geofence-policies" : {
+      "post" : {
+        "description" : "Creates a new version of the delivery's geofence circle, owned by the caller's provider tenant; the previous version is kept.",
+        "operationId" : "create_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateGeofencePolicyResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Policy version created."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The geometry is invalid (missing/invalid centre or non-positive radius)."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The caller has no provider identity, or does not own the delivery."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery does not exist."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A concurrent policy version already exists for this delivery."
+          }
+        },
+        "summary" : "Create a geofence-policy version for a delivery",
+        "tags" : [ "Geofence policy" ]
+      }
+    },
     "/api/v2/deliveries/{deliveryId}/start" : {
       "post" : {
         "description" : "Moves a delivery owned by the caller's provider tenant to the started state.",
@@ -6154,6 +6359,104 @@
         "tags" : [ "Delivery lifecycle" ]
       }
     },
+    "/api/v2/deliveries/{deliveryId}/tracking" : {
+      "get" : {
+        "description" : "Returns the latest trusted position and load state of a delivery visible to the owning provider or the assigned driver.",
+        "operationId" : "latest",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Latest tracking returned."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The caller is neither the owning provider nor the assigned driver."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery does not exist or has no tracking yet."
+          }
+        },
+        "summary" : "Get the latest tracking of a delivery",
+        "tags" : [ "Transport tracking" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}/tracking/samples" : {
+      "get" : {
+        "description" : "Returns the delivery's transport-evidence samples ordered by device timestamp, with reception instant and latestAdvanced visible.",
+        "operationId" : "samples",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Timeline returned (possibly empty)."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The caller is neither the owning provider nor the assigned driver."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery does not exist."
+          }
+        },
+        "summary" : "List the tracking trail of a delivery",
+        "tags" : [ "Transport tracking" ]
+      }
+    },
     "/api/v2/deliveries/{deliveryId}/transitions" : {
       "get" : {
         "description" : "Returns the append-only journal of physical state transitions of a delivery owned by the caller's provider tenant.",
@@ -6197,6 +6500,85 @@
         },
         "summary" : "List a delivery's state transitions",
         "tags" : [ "Delivery lifecycle" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}/transport-evidence" : {
+      "post" : {
+        "description" : "Accepts a driver-app position ping or load milestone for a delivery whose assigned driver is the caller; a late sample is preserved without moving the latest value.",
+        "operationId" : "record",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransportEvidenceResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Evidence recorded (latestAdvanced=false for a late sample)."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The body is malformed (unknown type/milestone, missing coordinates, non-positive volume)."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The caller is not the driver assigned to the delivery, or the assignment crosses tenants."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The delivery (or its assigned driver) does not exist."
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "The load milestone is not possible from the current state (e.g. UNLOADED before LOADED)."
+          }
+        },
+        "summary" : "Record transport evidence for a delivery",
+        "tags" : [ "Transport evidence" ]
       }
     },
     "/api/v2/drivers" : {
@@ -8119,7 +8501,7 @@
     "bearerAuth" : [ ]
   } ],
   "servers" : [ {
-    "description" : "Local Development Environment",
+    "description" : "API Server",
     "url" : "http://localhost:8080"
   } ],
   "tags" : [ {
@@ -8146,6 +8528,9 @@
   }, {
     "description" : "Device telemetry ingestion (v2, machine authenticated)",
     "name" : "Telemetry"
+  }, {
+    "description" : "Reserved delete/export contract for transport evidence (not operative yet)",
+    "name" : "Transport evidence retention (reserved)"
   }, {
     "description" : "Payment management endpoints",
     "name" : "Payments"
@@ -8183,11 +8568,17 @@
     "description" : "Equipment management endpoints",
     "name" : "Equipment"
   }, {
+    "description" : "Geofence-policy administration (v2, decision input)",
+    "name" : "Geofence policy"
+  }, {
     "description" : "Customer accounts and sites (v2)",
     "name" : "Customers"
   }, {
     "description" : "Transactional assignment after acceptance (v2)",
     "name" : "Delivery assignment"
+  }, {
+    "description" : "Transport tracking query (v2)",
+    "name" : "Transport tracking"
   }, {
     "description" : "Authentication endpoints",
     "name" : "Authentication"
@@ -8197,5 +8588,8 @@
   }, {
     "description" : "Notification management endpoints",
     "name" : "Notifications"
+  }, {
+    "description" : "Driver-app-reported transport evidence (v2)",
+    "name" : "Transport evidence"
   } ]
 }
