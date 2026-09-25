@@ -45,7 +45,7 @@ class DeliveryTrackingTest {
     void tiedTimestampDoesNotAdvanceTheLatest() {
         var tracking = new DeliveryTracking(1L, 10L, 100L);
         assertThat(tracking.recordPosition(new GeoPosition(10.0, -66.0, null), T0)).isTrue();
-        assertThat(tracking.recordPosition(new GeoPosition(99.0, 99.0, null), T0)).isFalse();
+        assertThat(tracking.recordPosition(new GeoPosition(11.0, -65.0, null), T0)).isFalse();
         assertThat(tracking.getLastLatitude()).isEqualTo(10.0);
     }
 
