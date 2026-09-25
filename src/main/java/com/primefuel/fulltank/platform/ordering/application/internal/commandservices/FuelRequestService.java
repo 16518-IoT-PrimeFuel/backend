@@ -11,6 +11,7 @@ import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.Create
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +35,12 @@ public class FuelRequestService {
                 .orElseThrow(() -> new IllegalArgumentException("Fuel product not found"));
         if (!product.getProviderId().equals(resource.providerId())) {
             throw new IllegalArgumentException("Fuel product does not belong to provider");
+        }
+        if (resource.quantity() == null || resource.quantity() <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than zero");
+        }
+        if (resource.deliveryDate() == null || resource.deliveryDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Delivery date cannot be in the past");
         }
         var request = new FuelRequestPersistenceEntity();
         request.setBuyerCompanyId(resource.buyerCompanyId());

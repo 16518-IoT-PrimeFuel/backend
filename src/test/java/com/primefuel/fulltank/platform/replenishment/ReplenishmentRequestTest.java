@@ -10,6 +10,8 @@ import com.primefuel.fulltank.platform.replenishment.domain.model.commands.Consu
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.CreateReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.RejectReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.ReplenishmentStatus;
+import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
+import com.primefuel.fulltank.platform.shared.application.result.Result;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -84,6 +86,18 @@ class ReplenishmentRequestTest {
         var unknownProduct = commandService.handle(new CreateReplenishmentRequestCommand(
                 1L, 10L, 20L, 7L, 999999L, 30.0, "GAL", null, null));
         assertThat(unknownProduct.isFailure()).isTrue();
+    }
+
+    @Test
+    void creationRejectsInactiveProductAsValidationError() {
+        var inactive = fuelProductCommandService.handle(new CreateFuelProductCommand(
+                "Diesel off", FuelType.DIESEL, 12.5, "GAL", 1000.0, 1000.0, 7L, false)).getOrElse(null).getId();
+
+        var result = commandService.handle(new CreateReplenishmentRequestCommand(
+                1L, 10L, 20L, 7L, inactive, 50.0, "GAL", null, null));
+
+        assertThat(result.isFailure()).isTrue();
+        assertThat(((Result.Failure<?, ApplicationError>) result).error().code()).isEqualTo("VALIDATION_ERROR");
     }
 
     @Test

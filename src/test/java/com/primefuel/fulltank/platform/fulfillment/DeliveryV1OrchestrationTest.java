@@ -120,7 +120,7 @@ class DeliveryV1OrchestrationTest {
 
     private long order(long providerId, long productId, double quantity) {
         var order = new FuelOrder(new CreateFuelOrderCommand(900L + SEQUENCE.incrementAndGet(), providerId,
-                productId, null, quantity, "Av. V1 Orchestration 1", LocalDate.parse("2026-10-15")), quantity * 10);
+                productId, null, quantity, "Av. V1 Orchestration 1", LocalDate.parse("2099-10-15")), quantity * 10);
         return fuelOrderRepository.save(order).getId();
     }
 

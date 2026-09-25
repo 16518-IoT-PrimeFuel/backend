@@ -14,6 +14,7 @@ import com.primefuel.fulltank.platform.replenishment.domain.model.commands.Creat
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.RejectReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.ReplenishmentSource;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
+import com.primefuel.fulltank.platform.supply.api.SupplyCatalog;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,21 +37,28 @@ public class LegacyFuelRequestBridge {
     private final ReplenishmentLookup replenishmentLookup;
     private final CustomerDirectory customerDirectory;
     private final TankAssets tankAssets;
+    private final SupplyCatalog supplyCatalog;
 
     public LegacyFuelRequestBridge(FuelRequestService fuelRequestService,
                                    ReplenishmentCommandService replenishmentCommandService,
                                    ReplenishmentLookup replenishmentLookup,
                                    CustomerDirectory customerDirectory,
-                                   TankAssets tankAssets) {
+                                   TankAssets tankAssets,
+                                   SupplyCatalog supplyCatalog) {
         this.fuelRequestService = fuelRequestService;
         this.replenishmentCommandService = replenishmentCommandService;
         this.replenishmentLookup = replenishmentLookup;
         this.customerDirectory = customerDirectory;
         this.tankAssets = tankAssets;
+        this.supplyCatalog = supplyCatalog;
     }
 
     @Transactional
     public FuelRequestPersistenceEntity create(CreateFuelRequestResource resource) {
+        // Inactive check via the public supply seam, so FuelRequestService's frozen ArchUnit baseline stays intact.
+        supplyCatalog.findForTenant(resource.providerId(), resource.fuelProductId())
+                .filter(product -> !product.active())
+                .ifPresent(product -> { throw new IllegalArgumentException("Fuel product is inactive"); });
         var saved = fuelRequestService.create(resource);
         var customerId = customerDirectory.customerIdForLegacyCompany(saved.getBuyerCompanyId()).orElse(null);
         var organizationId = customerId == null

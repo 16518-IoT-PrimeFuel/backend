@@ -168,7 +168,7 @@ class StateLifecycleRetryCharacterizationTest {
                             .contentType("application/json")
                             .content("""
                                     {"buyerCompanyId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
-                                     "unit":"GALLONS","deliveryAddress":"Av. Retry 1","deliveryDate":"2026-10-15",
+                                     "unit":"GALLONS","deliveryAddress":"Av. Retry 1","deliveryDate":"2099-10-15",
                                      "source":"MANUAL"}
                                     """.formatted(buyerCompanyId, providerId, fuelProductId)))
                     .andExpect(status().isCreated())

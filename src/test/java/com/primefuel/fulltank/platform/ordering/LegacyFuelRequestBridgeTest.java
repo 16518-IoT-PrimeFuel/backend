@@ -70,6 +70,22 @@ class LegacyFuelRequestBridgeTest {
     }
 
     @Test
+    void createRejectsInactiveProductNonPositiveQuantityAndPastDate() {
+        var inactive = fuelProductCommandService.handle(new CreateFuelProductCommand(
+                "Diesel inactivo", FuelType.DIESEL, 12.0, "GAL", 500.0, 500.0, 7L, false)).getOrElse(null).getId();
+        var productId = aProduct();
+
+        assertThatThrownBy(() -> fuelRequestService.create(aRequest(inactive)))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Fuel product is inactive");
+        assertThatThrownBy(() -> fuelRequestService.create(new CreateFuelRequestResource(42L, 7L, null, productId,
+                0.0, "GAL", "Av. 1", LocalDate.now().plusDays(1), "MANUAL")))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Quantity must be greater than zero");
+        assertThatThrownBy(() -> fuelRequestService.create(new CreateFuelRequestResource(42L, 7L, null, productId,
+                40.0, "GAL", "Av. 1", LocalDate.now().minusDays(1), "MANUAL")))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Delivery date cannot be in the past");
+    }
+
+    @Test
     void legacyRejectPropagatesToTheReplenishmentRequest() {
         var productId = aProduct();
         var legacy = fuelRequestService.create(aRequest(productId));

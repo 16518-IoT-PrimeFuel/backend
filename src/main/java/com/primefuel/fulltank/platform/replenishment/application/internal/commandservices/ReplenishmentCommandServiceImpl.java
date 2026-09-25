@@ -51,6 +51,9 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
         if (snapshot.isEmpty()) {
             return Result.failure(ApplicationError.notFound("FuelProduct", String.valueOf(command.fuelProductId())));
         }
+        if (!snapshot.get().active()) {
+            return Result.failure(ApplicationError.validationError("fuelProduct", "Fuel product is inactive"));
+        }
         try {
             var request = new ReplenishmentRequest(command, snapshot.get().pricePerUnit());
             return Result.success(repository.save(request));

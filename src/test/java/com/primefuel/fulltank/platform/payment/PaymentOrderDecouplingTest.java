@@ -49,7 +49,7 @@ class PaymentOrderDecouplingTest {
 
     private long order(long companyId, long providerId) {
         var order = new FuelOrder(new CreateFuelOrderCommand(companyId, providerId, 1L, null, 50.0,
-                "Av. Decoupling 1", LocalDate.parse("2026-10-15")), 50.0);
+                "Av. Decoupling 1", LocalDate.parse("2099-10-15")), 50.0);
         return fuelOrderRepository.save(order).getId();
     }
 

@@ -155,7 +155,7 @@ class DeliveryV1OrchestrationConcurrencyMySqlTest {
 
     private long order(long providerId, long productId) {
         var order = new FuelOrder(new CreateFuelOrderCommand(900L + SEQUENCE.incrementAndGet(), providerId,
-                productId, null, 100.0, "Av. Mysql V1 1", LocalDate.parse("2026-10-15")), 1000.0);
+                productId, null, 100.0, "Av. Mysql V1 1", LocalDate.parse("2099-10-15")), 1000.0);
         return fuelOrderRepository.save(order).getId();
     }
 

@@ -104,7 +104,7 @@ class AuthorizationContractTest {
                         .contentType("application/json")
                         .content("""
                                 {"buyerCompanyId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
-                                 "unit":"GALLONS","deliveryAddress":"Av. Neg 1","deliveryDate":"2026-10-15",
+                                 "unit":"GALLONS","deliveryAddress":"Av. Neg 1","deliveryDate":"2099-10-15",
                                  "source":"MANUAL"}
                                 """.formatted(buyerCompanyId, ownerProviderId, fuelProductId)))
                 .andExpect(status().isCreated())
@@ -156,7 +156,7 @@ class AuthorizationContractTest {
                         .contentType("application/json")
                         .content("""
                                 {"buyerCompanyId":%d,"providerId":%d,"fuelProductId":%d,"quantity":5,
-                                 "unit":"GALLONS","deliveryAddress":"Av. Neg 2","deliveryDate":"2026-10-15",
+                                 "unit":"GALLONS","deliveryAddress":"Av. Neg 2","deliveryDate":"2099-10-15",
                                  "source":"MANUAL"}
                                 """.formatted(buyerCompanyId, providerId, fuelProductId)))
                 .andExpect(status().isCreated())

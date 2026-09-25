@@ -285,7 +285,7 @@ class OrderFulfillmentGoldenPathTest {
                         .contentType("application/json")
                         .content("""
                                 {"buyerCompanyId":%d,"providerId":%d,"fuelProductId":%d,"quantity":100,
-                                 "unit":"GALLONS","deliveryAddress":"Av. Golden 123","deliveryDate":"2026-10-15",
+                                 "unit":"GALLONS","deliveryAddress":"Av. Golden 123","deliveryDate":"2099-10-15",
                                  "source":"MANUAL"}
                                 """.formatted(buyerCompanyId, providerId, fuelProductId)))
                 .andExpect(status().isCreated())
