@@ -85,6 +85,16 @@ class CrossTenantIsolationTest {
     }
 
     @Test
+    void tenantBCannotReadTenantAsBuyerCompanyOrProviderCompany() throws Exception {
+        var a = new Tenant("xtenant-co-a");
+        var b = new Tenant("xtenant-co-b");
+
+        // @PreAuthorize ownsCompany/ownsProvider rejects before lookup: 403, not 404.
+        mockMvc.perform(get("/api/v1/buyer-companies/{id}", a.buyerCompanyId).with(b.buyer)).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/provider-companies/{id}", a.providerId).with(b.provider)).andExpect(status().isForbidden());
+    }
+
+    @Test
     void directOrderCreationRejectsAProviderIdThatDoesNotOwnTheChosenFuelProduct() throws Exception {
         // Regression test for the R01 hotfix in FuelOrderCommandServiceImpl#handle(CreateFuelOrderCommand):
         // POST /api/v1/fuel-orders used to only check @currentUserAccess.ownsCompany(resource.companyId())
@@ -180,7 +190,7 @@ class CrossTenantIsolationTest {
                             .contentType("application/json")
                             .content("""
                                     {"buyerCompanyId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
-                                     "unit":"GALLONS","deliveryAddress":"Av. Xtenant 1","deliveryDate":"2026-10-15",
+                                     "unit":"GALLONS","deliveryAddress":"Av. Xtenant 1","deliveryDate":"2099-10-15",
                                      "source":"MANUAL"}
                                     """.formatted(buyerCompanyId, providerId, fuelProductId)))
                     .andExpect(status().isCreated())
