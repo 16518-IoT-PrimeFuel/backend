@@ -47,3 +47,10 @@ Build green; ArchUnit baseline unchanged.
   "aprobar" half of the ticket) is automated; entries are reviewed by ops.
 - **A3 — W2 closes with rows classified (mapped or quarantined), not necessarily 100 % mapped**, which
   is the S05 Definition of Done.
+
+## PORT-1 — legacy user membership backfill (deferred by T04-B)
+
+`V23__backfill_legacy_organizations_memberships.sql` creates one organization per legacy company
+(CUSTOMER/DISTRIBUTOR) and an `OWNER` membership for its users, only for organizations created by V23.
+Ambiguous RUCs (buyer+provider), pre-existing RUCs, blank RUCs and users with both links or an existing
+membership are skipped for manual decision. Pending verification on local MySQL.

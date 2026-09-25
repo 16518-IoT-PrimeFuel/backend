@@ -74,6 +74,9 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       explícita (`customer_mapping_quarantines`, `V8`, validada en MySQL 8.0.46); sin inferencia
       desde favorito/última orden. Build verde.
       → `docs/api-ledger/T05-B-customer-membership-backfill.md`
+- [x] **PORT-1** — Backfill de usuarios legacy (pre-T04) a organizations + memberships `OWNER` vía
+      `V23` (solo orgs creadas por V23; RUC ambiguo/preexistente/vacío queda para decisión manual).
+      Pendiente de verificación en MySQL local. → `docs/api-ledger/T05-B-customer-membership-backfill.md`
 
 ## W3 — Supply, tanques y solicitud manual (S11, S06, S10)
 
