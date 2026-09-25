@@ -114,7 +114,7 @@ class GeofenceEvaluationTest {
     private void position(long deliveryId, long providerId, long driverId, double latitude, double longitude,
                           Double accuracy, Instant recordedAt) {
         assertThat(recorder.recordPosition(new RecordPositionEvidenceCommand(deliveryId, providerId, driverId,
-                latitude, longitude, accuracy, recordedAt)).isSuccess()).isTrue();
+                latitude, longitude, accuracy, recordedAt, null)).isSuccess()).isTrue();
     }
 
     private static RequestPostProcessor authForProvider(long providerId) {
@@ -252,7 +252,7 @@ class GeofenceEvaluationTest {
         long deliveryId = delivery(providerId, driverId);
 
         var beyondSkew = recorder.recordPosition(new RecordPositionEvidenceCommand(deliveryId, providerId,
-                driverId, 10.0, 20.0, 10.0, T0.plusSeconds(121)));
+                driverId, 10.0, 20.0, 10.0, T0.plusSeconds(121), null));
         assertThat(beyondSkew.isFailure()).isTrue();
 
         // Within the tolerated skew it is accepted.

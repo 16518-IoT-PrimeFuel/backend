@@ -13,5 +13,6 @@ public record RecordPositionEvidenceCommand(
         Double latitude,
         Double longitude,
         Double accuracyMeters,
-        Instant recordedAt) {
+        Instant recordedAt,
+        String eventId) {
 }

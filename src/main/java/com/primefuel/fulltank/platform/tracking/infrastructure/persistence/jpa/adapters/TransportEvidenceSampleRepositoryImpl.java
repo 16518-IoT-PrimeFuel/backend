@@ -7,6 +7,7 @@ import com.primefuel.fulltank.platform.tracking.infrastructure.persistence.jpa.r
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class TransportEvidenceSampleRepositoryImpl implements TransportEvidenceSampleRepository {
@@ -41,5 +42,11 @@ public class TransportEvidenceSampleRepositoryImpl implements TransportEvidenceS
     @Override
     public long countByDeliveryId(Long deliveryId) {
         return persistenceRepository.countByDeliveryId(deliveryId);
+    }
+
+    @Override
+    public Optional<TransportEvidenceSample> findByDeliveryIdAndClientEventId(Long deliveryId, String clientEventId) {
+        return persistenceRepository.findByDeliveryIdAndClientEventId(deliveryId, clientEventId)
+                .map(TransportEvidenceSamplePersistenceAssembler::toDomain);
     }
 }

@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.tracking.interfaces.rest.resources;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 
@@ -12,6 +13,9 @@ import java.time.Instant;
  *
  * <p>There is deliberately no {@code driverId} field: the assigned driver is resolved server-side from the
  * delivery and the principal, never trusted from the request.
+ *
+ * <p>{@code eventId} is an optional client idempotency key, unique per delivery: a retry with the same key
+ * returns the original acknowledgement (200) without storing a new sample.
  */
 public record TransportEvidenceResource(
         @NotBlank String type,
@@ -21,5 +25,6 @@ public record TransportEvidenceResource(
         String milestone,
         Double volume,
         String unit,
-        Instant recordedAt) {
+        Instant recordedAt,
+        @Size(max = 160) String eventId) {
 }

@@ -62,6 +62,10 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
         if (command.deliveryId() == null) {
             return Result.failure(ApplicationError.validationError("deliveryId", "A delivery is required"));
         }
+        var replay = replay(command.deliveryId(), command.eventId());
+        if (replay != null) {
+            return replay;
+        }
         if (command.recordedAt() == null) {
             return Result.failure(ApplicationError.validationError("recordedAt",
                     "A position timestamp is required"));
@@ -81,9 +85,11 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
             var tracking = loadOrCreate(command.deliveryId(), command.providerId(), command.driverId());
             boolean advanced = tracking.recordPosition(position, command.recordedAt());
 
-            var sample = sampleRepository.save(TransportEvidenceSample.position(
+            var newSample = TransportEvidenceSample.position(
                     command.deliveryId(), command.providerId(), command.driverId(), position,
-                    command.recordedAt(), receivedAt, advanced));
+                    command.recordedAt(), receivedAt, advanced);
+            newSample.setClientEventId(command.eventId());
+            var sample = sampleRepository.save(newSample);
             if (advanced) {
                 tracking.linkPositionEvidence(sample.getId());
             }
@@ -96,7 +102,7 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
                             command.recordedAt(), advanced, receivedAt).toPayloadJson());
 
             return Result.success(new EvidenceAck(sample.getId(), command.deliveryId(), "POSITION", null,
-                    advanced, command.recordedAt()));
+                    advanced, command.recordedAt(), false));
         } catch (OptimisticLockingFailureException exception) {
             return concurrent();
         }
@@ -107,6 +113,10 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
     public Result<EvidenceAck, ApplicationError> recordLoad(RecordLoadEvidenceCommand command) {
         if (command.deliveryId() == null) {
             return Result.failure(ApplicationError.validationError("deliveryId", "A delivery is required"));
+        }
+        var replay = replay(command.deliveryId(), command.eventId());
+        if (replay != null) {
+            return replay;
         }
         if (command.milestone() == null) {
             return Result.failure(ApplicationError.validationError("milestone", "A load milestone is required"));
@@ -140,19 +150,41 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
 
             // The raw sample is always kept, exactly like a position sample; only an advancing one is linked
             // as the source of the projection's latest load state.
-            var sample = sampleRepository.save(TransportEvidenceSample.load(
+            var newSample = TransportEvidenceSample.load(
                     command.deliveryId(), command.providerId(), command.driverId(), command.milestone(),
-                    volume, recordedAt, clock.instant(), advanced));
+                    volume, recordedAt, clock.instant(), advanced);
+            newSample.setClientEventId(command.eventId());
+            var sample = sampleRepository.save(newSample);
             if (advanced) {
                 tracking.linkLoadEvidence(sample.getId());
             }
             tracking = trackingRepository.save(tracking);
 
             return Result.success(new EvidenceAck(sample.getId(), command.deliveryId(), "LOAD",
-                    command.milestone().name(), advanced, recordedAt));
+                    command.milestone().name(), advanced, recordedAt, false));
         } catch (OptimisticLockingFailureException exception) {
             return concurrent();
         }
+    }
+
+    /**
+     * A retry of a sample the client already sent (same {@code eventId} on the same delivery) gets the original
+     * acknowledgement back: nothing is stored and no event is published again. The REST adapter authorises the
+     * caller for this delivery first, so the lookup never reveals another tenant's keys.
+     *
+     * <p>ponytail: two identical requests racing past this lookup are stopped by the
+     * {@code uk_tes_delivery_client_event} constraint and the loser surfaces as a data-integrity error, not a
+     * replay; turning it into a replay needs a re-read in a fresh transaction, add it only if clients hit it.
+     */
+    private Result<EvidenceAck, ApplicationError> replay(Long deliveryId, String eventId) {
+        if (eventId == null) {
+            return null;
+        }
+        return sampleRepository.findByDeliveryIdAndClientEventId(deliveryId, eventId)
+                .map(sample -> Result.<EvidenceAck, ApplicationError>success(new EvidenceAck(sample.getId(),
+                        deliveryId, sample.getKind().name(), sample.getMilestone(), sample.isLatestAdvanced(),
+                        sample.getRecordedAt(), true)))
+                .orElse(null);
     }
 
     /**

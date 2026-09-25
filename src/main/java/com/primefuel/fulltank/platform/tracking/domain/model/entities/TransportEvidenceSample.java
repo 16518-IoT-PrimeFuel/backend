@@ -42,6 +42,7 @@ public class TransportEvidenceSample {
     private Instant recordedAt;
     private Instant receivedAt;
     private boolean latestAdvanced;
+    private String clientEventId;
 
     private TransportEvidenceSample(TransportEvidenceKind kind, Long deliveryId, Long providerId, Long driverId,
                                     Instant recordedAt, Instant receivedAt, boolean latestAdvanced) {

@@ -4,6 +4,7 @@ import com.primefuel.fulltank.platform.fleet.api.FleetCatalog;
 import com.primefuel.fulltank.platform.fulfillment.api.DeliveryTrackingLookup;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
+import com.primefuel.fulltank.platform.shared.application.result.Result;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ErrorResponseAssembler;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import com.primefuel.fulltank.platform.tracking.api.TransportEvidenceRecorder;
@@ -71,6 +72,7 @@ public class TransportEvidenceController {
     @Operation(summary = "Record transport evidence for a delivery",
             description = "Accepts a driver-app position ping or load milestone for a delivery whose assigned driver is the caller; a late sample is preserved without moving the latest value.")
     @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Replay: this eventId was already recorded for the delivery; the original ack is returned and nothing new is stored."),
             @ApiResponse(responseCode = "201", description = "Evidence recorded (latestAdvanced=false for a late sample)."),
             @ApiResponse(responseCode = "400", description = "The body is malformed (unknown type/milestone, missing coordinates, non-positive volume)."),
             @ApiResponse(responseCode = "403", description = "The caller is not the driver assigned to the delivery, or the assignment crosses tenants."),
@@ -114,12 +116,10 @@ public class TransportEvidenceController {
         }
 
         return switch (kind) {
-            case POSITION -> ResponseEntityAssembler.toResponseEntityFromResult(
-                    transportEvidenceRecorder.recordPosition(new RecordPositionEvidenceCommand(
-                            assignment.deliveryId(), assignment.providerId(), assignment.driverId(),
-                            resource.latitude(), resource.longitude(), resource.accuracyMeters(),
-                            resource.recordedAt())),
-                    TransportEvidenceController::toResource, HttpStatus.CREATED);
+            case POSITION -> respond(transportEvidenceRecorder.recordPosition(new RecordPositionEvidenceCommand(
+                    assignment.deliveryId(), assignment.providerId(), assignment.driverId(),
+                    resource.latitude(), resource.longitude(), resource.accuracyMeters(),
+                    resource.recordedAt(), resource.eventId())));
             case LOAD -> recordLoad(assignment, resource);
         };
     }
@@ -132,11 +132,17 @@ public class TransportEvidenceController {
         } catch (IllegalArgumentException exception) {
             return error(ApplicationError.validationError("milestone", exception.getMessage()));
         }
-        return ResponseEntityAssembler.toResponseEntityFromResult(
-                transportEvidenceRecorder.recordLoad(new RecordLoadEvidenceCommand(
-                        assignment.deliveryId(), assignment.providerId(), assignment.driverId(), milestone,
-                        resource.volume(), resource.unit(), resource.recordedAt())),
-                TransportEvidenceController::toResource, HttpStatus.CREATED);
+        return respond(transportEvidenceRecorder.recordLoad(new RecordLoadEvidenceCommand(
+                assignment.deliveryId(), assignment.providerId(), assignment.driverId(), milestone,
+                resource.volume(), resource.unit(), resource.recordedAt(), resource.eventId())));
+    }
+
+    /** 201 for a new sample, 200 when the {@code eventId} replays one already stored. */
+    private static ResponseEntity<?> respond(Result<TransportEvidenceRecorder.EvidenceAck, ApplicationError> result) {
+        var replayed = result instanceof Result.Success<TransportEvidenceRecorder.EvidenceAck, ApplicationError> s
+                && s.value().replayed();
+        return ResponseEntityAssembler.toResponseEntityFromResult(result, TransportEvidenceController::toResource,
+                replayed ? HttpStatus.OK : HttpStatus.CREATED);
     }
 
     private static ResponseEntity<?> error(ApplicationError applicationError) {

@@ -24,6 +24,7 @@ public final class TransportEvidenceSamplePersistenceAssembler {
         sample.setRecordedAt(entity.getRecordedAt());
         sample.setReceivedAt(entity.getReceivedAt());
         sample.setLatestAdvanced(entity.isLatestAdvanced());
+        sample.setClientEventId(entity.getClientEventId());
         return sample;
     }
 
@@ -45,6 +46,7 @@ public final class TransportEvidenceSamplePersistenceAssembler {
         entity.setRecordedAt(sample.getRecordedAt());
         entity.setReceivedAt(sample.getReceivedAt());
         entity.setLatestAdvanced(sample.isLatestAdvanced());
+        entity.setClientEventId(sample.getClientEventId());
         return entity;
     }
 }

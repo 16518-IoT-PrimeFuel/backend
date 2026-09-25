@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,7 +15,10 @@ import lombok.Setter;
 import java.time.Instant;
 
 @Entity
-@Table(name = "transport_evidence_samples")
+@Table(name = "transport_evidence_samples",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_tes_delivery_client_event",
+                columnNames = {"delivery_id", "client_event_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -53,6 +57,9 @@ public class TransportEvidenceSamplePersistenceEntity extends AuditableAbstractP
 
     @Column(name = "received_at", nullable = false)
     private Instant receivedAt;
+
+    @Column(name = "client_event_id", length = 160)
+    private String clientEventId;
 
     @Column(name = "latest_advanced", nullable = false)
     private boolean latestAdvanced;

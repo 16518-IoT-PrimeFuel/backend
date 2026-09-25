@@ -6,6 +6,7 @@ import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Deliv
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CreateDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryRepository;
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
+import com.primefuel.fulltank.platform.shared.infrastructure.persistence.jpa.repositories.EventPublicationPersistenceRepository;
 import com.primefuel.fulltank.platform.tracking.domain.model.valueobjects.LoadMilestone;
 import com.primefuel.fulltank.platform.tracking.domain.repositories.DeliveryTrackingRepository;
 import com.primefuel.fulltank.platform.tracking.domain.repositories.TransportEvidenceSampleRepository;
@@ -67,6 +68,9 @@ class TransportEvidenceControllerTest {
     @Autowired
     private TransportEvidenceSampleRepository sampleRepository;
 
+    @Autowired
+    private EventPublicationPersistenceRepository publications;
+
     private long driver(long providerId, long userId) {
         var result = fleetRegistry.registerDriver(new RegisterDriverCommand(providerId, userId, "Tracking",
                 "Driver", "L-TRK-" + SEQUENCE.incrementAndGet(), "999000777",
@@ -112,6 +116,31 @@ class TransportEvidenceControllerTest {
         assertThat(tracking.getLastPositionAt()).isEqualTo(Instant.parse("2026-09-01T10:00:00Z"));
         assertThat(tracking.getDriverId()).isEqualTo(driverId);
         assertThat(sampleRepository.countByDeliveryId(deliveryId)).isEqualTo(1);
+    }
+
+    @Test
+    void aRetriedEventIdReplaysTheOriginalAckWithoutStoringOrPublishingAgain() throws Exception {
+        long providerId = 808L;
+        long userId = 908L;
+        long deliveryId = delivery(providerId, driver(providerId, userId));
+        var auth = authFor(userId, providerId);
+        var body = """
+                {"type":"POSITION","latitude":10.5,"longitude":-66.9,
+                 "recordedAt":"2026-09-01T10:00:00Z","eventId":"offline-retry-1"}""";
+
+        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated());
+        long evidenceId = sampleRepository.findByDeliveryId(deliveryId).getFirst().getId();
+
+        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.evidenceId").value(evidenceId));
+
+        assertThat(sampleRepository.countByDeliveryId(deliveryId)).isEqualTo(1);
+        assertThat(publications.findByAggregateTypeAndAggregateIdOrderByIdAsc("DeliveryTracking",
+                String.valueOf(deliveryId))).hasSize(1);
     }
 
     @Test

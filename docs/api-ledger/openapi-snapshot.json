@@ -1838,6 +1838,11 @@
             "format" : "double",
             "type" : "number"
           },
+          "eventId" : {
+            "maxLength" : 160,
+            "minLength" : 0,
+            "type" : "string"
+          },
           "latitude" : {
             "format" : "double",
             "type" : "number"
@@ -6526,6 +6531,16 @@
           "required" : true
         },
         "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Replay: this eventId was already recorded for the delivery; the original ack is returned and nothing new is stored."
+          },
           "201" : {
             "content" : {
               "application/json" : {

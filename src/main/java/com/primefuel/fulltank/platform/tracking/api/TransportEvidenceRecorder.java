@@ -40,6 +40,7 @@ public interface TransportEvidenceRecorder {
             String kind,
             String milestone,
             boolean latestAdvanced,
-            Instant recordedAt) {
+            Instant recordedAt,
+            boolean replayed) {
     }
 }

@@ -16,5 +16,6 @@ public record RecordLoadEvidenceCommand(
         LoadMilestone milestone,
         Double volume,
         String unit,
-        Instant recordedAt) {
+        Instant recordedAt,
+        String eventId) {
 }

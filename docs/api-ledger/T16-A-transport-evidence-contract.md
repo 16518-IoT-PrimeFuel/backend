@@ -88,6 +88,12 @@ inválido (type/milestone desconocido, coordenadas ausentes, volumen ≤ 0); `40
 asignado o la asignación cruza tenants; `404` el delivery (o su driver) no existe; `422` hito imposible
 (p. ej. `UNLOADED` antes de `LOADED`).
 
+**`eventId` (PORT-3, opcional, ≤ 160 chars):** clave de idempotencia del cliente (reintentos offline de la app
+del driver), única **por delivery** (`uk_tes_delivery_client_event(delivery_id, client_event_id)`, `V24`), no
+global. Si ya existe una muestra con ese `eventId` en ese delivery, se responde **`200`** con el ack original
+(mismo `evidenceId`) sin guardar otra muestra ni republicar `DeliveryTelemetryReceived`. La auth/tenancy (§1.3)
+corre antes de la búsqueda: un replay ajeno sigue siendo `403`/`404`. Sin `eventId` el comportamiento no cambia.
+
 ### 1.3 Auth y tenancy (la regla del rediseño)
 
 El caller debe ser **el driver asignado a esa entrega específica**. La resolución es server-side, en el

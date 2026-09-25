@@ -3,6 +3,7 @@ package com.primefuel.fulltank.platform.tracking.domain.repositories;
 import com.primefuel.fulltank.platform.tracking.domain.model.entities.TransportEvidenceSample;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Persistence port of the raw transport evidence (S16/T16-A). Append-only: samples are written, never
@@ -24,4 +25,7 @@ public interface TransportEvidenceSampleRepository {
     List<TransportEvidenceSample> findByDeliveryIdOrderedByRecordedAt(Long deliveryId);
 
     long countByDeliveryId(Long deliveryId);
+
+    /** The sample a client already sent under {@code clientEventId} for this delivery, if any. */
+    Optional<TransportEvidenceSample> findByDeliveryIdAndClientEventId(Long deliveryId, String clientEventId);
 }

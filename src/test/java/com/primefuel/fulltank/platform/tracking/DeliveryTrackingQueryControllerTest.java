@@ -86,7 +86,7 @@ class DeliveryTrackingQueryControllerTest {
     private void position(long deliveryId, long providerId, long driverId, double latitude,
                           String recordedAt) {
         var result = recorder.recordPosition(new RecordPositionEvidenceCommand(deliveryId, providerId, driverId,
-                latitude, -66.0, 5.0, Instant.parse(recordedAt)));
+                latitude, -66.0, 5.0, Instant.parse(recordedAt), null));
         assertThat(result.isSuccess()).isTrue();
     }
 
@@ -207,7 +207,7 @@ class DeliveryTrackingQueryControllerTest {
         long deliveryId = delivery(providerId, driverId);
 
         assertThat(recorder.recordLoad(new RecordLoadEvidenceCommand(deliveryId, providerId, driverId,
-                LoadMilestone.LOADED, 120.0, "LITRE", Instant.parse("2026-09-01T09:00:00Z"))).isSuccess()).isTrue();
+                LoadMilestone.LOADED, 120.0, "LITRE", Instant.parse("2026-09-01T09:00:00Z"), null)).isSuccess()).isTrue();
 
         mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(driverUserId, providerId)))

@@ -70,13 +70,13 @@ class TrackingProjectionRebuildTest {
 
     private void position(long deliveryId, long providerId, long driverId, double latitude, String recordedAt) {
         assertThat(recorder.recordPosition(new RecordPositionEvidenceCommand(deliveryId, providerId, driverId,
-                latitude, -66.0, 5.0, Instant.parse(recordedAt))).isSuccess()).isTrue();
+                latitude, -66.0, 5.0, Instant.parse(recordedAt), null)).isSuccess()).isTrue();
     }
 
     private void load(long deliveryId, long providerId, long driverId, LoadMilestone milestone, Double volume,
                       String recordedAt) {
         assertThat(recorder.recordLoad(new RecordLoadEvidenceCommand(deliveryId, providerId, driverId, milestone,
-                volume, "LITRE", Instant.parse(recordedAt))).isSuccess()).isTrue();
+                volume, "LITRE", Instant.parse(recordedAt), null)).isSuccess()).isTrue();
     }
 
     @Test

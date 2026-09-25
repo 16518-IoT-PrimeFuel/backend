@@ -4,6 +4,7 @@ import com.primefuel.fulltank.platform.tracking.infrastructure.persistence.jpa.e
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TransportEvidenceSamplePersistenceRepository
         extends JpaRepository<TransportEvidenceSamplePersistenceEntity, Long> {
@@ -18,4 +19,7 @@ public interface TransportEvidenceSamplePersistenceRepository
             Long deliveryId);
 
     long countByDeliveryId(Long deliveryId);
+
+    Optional<TransportEvidenceSamplePersistenceEntity> findByDeliveryIdAndClientEventId(Long deliveryId,
+                                                                                      String clientEventId);
 }
