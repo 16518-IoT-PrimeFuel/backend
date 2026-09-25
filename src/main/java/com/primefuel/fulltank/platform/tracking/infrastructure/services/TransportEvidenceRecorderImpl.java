@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 
 /**
  * Transport-evidence recorder (S16/T16-A). Every accepted sample is stored twice by design: as a raw,
@@ -62,9 +63,9 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
         if (command.deliveryId() == null) {
             return Result.failure(ApplicationError.validationError("deliveryId", "A delivery is required"));
         }
-        var replay = replay(command.deliveryId(), command.eventId());
-        if (replay != null) {
-            return replay;
+        var replay = findReplay(command.deliveryId(), command.eventId());
+        if (replay.isPresent()) {
+            return Result.success(replay.get());
         }
         if (command.recordedAt() == null) {
             return Result.failure(ApplicationError.validationError("recordedAt",
@@ -114,9 +115,9 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
         if (command.deliveryId() == null) {
             return Result.failure(ApplicationError.validationError("deliveryId", "A delivery is required"));
         }
-        var replay = replay(command.deliveryId(), command.eventId());
-        if (replay != null) {
-            return replay;
+        var replay = findReplay(command.deliveryId(), command.eventId());
+        if (replay.isPresent()) {
+            return Result.success(replay.get());
         }
         if (command.milestone() == null) {
             return Result.failure(ApplicationError.validationError("milestone", "A load milestone is required"));
@@ -172,19 +173,18 @@ public class TransportEvidenceRecorderImpl implements TransportEvidenceRecorder 
      * acknowledgement back: nothing is stored and no event is published again. The REST adapter authorises the
      * caller for this delivery first, so the lookup never reveals another tenant's keys.
      *
-     * <p>ponytail: two identical requests racing past this lookup are stopped by the
-     * {@code uk_tes_delivery_client_event} constraint and the loser surfaces as a data-integrity error, not a
-     * replay; turning it into a replay needs a re-read in a fresh transaction, add it only if clients hit it.
+     * A concurrent retry may hit the unique constraint. The REST adapter rereads the winner after this
+     * transaction rolls back.
      */
-    private Result<EvidenceAck, ApplicationError> replay(Long deliveryId, String eventId) {
+    @Override
+    public Optional<EvidenceAck> findReplay(Long deliveryId, String eventId) {
         if (eventId == null) {
-            return null;
+            return Optional.empty();
         }
         return sampleRepository.findByDeliveryIdAndClientEventId(deliveryId, eventId)
-                .map(sample -> Result.<EvidenceAck, ApplicationError>success(new EvidenceAck(sample.getId(),
+                .map(sample -> new EvidenceAck(sample.getId(),
                         deliveryId, sample.getKind().name(), sample.getMilestone(), sample.isLatestAdvanced(),
-                        sample.getRecordedAt(), true)))
-                .orElse(null);
+                        sample.getRecordedAt(), true));
     }
 
     /**

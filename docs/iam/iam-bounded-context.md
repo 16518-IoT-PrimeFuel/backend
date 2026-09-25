@@ -2,7 +2,7 @@
 
 ## 1. Estado del bounded context
 
-El bounded context **IAM (Identity and Access Management)** ya está implementado en el backend. Su responsabilidad es registrar y autenticar usuarios, asociarlos a una empresa compradora o proveedora, emitir JWT, resolver roles y aplicar reglas de ownership sobre los recursos protegidos.
+El bounded context **IAM (Identity and Access Management)** registra y autentica usuarios, emite JWT y controla el acceso. Las tablas legacy `buyer_companies` y `provider_companies` siguen atendiendo v1; el modelo v2 usa `Organization` y `Membership` con roles `OWNER`, `ADMIN` y `MEMBER` para resolver el tenant. El backfill V23 crea organizaciones y membresías solo para vínculos legacy no ambiguos. Este informe y sus diagramas detallan la parte legacy; el modelo v2 está descrito en [T04-A](../api-ledger/T04-A-organization-membership.md) y [T04-B](../api-ledger/T04-B-onboarding-invitations.md).
 
 La implementación sigue una separación por capas:
 

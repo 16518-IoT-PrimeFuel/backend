@@ -13,8 +13,8 @@ import com.primefuel.fulltank.platform.replenishment.domain.model.commands.Consu
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.CreateReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.RejectReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.ReplenishmentSource;
+import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
-import com.primefuel.fulltank.platform.supply.api.SupplyCatalog;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,28 +37,21 @@ public class LegacyFuelRequestBridge {
     private final ReplenishmentLookup replenishmentLookup;
     private final CustomerDirectory customerDirectory;
     private final TankAssets tankAssets;
-    private final SupplyCatalog supplyCatalog;
 
     public LegacyFuelRequestBridge(FuelRequestService fuelRequestService,
                                    ReplenishmentCommandService replenishmentCommandService,
                                    ReplenishmentLookup replenishmentLookup,
                                    CustomerDirectory customerDirectory,
-                                   TankAssets tankAssets,
-                                   SupplyCatalog supplyCatalog) {
+                                   TankAssets tankAssets) {
         this.fuelRequestService = fuelRequestService;
         this.replenishmentCommandService = replenishmentCommandService;
         this.replenishmentLookup = replenishmentLookup;
         this.customerDirectory = customerDirectory;
         this.tankAssets = tankAssets;
-        this.supplyCatalog = supplyCatalog;
     }
 
     @Transactional
     public FuelRequestPersistenceEntity create(CreateFuelRequestResource resource) {
-        // Inactive check via the public supply seam, so FuelRequestService's frozen ArchUnit baseline stays intact.
-        supplyCatalog.findForTenant(resource.providerId(), resource.fuelProductId())
-                .filter(product -> !product.active())
-                .ifPresent(product -> { throw new IllegalArgumentException("Fuel product is inactive"); });
         var saved = fuelRequestService.create(resource);
         var customerId = customerDirectory.customerIdForLegacyCompany(saved.getBuyerCompanyId()).orElse(null);
         var organizationId = customerId == null
@@ -67,9 +60,13 @@ public class LegacyFuelRequestBridge {
         var tankId = tankAssets.tankIdForLegacyEquipment(saved.getEquipmentId()).orElse(null);
         var source = resource.source() == null || resource.source().equalsIgnoreCase("MANUAL")
                 ? ReplenishmentSource.MANUAL : ReplenishmentSource.AUTOMATIC;
-        replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
+        var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
                 organizationId, customerId, tankId, saved.getProviderId(), saved.getFuelProductId(),
                 saved.getQuantity(), saved.getUnit(), source, episodeKey(saved.getId())));
+        if (created instanceof Result.Failure<?, ?> failure) {
+            var error = (ApplicationError) failure.error();
+            throw new IllegalArgumentException(error.details() == null ? error.message() : error.details());
+        }
         return saved;
     }
 

@@ -6,6 +6,7 @@ import com.primefuel.fulltank.platform.tracking.domain.model.commands.RecordLoad
 import com.primefuel.fulltank.platform.tracking.domain.model.commands.RecordPositionEvidenceCommand;
 
 import java.time.Instant;
+import java.util.Optional;
 
 /**
  * Public write seam of the tracking module (S16/T16-A). It is the only surface through which transport
@@ -33,6 +34,8 @@ public interface TransportEvidenceRecorder {
     Result<EvidenceAck, ApplicationError> recordPosition(RecordPositionEvidenceCommand command);
 
     Result<EvidenceAck, ApplicationError> recordLoad(RecordLoadEvidenceCommand command);
+
+    Optional<EvidenceAck> findReplay(Long deliveryId, String eventId);
 
     record EvidenceAck(
             Long evidenceId,

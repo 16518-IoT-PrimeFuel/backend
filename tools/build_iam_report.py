@@ -121,8 +121,8 @@ def footer(canvas, doc):
 
 
 story = []
-story += [Spacer(1, 18 * mm), p("Bounded Context IAM", "TitleBig"), p("FullTank Platform | Diseño táctico DDD orientado al backend actual", "Subtitle")]
-story += [p("Documento técnico", "H1x"), p("Este documento identifica las clases y responsabilidades reales del bounded context IAM implementado en Spring Boot. La organización sigue las capas Domain, Application, Infrastructure e Interfaces, siguiendo la estructura de la referencia proporcionada.")]
+story += [Spacer(1, 18 * mm), p("Bounded Context IAM", "TitleBig"), p("FullTank Platform | IAM legacy v1", "Subtitle")]
+story += [p("Documento técnico", "H1x"), p("Este informe y sus diagramas describen la parte legacy v1 de IAM. El modelo v2 incluye Organization y Membership para resolver el tenant; ver docs/api-ledger/T04-A-organization-membership.md y T04-B-onboarding-invitations.md. La organización sigue las capas Domain, Application, Infrastructure e Interfaces.")]
 story += [p("Estado", "H2x"), p("IAM ya está implementado: autenticación JWT, usuarios, roles, compañías compradoras/proveedoras, ownership de recursos y recuperación de contraseña con token de un solo uso. El alta crea usuario y compañía en una transacción y no permite que el cliente elija IDs de compañías existentes."), Spacer(1, 5)]
 story += [p("Capacidades principales", "H2x")] + table("", [
     ("Inicio de sesión", "REST", "sign-in devuelve JWT, roles y company/provider ID."),

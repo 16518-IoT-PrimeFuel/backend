@@ -1,16 +1,24 @@
 package com.primefuel.fulltank.platform.tracking;
 
 import com.primefuel.fulltank.platform.fleet.api.FleetRegistry;
+import com.primefuel.fulltank.platform.fleet.api.FleetCatalog;
+import com.primefuel.fulltank.platform.fulfillment.api.DeliveryTrackingLookup;
 import com.primefuel.fulltank.platform.fleet.domain.model.commands.RegisterDriverCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CreateDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryRepository;
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
+import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.shared.infrastructure.persistence.jpa.repositories.EventPublicationPersistenceRepository;
 import com.primefuel.fulltank.platform.tracking.domain.model.valueobjects.LoadMilestone;
 import com.primefuel.fulltank.platform.tracking.domain.repositories.DeliveryTrackingRepository;
 import com.primefuel.fulltank.platform.tracking.domain.repositories.TransportEvidenceSampleRepository;
+import com.primefuel.fulltank.platform.tracking.api.TransportEvidenceRecorder;
+import com.primefuel.fulltank.platform.tracking.interfaces.rest.TransportEvidenceController;
+import com.primefuel.fulltank.platform.tracking.interfaces.rest.resources.TransportEvidenceAckResource;
+import com.primefuel.fulltank.platform.tracking.interfaces.rest.resources.TransportEvidenceResource;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -22,9 +30,13 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -141,6 +153,31 @@ class TransportEvidenceControllerTest {
         assertThat(sampleRepository.countByDeliveryId(deliveryId)).isEqualTo(1);
         assertThat(publications.findByAggregateTypeAndAggregateIdOrderByIdAsc("DeliveryTracking",
                 String.valueOf(deliveryId))).hasSize(1);
+    }
+
+    @Test
+    void aConcurrentDuplicateReturnsTheCommittedAckAfterTheWriteRollsBack() {
+        var recorder = mock(TransportEvidenceRecorder.class);
+        var deliveries = mock(DeliveryTrackingLookup.class);
+        var fleet = mock(FleetCatalog.class);
+        var membership = mock(MembershipAccess.class);
+        var controller = new TransportEvidenceController(recorder, deliveries, fleet, membership);
+        var recordedAt = Instant.parse("2026-09-01T10:00:00Z");
+        var ack = new TransportEvidenceRecorder.EvidenceAck(55L, 44L, "POSITION", null,
+                true, recordedAt, true);
+        when(membership.currentUserId()).thenReturn(Optional.of(33L));
+        when(deliveries.findAssignedDelivery(44L)).thenReturn(Optional.of(
+                new DeliveryTrackingLookup.AssignedDeliverySnapshot(44L, 1L, 22L, 11L, "DISPATCHED")));
+        when(fleet.findDriver(11L)).thenReturn(Optional.of(new FleetCatalog.DriverSnapshot(
+                11L, 22L, 33L, "A", "B", "L", "1", "a@example.test", "AVAILABLE", true)));
+        when(recorder.recordPosition(any())).thenThrow(new DataIntegrityViolationException("duplicate key"));
+        when(recorder.findReplay(44L, "retry-1")).thenReturn(Optional.of(ack));
+
+        var response = controller.record(44L, new TransportEvidenceResource("POSITION", 10.5, -66.9,
+                null, null, null, null, recordedAt, "retry-1"));
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(((TransportEvidenceAckResource) response.getBody()).evidenceId()).isEqualTo(55L);
     }
 
     @Test

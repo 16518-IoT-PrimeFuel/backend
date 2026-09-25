@@ -22,6 +22,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -115,13 +116,19 @@ public class TransportEvidenceController {
             return error(ApplicationError.validationError("type", exception.getMessage()));
         }
 
-        return switch (kind) {
-            case POSITION -> respond(transportEvidenceRecorder.recordPosition(new RecordPositionEvidenceCommand(
-                    assignment.deliveryId(), assignment.providerId(), assignment.driverId(),
-                    resource.latitude(), resource.longitude(), resource.accuracyMeters(),
-                    resource.recordedAt(), resource.eventId())));
-            case LOAD -> recordLoad(assignment, resource);
-        };
+        try {
+            return switch (kind) {
+                case POSITION -> respond(transportEvidenceRecorder.recordPosition(new RecordPositionEvidenceCommand(
+                        assignment.deliveryId(), assignment.providerId(), assignment.driverId(),
+                        resource.latitude(), resource.longitude(), resource.accuracyMeters(),
+                        resource.recordedAt(), resource.eventId())));
+                case LOAD -> recordLoad(assignment, resource);
+            };
+        } catch (DataIntegrityViolationException exception) {
+            return transportEvidenceRecorder.findReplay(assignment.deliveryId(), resource.eventId())
+                    .map(ack -> respond(Result.success(ack)))
+                    .orElseThrow(() -> exception);
+        }
     }
 
     private ResponseEntity<?> recordLoad(DeliveryTrackingLookup.AssignedDeliverySnapshot assignment,

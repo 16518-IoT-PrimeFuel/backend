@@ -3,9 +3,17 @@ package com.primefuel.fulltank.platform.ordering;
 import com.primefuel.fulltank.platform.inventory.application.commandservices.FuelProductCommandService;
 import com.primefuel.fulltank.platform.inventory.domain.model.commands.CreateFuelProductCommand;
 import com.primefuel.fulltank.platform.inventory.domain.model.valueobjects.FuelType;
+import com.primefuel.fulltank.platform.equipment.api.CustomerDirectory;
+import com.primefuel.fulltank.platform.equipment.api.TankAssets;
+import com.primefuel.fulltank.platform.ordering.application.internal.commandservices.FuelRequestService;
 import com.primefuel.fulltank.platform.ordering.application.internal.commandservices.LegacyFuelRequestBridge;
+import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.entities.FuelRequestPersistenceEntity;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.CreateFuelRequestResource;
+import com.primefuel.fulltank.platform.replenishment.application.commandservices.ReplenishmentCommandService;
+import com.primefuel.fulltank.platform.replenishment.domain.model.commands.CreateReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.api.ReplenishmentLookup;
+import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
+import com.primefuel.fulltank.platform.shared.application.result.Result;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +22,9 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(properties = {
         "spring.profiles.active=test",
@@ -83,6 +94,27 @@ class LegacyFuelRequestBridgeTest {
         assertThatThrownBy(() -> fuelRequestService.create(new CreateFuelRequestResource(42L, 7L, null, productId,
                 40.0, "GAL", "Av. 1", LocalDate.now().minusDays(1), "MANUAL")))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("Delivery date cannot be in the past");
+    }
+
+    @Test
+    void failedReplenishmentCreationPropagatesTheError() {
+        var legacy = mock(FuelRequestService.class);
+        var commands = mock(ReplenishmentCommandService.class);
+        var saved = new FuelRequestPersistenceEntity();
+        saved.setId(1L);
+        saved.setBuyerCompanyId(42L);
+        saved.setProviderId(7L);
+        saved.setFuelProductId(8L);
+        saved.setQuantity(40.0);
+        saved.setUnit("GAL");
+        when(legacy.create(any())).thenReturn(saved);
+        when(commands.handle(any(CreateReplenishmentRequestCommand.class)))
+                .thenReturn(Result.failure(ApplicationError.validationError("fuelProduct", "inactive")));
+        var bridge = new LegacyFuelRequestBridge(legacy, commands, mock(ReplenishmentLookup.class),
+                mock(CustomerDirectory.class), mock(TankAssets.class));
+
+        assertThatThrownBy(() -> bridge.create(aRequest(8L)))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("inactive");
     }
 
     @Test
