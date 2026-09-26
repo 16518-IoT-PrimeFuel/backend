@@ -14,7 +14,9 @@ existing v1 compatibility surface.
 - [x] S22-S23: coexistence controls and payment boundary
 - [x] S24: retirement register and migration documentation
 - [x] Run migration, architecture and application test gates
-- [ ] Confirm external consumers before retiring v1 routes or legacy tables
+- [x] Audit the local Mobile-app consumer and record v1/static-mock evidence
+- [ ] Migrate Mobile-app to executable v2 consumers and confirm deployed consumers
+- [ ] Retire v1 routes and legacy tables only after the consumer ledger is closed
 
 ## Verification
 
@@ -23,5 +25,6 @@ existing v1 compatibility surface.
 
 ## Scope note
 
-S22/S24 remain controlled-retirement gates because the consumer ledger still
-contains `UNKNOWN` entries and explicitly forbids destructive legacy removal.
+S22/S24 remain controlled-retirement gates because the local Mobile-app still
+contains v1 clients with mock-default providers and the roadmap requires
+deployed-consumer evidence before destructive legacy removal.
