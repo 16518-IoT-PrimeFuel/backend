@@ -1,14 +1,14 @@
 family,operation,current_route,target,action,consumer,status,cutover_gate
-authentication,sign-in,/api/v1/authentication/sign-in,identity,KEEP,mobile-static-v1,mock-default,Mobile v2 migration
+authentication,sign-in,/api/v1/authentication/sign-in,identity,KEEP,mobile-static-v1,api-default,Mobile v2 migration
 authentication,sign-up,/api/v1/authentication/sign-up,identity v2,REDESIGN,mobile,adapter active,consumer contract
 buyer-companies,company CRUD,/api/v1/buyer-companies,customers/sites v2,REDESIGN,mobile,adapter active,tenant migration
 equipment,equipment CRUD,/api/v1/equipment,tanks v2,REDESIGN,mobile,adapter active,tank mapping
-fuel-products,product CRUD,/api/v1/fuel-products,supply v2,REDESIGN,mobile-static-v1,mock-default,Mobile v2 migration
-fuel-requests,request lifecycle,/api/v1/fuel-requests,replenishment v2,REDESIGN,mobile-static-v1,mock-default,Mobile v2 migration
-fuel-orders,direct create/confirm,/api/v1/fuel-orders,replenishment v2,DEPRECATE,mobile-static-v1,mock-default,Mobile v2 migration
-drivers,driver CRUD,/api/v1/drivers,fleet v2,MOVE,mobile-static-v1,mock-default,Mobile v2 migration
-vehicles,tanker CRUD,/api/v1/vehicles,fleet v2,MOVE,mobile-static-v1,mock-default,Mobile v2 migration
-deliveries,delivery lifecycle,/api/v1/deliveries,delivery v2,REDESIGN,mobile-static-v1,mock-default,Mobile v2 migration
+fuel-products,product CRUD,/api/v1/fuel-products,supply v2,REDESIGN,mobile-static-v1,api-default,Mobile v2 migration
+fuel-requests,request lifecycle,/api/v1/fuel-requests,replenishment v2,REDESIGN,mobile-static-v1,api-default,Mobile v2 migration
+fuel-orders,direct create/confirm,/api/v1/fuel-orders,replenishment v2,DEPRECATE,mobile-static-v1,api-default,Mobile v2 migration
+drivers,driver CRUD,/api/v1/drivers,fleet v2,MOVE,mobile-static-v1,api-default,Mobile v2 migration
+vehicles,tanker CRUD,/api/v1/vehicles,fleet v2,MOVE,mobile-static-v1,api-default,Mobile v2 migration
+deliveries,delivery lifecycle,/api/v1/deliveries,delivery v2,REDESIGN,mobile-static-v1,api-default,Mobile v2 migration
 notifications,manual create,/api/v1/notifications,events,DEPRECATE,mobile-route-defined,no-call-site,consumer audit complete
 notifications,reads,/api/v1/notifications and /api/v2/users/{id}/notifications,/api/v2/me/notifications,REDESIGN,mobile,v2 active,membership privacy
 payments,payment lifecycle,/api/v1/payments,legacybilling,UNKNOWN,mobile-route-defined,no-call-site,ADR-023

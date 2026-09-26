@@ -15,7 +15,7 @@ This is the implementation gate for the backend migration roadmap. v1 remains ad
 | S19 | Implemented | durable outbox, scheduled relay, retry-safe event envelope and checkpoints are present |
 | S20 | Implemented | v2 notification read model, event fanout and source-event idempotency are present |
 | S21 | Implemented | append-only lifecycle/tracking journal and tenant-safe timeline query are present |
-| S22 | Implemented as migration control | Local Mobile-app audit recorded in `consumer-ledger.csv`; it still contains static v1 clients and no executable v2 consumers, so v1 remains |
+| S22 | Implemented as migration control | Local Mobile-app audit recorded in `consumer-ledger.csv`; its API providers now default to backend v1, but executable v2 consumers are still absent, so v1 remains |
 | S23 | Implemented | payment command no longer imports or mutates `FuelOrderRepository`; ADR-023 records legacybilling boundary |
 | S24 | Controlled retirement | Local consumer evidence is documented; no destructive drop is allowed while v1 clients, mocks, or KEEP/RETAIN entries remain |
 
