@@ -136,13 +136,18 @@ public class DeliveryLifecycleServiceImpl {
             // post-completion one. Both saves share this transaction, and the row lock taken by the first one
             // makes a race on the second impossible — a rejected or racing close still leaves nothing behind.
             if (discharge) {
-                delivery.beginDelivering();
-                delivery = deliveryRepository.saveAndFlush(delivery);
-                transitionRepository.add(new DeliveryStateTransition(null, delivery.getId(),
-                        DeliveryPhysicalState.ARRIVED, DeliveryPhysicalState.DELIVERING,
-                        delivery.getVersion(), occurredAt));
+                delivery = enterDeliveringAndEvaluateSafety(delivery, occurredAt);
             }
+        } catch (IllegalArgumentException exception) {
+            return Result.failure(ApplicationError.validationError("deliveredVolume", exception.getMessage()));
+        }
+
+        try {
             delivery.completePhysical(command.deliveredVolume(), requestedVolume.get());
+        } catch (IllegalStateException exception) {
+            return Result.failure(ApplicationError.conflict("Delivery", exception.getMessage()));
+        }
+        try {
             var saved = deliveryRepository.saveAndFlush(delivery);
             transitionRepository.add(new DeliveryStateTransition(null, saved.getId(),
                     DeliveryPhysicalState.DELIVERING, DeliveryPhysicalState.COMPLETED,
@@ -152,13 +157,23 @@ public class DeliveryLifecycleServiceImpl {
                     new DeliveryCompleted(saved.getId(), saved.getOrderId(), saved.getProviderId(),
                             saved.getDeliveredVolume(), saved.getRequestedVolume(), occurredAt).toPayloadJson());
             return Result.success(saved);
-        } catch (IllegalArgumentException exception) {
-            return Result.failure(ApplicationError.validationError("deliveredVolume", exception.getMessage()));
-        } catch (IllegalStateException exception) {
-            return Result.failure(ApplicationError.conflict("Delivery", exception.getMessage()));
         } catch (OptimisticLockingFailureException exception) {
             return concurrent();
         }
+    }
+
+    /** Enter DELIVERING once, journal the transition, and evaluate safety before any physical close. */
+    private Delivery enterDeliveringAndEvaluateSafety(Delivery delivery, Instant occurredAt) {
+        delivery.beginDelivering();
+        var saved = deliveryRepository.saveAndFlush(delivery);
+        transitionRepository.add(new DeliveryStateTransition(null, saved.getId(),
+                DeliveryPhysicalState.ARRIVED, DeliveryPhysicalState.DELIVERING,
+                saved.getVersion(), occurredAt));
+        // ponytail: detection never blocks the state transition; infrastructure failures must roll back both.
+        publicationRegistry.publish("delivery.discharge.started.v1", AGGREGATE_TYPE,
+                String.valueOf(saved.getId()), saved.getProviderId(), (long) saved.getVersion(),
+                "{\"deliveryId\":%d}".formatted(saved.getId()));
+        return saved;
     }
     @Transactional
     public Result<Delivery, ApplicationError> handle(FailDeliveryCommand command) {

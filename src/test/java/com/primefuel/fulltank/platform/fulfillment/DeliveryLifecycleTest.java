@@ -15,17 +15,29 @@ import com.primefuel.fulltank.platform.fulfillment.domain.model.valueobjects.Del
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryRepository;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryStateTransitionRepository;
 import com.primefuel.fulltank.platform.ordering.application.queryservices.FuelOrderQueryService;
+import com.primefuel.fulltank.platform.safety.api.GeofencePolicies;
+import com.primefuel.fulltank.platform.safety.domain.model.commands.CreateGeofencePolicyCommand;
+import com.primefuel.fulltank.platform.safety.domain.model.entities.SafetyDecision;
+import com.primefuel.fulltank.platform.safety.domain.repositories.SafetyDecisionRepository;
 import com.primefuel.fulltank.platform.shared.infrastructure.persistence.jpa.repositories.EventPublicationPersistenceRepository;
+import com.primefuel.fulltank.platform.tracking.api.TransportEvidenceRecorder;
+import com.primefuel.fulltank.platform.tracking.domain.model.commands.RecordPositionEvidenceCommand;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 /**
@@ -57,6 +69,15 @@ class DeliveryLifecycleTest {
     @Autowired
     private EventPublicationPersistenceRepository publications;
 
+    @Autowired
+    private GeofencePolicies geofencePolicies;
+
+    @MockitoSpyBean
+    private SafetyDecisionRepository safetyDecisionRepository;
+
+    @Autowired
+    private TransportEvidenceRecorder transportEvidenceRecorder;
+
     @MockitoBean
     private FuelOrderQueryService fuelOrderQueryService;
 
@@ -72,6 +93,11 @@ class DeliveryLifecycleTest {
     private long eventsFor(Long deliveryId) {
         return publications.findByAggregateTypeAndAggregateIdOrderByIdAsc("Delivery", String.valueOf(deliveryId))
                 .size();
+    }
+
+    private void recordPosition(long deliveryId, long providerId, Instant recordedAt) {
+        assertThat(transportEvidenceRecorder.recordPosition(new RecordPositionEvidenceCommand(deliveryId,
+                providerId, 11L, 10.0, 20.0, 10.0, recordedAt, null)).isSuccess()).isTrue();
     }
 
     @Test
@@ -117,7 +143,7 @@ class DeliveryLifecycleTest {
                         (long) finalState.getVersion());
         // Closing from ARRIVED consumes two versions: first DELIVERING, then COMPLETED.
         assertThat(finalState.getVersion()).isEqualTo(arrivedVersion + 2);
-        assertThat(eventsFor(id)).isEqualTo(4);
+        assertThat(eventsFor(id)).isEqualTo(5);
     }
 
     @Test
@@ -147,7 +173,7 @@ class DeliveryLifecycleTest {
 
         assertThat(second.isFailure()).isTrue();
         assertThat(deliveryRepository.findById(id).orElseThrow().getDeliveredVolume()).isEqualTo(50.0);
-        assertThat(eventsFor(id)).isEqualTo(3);
+        assertThat(eventsFor(id)).isEqualTo(4);
     }
 
     @Test
@@ -245,5 +271,107 @@ class DeliveryLifecycleTest {
 
         assertThat(stored.currentPhysicalState()).isEqualTo(DeliveryPhysicalState.ASSIGNED);
         assertThat(stored.getPhysicalState()).isNull();
+    }
+
+    @Test
+    void freshPositionInsidePolicyRecordsAuthorizedAndStillCompletes() {
+        long providerId = 71L;
+        var delivery = seedDelivery(providerId, 100.0);
+        long id = delivery.getId();
+        lifecycle.handle(new AssignDeliveryCommand(id));
+        lifecycle.handle(new StartDeliveryCommand(id));
+        lifecycle.handle(new ArriveDeliveryCommand(id));
+        recordPosition(id, providerId, Instant.now());
+        geofencePolicies.createPolicy(new CreateGeofencePolicyCommand(id, providerId, 10.0, 20.0, 1000.0));
+
+        var result = lifecycle.handle(new CompletePhysicalDeliveryCommand(id, 80.0));
+
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getOrElse(null).currentPhysicalState()).isEqualTo(DeliveryPhysicalState.COMPLETED);
+        var decisions = safetyDecisionRepository.findByDeliveryId(id);
+        assertThat(decisions).hasSize(1);
+        assertThat(decisions.get(0).isAuthorized()).isTrue();
+        assertThat(decisions.get(0).getProviderId()).isEqualTo(providerId);
+        assertThat(publications.findByAggregateTypeAndAggregateIdOrderByIdAsc(
+                "SafetyDecision", String.valueOf(decisions.get(0).getId())))
+                .extracting(event -> event.getEventType())
+                .containsExactly("safety.valve.authorized.v1");
+    }
+
+    @Test
+    void stalePositionRecordsBlockedButDoesNotBlockCompletion() {
+        long providerId = 72L;
+        var delivery = seedDelivery(providerId, 100.0);
+        long id = delivery.getId();
+        lifecycle.handle(new AssignDeliveryCommand(id));
+        lifecycle.handle(new StartDeliveryCommand(id));
+        lifecycle.handle(new ArriveDeliveryCommand(id));
+        recordPosition(id, providerId, Instant.now().minusSeconds(6 * 60));
+        geofencePolicies.createPolicy(new CreateGeofencePolicyCommand(id, providerId, 10.0, 20.0, 1000.0));
+
+        var result = lifecycle.handle(new CompletePhysicalDeliveryCommand(id, 80.0));
+
+        assertThat(result.isSuccess()).isTrue();
+        var decision = safetyDecisionRepository.findByDeliveryId(id).getFirst();
+        assertThat(decision.isAuthorized()).isFalse();
+        assertThat(decision.getReason()).isEqualTo("STALE");
+    }
+
+    @Test
+    void noPolicyRecordsNoPolicyAndDoesNotBlockCompletion() {
+        long providerId = 73L;
+        var delivery = seedDelivery(providerId, 100.0);
+        long id = delivery.getId();
+        lifecycle.handle(new AssignDeliveryCommand(id));
+        lifecycle.handle(new StartDeliveryCommand(id));
+        lifecycle.handle(new ArriveDeliveryCommand(id));
+
+        var result = lifecycle.handle(new CompletePhysicalDeliveryCommand(id, 80.0));
+
+        assertThat(result.isSuccess()).isTrue();
+        var decision = safetyDecisionRepository.findByDeliveryId(id).getFirst();
+        assertThat(decision.getReason()).isEqualTo("NO_POLICY");
+    }
+
+    @Test
+    void infrastructureFailurePersistingDecisionRollsBackDischargeAndCompletion() {
+        long providerId = 74L;
+        var delivery = seedDelivery(providerId, 100.0);
+        long id = delivery.getId();
+        lifecycle.handle(new AssignDeliveryCommand(id));
+        lifecycle.handle(new StartDeliveryCommand(id));
+        lifecycle.handle(new ArriveDeliveryCommand(id));
+        geofencePolicies.createPolicy(new CreateGeofencePolicyCommand(id, providerId, 10.0, 20.0, 1000.0));
+        doThrow(new DataAccessResourceFailureException("forced decision persistence failure"))
+                .when(safetyDecisionRepository).save(any());
+
+        assertThatThrownBy(() -> lifecycle.handle(new CompletePhysicalDeliveryCommand(id, 80.0)))
+                .isInstanceOf(DataAccessResourceFailureException.class);
+
+        assertThat(deliveryRepository.findById(id).orElseThrow().currentPhysicalState())
+                .isEqualTo(DeliveryPhysicalState.ARRIVED);
+        assertThat(transitionRepository.findByDeliveryId(id))
+                .extracting(DeliveryStateTransition::toState)
+                .containsExactly(DeliveryPhysicalState.ASSIGNED, DeliveryPhysicalState.STARTED,
+                        DeliveryPhysicalState.ARRIVED);
+    }
+
+    @Test
+    void completingFromDeliveringDoesNotEvaluateSafetyAgain() {
+        long providerId = 75L;
+        var delivery = seedDelivery(providerId, 100.0);
+        long id = delivery.getId();
+        lifecycle.handle(new AssignDeliveryCommand(id));
+        lifecycle.handle(new StartDeliveryCommand(id));
+        lifecycle.handle(new ArriveDeliveryCommand(id));
+        safetyDecisionRepository.save(SafetyDecision.recordWithoutPolicy(id, providerId, Instant.now()));
+        var delivering = deliveryRepository.findById(id).orElseThrow();
+        delivering.beginDelivering();
+        deliveryRepository.saveAndFlush(delivering);
+
+        var result = lifecycle.handle(new CompletePhysicalDeliveryCommand(id, 80.0));
+
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(safetyDecisionRepository.countByDeliveryId(id)).isEqualTo(1);
     }
 }
