@@ -3,7 +3,6 @@ package com.primefuel.fulltank.platform.supply.application.internal.commandservi
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
 import com.primefuel.fulltank.platform.supply.api.SupplyCatalog;
-import com.primefuel.fulltank.platform.supply.application.commandservices.SupplyReservationService;
 import com.primefuel.fulltank.platform.supply.domain.model.aggregates.SupplyReservation;
 import com.primefuel.fulltank.platform.supply.domain.model.commands.ReserveSupplyCommand;
 import com.primefuel.fulltank.platform.supply.domain.model.valueobjects.ReservationStatus;
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class SupplyReservationServiceImpl implements SupplyReservationService {
+public class SupplyReservationServiceImpl {
 
     private final SupplyCatalog supplyCatalog;
     private final SupplyReservationRepository reservationRepository;
@@ -30,8 +29,6 @@ public class SupplyReservationServiceImpl implements SupplyReservationService {
         this.lockInitializer = lockInitializer;
         this.lockRepository = lockRepository;
     }
-
-    @Override
     @Transactional
     public Result<SupplyReservation, ApplicationError> reserve(ReserveSupplyCommand command) {
         if (command.providerId() == null || command.fuelProductId() == null) {
@@ -59,14 +56,10 @@ public class SupplyReservationServiceImpl implements SupplyReservationService {
         var reservation = new SupplyReservation(command, snapshot.get().pricePerUnit());
         return Result.success(reservationRepository.save(reservation));
     }
-
-    @Override
     @Transactional
     public Result<Long, ApplicationError> release(String reference) {
         return transition(reference, SupplyReservation::release);
     }
-
-    @Override
     @Transactional
     public Result<Long, ApplicationError> reconcile(String reference) {
         return transition(reference, SupplyReservation::reconcile);

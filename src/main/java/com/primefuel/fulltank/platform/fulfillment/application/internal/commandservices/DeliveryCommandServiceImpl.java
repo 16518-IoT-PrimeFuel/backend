@@ -2,7 +2,7 @@ package com.primefuel.fulltank.platform.fulfillment.application.internal.command
 
 import com.primefuel.fulltank.platform.fulfillment.api.DeliveryIntegration;
 import com.primefuel.fulltank.platform.fulfillment.application.commandservices.DeliveryCommandService;
-import com.primefuel.fulltank.platform.fulfillment.application.commandservices.DeliveryLifecycleService;
+import com.primefuel.fulltank.platform.fulfillment.application.internal.commandservices.DeliveryLifecycleServiceImpl;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.ArriveDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.AssignDeliveryCommand;
@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * T14-B/T15-B legacy delivery adapter. It keeps the v1 (S14) contract intact — same routes, same request
  * bodies, same legacy {@code status} in responses — while routing every delivery state mutation through the
- * physical machine ({@link DeliveryLifecycleService}). Since T15-B it owns <strong>no foreign repository</strong>:
+ * physical machine ({@link DeliveryLifecycleServiceImpl}). Since T15-B it owns <strong>no foreign repository</strong>:
  * the cross-module orchestration of {@code create} and the legacy {@code complete} side effects live behind the
  * {@link DeliveryIntegration} port (implemented in {@code applicationflows}). The v1↔physical map is:
  *
@@ -45,12 +45,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class DeliveryCommandServiceImpl implements DeliveryCommandService {
 
     private final DeliveryRepository deliveryRepository;
-    private final DeliveryLifecycleService deliveryLifecycleService;
+    private final DeliveryLifecycleServiceImpl deliveryLifecycleService;
     private final FuelOrderQueryService fuelOrderQueryService;
     private final DeliveryIntegration deliveryIntegration;
 
     public DeliveryCommandServiceImpl(DeliveryRepository deliveryRepository,
-                                      DeliveryLifecycleService deliveryLifecycleService,
+                                      DeliveryLifecycleServiceImpl deliveryLifecycleService,
                                       FuelOrderQueryService fuelOrderQueryService,
                                       DeliveryIntegration deliveryIntegration) {
         this.deliveryRepository = deliveryRepository;

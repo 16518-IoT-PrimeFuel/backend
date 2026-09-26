@@ -3,7 +3,7 @@ package com.primefuel.fulltank.platform.replenishment;
 import com.primefuel.fulltank.platform.equipment.api.TankAssets;
 import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerCommandService;
 import com.primefuel.fulltank.platform.equipment.application.commandservices.TankCommandService;
-import com.primefuel.fulltank.platform.equipment.application.commandservices.TankReadingService;
+import com.primefuel.fulltank.platform.equipment.application.internal.commandservices.TankReadingServiceImpl;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterCustomerCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterTankCommand;
 import com.primefuel.fulltank.platform.inventory.application.commandservices.FuelProductCommandService;
@@ -78,7 +78,7 @@ class RefillGenerationIntegrationTest {
     private TankCommandService tankCommandService;
 
     @Autowired
-    private TankReadingService tankReadingService;
+    private TankReadingServiceImpl tankReadingService;
 
     @Autowired
     private FuelProductCommandService fuelProductCommandService;

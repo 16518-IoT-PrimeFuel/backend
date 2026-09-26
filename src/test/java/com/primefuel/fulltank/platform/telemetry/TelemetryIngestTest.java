@@ -1,11 +1,11 @@
 package com.primefuel.fulltank.platform.telemetry;
 
 import com.primefuel.fulltank.platform.equipment.devicebinding.application.commandservices.DeviceBindingCommandService;
-import com.primefuel.fulltank.platform.equipment.devicebinding.application.commandservices.DeviceCredentialService;
+import com.primefuel.fulltank.platform.equipment.devicebinding.application.internal.commandservices.DeviceCredentialServiceImpl;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.commands.BindDeviceCommand;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.commands.ProvisionDeviceCredentialCommand;
 import com.primefuel.fulltank.platform.telemetry.api.events.ValidatedTankReadingEvent;
-import com.primefuel.fulltank.platform.telemetry.application.commandservices.TelemetryIngestService;
+import com.primefuel.fulltank.platform.telemetry.application.internal.commandservices.TelemetryIngestServiceImpl;
 import com.primefuel.fulltank.platform.telemetry.domain.model.commands.IngestTelemetryCommand;
 import com.primefuel.fulltank.platform.telemetry.domain.model.valueobjects.ReadingQuality;
 import com.primefuel.fulltank.platform.telemetry.domain.repositories.TelemetryReadingRepository;
@@ -38,10 +38,10 @@ class TelemetryIngestTest {
     private static final Instant CAPTURED = Instant.parse("2026-05-01T10:00:00Z");
 
     @Autowired
-    private TelemetryIngestService ingestService;
+    private TelemetryIngestServiceImpl ingestService;
 
     @Autowired
-    private DeviceCredentialService credentialService;
+    private DeviceCredentialServiceImpl credentialService;
 
     @Autowired
     private DeviceBindingCommandService bindingService;

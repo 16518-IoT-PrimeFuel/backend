@@ -1,7 +1,7 @@
 package com.primefuel.fulltank.platform.telemetry.interfaces.rest;
 
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
-import com.primefuel.fulltank.platform.telemetry.application.commandservices.TelemetryIngestService;
+import com.primefuel.fulltank.platform.telemetry.application.internal.commandservices.TelemetryIngestServiceImpl;
 import com.primefuel.fulltank.platform.telemetry.domain.model.commands.IngestTelemetryCommand;
 import com.primefuel.fulltank.platform.telemetry.interfaces.rest.resources.IngestReadingResource;
 import com.primefuel.fulltank.platform.telemetry.interfaces.rest.transform.ReadingAckFromResultAssembler;
@@ -24,9 +24,9 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Telemetry", description = "Device telemetry ingestion (v2, machine authenticated)")
 public class TelemetryController {
 
-    private final TelemetryIngestService ingestService;
+    private final TelemetryIngestServiceImpl ingestService;
 
-    public TelemetryController(TelemetryIngestService ingestService) {
+    public TelemetryController(TelemetryIngestServiceImpl ingestService) {
         this.ingestService = ingestService;
     }
 

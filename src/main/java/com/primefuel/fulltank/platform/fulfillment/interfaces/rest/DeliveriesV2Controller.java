@@ -1,6 +1,6 @@
 package com.primefuel.fulltank.platform.fulfillment.interfaces.rest;
 
-import com.primefuel.fulltank.platform.fulfillment.application.commandservices.DeliveryLifecycleService;
+import com.primefuel.fulltank.platform.fulfillment.application.internal.commandservices.DeliveryLifecycleServiceImpl;
 import com.primefuel.fulltank.platform.fulfillment.application.queryservices.DeliveryQueryService;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.ArriveDeliveryCommand;
@@ -44,12 +44,12 @@ import java.util.function.Supplier;
 @Tag(name = "Delivery lifecycle", description = "Physical delivery state machine (v2)")
 public class DeliveriesV2Controller {
 
-    private final DeliveryLifecycleService deliveryLifecycleService;
+    private final DeliveryLifecycleServiceImpl deliveryLifecycleService;
     private final DeliveryQueryService deliveryQueryService;
     private final DeliveryStateTransitionRepository transitionRepository;
     private final TenantAccess tenantAccess;
 
-    public DeliveriesV2Controller(DeliveryLifecycleService deliveryLifecycleService,
+    public DeliveriesV2Controller(DeliveryLifecycleServiceImpl deliveryLifecycleService,
                                   DeliveryQueryService deliveryQueryService,
                                   DeliveryStateTransitionRepository transitionRepository,
                                   TenantAccess tenantAccess) {

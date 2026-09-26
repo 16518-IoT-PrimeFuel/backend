@@ -1,6 +1,6 @@
 package com.primefuel.fulltank.platform.equipment;
 
-import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerBackfillService;
+import com.primefuel.fulltank.platform.equipment.application.internal.commandservices.CustomerBackfillServiceImpl;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.CustomerAccountRepository;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.QuarantinedCompanyMappingRepository;
 import com.primefuel.fulltank.platform.iam.application.commandservices.BuyerCompanyCommandService;
@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CustomerBackfillTest {
 
     @Autowired
-    private CustomerBackfillService customerBackfillService;
+    private CustomerBackfillServiceImpl customerBackfillService;
 
     @Autowired
     private OrganizationCommandService organizationCommandService;

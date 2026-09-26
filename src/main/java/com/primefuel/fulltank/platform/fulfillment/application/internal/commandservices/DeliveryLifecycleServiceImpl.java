@@ -5,7 +5,6 @@ import com.primefuel.fulltank.platform.fulfillment.api.events.DeliveryAssigned;
 import com.primefuel.fulltank.platform.fulfillment.api.events.DeliveryCompleted;
 import com.primefuel.fulltank.platform.fulfillment.api.events.DeliveryFailed;
 import com.primefuel.fulltank.platform.fulfillment.api.events.DeliveryStarted;
-import com.primefuel.fulltank.platform.fulfillment.application.commandservices.DeliveryLifecycleService;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.ArriveDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.AssignDeliveryCommand;
@@ -38,7 +37,7 @@ import java.util.function.BiFunction;
  * driven by) the physical state.
  */
 @Service
-public class DeliveryLifecycleServiceImpl implements DeliveryLifecycleService {
+public class DeliveryLifecycleServiceImpl {
 
     private static final String AGGREGATE_TYPE = "Delivery";
 
@@ -56,8 +55,6 @@ public class DeliveryLifecycleServiceImpl implements DeliveryLifecycleService {
         this.fuelOrderQueryService = fuelOrderQueryService;
         this.publicationRegistry = publicationRegistry;
     }
-
-    @Override
     @Transactional
     public Result<Delivery, ApplicationError> handle(AssignDeliveryCommand command) {
         var existing = deliveryRepository.findById(command.deliveryId());
@@ -79,8 +76,6 @@ public class DeliveryLifecycleServiceImpl implements DeliveryLifecycleService {
                 (saved, occurredAt) -> new DeliveryAssigned(saved.getId(), saved.getOrderId(),
                         saved.getProviderId(), saved.currentPhysicalState().name(), occurredAt).toPayloadJson());
     }
-
-    @Override
     @Transactional
     public Result<Delivery, ApplicationError> handle(StartDeliveryCommand command) {
         var existing = deliveryRepository.findById(command.deliveryId());
@@ -98,8 +93,6 @@ public class DeliveryLifecycleServiceImpl implements DeliveryLifecycleService {
                 (saved, occurredAt) -> new DeliveryStarted(saved.getId(), saved.getOrderId(),
                         saved.getProviderId(), from.name(), occurredAt).toPayloadJson());
     }
-
-    @Override
     @Transactional
     public Result<Delivery, ApplicationError> handle(ArriveDeliveryCommand command) {
         var existing = deliveryRepository.findById(command.deliveryId());
@@ -117,8 +110,6 @@ public class DeliveryLifecycleServiceImpl implements DeliveryLifecycleService {
                 (saved, occurredAt) -> new DeliveryArrived(saved.getId(), saved.getOrderId(),
                         saved.getProviderId(), from.name(), occurredAt).toPayloadJson());
     }
-
-    @Override
     @Transactional
     public Result<Delivery, ApplicationError> handle(CompletePhysicalDeliveryCommand command) {
         var existing = deliveryRepository.findById(command.deliveryId());
@@ -169,14 +160,10 @@ public class DeliveryLifecycleServiceImpl implements DeliveryLifecycleService {
             return concurrent();
         }
     }
-
-    @Override
     @Transactional
     public Result<Delivery, ApplicationError> handle(FailDeliveryCommand command) {
         return terminate(command.deliveryId(), DeliveryPhysicalState.FAILED, command.reason());
     }
-
-    @Override
     @Transactional
     public Result<Delivery, ApplicationError> handle(CancelDeliveryCommand command) {
         return terminate(command.deliveryId(), DeliveryPhysicalState.CANCELLED, command.reason());

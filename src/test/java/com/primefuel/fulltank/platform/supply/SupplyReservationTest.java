@@ -3,7 +3,7 @@ package com.primefuel.fulltank.platform.supply;
 import com.primefuel.fulltank.platform.inventory.application.commandservices.FuelProductCommandService;
 import com.primefuel.fulltank.platform.inventory.domain.model.commands.CreateFuelProductCommand;
 import com.primefuel.fulltank.platform.inventory.domain.model.valueobjects.FuelType;
-import com.primefuel.fulltank.platform.supply.application.commandservices.SupplyReservationService;
+import com.primefuel.fulltank.platform.supply.application.internal.commandservices.SupplyReservationServiceImpl;
 import com.primefuel.fulltank.platform.supply.domain.model.commands.ReserveSupplyCommand;
 import com.primefuel.fulltank.platform.supply.domain.repositories.SupplyReservationRepository;
 import com.primefuel.fulltank.platform.supply.domain.model.valueobjects.ReservationStatus;
@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SupplyReservationTest {
 
     @Autowired
-    private SupplyReservationService reservationService;
+    private SupplyReservationServiceImpl reservationService;
 
     @Autowired
     private SupplyReservationRepository reservationRepository;

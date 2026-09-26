@@ -6,7 +6,6 @@ import com.primefuel.fulltank.platform.shared.application.result.Result;
 import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Unit;
 import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Volume;
 import com.primefuel.fulltank.platform.telemetry.api.events.ValidatedTankReadingEvent;
-import com.primefuel.fulltank.platform.telemetry.application.commandservices.TelemetryIngestService;
 import com.primefuel.fulltank.platform.telemetry.domain.model.aggregates.TelemetryReading;
 import com.primefuel.fulltank.platform.telemetry.domain.model.commands.IngestTelemetryCommand;
 import com.primefuel.fulltank.platform.telemetry.domain.model.valueobjects.ReadingQuality;
@@ -24,7 +23,8 @@ import java.time.Instant;
  * policy** (no thresholds, no orders) — that is S09's job.
  */
 @Service
-public class TelemetryIngestServiceImpl implements TelemetryIngestService {
+public class TelemetryIngestServiceImpl {
+    public record IngestResult(Long readingId, String quality, Long tankId, boolean duplicate) { }
 
     public static final int SUPPORTED_SCHEMA_VERSION = 1;
 
@@ -39,8 +39,6 @@ public class TelemetryIngestServiceImpl implements TelemetryIngestService {
         this.deviceAuthentication = deviceAuthentication;
         this.events = events;
     }
-
-    @Override
     @Transactional
     public Result<IngestResult, ApplicationError> handle(IngestTelemetryCommand command) {
         if (command.schemaVersion() == null || command.schemaVersion() != SUPPORTED_SCHEMA_VERSION) {

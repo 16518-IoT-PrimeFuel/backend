@@ -1,7 +1,7 @@
 package com.primefuel.fulltank.platform.equipment.infrastructure.services;
 
 import com.primefuel.fulltank.platform.equipment.api.TankAssets;
-import com.primefuel.fulltank.platform.equipment.application.commandservices.TankReadingService;
+import com.primefuel.fulltank.platform.equipment.application.internal.commandservices.TankReadingServiceImpl;
 import com.primefuel.fulltank.platform.equipment.domain.model.aggregates.Tank;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.TankRepository;
 import org.springframework.stereotype.Component;
@@ -13,9 +13,9 @@ import java.util.Optional;
 public class TankAssetsImpl implements TankAssets {
 
     private final TankRepository tankRepository;
-    private final TankReadingService tankReadingService;
+    private final TankReadingServiceImpl tankReadingService;
 
-    public TankAssetsImpl(TankRepository tankRepository, TankReadingService tankReadingService) {
+    public TankAssetsImpl(TankRepository tankRepository, TankReadingServiceImpl tankReadingService) {
         this.tankRepository = tankRepository;
         this.tankReadingService = tankReadingService;
     }

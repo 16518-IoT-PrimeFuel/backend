@@ -1,6 +1,6 @@
 package com.primefuel.fulltank.platform.fulfillment;
 
-import com.primefuel.fulltank.platform.fulfillment.application.commandservices.DeliveryLifecycleService;
+import com.primefuel.fulltank.platform.fulfillment.application.internal.commandservices.DeliveryLifecycleServiceImpl;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.ArriveDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.AssignDeliveryCommand;
@@ -46,7 +46,7 @@ class DeliveryLifecycleTest {
     private static final AtomicLong ORDERS = new AtomicLong(7000);
 
     @Autowired
-    private DeliveryLifecycleService lifecycle;
+    private DeliveryLifecycleServiceImpl lifecycle;
 
     @Autowired
     private DeliveryRepository deliveryRepository;

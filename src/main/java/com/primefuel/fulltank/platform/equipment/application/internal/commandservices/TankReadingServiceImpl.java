@@ -1,7 +1,6 @@
 package com.primefuel.fulltank.platform.equipment.application.internal.commandservices;
 
 import com.primefuel.fulltank.platform.equipment.api.events.TankLevelManuallyUpdatedEvent;
-import com.primefuel.fulltank.platform.equipment.application.commandservices.TankReadingService;
 import com.primefuel.fulltank.platform.equipment.domain.model.aggregates.Tank;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.TankRepository;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
@@ -15,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 
 @Service
-public class TankReadingServiceImpl implements TankReadingService {
+public class TankReadingServiceImpl {
 
     private final TankRepository tankRepository;
     private final ApplicationEventPublisher events;
@@ -24,8 +23,6 @@ public class TankReadingServiceImpl implements TankReadingService {
         this.tankRepository = tankRepository;
         this.events = events;
     }
-
-    @Override
     @Transactional
     public Result<Tank, ApplicationError> applyValidatedReading(Long tankId, Double level, String unit,
                                                                Instant observedAt) {
@@ -46,8 +43,6 @@ public class TankReadingServiceImpl implements TankReadingService {
         }
         return Result.success(tankRepository.save(tank));
     }
-
-    @Override
     @Transactional
     public Result<Tank, ApplicationError> applyManualLevel(Long tankId, Double level, String unit) {
         var existing = tankRepository.findById(tankId);

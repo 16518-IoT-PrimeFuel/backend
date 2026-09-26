@@ -1,7 +1,6 @@
 package com.primefuel.fulltank.platform.equipment.application.internal.commandservices;
 
 import com.primefuel.fulltank.platform.equipment.application.commandservices.TankBackfillReport;
-import com.primefuel.fulltank.platform.equipment.application.commandservices.TankBackfillService;
 import com.primefuel.fulltank.platform.equipment.application.commandservices.TankCommandService;
 import com.primefuel.fulltank.platform.equipment.api.CustomerDirectory;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterTankCommand;
@@ -17,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
  * left untouched and reported.
  */
 @Service
-public class TankLegacyBackfillServiceImpl implements TankBackfillService {
+public class TankLegacyBackfillServiceImpl {
 
     private final EquipmentRepository equipmentRepository;
     private final TankRepository tankRepository;
@@ -33,8 +32,6 @@ public class TankLegacyBackfillServiceImpl implements TankBackfillService {
         this.customerDirectory = customerDirectory;
         this.tankCommandService = tankCommandService;
     }
-
-    @Override
     @Transactional
     public TankBackfillReport run() {
         var equipmentItems = equipmentRepository.findAll();

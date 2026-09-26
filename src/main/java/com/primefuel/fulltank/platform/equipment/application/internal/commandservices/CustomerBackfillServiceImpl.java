@@ -1,7 +1,6 @@
 package com.primefuel.fulltank.platform.equipment.application.internal.commandservices;
 
 import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerBackfillReport;
-import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerBackfillService;
 import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerCommandService;
 import com.primefuel.fulltank.platform.equipment.domain.model.aggregates.QuarantinedCompanyMapping;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterCustomerCommand;
@@ -16,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
  * not resolve to exactly one organization are never inferred: they are quarantined for manual review.
  */
 @Service
-public class CustomerBackfillServiceImpl implements CustomerBackfillService {
+public class CustomerBackfillServiceImpl {
 
     private static final String NO_ORGANIZATION = "NO_ORGANIZATION_FOR_RUC";
     private static final String REGISTRATION_CONFLICT = "REGISTRATION_CONFLICT";
@@ -35,8 +34,6 @@ public class CustomerBackfillServiceImpl implements CustomerBackfillService {
         this.quarantineRepository = quarantineRepository;
         this.customerCommandService = customerCommandService;
     }
-
-    @Override
     @Transactional
     public CustomerBackfillReport run() {
         var companies = legacyCompanyDirectory.findAllBuyerCompanies();

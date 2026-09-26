@@ -2,7 +2,7 @@ package com.primefuel.fulltank.platform.equipment;
 
 import com.primefuel.fulltank.platform.equipment.api.DeviceAuthentication;
 import com.primefuel.fulltank.platform.equipment.devicebinding.application.commandservices.DeviceBindingCommandService;
-import com.primefuel.fulltank.platform.equipment.devicebinding.application.commandservices.DeviceCredentialService;
+import com.primefuel.fulltank.platform.equipment.devicebinding.application.internal.commandservices.DeviceCredentialServiceImpl;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.commands.BindDeviceCommand;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.commands.MoveDeviceCommand;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.commands.ProvisionDeviceCredentialCommand;
@@ -35,7 +35,7 @@ class DeviceProvisioningTest {
     private static final Instant T1 = Instant.parse("2026-02-01T00:00:00Z");
 
     @Autowired
-    private DeviceCredentialService credentialService;
+    private DeviceCredentialServiceImpl credentialService;
 
     @Autowired
     private DeviceBindingCommandService bindingService;

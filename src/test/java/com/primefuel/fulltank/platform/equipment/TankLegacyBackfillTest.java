@@ -2,8 +2,8 @@ package com.primefuel.fulltank.platform.equipment;
 
 import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerCommandService;
 import com.primefuel.fulltank.platform.equipment.application.commandservices.EquipmentCommandService;
-import com.primefuel.fulltank.platform.equipment.application.commandservices.TankBackfillService;
-import com.primefuel.fulltank.platform.equipment.application.commandservices.TankReadingService;
+import com.primefuel.fulltank.platform.equipment.application.internal.commandservices.TankLegacyBackfillServiceImpl;
+import com.primefuel.fulltank.platform.equipment.application.internal.commandservices.TankReadingServiceImpl;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.CreateEquipmentCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterCustomerCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.UpdateEquipmentCommand;
@@ -33,10 +33,10 @@ class TankLegacyBackfillTest {
     private CustomerCommandService customerCommandService;
 
     @Autowired
-    private TankBackfillService tankBackfillService;
+    private TankLegacyBackfillServiceImpl tankBackfillService;
 
     @Autowired
-    private TankReadingService tankReadingService;
+    private TankReadingServiceImpl tankReadingService;
 
     @Autowired
     private EquipmentCommandService equipmentCommandService;

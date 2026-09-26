@@ -23,7 +23,6 @@ import com.primefuel.fulltank.platform.iam.domain.repositories.RoleRepository;
 import com.primefuel.fulltank.platform.iam.domain.repositories.UserRepository;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +55,7 @@ public class UserCommandServiceImpl implements UserCommandService {
     }
 
     @Override
-    public Result<ImmutablePair<User, String>, ApplicationError> handle(SignInCommand command) {
+    public Result<UserCommandService.SignInResult, ApplicationError> handle(SignInCommand command) {
         var user = userRepository.findByUsername(command.username());
         if (user.isEmpty()) {
             return Result.failure(ApplicationError.notFound("User", command.username()));
@@ -65,7 +64,7 @@ public class UserCommandServiceImpl implements UserCommandService {
             return Result.failure(ApplicationError.validationError("credentials", "Invalid username or password"));
         }
         var token = tokenService.generateToken(user.get().getUsername());
-        return Result.success(ImmutablePair.of(user.get(), token));
+        return Result.success(new UserCommandService.SignInResult(user.get(), token));
     }
 
     @Override
@@ -79,6 +78,7 @@ public class UserCommandServiceImpl implements UserCommandService {
         var validAccount = switch (roleName) {
             case ROLE_BUYER -> command.buyerCompany() != null && command.providerCompany() == null;
             case ROLE_PROVIDER -> command.providerCompany() != null && command.buyerCompany() == null;
+            case ROLE_ADMIN -> false;
         };
         if (!validAccount) {
             return Result.failure(ApplicationError.validationError(

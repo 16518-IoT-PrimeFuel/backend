@@ -3,18 +3,18 @@ package com.primefuel.fulltank.platform.supply.infrastructure.services;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
 import com.primefuel.fulltank.platform.supply.api.SupplyReservations;
-import com.primefuel.fulltank.platform.supply.application.commandservices.SupplyReservationService;
+import com.primefuel.fulltank.platform.supply.application.internal.commandservices.SupplyReservationServiceImpl;
 import com.primefuel.fulltank.platform.supply.domain.model.aggregates.SupplyReservation;
 import com.primefuel.fulltank.platform.supply.domain.model.commands.ReserveSupplyCommand;
 import org.springframework.stereotype.Component;
 
-/** Adapter over {@link SupplyReservationService} exposing the reservation write surface as {@code supply.api}. */
+/** Adapter over {@link SupplyReservationServiceImpl} exposing the reservation write surface as {@code supply.api}. */
 @Component("supplyReservations")
 public class SupplyReservationsImpl implements SupplyReservations {
 
-    private final SupplyReservationService reservationService;
+    private final SupplyReservationServiceImpl reservationService;
 
-    public SupplyReservationsImpl(SupplyReservationService reservationService) {
+    public SupplyReservationsImpl(SupplyReservationServiceImpl reservationService) {
         this.reservationService = reservationService;
     }
 

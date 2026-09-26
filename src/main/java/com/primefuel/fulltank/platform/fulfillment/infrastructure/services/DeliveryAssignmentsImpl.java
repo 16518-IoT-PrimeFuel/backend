@@ -1,7 +1,7 @@
 package com.primefuel.fulltank.platform.fulfillment.infrastructure.services;
 
 import com.primefuel.fulltank.platform.fulfillment.api.DeliveryAssignments;
-import com.primefuel.fulltank.platform.fulfillment.application.commandservices.DeliveryLifecycleService;
+import com.primefuel.fulltank.platform.fulfillment.application.internal.commandservices.DeliveryLifecycleServiceImpl;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.AssignDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CreateDeliveryCommand;
@@ -22,10 +22,10 @@ import java.util.Optional;
 public class DeliveryAssignmentsImpl implements DeliveryAssignments {
 
     private final DeliveryRepository deliveryRepository;
-    private final DeliveryLifecycleService deliveryLifecycleService;
+    private final DeliveryLifecycleServiceImpl deliveryLifecycleService;
 
     public DeliveryAssignmentsImpl(DeliveryRepository deliveryRepository,
-                                   DeliveryLifecycleService deliveryLifecycleService) {
+                                   DeliveryLifecycleServiceImpl deliveryLifecycleService) {
         this.deliveryRepository = deliveryRepository;
         this.deliveryLifecycleService = deliveryLifecycleService;
     }

@@ -1,6 +1,5 @@
 package com.primefuel.fulltank.platform.equipment.devicebinding.application.internal.commandservices;
 
-import com.primefuel.fulltank.platform.equipment.devicebinding.application.commandservices.DeviceCredentialService;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.aggregates.DeviceCredential;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.commands.ProvisionDeviceCredentialCommand;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.commands.RevokeDeviceCredentialCommand;
@@ -15,15 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 
 @Service
-public class DeviceCredentialServiceImpl implements DeviceCredentialService {
+public class DeviceCredentialServiceImpl {
+    public record ProvisionedCredential(Long credentialId, String deviceId, String channel, int tokenVersion, String rawToken) { }
 
     private final DeviceCredentialRepository repository;
 
     public DeviceCredentialServiceImpl(DeviceCredentialRepository repository) {
         this.repository = repository;
     }
-
-    @Override
     @Transactional
     public Result<ProvisionedCredential, ApplicationError> handle(ProvisionDeviceCredentialCommand command) {
         if (repository.findActiveByDeviceAndChannel(command.deviceId(), command.channel()).isPresent()) {
@@ -32,8 +30,6 @@ public class DeviceCredentialServiceImpl implements DeviceCredentialService {
         }
         return issue(command.deviceId(), command.channel());
     }
-
-    @Override
     @Transactional
     public Result<ProvisionedCredential, ApplicationError> handle(RotateDeviceCredentialCommand command) {
         var now = Instant.now();
@@ -44,8 +40,6 @@ public class DeviceCredentialServiceImpl implements DeviceCredentialService {
                 });
         return issue(command.deviceId(), command.channel());
     }
-
-    @Override
     @Transactional
     public Result<Long, ApplicationError> handle(RevokeDeviceCredentialCommand command) {
         var active = repository.findActiveByDeviceAndChannel(command.deviceId(), command.channel());

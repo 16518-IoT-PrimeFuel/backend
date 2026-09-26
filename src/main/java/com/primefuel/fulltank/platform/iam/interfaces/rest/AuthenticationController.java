@@ -89,9 +89,9 @@ public class AuthenticationController {
         var result = userCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
-                pair -> AuthenticatedUserResourceFromEntityAssembler.toResourceFromEntity(
-                        pair.getLeft(), pair.getRight(),
-                        membershipQueryService.handle(new GetMembershipsByUserIdQuery(pair.getLeft().getId()))),
+                signIn -> AuthenticatedUserResourceFromEntityAssembler.toResourceFromEntity(
+                        signIn.user(), signIn.token(),
+                        membershipQueryService.handle(new GetMembershipsByUserIdQuery(signIn.user().getId()))),
                 HttpStatus.OK);
     }
 

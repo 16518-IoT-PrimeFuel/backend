@@ -1,7 +1,7 @@
 package com.primefuel.fulltank.platform.equipment.application.internal.commandservices;
 
 import com.primefuel.fulltank.platform.equipment.application.commandservices.EquipmentCommandService;
-import com.primefuel.fulltank.platform.equipment.application.commandservices.TankReadingService;
+import com.primefuel.fulltank.platform.equipment.application.internal.commandservices.TankReadingServiceImpl;
 import com.primefuel.fulltank.platform.equipment.domain.model.aggregates.Equipment;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.CreateEquipmentCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.UpdateEquipmentCommand;
@@ -17,11 +17,11 @@ public class EquipmentCommandServiceImpl implements EquipmentCommandService {
 
     private final EquipmentRepository equipmentRepository;
     private final TankRepository tankRepository;
-    private final TankReadingService tankReadingService;
+    private final TankReadingServiceImpl tankReadingService;
 
     public EquipmentCommandServiceImpl(EquipmentRepository equipmentRepository,
                                        TankRepository tankRepository,
-                                       TankReadingService tankReadingService) {
+                                       TankReadingServiceImpl tankReadingService) {
         this.equipmentRepository = equipmentRepository;
         this.tankRepository = tankRepository;
         this.tankReadingService = tankReadingService;
