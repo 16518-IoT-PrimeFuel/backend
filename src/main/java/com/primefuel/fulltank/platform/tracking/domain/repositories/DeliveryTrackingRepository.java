@@ -10,4 +10,6 @@ public interface DeliveryTrackingRepository {
     Optional<DeliveryTracking> findByDeliveryId(Long deliveryId);
 
     DeliveryTracking save(DeliveryTracking tracking);
+
+    long deleteByDeliveryId(Long deliveryId);
 }

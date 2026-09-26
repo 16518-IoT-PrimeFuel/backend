@@ -20,6 +20,8 @@ public interface TransportEvidenceSamplePersistenceRepository
 
     long countByDeliveryId(Long deliveryId);
 
+    long deleteByDeliveryId(Long deliveryId);
+
     Optional<TransportEvidenceSamplePersistenceEntity> findByDeliveryIdAndClientEventId(Long deliveryId,
                                                                                       String clientEventId);
 }

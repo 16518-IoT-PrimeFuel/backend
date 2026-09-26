@@ -26,6 +26,8 @@ public interface TransportEvidenceSampleRepository {
 
     long countByDeliveryId(Long deliveryId);
 
+    long deleteByDeliveryId(Long deliveryId);
+
     /** The sample a client already sent under {@code clientEventId} for this delivery, if any. */
     Optional<TransportEvidenceSample> findByDeliveryIdAndClientEventId(Long deliveryId, String clientEventId);
 }

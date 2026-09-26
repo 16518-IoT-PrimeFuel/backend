@@ -30,4 +30,9 @@ public class DeliveryTrackingRepositoryImpl implements DeliveryTrackingRepositor
         return DeliveryTrackingPersistenceAssembler.toDomain(
                 persistenceRepository.saveAndFlush(DeliveryTrackingPersistenceAssembler.toPersistence(tracking)));
     }
+
+    @Override
+    public long deleteByDeliveryId(Long deliveryId) {
+        return persistenceRepository.deleteByDeliveryId(deliveryId);
+    }
 }

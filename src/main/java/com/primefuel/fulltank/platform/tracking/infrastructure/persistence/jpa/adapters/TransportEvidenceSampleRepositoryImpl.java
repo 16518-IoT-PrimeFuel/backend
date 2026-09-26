@@ -45,6 +45,11 @@ public class TransportEvidenceSampleRepositoryImpl implements TransportEvidenceS
     }
 
     @Override
+    public long deleteByDeliveryId(Long deliveryId) {
+        return persistenceRepository.deleteByDeliveryId(deliveryId);
+    }
+
+    @Override
     public Optional<TransportEvidenceSample> findByDeliveryIdAndClientEventId(Long deliveryId, String clientEventId) {
         return persistenceRepository.findByDeliveryIdAndClientEventId(deliveryId, clientEventId)
                 .map(TransportEvidenceSamplePersistenceAssembler::toDomain);

@@ -154,28 +154,24 @@ nadie asuma una política de retención que no existe: a día de hoy **no hay ve
 datos de transporte. (Qué se conserva como evidencia legal vs. qué es dato personal queda, por decisión,
 sin recorte temporal.)
 
-### U18 — borrado/export **reservado, no operativo**
+### U18 — borrado/export administrativo (implementado en T2)
 
 Se define la **forma y ruta** del contrato de borrado/export pero **no se expone activo**:
 
 - `DELETE /api/v2/admin/deliveries/{deliveryId}/transport-evidence`
 - `GET    /api/v2/admin/deliveries/{deliveryId}/transport-evidence/export`
 
-`ReservedTransportEvidenceAdminController` responde **`501 Not Implemented`** con cuerpo
-`ErrorResource{code:"NOT_IMPLEMENTED", message, details}` y **no toca ni expone evidencia**. Es deliberado
-que **no** sea un `404` silencioso: el contrato **existe**, sólo que la operación aún no está habilitada.
+`TransportEvidenceAdminController` requiere `ROLE_ADMIN`. `GET /export` devuelve `{deliveryId, samples}` con
+los campos y el orden del endpoint público de muestras. `DELETE` devuelve `204` (también si ya no quedan
+muestras) y borra solo `transport_evidence_samples` y `delivery_trackings` dentro de una transacción. Una
+entrega inexistente devuelve `404`. Las tablas `delivery_state_transitions`, `safety_decisions` y cualquier
+journal no se modifican.
 
-**Por qué reservado:** la autorización real de estas operaciones requiere el rol de plataforma
-**`ROLE_ADMIN`**, que **no existe** todavía (`Roles` sólo tiene `ROLE_BUYER`/`ROLE_PROVIDER`; ver T22-A/T23-A)
-y cuya creación es **T24-PRE-ADMIN**, aún no construida. Mismo tratamiento que T16-A le dio a
-`ValveStateObserved`: **se reserva el contrato, no se implementa la autorización real** hasta que el rol
-exista.
-
-> Con esto, la DoD de S16 ("reglas comunes + U10/U18 registradas") queda **completa**.
+La asignación del primer administrador y la ruta de promoción están en `T24-PRE-ADMIN`.
 
 ---
 
-## 5. Tests escritos (**como archivos, sin ejecutar**)
+## 5. Tests
 
 - `tracking/DeliveryTrackingQueryControllerTest` (Spring + H2, MockMvc):
   1. **latest por driver asignado y por proveedor dueño** — ambos `200` y ven la posición;
@@ -184,8 +180,8 @@ exista.
      es `10:10`;
   3. **tenant ajeno rechazado** — `403` en latest y en samples;
   4. **delivery sin tracking** — `404`;
-  5. **contrato reservado** — `DELETE` y `GET /export` responden `501` con `code=NOT_IMPLEMENTED` y **sin**
-     datos de evidencia;
+  5. **retención admin** — no-admin recibe `403`; admin exporta muestras y borra proyección/muestras sin
+     alterar transiciones; repetir el borrado devuelve `204`;
   6. **estado de carga visible** en el latest (`loaded`, `lastLoadMilestone`, `lastLoadVolume`).
 - `tracking/TrackingProjectionRebuildTest` (Spring + H2, seam directa):
   1. **rebuild determinístico con jitter** — tras ingerir `LOADED`, posiciones desordenadas y `UNLOADED`, el
@@ -223,7 +219,6 @@ Ningún test fue ejecutado en esta máquina (ver §7).
 
 ## 7. Estado del build
 
-**Build no verificado en esta máquina — pendiente de verificación por el usuario.**
 
 Regla dura aplicada: sólo se escribieron archivos de código y tests (como archivos) más este ledger. **No**
 se corrió `./mvnw test`, **no** se compiló, **no** se levantó la app, **no** se hizo commit. **No** hay

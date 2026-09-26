@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
@@ -62,6 +63,9 @@ class DeliveryTrackingQueryControllerTest {
     @Autowired
     private TransportEvidenceRecorder recorder;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private long driver(long providerId, long userId) {
         var result = fleetRegistry.registerDriver(new RegisterDriverCommand(providerId, userId, "Query",
                 "Driver", "L-TRK-Q-" + SEQUENCE.incrementAndGet(), "999000888",
@@ -78,8 +82,12 @@ class DeliveryTrackingQueryControllerTest {
     }
 
     private static RequestPostProcessor authFor(long userId, Long providerId) {
+        return authForRole(userId, providerId, "ROLE_PROVIDER");
+    }
+
+    private static RequestPostProcessor authForRole(long userId, Long providerId, String role) {
         var principal = new UserDetailsImpl(userId, "user-" + userId, "encoded", null, providerId,
-                List.of(new SimpleGrantedAuthority("ROLE_PROVIDER")));
+                List.of(new SimpleGrantedAuthority(role)));
         return authentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
     }
 
@@ -180,23 +188,40 @@ class DeliveryTrackingQueryControllerTest {
     }
 
     @Test
-    void theReservedRetentionContractAnswersNotAvailableWithoutExposingData() throws Exception {
+    void adminCanExportAndDeleteOnlyGpsEvidence() throws Exception {
         long providerId = 15L;
         long driverId = driver(providerId, 115L);
         long deliveryId = delivery(providerId, driverId);
         position(deliveryId, providerId, driverId, 42.0, "2026-09-01T10:00:00Z");
 
-        mockMvc.perform(delete("/api/v2/admin/deliveries/{id}/transport-evidence", deliveryId)
-                        .with(authFor(115L, providerId)))
-                .andExpect(status().isNotImplemented())
-                .andExpect(jsonPath("$.code").value("NOT_IMPLEMENTED"))
-                .andExpect(jsonPath("$.lastLatitude").doesNotExist());
-
+        var admin = authForRole(900L, null, "ROLE_ADMIN");
+        mockMvc.perform(get("/api/v2/admin/deliveries/{id}/transport-evidence/export", -1L).with(admin))
+                .andExpect(status().isNotFound());
         mockMvc.perform(get("/api/v2/admin/deliveries/{id}/transport-evidence/export", deliveryId)
                         .with(authFor(115L, providerId)))
-                .andExpect(status().isNotImplemented())
-                .andExpect(jsonPath("$.code").value("NOT_IMPLEMENTED"))
-                .andExpect(jsonPath("$.lastLatitude").doesNotExist());
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v2/admin/deliveries/{id}/transport-evidence/export", deliveryId)
+                        .with(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deliveryId").value(deliveryId))
+                .andExpect(jsonPath("$.samples.length()").value(1))
+                .andExpect(jsonPath("$.samples[0].latitude").value(42.0));
+
+        long transitionCount = jdbcTemplate.queryForObject(
+                "select count(*) from delivery_state_transitions where delivery_id = ?", Long.class, deliveryId);
+        mockMvc.perform(delete("/api/v2/admin/deliveries/{id}/transport-evidence", deliveryId).with(admin))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/v2/admin/deliveries/{id}/transport-evidence", deliveryId).with(admin))
+                .andExpect(status().isNoContent());
+        assertThat(jdbcTemplate.queryForObject(
+                "select count(*) from transport_evidence_samples where delivery_id = ?", Long.class, deliveryId))
+                .isZero();
+        assertThat(jdbcTemplate.queryForObject(
+                "select count(*) from delivery_trackings where delivery_id = ?", Long.class, deliveryId))
+                .isZero();
+        assertThat(jdbcTemplate.queryForObject(
+                "select count(*) from delivery_state_transitions where delivery_id = ?", Long.class, deliveryId))
+                .isEqualTo(transitionCount);
     }
 
     @Test

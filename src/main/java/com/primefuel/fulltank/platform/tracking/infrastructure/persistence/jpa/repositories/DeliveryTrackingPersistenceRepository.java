@@ -10,4 +10,6 @@ public interface DeliveryTrackingPersistenceRepository
 
     /** Backed by {@code uk_delivery_tracking_delivery}, so at most one row can match. */
     Optional<DeliveryTrackingPersistenceEntity> findByDeliveryId(Long deliveryId);
+
+    long deleteByDeliveryId(Long deliveryId);
 }
