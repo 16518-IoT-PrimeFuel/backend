@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.equipment.infrastructure.persistence.jpa.adapters;
 
 import com.primefuel.fulltank.platform.equipment.application.ports.TankStore;
+import com.primefuel.fulltank.platform.equipment.application.ports.TankData;
 import com.primefuel.fulltank.platform.equipment.infrastructure.persistence.jpa.entities.TankPersistenceEntity;
 import com.primefuel.fulltank.platform.equipment.infrastructure.persistence.jpa.repositories.TankJpaRepository;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,16 @@ public class TankStoreAdapter implements TankStore {
     }
 
     @Override
+    public java.util.List<TankData> findBySiteId(Long siteId) {
+        return repository.findByCustomerSiteIdOrderByIdAsc(siteId).stream().map(this::toData).toList();
+    }
+
+    @Override
+    public java.util.Optional<TankData> findById(Long tankId) {
+        return repository.findById(tankId).map(this::toData);
+    }
+
+    @Override
     public boolean belongsToSite(Long tankId, Long siteId) {
         return repository.existsByIdAndCustomerSiteId(tankId, siteId);
     }
@@ -41,5 +52,10 @@ public class TankStoreAdapter implements TankStore {
     @Override
     public boolean applyValidatedReading(Long tankId, double level, Instant capturedAt) {
         return repository.applyValidatedReading(tankId, level, capturedAt) > 0;
+    }
+
+    private TankData toData(TankPersistenceEntity tank) {
+        return new TankData(tank.getId(), tank.getCustomerSiteId(), tank.getName(), tank.getFuelType(),
+                tank.getCapacity(), tank.getUnit(), tank.getCurrentLevel(), tank.getStatus(), tank.getLastReadingAt());
     }
 }

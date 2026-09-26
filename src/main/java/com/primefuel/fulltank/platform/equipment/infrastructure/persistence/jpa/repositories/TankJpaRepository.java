@@ -7,11 +7,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface TankJpaRepository extends JpaRepository<TankPersistenceEntity, Long> {
     boolean existsByIdAndCustomerSiteId(Long id, Long customerSiteId);
 
     Optional<TankPersistenceEntity> findById(Long id);
+
+    List<TankPersistenceEntity> findByCustomerSiteIdOrderByIdAsc(Long customerSiteId);
 
     @Modifying
     @Query("update TankPersistenceEntity t set t.currentLevel = :level, t.lastReadingAt = :capturedAt "

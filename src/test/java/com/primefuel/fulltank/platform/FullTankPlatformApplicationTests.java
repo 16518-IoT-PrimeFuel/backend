@@ -185,7 +185,9 @@ class FullTankPlatformApplicationTests {
                 .andExpect(jsonPath("$.paths['/api/v1/fuel-requests']").exists())
                 .andExpect(jsonPath("$.paths['/api/v2/buyer-companies/{companyId}/replenishment-requests']").exists())
                 .andExpect(jsonPath("$.paths['/api/v2/provider-companies/{providerId}/replenishment-requests/{requestId}/accept']").exists())
-                .andExpect(jsonPath("$.paths['/api/v2/telemetry/readings']").exists());
+                .andExpect(jsonPath("$.paths['/api/v2/telemetry/readings']").exists())
+                .andExpect(jsonPath("$.paths['/api/v2/buyer-companies/{companyId}/sites/{siteId}/tanks']").exists())
+                .andExpect(jsonPath("$.paths['/api/v2/reports/buyers/{companyId}/export']").exists());
     }
 
     @Test
