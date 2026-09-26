@@ -1,0 +1,23 @@
+CREATE TABLE valve_commands (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    command_id VARCHAR(36) NOT NULL,
+    delivery_id BIGINT NOT NULL,
+    provider_id BIGINT NOT NULL,
+    decision_id BIGINT NOT NULL,
+    action VARCHAR(10) NOT NULL,
+    nonce VARCHAR(36) NOT NULL,
+    issued_at DATETIME(6) NOT NULL,
+    expires_at DATETIME(6) NOT NULL,
+    signature VARCHAR(64) NOT NULL,
+    protocol_version VARCHAR(5) NOT NULL,
+    status VARCHAR(12) NOT NULL,
+    acked_at DATETIME(6) NULL,
+    version BIGINT NOT NULL DEFAULT 0,
+    CONSTRAINT pk_valve_commands PRIMARY KEY (id),
+    CONSTRAINT uk_valve_commands_delivery_command UNIQUE (delivery_id, command_id),
+    CONSTRAINT uk_valve_commands_delivery_nonce UNIQUE (delivery_id, nonce),
+    CONSTRAINT uk_valve_commands_delivery_decision UNIQUE (delivery_id, decision_id),
+    CONSTRAINT ck_valve_commands_action CHECK (action IN ('OPEN')),
+    CONSTRAINT ck_valve_commands_status CHECK (status IN ('PENDING', 'ACKED', 'EXPIRED', 'REVOKED')),
+    INDEX ix_valve_commands_delivery_status (delivery_id, status)
+);
