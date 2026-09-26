@@ -111,6 +111,8 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       y conserva el `requestId` legacy correlacionando el `orderId`; el rechazo se propaga. Sin orden
       directa v2. Sin esquema nuevo. Build verde.
       → `docs/api-ledger/T10-B-legacy-request-bridge.md`
+- [x] **T5** — Fecha de negocio de FuelRequest validada con `Clock` en `America/Lima`; test fijo cubre
+      25/09 aceptado tras medianoche UTC y 24/09 rechazado con HTTP 400. → `docs/api-ledger/T5-lima-business-date.md`
 
 ## W4 — Dispositivos, telemetría y reposición automática (S07, S08, S09)
 
@@ -258,6 +260,9 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 
 ## W6 — Tracking, safety y válvula (S16, S17, S18, S21)
 
+> **T4 ponytail (2026-09-26):** interfaces de una implementación, `commons-lang3`, `MessageResource` y
+> directorio de tests vacío auditados/eliminados según alcance. → `docs/api-ledger/T4-ponytail-cleanup.md`
+
 > **Rediseño aprobado (2026-09-23)** — ver `docs/api-ledger/W6-REDESIGN-transport-evidence.md`. W6 ya no
 > depende de `telemetry`/`devicebinding` (S07/S08, congeladas); la evidencia de transporte la reporta la app
 > del conductor, autenticada vía `iam.api`/`fleet.api`. Desbloqueado, en ejecución.
@@ -269,16 +274,15 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       `fleet.api.FleetCatalog` (tenant del driver); nunca se lee `driverId` del body. Invariantes: mismo
       tenant, muestra tardía no retrocede el latest (empate = tardío) pero sí queda como evidencia cruda,
       evento `DeliveryTelemetryReceived` publicado en la misma TX. Migración aditiva `V21`. **Asunción abierta
-      U10/U18 (retención GPS/PII) heredada por T16-B, no bloqueaba T16-A.** Build no verificado en esta
-      máquina — pendiente de verificación por el usuario. → `docs/api-ledger/T16-A-transport-evidence-contract.md`
+      U10/U18 (retención GPS/PII) heredada por T16-B, no bloqueaba T16-A. → `docs/api-ledger/T16-A-transport-evidence-contract.md`
 - [x] T16-B — Proyección y consulta de seguimiento
     - Módulo `tracking`: `GET /api/v2/deliveries/{id}/tracking` y `.../tracking/samples` (proveedor dueño o driver
       asignado), `TrackingProjectionRebuilder` determinista (jitter de POSITION y LOAD, tolerante a evidencia LOAD
-      cronológicamente imposible), y `DELETE`/`GET .../export` de admin reservados (501) por U18 hasta
-      `T24-PRE-ADMIN`. U10: sin límite de retención de `transport_evidence_samples`. **Build no verificado en esta
-      máquina — pendiente de verificación por el usuario.** → `docs/api-ledger/T16-B-tracking-query-and-retention.md`
-- [ ] T17-A — Modelo y validación de geocerca
-- [ ] T17-B — Decisión safety y evidencia versionada
+      cronológicamente imposible), y `DELETE`/`GET .../export` de admin para U18. U10: sin límite de retención
+      de `transport_evidence_samples`. T2 hizo operativos esos
+      endpoints con `ROLE_ADMIN`, exportación y borrado de solo GPS/proyección. → `docs/api-ledger/T16-B-tracking-query-and-retention.md`
+- [x] **T17-A** — Modelo y validación de geocerca. `safety`: `GeofencePoliciesController`, `GeofenceDecisionEvaluator`, `GeofenceEvaluationImpl`, persistencia V22. → `docs/api-ledger/T17-A-geofence-policy.md`
+- [ ] T17-B — Decisión safety y evidencia versionada. Detenido: S17/T17-A no define qué transición de delivery dispara la evaluación; ver `docs/api-ledger/T17-B-safety-decision-integration.md`.
 - [ ] T18-A — Protocolo y outbox de comandos de válvula
 - [ ] T18-B — ACK, incidentes y prueba de hardware (requiere banco físico)
 - [ ] T21-A — Journal transaccional de negocio
@@ -357,17 +361,14 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       (resuelto), y 6 diagramas `.puml` (nodos y relación eliminados). Snapshot OpenAPI regenerado por test;
       **77/77 rutas intactas**. No se tocó T24-B (retiro real, sigue bloqueado).
       `./mvnw.cmd test` verde. → `docs/api-ledger/T24-A-marker-cleanup.md`
-- [ ] T24-PRE-ADMIN — Asignación de rol de plataforma (U19, nuevo, desbloquea T24-B). `ROLE_ADMIN` era un
+- [x] T24-PRE-ADMIN — Asignación de rol de plataforma (U19). `ROLE_ADMIN` era un
       string en `@Secured` de 7 controllers sin existir en `Roles` ni en ningún flujo de asignación — no
       existía forma de tener un usuario admin. Resuelto con el usuario (2026-09-23): endpoint protegido
       `POST /api/v2/admin/users/{id}/promote` (solo-admin) + seed manual en BD para el primer admin (bootstrap).
-      Ver callout U19 en el roadmap, sección S24.
-- [ ] T24-PRE-METRICS — Métricas de tráfico por versión (v1/v2), nuevo, desbloquea T24-B. Implementa el plan ya
-      documentado en `docs/api-ledger/T22-B-sunset-plan.md` sección 2 (instrumentar `path.version` +
-      `controller#method`, contador por ruta, reporte semanal `count`/`last_seen`/`distinct_callers`). El
-      usuario decidió (2026-09-23) implementar esto antes de aprobar cualquier sunset — no se puede probar
-      "cero uso" de ninguna ruta v1 sin esta instrumentación (el ledger externo de consumidores sigue `UNKNOWN`
-      aparte).
+      Implementado con V26 y seed SQL manual. → `docs/api-ledger/T24-PRE-ADMIN-platform-admin-role.md`
+- [x] T24-PRE-METRICS — Métricas de tráfico por patrón y versión con V27 y `GET /api/v2/admin/api-metrics`.
+      El sunset sigue bloqueado por ventana real de medición y ledger externo de consumidores `UNKNOWN`.
+      → `docs/api-ledger/T24-PRE-METRICS-route-usage.md`
 - [ ] T24-B — Retiro controlado de endpoints confirmados. Bloqueado por: (1) T24-PRE-METRICS + ventana de
       medición real, (2) T24-PRE-ADMIN, (3) ledger externo de consumidores `UNKNOWN` (fuera de este repo).
 

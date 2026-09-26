@@ -888,20 +888,6 @@
         },
         "type" : "object"
       },
-      "ErrorResource" : {
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "details" : {
-            "type" : "string"
-          },
-          "message" : {
-            "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
       "FailDeliveryResource" : {
         "properties" : {
           "reason" : {
@@ -1327,6 +1313,24 @@
             "type" : "number"
           },
           "unit" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "PromotedUser" : {
+        "properties" : {
+          "roles" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "userId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "username" : {
             "type" : "string"
           }
         },
@@ -5555,9 +5559,57 @@
         "tags" : [ "vehicles-controller" ]
       }
     },
+    "/api/v2/admin/api-metrics" : {
+      "get" : {
+        "description" : "Returns per-pattern request counts, last-seen time and distinct caller count.",
+        "operationId" : "list_4",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "version",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Route metrics returned."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Version must be v1 or v2."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not a platform administrator."
+          }
+        },
+        "summary" : "List API route usage",
+        "tags" : [ "API route metrics" ]
+      }
+    },
     "/api/v2/admin/deliveries/{deliveryId}/transport-evidence" : {
       "delete" : {
-        "description" : "Reserved contract (U18). Not operative; answers 501 until the platform admin role exists (T24-PRE-ADMIN).",
+        "description" : "Removes only raw GPS samples and the tracking projection for the delivery.",
         "operationId" : "delete_2",
         "parameters" : [ {
           "in" : "path",
@@ -5569,24 +5621,23 @@
           }
         } ],
         "responses" : {
-          "501" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResource"
-                }
-              }
-            },
-            "description" : "The operation is reserved but not implemented."
+          "204" : {
+            "description" : "Transport evidence deleted (idempotent)."
+          },
+          "403" : {
+            "description" : "Caller is not a platform administrator."
+          },
+          "404" : {
+            "description" : "Delivery does not exist."
           }
         },
-        "summary" : "Reserved: delete transport evidence",
-        "tags" : [ "Transport evidence retention (reserved)" ]
+        "summary" : "Delete transport evidence",
+        "tags" : [ "Transport evidence retention" ]
       }
     },
     "/api/v2/admin/deliveries/{deliveryId}/transport-evidence/export" : {
       "get" : {
-        "description" : "Reserved contract (U18). Not operative; answers 501 until the platform admin role exists (T24-PRE-ADMIN).",
+        "description" : "Returns GPS and load evidence ordered by recordedAt.",
         "operationId" : "export",
         "parameters" : [ {
           "in" : "path",
@@ -5598,19 +5649,88 @@
           }
         } ],
         "responses" : {
-          "501" : {
+          "200" : {
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResource"
+                  "type" : "object"
                 }
               }
             },
-            "description" : "The operation is reserved but not implemented."
+            "description" : "Evidence exported; samples may be empty."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not a platform administrator."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery does not exist."
           }
         },
-        "summary" : "Reserved: export transport evidence",
-        "tags" : [ "Transport evidence retention (reserved)" ]
+        "summary" : "Export transport evidence",
+        "tags" : [ "Transport evidence retention" ]
+      }
+    },
+    "/api/v2/admin/users/{userId}/promote" : {
+      "post" : {
+        "description" : "Adds ROLE_ADMIN to the user without removing existing roles.",
+        "operationId" : "promote",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "userId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PromotedUser"
+                }
+              }
+            },
+            "description" : "User has ROLE_ADMIN."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PromotedUser"
+                }
+              }
+            },
+            "description" : "Caller is not a platform administrator."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PromotedUser"
+                }
+              }
+            },
+            "description" : "User does not exist."
+          }
+        },
+        "summary" : "Promote a user to platform administrator",
+        "tags" : [ "Platform administration" ]
       }
     },
     "/api/v2/customers" : {
@@ -8523,6 +8643,9 @@
     "description" : "Organization onboarding endpoints (v2)",
     "name" : "Onboarding"
   }, {
+    "description" : "Administrative route usage report",
+    "name" : "API route metrics"
+  }, {
     "description" : "Tank assets and configuration (v2)",
     "name" : "Tanks"
   }, {
@@ -8538,14 +8661,14 @@
     "description" : "Inventory management endpoints",
     "name" : "Fuel Products"
   }, {
+    "description" : "Administrative export and deletion of GPS evidence",
+    "name" : "Transport evidence retention"
+  }, {
     "description" : "Provider company management endpoints",
     "name" : "Provider Companies"
   }, {
     "description" : "Device telemetry ingestion (v2, machine authenticated)",
     "name" : "Telemetry"
-  }, {
-    "description" : "Reserved delete/export contract for transport evidence (not operative yet)",
-    "name" : "Transport evidence retention (reserved)"
   }, {
     "description" : "Payment management endpoints",
     "name" : "Payments"
@@ -8558,6 +8681,9 @@
   }, {
     "description" : "Driver catalog and lifecycle (v2)",
     "name" : "Fleet drivers"
+  }, {
+    "description" : "Platform-wide administrative operations",
+    "name" : "Platform administration"
   }, {
     "description" : "Analytics and reporting endpoints",
     "name" : "Analytics"
