@@ -22,6 +22,7 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
     private DeliveryStatus status;
     private String scheduledDate;
     private LocalDateTime dispatchedAt;
+    private LocalDateTime arrivedAt;
     private LocalDateTime deliveredAt;
     private String notes;
 
@@ -44,11 +45,19 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
     }
 
     public void complete() {
-        if (this.status != DeliveryStatus.DISPATCHED) {
-            throw new IllegalStateException("Only dispatched deliveries can be completed");
+        if (this.status != DeliveryStatus.DISPATCHED && this.status != DeliveryStatus.ARRIVED) {
+            throw new IllegalStateException("Only dispatched or arrived deliveries can be completed");
         }
         this.status = DeliveryStatus.DELIVERED;
         this.deliveredAt = LocalDateTime.now();
+    }
+
+    public void arrive() {
+        if (this.status != DeliveryStatus.DISPATCHED) {
+            throw new IllegalStateException("Only dispatched deliveries can arrive");
+        }
+        this.status = DeliveryStatus.ARRIVED;
+        this.arrivedAt = LocalDateTime.now();
     }
 
     public void fail(String reason) {

@@ -4,6 +4,7 @@ import com.primefuel.fulltank.platform.equipment.domain.repositories.EquipmentRe
 import com.primefuel.fulltank.platform.fulfillment.application.commandservices.DeliveryCommandService;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CompleteDeliveryCommand;
+import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.ArriveDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CreateDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.DispatchDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.FailDeliveryCommand;
@@ -16,6 +17,8 @@ import com.primefuel.fulltank.platform.shared.application.result.ApplicationErro
 import com.primefuel.fulltank.platform.shared.application.result.Result;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Clock;
 
 @Service
 public class DeliveryCommandServiceImpl implements DeliveryCommandService {
@@ -54,7 +57,7 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
             return Result.failure(ApplicationError.conflict("Delivery",
                     "Driver and vehicle must belong to the selected provider"));
         }
-        if (!isAvailable(driver.get().getStatus()) || !isAvailable(vehicle.get().getStatus())) {
+        if (!driver.get().isEligibleAt(Clock.systemUTC()) || !vehicle.get().isEligible()) {
             return Result.failure(ApplicationError.conflict("Delivery", "Driver or vehicle is not available"));
         }
         var order = orderRepository.findById(command.orderId());
@@ -71,9 +74,10 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
         driver.get().setStatus("ASSIGNED");
         vehicle.get().setStatus("IN_ROUTE");
         order.get().dispatch();
+        // Accepted requests already own their supply reservation. Direct legacy orders reserve here.
         var reservationKey = order.get().getRequestId() != null ? order.get().getRequestId() : order.get().getId();
-        if (!supplyReservations.reserve(reservationKey, order.get().getFuelProductId(),
-                order.get().getRequestedQuantity())) {
+        if (order.get().getRequestId() == null && !supplyReservations.reserve(reservationKey,
+                order.get().getFuelProductId(), order.get().getRequestedQuantity())) {
             return Result.failure(ApplicationError.conflict("Delivery", "Insufficient inventory stock"));
         }
         driverRepository.save(driver.get());
@@ -135,6 +139,21 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
     }
 
     @Override
+    public Result<Delivery, ApplicationError> handle(ArriveDeliveryCommand command) {
+        var existing = deliveryRepository.findById(command.deliveryId());
+        if (existing.isEmpty()) {
+            return Result.failure(ApplicationError.notFound("Delivery", command.deliveryId().toString()));
+        }
+        try {
+            var delivery = existing.get();
+            delivery.arrive();
+            return Result.success(deliveryRepository.save(delivery));
+        } catch (IllegalStateException exception) {
+            return Result.failure(ApplicationError.conflict("Delivery", exception.getMessage()));
+        }
+    }
+
+    @Override
     public Result<Delivery, ApplicationError> handle(FailDeliveryCommand command) {
         var existing = deliveryRepository.findById(command.deliveryId());
         if (existing.isEmpty()) {
@@ -145,7 +164,4 @@ public class DeliveryCommandServiceImpl implements DeliveryCommandService {
         return Result.success(deliveryRepository.save(delivery));
     }
 
-    private static boolean isAvailable(String status) {
-        return "AVAILABLE".equalsIgnoreCase(status) || "ACTIVE".equalsIgnoreCase(status);
-    }
 }

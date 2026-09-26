@@ -1,0 +1,1 @@
+ALTER TABLE deliveries ADD COLUMN arrived_at TIMESTAMP NULL;

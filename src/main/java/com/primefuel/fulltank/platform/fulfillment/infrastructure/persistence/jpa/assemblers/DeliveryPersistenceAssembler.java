@@ -19,6 +19,7 @@ public final class DeliveryPersistenceAssembler {
         domain.setStatus(entity.getStatus());
         domain.setScheduledDate(entity.getScheduledDate());
         domain.setDispatchedAt(entity.getDispatchedAt());
+        domain.setArrivedAt(entity.getArrivedAt());
         domain.setDeliveredAt(entity.getDeliveredAt());
         domain.setNotes(entity.getNotes());
         return domain;
@@ -37,6 +38,7 @@ public final class DeliveryPersistenceAssembler {
         entity.setStatus(domain.getStatus());
         entity.setScheduledDate(domain.getScheduledDate());
         entity.setDispatchedAt(domain.getDispatchedAt());
+        entity.setArrivedAt(domain.getArrivedAt());
         entity.setDeliveredAt(domain.getDeliveredAt());
         entity.setNotes(domain.getNotes());
         return entity;

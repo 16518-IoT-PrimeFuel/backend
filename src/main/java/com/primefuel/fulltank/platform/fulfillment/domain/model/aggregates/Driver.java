@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.time.Clock;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,6 +21,7 @@ public class Driver extends AbstractDomainAggregateRoot<Driver> {
     private String phoneNumber;
     private String email;
     private String status;
+    private LocalDate licenseExpiresAt;
 
     public Driver(Long providerId, String firstName, String lastName, String licenseNumber,
                   String phoneNumber, String email, String status) {
@@ -33,5 +37,10 @@ public class Driver extends AbstractDomainAggregateRoot<Driver> {
         this.phoneNumber = phoneNumber;
         this.email = email;
         this.status = status;
+    }
+
+    public boolean isEligibleAt(Clock clock) {
+        return ("AVAILABLE".equalsIgnoreCase(status) || "ACTIVE".equalsIgnoreCase(status))
+                && (licenseExpiresAt == null || !licenseExpiresAt.isBefore(LocalDate.now(clock)));
     }
 }

@@ -18,6 +18,7 @@ public class Vehicle extends AbstractDomainAggregateRoot<Vehicle> {
     private Double capacity;
     private String unit;
     private String status;
+    private boolean enabled = true;
 
     public Vehicle(Long providerId, String licensePlate, String brand, String model,
                    Double capacity, String unit, String status) {
@@ -33,5 +34,9 @@ public class Vehicle extends AbstractDomainAggregateRoot<Vehicle> {
         this.capacity = capacity;
         this.unit = unit;
         this.status = status;
+    }
+
+    public boolean isEligible() {
+        return enabled && ("AVAILABLE".equalsIgnoreCase(status) || "ACTIVE".equalsIgnoreCase(status));
     }
 }

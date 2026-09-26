@@ -35,4 +35,7 @@ public class VehiclePersistenceEntity extends AuditableAbstractPersistenceEntity
 
     @Column(nullable = false, length = 30)
     private String status;
+
+    @Column(nullable = false)
+    private boolean enabled = true;
 }

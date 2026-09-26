@@ -26,8 +26,9 @@ public class TrackingCommandService {
                           Double latitude, Double longitude, Double speedKph) {
         var delivery = deliveries.findById(deliveryId)
                 .orElseThrow(() -> new IllegalArgumentException("Delivery not found"));
-        if (delivery.getStatus() != DeliveryStatus.DISPATCHED) {
-            throw new IllegalStateException("Tracking requires a dispatched delivery");
+        if (delivery.getStatus() != DeliveryStatus.DISPATCHED
+                && delivery.getStatus() != DeliveryStatus.ARRIVED) {
+            throw new IllegalStateException("Tracking requires a dispatched or arrived delivery");
         }
         if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180
                 || (speedKph != null && speedKph < 0)) {

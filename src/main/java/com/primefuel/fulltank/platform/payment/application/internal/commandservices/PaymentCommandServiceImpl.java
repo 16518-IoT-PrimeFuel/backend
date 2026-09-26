@@ -6,22 +6,17 @@ import com.primefuel.fulltank.platform.payment.domain.model.commands.CompletePay
 import com.primefuel.fulltank.platform.payment.domain.model.commands.CreatePaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.RefundPaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.repositories.PaymentRepository;
-import com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PaymentCommandServiceImpl implements PaymentCommandService {
 
     private final PaymentRepository paymentRepository;
-    private final FuelOrderRepository fuelOrderRepository;
 
-    public PaymentCommandServiceImpl(PaymentRepository paymentRepository,
-                                     FuelOrderRepository fuelOrderRepository) {
+    public PaymentCommandServiceImpl(PaymentRepository paymentRepository) {
         this.paymentRepository = paymentRepository;
-        this.fuelOrderRepository = fuelOrderRepository;
     }
 
     @Override
@@ -36,21 +31,13 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
     }
 
     @Override
-    @Transactional
     public Result<Payment, ApplicationError> handle(CompletePaymentCommand command) {
         var existing = paymentRepository.findById(command.paymentId());
         if (existing.isEmpty()) {
             return Result.failure(ApplicationError.notFound("Payment", command.paymentId().toString()));
         }
         var payment = existing.get();
-        var order = fuelOrderRepository.findById(payment.getOrderId());
-        if (order.isEmpty()) {
-            return Result.failure(ApplicationError.notFound("FuelOrder", payment.getOrderId().toString()));
-        }
         payment.complete(command.transactionReference());
-        var paidOrder = order.get();
-        paidOrder.markPaid();
-        fuelOrderRepository.save(paidOrder);
         return Result.success(paymentRepository.save(payment));
     }
 

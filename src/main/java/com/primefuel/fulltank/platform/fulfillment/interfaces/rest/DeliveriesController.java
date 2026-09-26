@@ -3,6 +3,7 @@ package com.primefuel.fulltank.platform.fulfillment.interfaces.rest;
 import com.primefuel.fulltank.platform.fulfillment.application.commandservices.DeliveryCommandService;
 import com.primefuel.fulltank.platform.fulfillment.application.queryservices.DeliveryQueryService;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CompleteDeliveryCommand;
+import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.ArriveDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.DispatchDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.FailDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.queries.GetAllDeliveriesQuery;
@@ -75,6 +76,14 @@ public class DeliveriesController {
                 result,
                 DeliveryResourceFromEntityAssembler::toResourceFromEntity,
                 HttpStatus.OK);
+    }
+
+    @PostMapping("/{deliveryId}/arrive")
+    public ResponseEntity<?> arriveDelivery(@PathVariable Long deliveryId) {
+        if (!ownsDeliveryAsProvider(deliveryId)) return ResponseEntity.notFound().build();
+        var result = deliveryCommandService.handle(new ArriveDeliveryCommand(deliveryId));
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                result, DeliveryResourceFromEntityAssembler::toResourceFromEntity, HttpStatus.OK);
     }
 
     @PostMapping("/{deliveryId}/fail")

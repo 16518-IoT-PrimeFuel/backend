@@ -1,0 +1,13 @@
+id,element,status,evidence,rollback
+L01,empty module marker controllers,retain,documented markers have no runtime mapping,remove after docs and architecture references are migrated
+L02,v1 customer and membership routes,keep,legacy consumers remain in ledger,reactivate adapter
+L03,v1 fuel products,keep,v1 adapter remains the compatibility surface,reactivate adapter
+L04,v1 fuel requests and orders,keep,legacy mobile/web consumers remain in ledger,reactivate adapter
+L05,v1 drivers and vehicles,keep,v2 eligibility is additive,reactivate adapter
+L06,v1 deliveries,keep,v2 lifecycle is additive,reactivate adapter
+L07,v1 tracking geofence valve,keep,physical safety evidence is not yet complete,reactivate adapter
+L08,v1 notifications,keep,v2 read model is additive,reactivate adapter
+L09,v1 payments,keep,legacybilling decision preserves history,reactivate adapter
+L10,legacy database tables,retain,drop is forbidden until restore and retention approval,restore before contract
+L11,manual notification POST,keep,consumer and deprecation window unknown,restore endpoint before sunset
+L12,empty module markers,retain,static references exist in architecture documentation,delete after docs update

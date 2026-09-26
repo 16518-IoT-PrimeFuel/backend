@@ -18,6 +18,7 @@ public final class DriverPersistenceAssembler {
         driver.setPhoneNumber(entity.getPhoneNumber());
         driver.setEmail(entity.getEmail());
         driver.setStatus(entity.getStatus());
+        driver.setLicenseExpiresAt(entity.getLicenseExpiresAt());
         return driver;
     }
 
@@ -31,6 +32,7 @@ public final class DriverPersistenceAssembler {
         entity.setPhoneNumber(driver.getPhoneNumber());
         entity.setEmail(driver.getEmail());
         entity.setStatus(driver.getStatus());
+        entity.setLicenseExpiresAt(driver.getLicenseExpiresAt());
         return entity;
     }
 }

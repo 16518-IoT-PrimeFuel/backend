@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "drivers")
 @Getter
@@ -35,4 +37,7 @@ public class DriverPersistenceEntity extends AuditableAbstractPersistenceEntity 
 
     @Column(nullable = false, length = 30)
     private String status;
+
+    @Column
+    private LocalDate licenseExpiresAt;
 }

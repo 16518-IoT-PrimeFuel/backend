@@ -18,6 +18,7 @@ public final class VehiclePersistenceAssembler {
         vehicle.setCapacity(entity.getCapacity());
         vehicle.setUnit(entity.getUnit());
         vehicle.setStatus(entity.getStatus());
+        vehicle.setEnabled(entity.isEnabled());
         return vehicle;
     }
 
@@ -31,6 +32,7 @@ public final class VehiclePersistenceAssembler {
         entity.setCapacity(vehicle.getCapacity());
         entity.setUnit(vehicle.getUnit());
         entity.setStatus(vehicle.getStatus());
+        entity.setEnabled(vehicle.isEnabled());
         return entity;
     }
 }

@@ -34,6 +34,8 @@ public class DeliveryPersistenceEntity extends AuditableAbstractPersistenceEntit
 
     private LocalDateTime dispatchedAt;
 
+    private LocalDateTime arrivedAt;
+
     private LocalDateTime deliveredAt;
 
     private String scheduledDate;
