@@ -645,6 +645,19 @@ flowchart TD
 > - **Fuente de la posición:** la última posición confiable de `tracking.api.DeliveryTrackingQuery.latest`
 >   (S16/T16-B), no un dato nuevo — S17 evalúa sobre lo que T16-B ya expone.
 
+> **U21 resuelta (2026-09-26, decisión de producto del usuario).** T17-B evalúa safety únicamente al entrar
+> a `DELIVERING`. El camino actual es `DeliveryLifecycleServiceImpl.handle(complete)` desde `ARRIVED`: guardar
+> `ARRIVED → DELIVERING`, evaluar y después ejecutar `completePhysical`, todo dentro de la misma transacción.
+> Los caminos futuros a `DELIVERING` deben reutilizar el mismo método privado. La decisión nunca bloquea la
+> transición; un error de infraestructura sí revierte la transacción completa.
+
+> **U22 resuelta (2026-09-26, decisión de producto del usuario).** En alcance detection-only, el comando lógico
+> de válvula usa protocolo v1 firmado por HMAC-SHA256 sobre
+> `v1|{commandId}|{deliveryId}|{action}|{nonce}|{expiresAt ISO-8601}`. `SAFETY_VALVE_SIGNING_SECRET` suministra
+> `safety.valve.signing-secret`; no se configura un secreto por defecto. El nonce es UUID, el comando expira
+> a los 120 segundos y solo se usa una vez. `safety.valve.commands.enabled` es global y empieza apagado.
+> No hay firmware ni certificación física en este alcance.
+
 ### S18 — Ejecutar autorización de válvula con ACK verificable
 
 - **SPEC-ID / Título:** S18 / Ejecutar autorización de válvula con ACK verificable.
