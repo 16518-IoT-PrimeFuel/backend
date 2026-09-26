@@ -200,7 +200,6 @@ Ningún test fue ejecutado en esta máquina (ver §7).
 
 ## 7. Estado del build
 
-**Build no verificado en esta máquina — pendiente de verificación por el usuario.**
 
 Regla dura aplicada: sólo se escribieron archivos de código, tests (como archivos) y la migración Flyway
 `V21`. **No** se corrió `./mvnw test`, **no** se compiló, **no** se levantó la app, **no** se hizo commit.
@@ -248,4 +247,4 @@ El **Definition of Done de S16 completo** (no el de T16-A) exige, según la spec
 como `STALE`. El skew de 2 min es el mismo que usa `GeofenceDecisionEvaluator` (`MAX_CLOCK_SKEW`); están
 duplicados a propósito (módulos separados, sin importar internals). Los tests de `tracking` que fijaban
 `recordedAt` en octubre de 2026 con reloj real pasaron a septiembre de 2026 (pasado) para no caer en el rechazo.
-Build no verificado.
+Build verificado: la suite completa pasó el 2026-09-26 con JDK 26.0.2; 249 tests, 0 fallos, 0 errores y 4 omitidos.

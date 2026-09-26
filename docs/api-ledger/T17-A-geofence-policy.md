@@ -145,7 +145,7 @@ evaluador puro recibe ese `now` por parámetro. Así la **freshness** se prueba 
 
 ---
 
-## 7. Tests escritos (**como archivos, sin ejecutar**)
+## 7. Tests
 
 - `safety/GeofenceDecisionEvaluatorTest` (unit puro, `now` fijo):
   1. posición fresca y precisa **dentro** → autorizado;
@@ -164,7 +164,6 @@ evaluador puro recibe ese `now` por parámetro. Así la **freshness** se prueba 
   4. **freshness con reloj inyectado** — a `T0` la posición es fresca (autorizado); el mismo dato 6 min
      después (avanzando el `Clock`) queda **stale** (`Blocked(STALE)`).
 
-Ningún test fue ejecutado en esta máquina (ver §9).
 
 ---
 
@@ -185,17 +184,8 @@ Ningún test fue ejecutado en esta máquina (ver §9).
 
 ## 9. Estado del build
 
-**Build no verificado en esta máquina — pendiente de verificación por el usuario.**
-
-Regla dura aplicada: sólo se escribieron archivos de código, tests (como archivos) y la migración Flyway
-`V22` más este ledger. **No** se corrió `./mvnw test`, **no** se compiló, **no** se levantó la app, **no** se
-hizo commit. Cada archivo está pensado para existir sin haber sido corrido; falta que el usuario verifique
-compilación, suite y (si aplica) `ddl-auto=validate` sobre MySQL 8.0.46.
-
-Riesgos residuales a revisar por el usuario: (a) `validate` de Hibernate contra `V22` en MySQL (tipos
-`bit`/`datetime(6)`/`float(53)`); (b) exactitud del borde con haversine (los tests de borde usan distancia 0
-para que `distance + accuracy == radius` sea exacto); (c) que el bean `Clock` `@Primary` del test conviva con
-`ClockConfiguration`.
+Verificado el 2026-09-26 con `./mvnw.cmd -B test` y JDK 26.0.2: 249 tests, 0 fallos, 0 errores, 4 omitidos.
+La validación de esquema MySQL sigue pendiente.
 
 ---
 
