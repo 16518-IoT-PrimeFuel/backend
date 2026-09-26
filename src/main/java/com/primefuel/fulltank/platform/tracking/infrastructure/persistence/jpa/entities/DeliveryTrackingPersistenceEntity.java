@@ -17,7 +17,7 @@ import java.time.Instant;
 
 @Entity
 @Table(
-        name = "delivery_tracking",
+        name = "delivery_trackings",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_delivery_tracking_delivery", columnNames = "delivery_id"))
 @Getter
