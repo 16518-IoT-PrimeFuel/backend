@@ -21,19 +21,16 @@ La coexistencia v1↔v2 ya está cubierta por tests verdes:
 Se agregó `V1V2CoexistenceGoldenTest` para dejar explícito que la misma operación responde en ambas versiones
 (v1 create de delivery + v2 lectura/assignación) sin romperse mutuamente.
 
-## 2. Métricas por versión (plan)
+## 2. Métricas por versión (implementadas en T24-PRE-METRICS)
 
-Para aprobar un sunset hace falta medir el uso real de cada versión. Hoy **no existe** telemetría de rutas por
-versión; el plan es:
-
-- Instrumentar el filtro/auth para etiquetar cada request con `path.version` (`v1`/`v2`) y el
-  `controller#method`, y agregar contadores por ruta (Micrometer/actuator o el registro interno de T19-A).
-- Reporte semanal por ruta: `count`, `last_seen`, `distinct_callers` (tenant/company), para poblar
-  `última observación` del registro.
+Se cuenta uso por patrón con `ApiRouteMetricsInterceptor` y la persistencia V27 (`count`, `last_seen`,
+`distinct_callers`). El reporte actual es una consulta bajo `GET /api/v2/admin/api-metrics`, con filtro de
+versión; no corre un scheduler semanal.
 - Un sunset sólo puede aprobarse con `last_seen` dentro de la ventana acordada y `distinct_callers = 0`, más el
   ledger externo (frontend/mobile).
 
-> Estado: **plan documentado, no implementado.** Es prerequisito de T24-B, no de este ticket.
+> Estado: **instrumentación implementada**; aprobar sunset aún requiere una ventana real de medición y el
+> ledger externo de consumidores.
 
 ## 3. Registro de sunset (NO ejecutado)
 
