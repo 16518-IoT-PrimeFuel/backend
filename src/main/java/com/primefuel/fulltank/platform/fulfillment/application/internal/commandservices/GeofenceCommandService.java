@@ -5,10 +5,15 @@ import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryR
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+
 @Service
 public class GeofenceCommandService {
     private final DeliveryRepository deliveries;
     private final GeofenceStore geofences;
+    private final Clock clock = Clock.systemUTC();
 
     public GeofenceCommandService(DeliveryRepository deliveries, GeofenceStore geofences) {
         this.deliveries = deliveries;
@@ -25,10 +30,26 @@ public class GeofenceCommandService {
     }
 
     public GeofenceDecision evaluate(Long deliveryId, Double latitude, Double longitude) {
+        return evaluate(deliveryId, latitude, longitude, null, null);
+    }
+
+    public GeofenceDecision evaluate(Long deliveryId, Double latitude, Double longitude,
+                                     Instant capturedAt, Double accuracyMeters) {
         var geofence = geofences.active(deliveryId);
         if (geofence == null) throw new IllegalStateException("Geofence not configured");
         var distance = distanceMeters(geofence.latitude(), geofence.longitude(), latitude, longitude);
-        return new GeofenceDecision(distance <= geofence.radiusMeters(), geofence.version(), distance);
+        if (capturedAt == null || accuracyMeters == null) {
+            return new GeofenceDecision(false, geofence.version(), distance, "MISSING_EVIDENCE");
+        }
+        var now = Instant.now(clock);
+        if (capturedAt.isBefore(now.minus(Duration.ofMinutes(5))) || capturedAt.isAfter(now.plusSeconds(30))) {
+            return new GeofenceDecision(false, geofence.version(), distance, "STALE");
+        }
+        if (accuracyMeters <= 0 || accuracyMeters > 100) {
+            return new GeofenceDecision(false, geofence.version(), distance, "INACCURATE");
+        }
+        var inside = distance <= geofence.radiusMeters();
+        return new GeofenceDecision(inside, geofence.version(), distance, inside ? "INSIDE" : "OUTSIDE");
     }
 
     private static double distanceMeters(double aLat, double aLon, double bLat, double bLon) {

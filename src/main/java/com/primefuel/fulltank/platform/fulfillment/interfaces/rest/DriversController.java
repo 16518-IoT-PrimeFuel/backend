@@ -66,7 +66,8 @@ public class DriversController {
         if (driver == null || !currentUserAccess.ownsProvider(driver.getProviderId())) {
             return ResponseEntity.notFound().build();
         }
-        repository.deleteById(id);
+        driver.setStatus("INACTIVE");
+        repository.save(driver);
         return ResponseEntity.noContent().build();
     }
 

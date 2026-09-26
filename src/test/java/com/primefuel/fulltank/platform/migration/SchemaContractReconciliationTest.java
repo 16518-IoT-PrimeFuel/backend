@@ -24,7 +24,11 @@ class SchemaContractReconciliationTest {
             Map.entry("refill_policies", Set.of("threshold_value", "hysteresis_value", "target_volume")),
             Map.entry("refill_episodes", Set.of("episode_key", "request_id", "status")),
             Map.entry("replenishment_request_lifecycle", Set.of("idempotency_key", "version", "consumed_order_id")),
-            Map.entry("outbox_events", Set.of("event_key", "payload")));
+            Map.entry("outbox_events", Set.of("event_key", "payload")),
+            Map.entry("drivers", Set.of("license_expires_at")),
+            Map.entry("vehicles", Set.of("enabled")),
+            Map.entry("fleet_reservations", Set.of("idempotency_key", "window_start", "window_end")),
+            Map.entry("notifications", Set.of("source_event_key")));
 
     @Test
     void allMigrationContractsExistInTheSyntheticSchema() throws Exception {
@@ -48,6 +52,6 @@ class SchemaContractReconciliationTest {
                 }
             }
         }
-        assertTrue(flyway.info().current().getVersion().getVersion().equals("15"));
+        assertTrue(flyway.info().current().getVersion().getVersion().equals("19"));
     }
 }

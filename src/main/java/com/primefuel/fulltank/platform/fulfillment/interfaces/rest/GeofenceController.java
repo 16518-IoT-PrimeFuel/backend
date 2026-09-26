@@ -48,7 +48,8 @@ public class GeofenceController {
         var delivery = deliveries.handle(new GetDeliveryByIdQuery(deliveryId)).orElse(null);
         if (delivery == null || !access.ownsProvider(delivery.getProviderId())) return ResponseEntity.notFound().build();
         try {
-            return ResponseEntity.ok(service.evaluate(deliveryId, resource.latitude(), resource.longitude()));
+            return ResponseEntity.ok(service.evaluate(deliveryId, resource.latitude(), resource.longitude(),
+                    resource.capturedAt(), resource.accuracyMeters()));
         } catch (IllegalStateException exception) {
             return ResponseEntity.badRequest().body(Map.of("error", exception.getMessage()));
         }

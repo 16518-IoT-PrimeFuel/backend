@@ -66,7 +66,9 @@ public class VehiclesController {
         if (vehicle == null || !currentUserAccess.ownsProvider(vehicle.getProviderId())) {
             return ResponseEntity.notFound().build();
         }
-        repository.deleteById(id);
+        vehicle.setStatus("INACTIVE");
+        vehicle.setEnabled(false);
+        repository.save(vehicle);
         return ResponseEntity.noContent().build();
     }
 

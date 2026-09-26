@@ -39,6 +39,12 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     }
 
     @Override
+    public Optional<Notification> findBySourceEventKey(String sourceEventKey) {
+        return notificationPersistenceRepository.findBySourceEventKey(sourceEventKey)
+                .map(NotificationPersistenceAssembler::toDomainFromPersistence);
+    }
+
+    @Override
     public Notification save(Notification notification) {
         var entity = NotificationPersistenceAssembler.toPersistenceFromDomain(notification);
         return NotificationPersistenceAssembler.toDomainFromPersistence(

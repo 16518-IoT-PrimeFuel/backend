@@ -9,5 +9,6 @@ public interface NotificationRepository {
     Optional<Notification> findById(Long id);
     List<Notification> findByUserId(Long userId);
     List<Notification> findByUserIdAndReadFalse(Long userId);
+    Optional<Notification> findBySourceEventKey(String sourceEventKey);
     Notification save(Notification notification);
 }

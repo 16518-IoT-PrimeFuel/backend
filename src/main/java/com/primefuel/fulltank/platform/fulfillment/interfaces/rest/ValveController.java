@@ -36,7 +36,8 @@ public class ValveController {
         if (delivery == null || !access.ownsProvider(delivery.getProviderId())) return ResponseEntity.notFound().build();
         try {
             return ResponseEntity.ok(Map.of("accepted", service.issue(resource.commandId(), deliveryId,
-                    resource.desiredState(), resource.latitude(), resource.longitude()), "status", "PENDING"));
+                    resource.desiredState(), resource.latitude(), resource.longitude(), resource.capturedAt(),
+                    resource.accuracyMeters()), "status", "PENDING"));
         } catch (IllegalStateException exception) {
             return ResponseEntity.status(409).body(Map.of("error", exception.getMessage()));
         } catch (IllegalArgumentException exception) {

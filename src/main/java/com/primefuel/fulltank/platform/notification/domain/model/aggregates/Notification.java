@@ -21,6 +21,7 @@ public class Notification extends AbstractDomainAggregateRoot<Notification> {
     private String message;
     private boolean read;
     private Long referenceId;
+    private String sourceEventKey;
     private Date createdAt;
 
     public Notification(CreateNotificationCommand command) {
@@ -29,6 +30,7 @@ public class Notification extends AbstractDomainAggregateRoot<Notification> {
         this.title = command.title();
         this.message = command.message();
         this.referenceId = command.referenceId();
+        this.sourceEventKey = command.sourceEventKey();
         this.read = false;
     }
 

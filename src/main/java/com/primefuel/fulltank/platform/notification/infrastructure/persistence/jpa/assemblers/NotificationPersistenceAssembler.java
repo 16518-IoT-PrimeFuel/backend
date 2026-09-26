@@ -18,6 +18,7 @@ public final class NotificationPersistenceAssembler {
         domain.setMessage(entity.getMessage());
         domain.setRead(entity.isRead());
         domain.setReferenceId(entity.getReferenceId());
+        domain.setSourceEventKey(entity.getSourceEventKey());
         domain.setCreatedAt(entity.getCreatedAt());
         return domain;
     }
@@ -34,6 +35,7 @@ public final class NotificationPersistenceAssembler {
         entity.setMessage(domain.getMessage());
         entity.setRead(domain.isRead());
         entity.setReferenceId(domain.getReferenceId());
+        entity.setSourceEventKey(domain.getSourceEventKey());
         return entity;
     }
 }

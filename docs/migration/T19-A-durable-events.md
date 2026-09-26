@@ -13,9 +13,10 @@ El flujo de solicitudes manuales publica actualmente:
 - `FuelRequestApproved`
 - `FuelRequestRejected`
 
-El estado inicial es `PENDING` y `attempts=0`. El worker/releaser que entregue
-los eventos a un broker todavía es una etapa posterior; mientras no exista,
-los eventos quedan recuperables en la base de datos.
+El estado inicial es `PENDING` y `attempts=0`. Un relay interno programado
+recupera los `PENDING`, publica el envelope y los marca `PUBLISHED`; al no
+existir todavía un broker externo, la entrega fuera de este proceso queda
+explícitamente fuera de alcance.
 
 ## Gate cubierto
 
@@ -24,7 +25,7 @@ los eventos quedan recuperables en la base de datos.
 - publicación repetida sin duplicación;
 - suite de aplicación y arquitectura verdes.
 
-## Pendiente
+## Límite explícito
 
-Añadir consumidor/releaser con backoff, métricas, claim concurrente y prueba de
-replay contra el broker cuando se decida la tecnología de transporte.
+El relay actual es de una sola instancia y no sustituye un broker. Si se
+despliega horizontalmente, el siguiente paso es un claim con lock/lease y DLQ.

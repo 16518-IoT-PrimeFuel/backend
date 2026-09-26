@@ -20,6 +20,10 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
 
     @Override
     public Result<Notification, ApplicationError> handle(CreateNotificationCommand command) {
+        if (command.sourceEventKey() != null) {
+            var existing = notificationRepository.findBySourceEventKey(command.sourceEventKey());
+            if (existing.isPresent()) return Result.success(existing.get());
+        }
         var notification = new Notification(command);
         return Result.success(notificationRepository.save(notification));
     }

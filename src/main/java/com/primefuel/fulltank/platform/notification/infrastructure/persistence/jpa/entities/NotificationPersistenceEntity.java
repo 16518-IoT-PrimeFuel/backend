@@ -34,4 +34,7 @@ public class NotificationPersistenceEntity extends AuditableAbstractPersistenceE
     private boolean read;
 
     private Long referenceId;
+
+    @Column(name = "source_event_key", unique = true, length = 160)
+    private String sourceEventKey;
 }

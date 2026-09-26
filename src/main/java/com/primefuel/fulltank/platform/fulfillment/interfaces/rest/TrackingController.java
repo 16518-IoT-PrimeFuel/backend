@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.fulfillment.interfaces.rest;
 
 import com.primefuel.fulltank.platform.fulfillment.application.internal.commandservices.TrackingCommandService;
+import com.primefuel.fulltank.platform.fulfillment.application.ports.TrackingQueryPort;
 import com.primefuel.fulltank.platform.fulfillment.application.queryservices.DeliveryQueryService;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.queries.GetDeliveryByIdQuery;
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.TrackingPointResource;
@@ -23,11 +24,14 @@ public class TrackingController {
     private final TrackingCommandService service;
     private final DeliveryQueryService deliveries;
     private final TenantAccess access;
+    private final TrackingQueryPort tracking;
 
-    public TrackingController(TrackingCommandService service, DeliveryQueryService deliveries, TenantAccess access) {
+    public TrackingController(TrackingCommandService service, DeliveryQueryService deliveries,
+                              TenantAccess access, TrackingQueryPort tracking) {
         this.service = service;
         this.deliveries = deliveries;
         this.access = access;
+        this.tracking = tracking;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -46,5 +50,25 @@ public class TrackingController {
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.badRequest().body(Map.of("error", exception.getMessage()));
         }
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping
+    public ResponseEntity<?> list(@PathVariable Long deliveryId) {
+        if (!ownsDelivery(deliveryId)) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(tracking.findByDeliveryId(deliveryId));
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/latest")
+    public ResponseEntity<?> latest(@PathVariable Long deliveryId) {
+        if (!ownsDelivery(deliveryId)) return ResponseEntity.notFound().build();
+        return tracking.findLatestByDeliveryId(deliveryId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    private boolean ownsDelivery(Long deliveryId) {
+        return deliveries.handle(new GetDeliveryByIdQuery(deliveryId))
+                .filter(delivery -> access.ownsProvider(delivery.getProviderId()))
+                .isPresent();
     }
 }

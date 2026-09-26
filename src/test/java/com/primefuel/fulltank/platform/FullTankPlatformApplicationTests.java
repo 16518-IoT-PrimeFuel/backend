@@ -158,7 +158,7 @@ class FullTankPlatformApplicationTests {
                 .filter(pattern -> pattern.startsWith("/api/v1/"))
                 .count();
 
-        org.junit.jupiter.api.Assertions.assertEquals(77, routeCount);
+        org.junit.jupiter.api.Assertions.assertEquals(78, routeCount);
     }
 
     @Test
@@ -174,7 +174,7 @@ class FullTankPlatformApplicationTests {
         var digest = java.security.MessageDigest.getInstance("SHA-256")
                 .digest(contract.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         org.junit.jupiter.api.Assertions.assertEquals(
-                "79bd6b0a28b3aa535749263f2c5bc3d8cff0cb18d63cd031cd77d95a448434c6",
+                "93d3c82dfc08758e300db541247492ddc5cd9ce4562a8c95119e25dfc7419849",
                 java.util.HexFormat.of().formatHex(digest));
     }
 

@@ -29,7 +29,7 @@ public class DurableEventNotificationHandler {
         if (type == null) return;
         notifications.handle(new CreateNotificationCommand(userId, type,
                 title(type), "Event " + event.eventType() + " for " + event.aggregateType(),
-                Long.valueOf(event.aggregateId())));
+                Long.valueOf(event.aggregateId()), event.eventKey()));
     }
 
     private static Long userId(String payload) {

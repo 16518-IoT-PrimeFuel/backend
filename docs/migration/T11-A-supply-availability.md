@@ -8,5 +8,6 @@ solicitud, `SupplyReservationStore` descuenta stock con un `UPDATE` condicional
 (`available_stock >= quantity`) y registra una reserva única por `request_id`.
 Un retry devuelve la reserva existente y no vuelve a descontar stock.
 
-La expiración/liberación de reservas queda pendiente de definir junto con el
-lifecycle de delivery.
+La liberación de supply continúa siendo idempotente y queda coordinada por el
+lifecycle de delivery; la conciliación con un ERP externo no forma parte de
+este backend.

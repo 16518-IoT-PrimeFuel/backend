@@ -22,13 +22,13 @@ public class ValveCommandService {
 
     @Transactional
     public boolean issue(String commandId, Long deliveryId, String desiredState,
-                         Double latitude, Double longitude) {
+                         Double latitude, Double longitude, Instant capturedAt, Double accuracyMeters) {
         var delivery = deliveries.findById(deliveryId)
                 .orElseThrow(() -> new IllegalArgumentException("Delivery not found"));
         if (!"OPEN".equals(desiredState) && !"CLOSE".equals(desiredState)) {
             throw new IllegalArgumentException("Unsupported valve state");
         }
-        if (!geofences.evaluate(deliveryId, latitude, longitude).inside()) {
+        if (!geofences.evaluate(deliveryId, latitude, longitude, capturedAt, accuracyMeters).inside()) {
             throw new IllegalStateException("Valve command outside geofence");
         }
         if (commands.exists(commandId)) return false;
