@@ -620,6 +620,24 @@
         },
         "type" : "object"
       },
+      "DeliveryTimelineItemResource" : {
+        "properties" : {
+          "occurredAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "refId" : {
+            "type" : "string"
+          },
+          "summary" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "DeliveryTransitionResource" : {
         "properties" : {
           "aggregateVersion" : {
@@ -1987,6 +2005,23 @@
             "type" : "string"
           }
         },
+        "type" : "object"
+      },
+      "ValveObservationResource" : {
+        "properties" : {
+          "commandId" : {
+            "type" : "string"
+          },
+          "observedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "state" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        },
+        "required" : [ "observedAt", "state" ],
         "type" : "object"
       },
       "VehicleResource" : {
@@ -6484,6 +6519,64 @@
         "tags" : [ "Delivery lifecycle" ]
       }
     },
+    "/api/v2/deliveries/{deliveryId}/timeline" : {
+      "get" : {
+        "description" : "Combines state transitions, safety decisions, valve facts, and retained load milestones; deleted GPS samples are absent.",
+        "operationId" : "get_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryTimelineItemResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Timeline returned in occurredAt/type/id order."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryTimelineItemResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Caller is outside the provider tenant and is not its assigned driver."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryTimelineItemResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Delivery does not exist."
+          }
+        },
+        "summary" : "Get a delivery timeline",
+        "tags" : [ "Delivery timeline" ]
+      }
+    },
     "/api/v2/deliveries/{deliveryId}/tracking" : {
       "get" : {
         "description" : "Returns the latest trusted position and load state of a delivery visible to the owning provider or the assigned driver.",
@@ -6714,6 +6807,85 @@
         },
         "summary" : "Record transport evidence for a delivery",
         "tags" : [ "Transport evidence" ]
+      }
+    },
+    "/api/v2/deliveries/{deliveryId}/valve-observations" : {
+      "post" : {
+        "description" : "The assigned driver reports OPEN or CLOSED; invalid OPEN acknowledgements are recorded as safety incidents.",
+        "operationId" : "observe",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ValveObservationResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Observation recorded or ACK replayed idempotently."
+          },
+          "202" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Unmatched OPEN recorded as a safety incident."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Invalid observation body."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Caller is not the assigned driver or assignment crosses tenants."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Delivery or assigned driver does not exist."
+          }
+        },
+        "summary" : "Report a valve observation",
+        "tags" : [ "Valve observations" ]
       }
     },
     "/api/v2/drivers" : {
@@ -8646,6 +8818,9 @@
     "description" : "Administrative route usage report",
     "name" : "API route metrics"
   }, {
+    "description" : "Reconstructed physical and safety history",
+    "name" : "Delivery timeline"
+  }, {
     "description" : "Tank assets and configuration (v2)",
     "name" : "Tanks"
   }, {
@@ -8660,6 +8835,9 @@
   }, {
     "description" : "Inventory management endpoints",
     "name" : "Fuel Products"
+  }, {
+    "description" : "Logical valve ACK and safety observations",
+    "name" : "Valve observations"
   }, {
     "description" : "Administrative export and deletion of GPS evidence",
     "name" : "Transport evidence retention"

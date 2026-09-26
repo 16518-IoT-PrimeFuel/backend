@@ -282,11 +282,11 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       de `transport_evidence_samples`. T2 hizo operativos esos
       endpoints con `ROLE_ADMIN`, exportación y borrado de solo GPS/proyección. → `docs/api-ledger/T16-B-tracking-query-and-retention.md`
 - [x] **T17-A** — Modelo y validación de geocerca. `safety`: `GeofencePoliciesController`, `GeofenceDecisionEvaluator`, `GeofenceEvaluationImpl`, persistencia V22. → `docs/api-ledger/T17-A-geofence-policy.md`
-- [ ] T17-B — Decisión safety y evidencia versionada. Detenido: S17/T17-A no define qué transición de delivery dispara la evaluación; ver `docs/api-ledger/T17-B-safety-decision-integration.md`.
-- [ ] T18-A — Protocolo y outbox de comandos de válvula
-- [ ] T18-B — ACK, incidentes y prueba de hardware (requiere banco físico)
-- [ ] T21-A — Journal transaccional de negocio
-- [ ] T21-B — Timeline y proyección reconstruible
+- [x] **T17-B** — Decisión safety al entrar a `DELIVERING`, evidencia versionada y modo detección transaccional. → `docs/api-ledger/T17-B-safety-decision-integration.md`
+- [x] T18-A — Protocolo y outbox de comandos de válvula. [Detalle](docs/api-ledger/T18-A-signed-valve-commands.md).
+- [x] T18-B — ACK, incidentes y límite explícito de hardware. [Detalle](docs/api-ledger/T18-B-valve-observations-and-incidents.md).
+- [x] T21-A — Journal transaccional de negocio. [Detalle](docs/api-ledger/T21-A-delivery-business-journal.md).
+- [x] T21-B — Timeline reconstruible. [Detalle](docs/api-ledger/T21-B-delivery-timeline.md).
 
 ## W7 — Notificaciones, contratos, billing y retiro (S20, S22, S23, S24)
 
@@ -369,8 +369,7 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 - [x] T24-PRE-METRICS — Métricas de tráfico por patrón y versión con V27 y `GET /api/v2/admin/api-metrics`.
       El sunset sigue bloqueado por ventana real de medición y ledger externo de consumidores `UNKNOWN`.
       → `docs/api-ledger/T24-PRE-METRICS-route-usage.md`
-- [ ] T24-B — Retiro controlado de endpoints confirmados. Bloqueado por: (1) T24-PRE-METRICS + ventana de
-      medición real, (2) T24-PRE-ADMIN, (3) ledger externo de consumidores `UNKNOWN` (fuera de este repo).
+- [ ] T24-B — Retiro controlado de endpoints confirmados. Bloqueado por ventana de medición real (T24-PRE-METRICS ya operativo) y ledger externo de consumidores `UNKNOWN` (fuera de este repo).
 
 ## Documentación Swagger (OpenAPI + javadoc de REST)
 
