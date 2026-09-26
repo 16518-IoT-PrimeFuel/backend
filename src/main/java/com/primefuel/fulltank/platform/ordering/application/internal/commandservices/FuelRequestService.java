@@ -8,18 +8,24 @@ import com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRep
 import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.entities.FuelRequestPersistenceEntity;
 import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.repositories.FuelRequestPersistenceRepository;
 import com.primefuel.fulltank.platform.ordering.interfaces.rest.resources.CreateFuelRequestResource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class FuelRequestService {
+    private static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Lima");
+
     private final FuelRequestPersistenceRepository requests;
     private final FuelProductRepository products;
     private final FuelOrderRepository orders;
+    private Clock clock;
 
     public FuelRequestService(FuelRequestPersistenceRepository requests,
                               FuelProductRepository products,
@@ -27,6 +33,11 @@ public class FuelRequestService {
         this.requests = requests;
         this.products = products;
         this.orders = orders;
+    }
+
+    @Autowired
+    void setClock(Clock clock) {
+        this.clock = clock;
     }
 
     @Transactional
@@ -39,7 +50,7 @@ public class FuelRequestService {
         if (resource.quantity() == null || resource.quantity() <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than zero");
         }
-        if (resource.deliveryDate() == null || resource.deliveryDate().isBefore(LocalDate.now())) {
+        if (resource.deliveryDate() == null || resource.deliveryDate().isBefore(LocalDate.now(clock.withZone(BUSINESS_ZONE)))) {
             throw new IllegalArgumentException("Delivery date cannot be in the past");
         }
         var request = new FuelRequestPersistenceEntity();
