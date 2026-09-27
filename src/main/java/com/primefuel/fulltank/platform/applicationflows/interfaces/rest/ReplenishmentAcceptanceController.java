@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Endpoint de composición para aceptar una solicitud y crear y vincular su orden en la misma transacción. */
 @RestController
-@RequestMapping(value = "/api/v2/replenishment-requests", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/replenishment-requests", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Solicitudes de abastecimiento", description = "Creación y ciclo de decisión de solicitudes por organización")
 public class ReplenishmentAcceptanceController {
 

@@ -10,4 +10,5 @@ public interface BuyerCompanyRepository {
     List<BuyerCompany> findAll();
     BuyerCompany save(BuyerCompany buyerCompany);
     boolean existsByRuc(String ruc);
+    Optional<BuyerCompany> findByRuc(String ruc);
 }

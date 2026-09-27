@@ -88,7 +88,7 @@ class ReplenishmentAcceptanceIntegrationTest {
         var created = createRequest(fixture);
         var provider = auth(fixture.providerId(), "ROLE_PROVIDER");
 
-        var acceptedJson = mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", created)
+        var acceptedJson = mockMvc.perform(post("/api/replenishment-requests/{id}/accept", created)
                         .with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACCEPTED"))
@@ -108,7 +108,7 @@ class ReplenishmentAcceptanceIntegrationTest {
                 "T-" + IDS.incrementAndGet(), "Volvo", "FH", 1000.0, "LITRE", "AVAILABLE"))
                 .getOrElse(null);
 
-        mockMvc.perform(post("/api/v2/deliveries")
+        mockMvc.perform(post("/api/deliveries")
                         .with(provider)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -119,7 +119,7 @@ class ReplenishmentAcceptanceIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.orderId").value(orderId));
 
-        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", created)
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", created)
                         .with(provider))
                 .andExpect(status().isConflict());
         assertThat(orders.findByProviderId(fixture.providerId())).hasSize(1);
@@ -130,7 +130,7 @@ class ReplenishmentAcceptanceIntegrationTest {
         var fixture = fixture();
         var requestId = createRequest(fixture);
         var provider = auth(fixture.providerId(), "ROLE_PROVIDER");
-        var acceptedJson = mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId)
+        var acceptedJson = mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId)
                         .with(provider))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
@@ -167,7 +167,7 @@ class ReplenishmentAcceptanceIntegrationTest {
     private int assignAfterGate(CountDownLatch gate, RequestPostProcessor provider, long orderId,
                                 String commandId, long driverId, long tankerId) throws Exception {
         gate.await();
-        return mockMvc.perform(post("/api/v2/deliveries").with(provider)
+        return mockMvc.perform(post("/api/deliveries").with(provider)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"commandId":"%s","orderId":%d,"driverId":%d,"tankerId":%d,
@@ -178,20 +178,18 @@ class ReplenishmentAcceptanceIntegrationTest {
     }
 
     @Test
-    void missingLegacyTankMappingRollsBackTheAcceptanceAndOrderCreation() throws Exception {
+    void aTankWithoutLegacyEquipmentIsAcceptedWithAnOrderWithoutEquipment() throws Exception {
         var fixture = fixture(false);
         var requestId = createRequest(fixture);
 
-        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId)
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId)
                         .with(auth(fixture.providerId(), "ROLE_PROVIDER")))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.details").value(
-                        "No legacy equipment mapping exists for tank " + fixture.tankId()));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderId").isNumber());
 
-        var unchanged = replenishmentLookup.findById(requestId).orElseThrow();
-        assertThat(unchanged.status()).isEqualTo("PENDING");
-        assertThat(unchanged.acceptanceConsumed()).isFalse();
-        assertThat(orders.findByProviderId(fixture.providerId())).isEmpty();
+        assertThat(orders.findByProviderId(fixture.providerId()))
+                .singleElement()
+                .satisfies(order -> assertThat(order.getEquipmentId()).isNull());
     }
 
     @Test
@@ -201,7 +199,7 @@ class ReplenishmentAcceptanceIntegrationTest {
                 fixture.organizationId(), fixture.customerId(), fixture.tankId(), fixture.providerId(),
                 fixture.productId(), 100.0, "LITRE", ReplenishmentSource.MANUAL, null, null, null), 10.0));
 
-        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", request.getId())
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", request.getId())
                         .with(auth(fixture.providerId(), "ROLE_PROVIDER")))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.details").value("The request has no delivery address or date"));
@@ -223,19 +221,19 @@ class ReplenishmentAcceptanceIntegrationTest {
                  "quantity":100,"unit":"LITRE","deliveryAddress":"","deliveryDate":"2099-10-15"}
                 """;
 
-        var foreignTank = mockMvc.perform(post("/api/v2/replenishment-requests").with(buyer)
+        var foreignTank = mockMvc.perform(post("/api/replenishment-requests").with(buyer)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body.formatted(requester.customerId(), owner.tankId(), requester.providerId(), requester.productId())))
                 .andExpect(status().isNotFound())
                 .andReturn().getResponse().getContentAsString();
         assertThat(foreignTank).doesNotContain(owner.address());
 
-        mockMvc.perform(post("/api/v2/replenishment-requests").with(buyer)
+        mockMvc.perform(post("/api/replenishment-requests").with(buyer)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body.formatted(owner.customerId(), 0L, requester.providerId(), requester.productId())))
                 .andExpect(status().isNotFound());
 
-        mockMvc.perform(post("/api/v2/replenishment-requests").with(buyer)
+        mockMvc.perform(post("/api/replenishment-requests").with(buyer)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body.formatted(requester.customerId(), requester.tankId(), requester.providerId(), requester.productId())))
                 .andExpect(status().isCreated());

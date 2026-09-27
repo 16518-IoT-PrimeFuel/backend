@@ -41,4 +41,9 @@ public class BuyerCompanyRepositoryImpl implements BuyerCompanyRepository {
     public boolean existsByRuc(String ruc) {
         return buyerCompanyRepository.existsByRuc(ruc);
     }
+
+    @Override
+    public Optional<BuyerCompany> findByRuc(String ruc) {
+        return buyerCompanyRepository.findByRuc(ruc).map(BuyerCompanyPersistenceAssembler::toDomainFromPersistence);
+    }
 }

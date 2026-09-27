@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.equipment.infrastructure.services;
 
+import com.primefuel.fulltank.platform.iam.api.LegacyCompanyDirectory;
 import com.primefuel.fulltank.platform.equipment.api.CustomerDirectory;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.CustomerAccountRepository;
 import org.springframework.stereotype.Component;
@@ -10,9 +11,12 @@ import java.util.Optional;
 public class CustomerDirectoryImpl implements CustomerDirectory {
 
     private final CustomerAccountRepository customerAccountRepository;
+    private final LegacyCompanyDirectory legacyCompanyDirectory;
 
-    public CustomerDirectoryImpl(CustomerAccountRepository customerAccountRepository) {
+    public CustomerDirectoryImpl(CustomerAccountRepository customerAccountRepository,
+                                 LegacyCompanyDirectory legacyCompanyDirectory) {
         this.customerAccountRepository = customerAccountRepository;
+        this.legacyCompanyDirectory = legacyCompanyDirectory;
     }
 
     @Override
@@ -26,26 +30,12 @@ public class CustomerDirectoryImpl implements CustomerDirectory {
     }
 
     @Override
-    public Optional<Long> customerIdForLegacyCompany(Long legacyCompanyId) {
-        if (legacyCompanyId == null) {
-            return Optional.empty();
-        }
-        return customerAccountRepository.findByLegacyCompanyId(legacyCompanyId).map(customer -> customer.getId());
-    }
-
-    @Override
-    public Optional<Long> organizationIdForCustomer(Long customerAccountId) {
-        if (customerAccountId == null) {
-            return Optional.empty();
-        }
-        return customerAccountRepository.findById(customerAccountId)
-                .map(customer -> customer.getOrganizationId());
-    }
-
-    @Override
     public Optional<Long> legacyCompanyIdForCustomer(Long customerAccountId) {
+        // An account created through the API carries no explicit mapping: fall back to its organization's buyer company.
         return customerAccountId == null ? Optional.empty()
                 : customerAccountRepository.findById(customerAccountId)
-                .map(customer -> customer.getLegacyCompanyId());
+                .flatMap(customer -> customer.getLegacyCompanyId() != null
+                        ? Optional.of(customer.getLegacyCompanyId())
+                        : legacyCompanyDirectory.buyerCompanyIdForOrganization(customer.getOrganizationId()));
     }
 }

@@ -14,6 +14,7 @@ import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.SiteR
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.CustomerResourceFromDomainAssembler;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.SiteResourceFromDomainAssembler;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
+import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,20 +29,23 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v2/customers", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/customers", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Clientes", description = "Cuentas de cliente y sus sitios de entrega en una organización")
 public class CustomersController {
 
     private final CustomerCommandService customerCommandService;
     private final CustomerQueryService customerQueryService;
     private final MembershipAccess membershipAccess;
+    private final TenantAccess tenantAccess;
 
     public CustomersController(CustomerCommandService customerCommandService,
                                CustomerQueryService customerQueryService,
-                               MembershipAccess membershipAccess) {
+                               MembershipAccess membershipAccess,
+                               TenantAccess tenantAccess) {
         this.customerCommandService = customerCommandService;
         this.customerQueryService = customerQueryService;
         this.membershipAccess = membershipAccess;
+        this.tenantAccess = tenantAccess;
     }
 
     /**
@@ -55,13 +59,17 @@ public class CustomersController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Cuenta de cliente creada."),
             @ApiResponse(responseCode = "400", description = "El cuerpo no cumple las validaciones requeridas."),
-            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene una organización activa o la empresa heredada indicada no es suya."),
             @ApiResponse(responseCode = "409", description = "Ya existe una cuenta con el mismo RUC en esta organización.")
     })
     @PostMapping
     public ResponseEntity<?> registerCustomer(@Valid @RequestBody CreateCustomerResource resource) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        // The legacy company decides who is billed for the orders: only the caller's own company may be mapped.
+        if (resource.legacyCompanyId() != null && !tenantAccess.ownsCompany(resource.legacyCompanyId())) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         var result = customerCommandService.handle(new RegisterCustomerCommand(

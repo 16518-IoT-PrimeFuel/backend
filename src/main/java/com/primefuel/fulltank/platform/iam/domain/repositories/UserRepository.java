@@ -9,7 +9,6 @@ public interface UserRepository {
     Optional<User> findById(Long id);
     Optional<User> findByUsername(String username);
     Optional<User> findByCompanyId(Long companyId);
-    Optional<User> findByProviderId(Long providerId);
     List<User> findAll();
     User save(User user);
     boolean existsByUsername(String username);

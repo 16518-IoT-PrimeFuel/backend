@@ -54,9 +54,8 @@ public class ReplenishmentAcceptanceExecutor {
         var companyId = customers.legacyCompanyIdForCustomer(request.customerAccountId())
                 .orElseThrow(() -> fail(ApplicationError.conflict("ReplenishmentRequest",
                         "No legacy company mapping exists for customer account " + request.customerAccountId())));
-        var equipmentId = tanks.legacyEquipmentIdForTank(request.tankId())
-                .orElseThrow(() -> fail(ApplicationError.conflict("ReplenishmentRequest",
-                        "No legacy equipment mapping exists for tank " + request.tankId())));
+        // The order's equipment is optional: a tank registered through the API has no legacy equipment.
+        var equipmentId = tanks.legacyEquipmentIdForTank(request.tankId()).orElse(null);
         var orderId = orders.create(new FuelOrderCreation.Command(companyId, request.providerId(),
                 request.fuelProductId(), equipmentId, request.quantity(), request.deliveryAddress(),
                 request.deliveryDate()));
