@@ -2,7 +2,6 @@ package com.primefuel.fulltank.platform.notification.application.internal.comman
 
 import com.primefuel.fulltank.platform.notification.application.commandservices.NotificationCommandService;
 import com.primefuel.fulltank.platform.notification.domain.model.aggregates.Notification;
-import com.primefuel.fulltank.platform.notification.domain.model.commands.CreateNotificationCommand;
 import com.primefuel.fulltank.platform.notification.domain.model.commands.MarkNotificationAsReadCommand;
 import com.primefuel.fulltank.platform.notification.domain.repositories.NotificationRepository;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
@@ -16,12 +15,6 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
 
     public NotificationCommandServiceImpl(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
-    }
-
-    @Override
-    public Result<Notification, ApplicationError> handle(CreateNotificationCommand command) {
-        var notification = new Notification(command);
-        return Result.success(notificationRepository.save(notification));
     }
 
     @Override

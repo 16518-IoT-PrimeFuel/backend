@@ -1,6 +1,5 @@
 package com.primefuel.fulltank.platform.notification.domain.model.aggregates;
 
-import com.primefuel.fulltank.platform.notification.domain.model.commands.CreateNotificationCommand;
 import com.primefuel.fulltank.platform.notification.domain.model.commands.NotificationFanoutCommand;
 import com.primefuel.fulltank.platform.notification.domain.model.valueobjects.NotificationChannel;
 import com.primefuel.fulltank.platform.notification.domain.model.valueobjects.NotificationDeliveryStatus;
@@ -33,20 +32,6 @@ public class Notification extends AbstractDomainAggregateRoot<Notification> {
     private NotificationDeliveryStatus deliveryStatus;
     private int attempts;
     private LocalDateTime lastAttemptAt;
-
-    /** Manual creation (legacy v1 POST). Not event-driven, so it carries no fanout identity. */
-    public Notification(CreateNotificationCommand command) {
-        this.userId = command.userId();
-        this.type = command.type();
-        this.title = command.title();
-        this.message = command.message();
-        this.referenceId = command.referenceId();
-        this.read = false;
-        this.channel = NotificationChannel.IN_APP;
-        this.deliveryStatus = NotificationDeliveryStatus.DELIVERED;
-        this.attempts = 1;
-        this.lastAttemptAt = LocalDateTime.now();
-    }
 
     /** Event-driven fanout (S20/T20-A): idempotent by event + recipient + channel. */
     public Notification(NotificationFanoutCommand command) {

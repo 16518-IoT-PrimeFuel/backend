@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * T20-B: the v2 {@code /api/v2/me/notifications} inbox is private per user, mark-as-read is idempotent, and
+ * T20-B: the v2 {@code /api/me/notifications} inbox is private per user, mark-as-read is idempotent, and
  * the deprecated v1 POST keeps working.
  */
 @SpringBootTest(properties = {
@@ -106,46 +106,33 @@ class MeNotificationsControllerTest {
         var member = authFor(memberUserId);
 
         // Each user sees only their own notification.
-        var ownerList = mockMvc.perform(get("/api/v2/me/notifications").with(owner))
+        var ownerList = mockMvc.perform(get("/api/me/notifications").with(owner))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andReturn().getResponse().getContentAsString();
         long ownerNotificationId = objectMapper.readTree(ownerList).get(0).get("id").asLong();
 
-        mockMvc.perform(get("/api/v2/me/notifications").with(member))
+        mockMvc.perform(get("/api/me/notifications").with(member))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].userId").value(memberUserId));
 
         // One user cannot mark another user's notification as read (privacy).
-        mockMvc.perform(post("/api/v2/me/notifications/{id}/read", ownerNotificationId).with(member))
+        mockMvc.perform(post("/api/me/notifications/{id}/read", ownerNotificationId).with(member))
                 .andExpect(status().isNotFound());
 
         // Mark as read, then repeat: idempotent, still exactly one notification.
-        mockMvc.perform(post("/api/v2/me/notifications/{id}/read", ownerNotificationId).with(owner))
+        mockMvc.perform(post("/api/me/notifications/{id}/read", ownerNotificationId).with(owner))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.read").value(true));
-        mockMvc.perform(post("/api/v2/me/notifications/{id}/read", ownerNotificationId).with(owner))
+        mockMvc.perform(post("/api/me/notifications/{id}/read", ownerNotificationId).with(owner))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.read").value(true));
 
         assertThat(notificationRepository.findByUserId(ownerUserId)).hasSize(1);
-        mockMvc.perform(get("/api/v2/me/notifications/unread").with(owner))
+        mockMvc.perform(get("/api/me/notifications/unread").with(owner))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
-    }
-
-    @Test
-    void theDeprecatedV1PostStillWorks() throws Exception {
-        long userId = 2003;
-        var user = authFor(userId);
-        mockMvc.perform(post("/api/v1/notifications").with(user)
-                        .contentType("application/json")
-                        .content("""
-                                {"userId":%d,"type":"GENERAL","title":"Manual","message":"legacy"}
-                                """.formatted(userId)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.title").value("Manual"));
     }
 
     private static RequestPostProcessor authFor(long userId) {

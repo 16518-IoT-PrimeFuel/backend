@@ -26,12 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Bandeja v2 del usuario autenticado. Todas las operaciones se limitan al usuario del principal; las rutas no
+ * Bandeja del usuario autenticado. Todas las operaciones se limitan al usuario del principal; las rutas no
  * reciben un identificador de usuario y solo permiten consultar o actualizar sus propias notificaciones.
  */
 @RestController
-@RequestMapping(value = "/api/v2/me/notifications", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Mis notificaciones", description = "Bandeja personal de notificaciones de la API v2")
+@RequestMapping(value = "/api/me/notifications", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Mis notificaciones", description = "Bandeja personal de notificaciones del usuario autenticado")
 public class MeNotificationsController {
 
     private final NotificationQueryService notificationQueryService;
