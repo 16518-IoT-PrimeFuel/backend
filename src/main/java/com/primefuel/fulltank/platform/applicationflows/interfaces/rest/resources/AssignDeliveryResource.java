@@ -3,7 +3,7 @@ package com.primefuel.fulltank.platform.applicationflows.interfaces.rest.resourc
 import java.time.Instant;
 
 /**
- * Request body for the v2 assignment. It carries no {@code providerId} on purpose: the provider is resolved
+ * Request body for the assignment. It carries no {@code providerId} on purpose: the provider is resolved
  * from the caller's principal. The order identifies the accepted replenishment request behind it.
  */
 public record AssignDeliveryResource(

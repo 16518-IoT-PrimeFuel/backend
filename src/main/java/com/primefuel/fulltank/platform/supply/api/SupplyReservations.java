@@ -17,6 +17,9 @@ public interface SupplyReservations {
     /** Idempotent release of every active reservation of a reference. */
     Result<Long, ApplicationError> release(String reference);
 
+    /** Marks every active reservation of a reference as consumed by a completed delivery; returns how many. */
+    Result<Long, ApplicationError> reconcile(String reference);
+
     record ReservationSnapshot(
             Long id,
             Long providerId,

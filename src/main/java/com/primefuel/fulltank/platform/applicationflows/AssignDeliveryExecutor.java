@@ -3,6 +3,7 @@ package com.primefuel.fulltank.platform.applicationflows;
 import com.primefuel.fulltank.platform.fleet.api.FleetReservations;
 import com.primefuel.fulltank.platform.fleet.domain.model.commands.ReserveFleetCommand;
 import com.primefuel.fulltank.platform.fulfillment.api.DeliveryAssignments;
+import com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository;
 import com.primefuel.fulltank.platform.replenishment.api.ReplenishmentAcceptance;
 import com.primefuel.fulltank.platform.replenishment.api.ReplenishmentLookup;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
@@ -37,27 +38,24 @@ public class AssignDeliveryExecutor {
     private final SupplyReservations supplyReservations;
     private final FleetReservations fleetReservations;
     private final DeliveryAssignments deliveryAssignments;
+    private final FuelOrderRepository orderRepository;
 
     public AssignDeliveryExecutor(ReplenishmentLookup replenishmentLookup,
                                   ReplenishmentAcceptance replenishmentAcceptance,
                                   SupplyReservations supplyReservations,
                                   FleetReservations fleetReservations,
-                                  DeliveryAssignments deliveryAssignments) {
+                                  DeliveryAssignments deliveryAssignments,
+                                  FuelOrderRepository orderRepository) {
         this.replenishmentLookup = replenishmentLookup;
         this.replenishmentAcceptance = replenishmentAcceptance;
         this.supplyReservations = supplyReservations;
         this.fleetReservations = fleetReservations;
         this.deliveryAssignments = deliveryAssignments;
+        this.orderRepository = orderRepository;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public AssignDeliveryResult execute(AssignDeliveryFlowCommand command) {
-        return execute(command, true);
-    }
-
-    /** @param consumeAcceptance whether this assignment consumes the request acceptance. */
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public AssignDeliveryResult execute(AssignDeliveryFlowCommand command, boolean consumeAcceptance) {
         if (command.commandId() == null || command.commandId().isBlank()) {
             throw fail(ApplicationError.validationError("commandId", "A command id is required"));
         }
@@ -92,8 +90,8 @@ public class AssignDeliveryExecutor {
         }
 
         // Step 1 — consume the acceptance once-only: the gate that prevents assigning the same need twice.
-        // An acceptance consumed by the v2 acceptance flow is not consumed a second time here.
-        if (consumeAcceptance && !request.acceptanceConsumed()) {
+        // An acceptance consumed by the acceptance flow is not consumed a second time here.
+        if (!request.acceptanceConsumed()) {
             var consumed = replenishmentAcceptance.consume(request.id());
             if (consumed.isFailure()) {
                 throw fail(errorOf(consumed));
@@ -134,6 +132,16 @@ public class AssignDeliveryExecutor {
         if (delivery.isFailure()) {
             throw fail(errorOf(delivery));
         }
+
+        // Step 5 — the assigned order is dispatched, so the physical close can settle it (PENDING_PAYMENT).
+        orderRepository.findById(command.orderId()).ifPresent(order -> {
+            try {
+                order.dispatch();
+            } catch (IllegalStateException exception) {
+                throw fail(ApplicationError.conflict("FuelOrder", exception.getMessage()));
+            }
+            orderRepository.save(order);
+        });
 
         LOG.info("assignment committed commandId={} orderId={} deliveryId={} driverId={} tankerId={}",
                 command.commandId(), command.orderId(), delivery.getOrElse(null).id(), command.driverId(),

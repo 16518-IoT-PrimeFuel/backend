@@ -28,6 +28,11 @@ public class SupplyReservationsImpl implements SupplyReservations {
         return reservationService.release(reference);
     }
 
+    @Override
+    public Result<Long, ApplicationError> reconcile(String reference) {
+        return reservationService.reconcile(reference);
+    }
+
     private static ReservationSnapshot toSnapshot(SupplyReservation reservation) {
         return new ReservationSnapshot(reservation.getId(), reservation.getProviderId(),
                 reservation.getFuelProductId(), reservation.getReference(), reservation.getQuantity(),

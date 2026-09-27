@@ -27,7 +27,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v1/fuel-orders", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/fuel-orders", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Órdenes de combustible", description = "Creación, consulta y gestión de órdenes entre empresas compradoras y distribuidores")
 public class FuelOrdersController {
 
@@ -90,13 +90,14 @@ public class FuelOrdersController {
     /**
      * Cancela una orden de combustible.
      *
-     * <p>Puede cancelarla la empresa compradora o el distribuidor propietario. El estado actual no bloquea esta transición.</p>
+     * <p>Puede cancelarla la empresa compradora o el distribuidor propietario. Solo se cancelan órdenes pendientes o confirmadas; repetir la cancelación no cambia nada.</p>
      */
     @Operation(summary = "Cancelar orden de combustible",
             description = "Registra la cancelación solicitada por la empresa compradora o el distribuidor asociado a la orden.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Orden de combustible cancelada."),
-            @ApiResponse(responseCode = "404", description = "La orden no existe o no pertenece al usuario.")
+            @ApiResponse(responseCode = "404", description = "La orden no existe o no pertenece al usuario."),
+            @ApiResponse(responseCode = "409", description = "La orden ya fue despachada, entregada o pagada.")
     })
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {

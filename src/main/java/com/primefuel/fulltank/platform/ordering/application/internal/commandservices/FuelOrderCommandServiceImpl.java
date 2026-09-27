@@ -67,7 +67,11 @@ public class FuelOrderCommandServiceImpl implements FuelOrderCommandService {
             return Result.failure(ApplicationError.notFound("FuelOrder", command.orderId().toString()));
         }
         var order = existing.get();
-        order.confirm();
+        try {
+            order.confirm();
+        } catch (IllegalStateException exception) {
+            return Result.failure(ApplicationError.conflict("FuelOrder", exception.getMessage()));
+        }
         return Result.success(fuelOrderRepository.save(order));
     }
 
@@ -78,7 +82,11 @@ public class FuelOrderCommandServiceImpl implements FuelOrderCommandService {
             return Result.failure(ApplicationError.notFound("FuelOrder", command.orderId().toString()));
         }
         var order = existing.get();
-        order.cancel();
+        try {
+            order.cancel();
+        } catch (IllegalStateException exception) {
+            return Result.failure(ApplicationError.conflict("FuelOrder", exception.getMessage()));
+        }
         return Result.success(fuelOrderRepository.save(order));
     }
 }

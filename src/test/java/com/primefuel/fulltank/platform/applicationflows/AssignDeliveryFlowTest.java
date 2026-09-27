@@ -4,7 +4,10 @@ import com.primefuel.fulltank.platform.fleet.api.FleetRegistry;
 import com.primefuel.fulltank.platform.fleet.domain.model.commands.RegisterDriverCommand;
 import com.primefuel.fulltank.platform.fleet.domain.model.commands.RegisterTankerCommand;
 import com.primefuel.fulltank.platform.fleet.domain.repositories.FleetReservationRepository;
+import com.primefuel.fulltank.platform.fleet.domain.model.valueobjects.FleetReservationStatus;
+import com.primefuel.fulltank.platform.fulfillment.application.internal.commandservices.DeliveryLifecycleServiceImpl;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
+import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.FailDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.valueobjects.DeliveryPhysicalState;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryRepository;
 import com.primefuel.fulltank.platform.inventory.application.commandservices.FuelProductCommandService;
@@ -61,6 +64,9 @@ class AssignDeliveryFlowTest {
 
     @Autowired
     private AssignDeliveryFlow assignDeliveryFlow;
+
+    @Autowired
+    private DeliveryLifecycleServiceImpl deliveryLifecycleService;
 
     @Autowired
     private FleetRegistry fleetRegistry;
@@ -162,6 +168,24 @@ class AssignDeliveryFlowTest {
         assertThat(supplyReservationRepository.findByReferenceAndStatus(commandId, ReservationStatus.ACTIVE))
                 .hasSize(1);
         assertThat(fleetReservationRepository.findByReference(commandId)).isPresent();
+    }
+
+    @Test
+    void failingADeliveryReleasesItsSupplyAndFleetReservations() {
+        long providerId = providerId();
+        long productId = product(providerId, 1000.0);
+        long orderId = 5000L + SEQUENCE.incrementAndGet();
+        acceptedRequest(providerId, productId, 100.0, "LITRE", orderId);
+        var commandId = "cmd-fail-" + SEQUENCE.incrementAndGet();
+        var assignment = assignDeliveryFlow.assign(command(commandId, orderId, providerId, driver(providerId),
+                tanker(providerId, 1000.0))).getOrElse(null);
+
+        assertThat(deliveryLifecycleService.handle(new FailDeliveryCommand(assignment.deliveryId(), "road closed"))
+                .isSuccess()).isTrue();
+
+        assertThat(supplyReservationRepository.findByReferenceAndStatus(commandId, ReservationStatus.ACTIVE)).isEmpty();
+        assertThat(fleetReservationRepository.findByReference(commandId).orElseThrow().getStatus())
+                .isEqualTo(FleetReservationStatus.RELEASED);
     }
 
     @Test

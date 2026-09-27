@@ -38,16 +38,26 @@ public class FuelOrder extends AbstractDomainAggregateRoot<FuelOrder> {
         this.scheduledDate = command.scheduledDate();
     }
 
+    /** The buyer confirms before dispatch; confirming again is a no-op. */
     public void confirm() {
+        if (status != OrderStatus.PENDING && status != OrderStatus.CONFIRMED) {
+            throw new IllegalStateException("Only pending orders can be confirmed");
+        }
         this.status = OrderStatus.CONFIRMED;
     }
 
+    /** Only an order not yet dispatched can be cancelled; cancelling again is a no-op. */
     public void cancel() {
+        if (status != OrderStatus.PENDING && status != OrderStatus.CONFIRMED && status != OrderStatus.CANCELLED) {
+            throw new IllegalStateException("Only pending or confirmed orders can be cancelled");
+        }
         this.status = OrderStatus.CANCELLED;
     }
 
     public void dispatch() {
-        if (status != OrderStatus.PENDING) throw new IllegalStateException("Order is not pending assignment");
+        if (status != OrderStatus.PENDING && status != OrderStatus.CONFIRMED) {
+            throw new IllegalStateException("Order is not pending assignment");
+        }
         this.status = OrderStatus.DISPATCHED;
     }
 
