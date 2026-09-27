@@ -11,14 +11,13 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
- * A delivery. Alongside the legacy {@link DeliveryStatus} (kept for v1 compatibility) it now tracks the
+ * A delivery. Alongside the legacy {@link DeliveryStatus} (kept for legacy readers such as analytics) it now tracks the
  * physical lifecycle (S14/T14-A) in {@link DeliveryPhysicalState}, plus an optimistic-lock {@code version}
  * and the physical timestamps/volumes.
  *
  * <p>{@code physicalState} is nullable on purpose: rows created by the legacy flow predate the machine and
  * are <em>derived</em> on read through {@link DeliveryPhysicalState#fromLegacy(DeliveryStatus)} instead of
- * being rewritten. The legacy {@code dispatch()/complete()/fail()} mutators are left untouched — T14-B is
- * the ticket that reroutes v1 through this machine.
+ * being rewritten. Only {@code dispatch()} survives, to build such legacy rows.
  */
 @Getter
 @Setter
@@ -47,7 +46,7 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
     /**
      * The correlation id of the orchestrated assignment that created this delivery (T15-A), unique when
      * present. A retry of the same command finds the delivery here instead of creating a second one; legacy
-     * (v1) deliveries carry none.
+     * deliveries carry none.
      */
     private String assignmentCommandId;
 
@@ -64,16 +63,6 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
     public void dispatch() {
         this.status = DeliveryStatus.DISPATCHED;
         this.dispatchedAt = LocalDateTime.now();
-    }
-
-    public void complete() {
-        this.status = DeliveryStatus.DELIVERED;
-        this.deliveredAt = LocalDateTime.now();
-    }
-
-    public void fail(String reason) {
-        this.status = DeliveryStatus.FAILED;
-        this.notes = reason;
     }
 
     /** The physical state, derived from the legacy status when the row has not entered the machine yet. */
@@ -165,7 +154,7 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
 
     private void materialize(DeliveryPhysicalState next) {
         this.physicalState = next;
-        // Keep the legacy status coherent for v1 readers through the compatibility map.
+        // Keep the legacy status coherent for legacy readers through the compatibility map.
         this.status = next.toLegacyStatus();
     }
 }

@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.fulfillment.application.internal.commandservices;
 
+import com.primefuel.fulltank.platform.fulfillment.api.DeliveryIntegration;
 import com.primefuel.fulltank.platform.fulfillment.api.events.DeliveryArrived;
 import com.primefuel.fulltank.platform.fulfillment.api.events.DeliveryAssigned;
 import com.primefuel.fulltank.platform.fulfillment.api.events.DeliveryCompleted;
@@ -33,8 +34,9 @@ import java.util.function.BiFunction;
  * the same transaction, so a rollback leaves neither state nor event behind. A close from {@code ARRIVED}
  * persists the implicit discharge as its own transition, so it journals two rows with their own versions.
  *
- * <p>Payment is not touched here: `PAID`/`PENDING_PAYMENT` are a commercial concern and never drive (or are
- * driven by) the physical state.
+ * <p>A physical close also applies the commercial completion effects (release the fleet, refuel, order to
+ * {@code PENDING_PAYMENT}) through the fulfillment-owned {@link DeliveryIntegration} port, same transaction.
+ * The physical state never depends on payment.
  */
 @Service
 public class DeliveryLifecycleServiceImpl {
@@ -45,15 +47,18 @@ public class DeliveryLifecycleServiceImpl {
     private final DeliveryStateTransitionRepository transitionRepository;
     private final FuelOrderQueryService fuelOrderQueryService;
     private final EventPublicationRegistry publicationRegistry;
+    private final DeliveryIntegration deliveryIntegration;
 
     public DeliveryLifecycleServiceImpl(DeliveryRepository deliveryRepository,
                                         DeliveryStateTransitionRepository transitionRepository,
                                         FuelOrderQueryService fuelOrderQueryService,
-                                        EventPublicationRegistry publicationRegistry) {
+                                        EventPublicationRegistry publicationRegistry,
+                                        DeliveryIntegration deliveryIntegration) {
         this.deliveryRepository = deliveryRepository;
         this.transitionRepository = transitionRepository;
         this.fuelOrderQueryService = fuelOrderQueryService;
         this.publicationRegistry = publicationRegistry;
+        this.deliveryIntegration = deliveryIntegration;
     }
     @Transactional
     public Result<Delivery, ApplicationError> handle(AssignDeliveryCommand command) {
@@ -156,6 +161,9 @@ public class DeliveryLifecycleServiceImpl {
                     saved.getProviderId(), (long) saved.getVersion(),
                     new DeliveryCompleted(saved.getId(), saved.getOrderId(), saved.getProviderId(),
                             saved.getDeliveredVolume(), saved.getRequestedVolume(), occurredAt).toPayloadJson());
+            deliveryIntegration.applyCompletionEffects(new DeliveryIntegration.CompletionEffectsCommand(
+                    saved.getOrderId(), saved.getDriverId(), saved.getVehicleId(), saved.getAssignmentCommandId(),
+                    saved.getDeliveredVolume()));
             return Result.success(saved);
         } catch (OptimisticLockingFailureException exception) {
             return concurrent();
@@ -202,9 +210,13 @@ public class DeliveryLifecycleServiceImpl {
         } catch (IllegalStateException exception) {
             return Result.failure(ApplicationError.conflict("Delivery", exception.getMessage()));
         }
-        return commit(delivery, from, "delivery.failed.v1",
+        var result = commit(delivery, from, "delivery.failed.v1",
                 (saved, occurredAt) -> new DeliveryFailed(saved.getId(), saved.getOrderId(),
                         saved.getProviderId(), terminalState.name(), reason, occurredAt).toPayloadJson());
+        if (result.isSuccess()) {
+            deliveryIntegration.releaseReservations(delivery.getAssignmentCommandId());
+        }
+        return result;
     }
 
     /** Persists the transition, journals it and publishes the event — one transactional unit. */

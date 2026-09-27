@@ -21,7 +21,7 @@ import java.util.List;
 
 /** Reconstruye la cronología de negocio de una entrega con sus fuentes históricas y las muestras retenidas. */
 @RestController
-@RequestMapping("/api/v2/deliveries")
+@RequestMapping("/api/deliveries")
 @Tag(name = "Cronología de entregas", description = "Historial físico y de seguridad reconstruido")
 public class DeliveryTimelineController {
     private final DeliveryTrackingLookup deliveries;

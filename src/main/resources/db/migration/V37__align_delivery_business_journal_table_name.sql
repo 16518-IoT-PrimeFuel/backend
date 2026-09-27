@@ -1,0 +1,1 @@
+rename table delivery_business_journal to delivery_business_journals;

@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "authorization.jwt.secret=0123456789abcdef0123456789abcdef"
 })
 @AutoConfigureMockMvc
-class DeliveriesV2ControllerTest {
+class DeliveriesControllerTest {
 
     private static final AtomicLong ORDERS = new AtomicLong(9100);
 
@@ -68,13 +68,13 @@ class DeliveriesV2ControllerTest {
         var deliveryId = seedDelivery(555L, 100.0);
         var provider = authForProvider(555L);
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/start", deliveryId).with(provider))
+        mockMvc.perform(post("/api/deliveries/{id}/start", deliveryId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.physicalState").value("STARTED"));
-        mockMvc.perform(post("/api/v2/deliveries/{id}/arrive", deliveryId).with(provider))
+        mockMvc.perform(post("/api/deliveries/{id}/arrive", deliveryId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.physicalState").value("ARRIVED"));
-        mockMvc.perform(post("/api/v2/deliveries/{id}/complete", deliveryId).with(provider)
+        mockMvc.perform(post("/api/deliveries/{id}/complete", deliveryId).with(provider)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"deliveredVolume\":42.5}"))
                 .andExpect(status().isOk())
@@ -83,10 +83,10 @@ class DeliveriesV2ControllerTest {
                 .andExpect(jsonPath("$.deliveredVolume").value(42.5))
                 .andExpect(jsonPath("$.requestedVolume").value(100.0));
 
-        mockMvc.perform(get("/api/v2/deliveries/{id}", deliveryId).with(provider))
+        mockMvc.perform(get("/api/deliveries/{id}", deliveryId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.physicalState").value("COMPLETED"));
-        mockMvc.perform(get("/api/v2/deliveries/{id}/transitions", deliveryId).with(provider))
+        mockMvc.perform(get("/api/deliveries/{id}/transitions", deliveryId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(4));
     }
@@ -97,7 +97,7 @@ class DeliveriesV2ControllerTest {
         var provider = authForProvider(556L);
 
         // An assigned delivery cannot arrive without starting first.
-        mockMvc.perform(post("/api/v2/deliveries/{id}/arrive", deliveryId).with(provider))
+        mockMvc.perform(post("/api/deliveries/{id}/arrive", deliveryId).with(provider))
                 .andExpect(status().isConflict());
     }
 
@@ -105,10 +105,10 @@ class DeliveriesV2ControllerTest {
     void rejectsADeliveredVolumeAboveTheRequestedOneWith400() throws Exception {
         var deliveryId = seedDelivery(558L, 100.0);
         var provider = authForProvider(558L);
-        mockMvc.perform(post("/api/v2/deliveries/{id}/start", deliveryId).with(provider))
+        mockMvc.perform(post("/api/deliveries/{id}/start", deliveryId).with(provider))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/complete", deliveryId).with(provider)
+        mockMvc.perform(post("/api/deliveries/{id}/complete", deliveryId).with(provider)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"deliveredVolume\":500.0}"))
                 .andExpect(status().isBadRequest());
@@ -119,15 +119,15 @@ class DeliveriesV2ControllerTest {
         var deliveryId = seedDelivery(557L, 100.0);
         var other = authForProvider(999L);
 
-        mockMvc.perform(get("/api/v2/deliveries/{id}", deliveryId).with(other))
+        mockMvc.perform(get("/api/deliveries/{id}", deliveryId).with(other))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(post("/api/v2/deliveries/{id}/start", deliveryId).with(other))
+        mockMvc.perform(post("/api/deliveries/{id}/start", deliveryId).with(other))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(post("/api/v2/deliveries/{id}/complete", deliveryId).with(other)
+        mockMvc.perform(post("/api/deliveries/{id}/complete", deliveryId).with(other)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"deliveredVolume\":1.0}"))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v2/deliveries/{id}/transitions", deliveryId).with(other))
+        mockMvc.perform(get("/api/deliveries/{id}/transitions", deliveryId).with(other))
                 .andExpect(status().isNotFound());
     }
 

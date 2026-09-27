@@ -1,21 +1,23 @@
 package com.primefuel.fulltank.platform.fulfillment.interfaces.rest;
 
-import com.primefuel.fulltank.platform.fulfillment.application.commandservices.DeliveryCommandService;
+import com.primefuel.fulltank.platform.fulfillment.application.internal.commandservices.DeliveryLifecycleServiceImpl;
 import com.primefuel.fulltank.platform.fulfillment.application.queryservices.DeliveryQueryService;
-import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CompleteDeliveryCommand;
-import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.DispatchDeliveryCommand;
+import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
+import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.ArriveDeliveryCommand;
+import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.AssignDeliveryCommand;
+import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CancelDeliveryCommand;
+import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CompletePhysicalDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.FailDeliveryCommand;
-import com.primefuel.fulltank.platform.fulfillment.domain.model.queries.GetAllDeliveriesQuery;
+import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.StartDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.queries.GetDeliveryByIdQuery;
-import com.primefuel.fulltank.platform.fulfillment.domain.model.queries.GetDeliveryByOrderIdQuery;
-import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.CreateDeliveryResource;
+import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryStateTransitionRepository;
+import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.CompleteDeliveryResource;
+import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.DeliveryTransitionResource;
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.DeliveryResource;
 import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.resources.FailDeliveryResource;
-import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.transform.CreateDeliveryCommandFromResourceAssembler;
-import com.primefuel.fulltank.platform.fulfillment.interfaces.rest.transform.DeliveryResourceFromEntityAssembler;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
-import com.primefuel.fulltank.platform.ordering.application.queryservices.FuelOrderQueryService;
-import com.primefuel.fulltank.platform.ordering.domain.model.queries.GetFuelOrderByIdQuery;
+import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
+import com.primefuel.fulltank.platform.shared.application.result.Result;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,216 +27,211 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
+import java.util.function.Supplier;
 
+/**
+ * Ciclo físico de entrega (S14/T14-A): asignar, iniciar, llegar, completar, fallar y cancelar.
+ * Solo el distribuidor propietario puede avanzar la entrega. Las transiciones inválidas responden 409,
+ * el volumen de evidencia inválido responde 400 y un volumen de orden no resoluble al completar responde 422.
+ */
 @RestController
-@RequestMapping(value = "/api/v1/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Entregas", description = "Creación, consulta y actualización de entregas de combustible")
+@RequestMapping(value = "/api/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Ciclo de entrega", description = "Transiciones del estado físico de una entrega")
 public class DeliveriesController {
 
-    private final DeliveryCommandService deliveryCommandService;
+    private final DeliveryLifecycleServiceImpl deliveryLifecycleService;
     private final DeliveryQueryService deliveryQueryService;
-    private final FuelOrderQueryService fuelOrderQueryService;
+    private final DeliveryStateTransitionRepository transitionRepository;
     private final TenantAccess tenantAccess;
 
-    public DeliveriesController(DeliveryCommandService deliveryCommandService,
-                                DeliveryQueryService deliveryQueryService,
-                                FuelOrderQueryService fuelOrderQueryService,
-                                TenantAccess tenantAccess) {
-        this.deliveryCommandService = deliveryCommandService;
+    public DeliveriesController(DeliveryLifecycleServiceImpl deliveryLifecycleService,
+                                  DeliveryQueryService deliveryQueryService,
+                                  DeliveryStateTransitionRepository transitionRepository,
+                                  TenantAccess tenantAccess) {
+        this.deliveryLifecycleService = deliveryLifecycleService;
         this.deliveryQueryService = deliveryQueryService;
-        this.fuelOrderQueryService = fuelOrderQueryService;
+        this.transitionRepository = transitionRepository;
         this.tenantAccess = tenantAccess;
     }
 
     /**
-     * Crea una entrega para una orden del distribuidor autenticado.
+     * Asigna una entrega a su conductor y cisterna.
      *
-     * <p>El distribuidor del cuerpo debe coincidir con el tenant autenticado; el conductor, la cisterna y
-     * la orden deben pertenecerle. También se exige disponibilidad, capacidad y existencias suficientes.
-     * La operación asigna conductor y cisterna, descuenta existencias y despacha la orden en una transacción.</p>
+     * <p>Solo opera sobre entregas del distribuidor autenticado; las ajenas responden como no encontradas. Repetir la asignación no duplica el historial ni los eventos.</p>
      */
-    @Operation(summary = "Crear entrega",
-            description = "Crea y despacha una entrega del distribuidor tras validar la propiedad, disponibilidad de flota, capacidad de la cisterna y existencias.")
+    @Operation(summary = "Asignar entrega",
+            description = "Avanza a asignada una entrega propia del distribuidor autenticado. Repetir la operación en ese estado no genera efectos duplicados.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Entrega creada y orden despachada."),
-            @ApiResponse(responseCode = "403", description = "El tenant autenticado no es propietario del distribuidor indicado."),
-            @ApiResponse(responseCode = "404", description = "No se encontró para el distribuidor el conductor, la cisterna o la orden."),
-            @ApiResponse(responseCode = "409", description = "La flota no está disponible, la capacidad o las existencias son insuficientes, o la orden ya tiene una entrega.")
+            @ApiResponse(responseCode = "200", description = "Entrega asignada o ya se encontraba asignada."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite asignar la entrega.")
     })
-    @PostMapping
-    @PreAuthorize("@tenantAccess.ownsProvider(#resource.providerId())")
-    public ResponseEntity<?> createDelivery(@RequestBody CreateDeliveryResource resource) {
-        var command = CreateDeliveryCommandFromResourceAssembler.toCommandFromResource(resource);
-        var result = deliveryCommandService.handle(command);
-        return ResponseEntityAssembler.toResponseEntityFromResult(
-                result,
-                DeliveryResourceFromEntityAssembler::toResourceFromEntity,
-                HttpStatus.CREATED);
+    @PostMapping("/{deliveryId}/assign")
+    public ResponseEntity<?> assign(@PathVariable Long deliveryId) {
+        return advance(deliveryId, () -> deliveryLifecycleService.handle(new AssignDeliveryCommand(deliveryId)));
     }
 
     /**
-     * Despacha una entrega.
+     * Inicia una entrega en ruta.
      *
-     * <p>Solo el tenant propietario puede avanzar la entrega. Una entrega ajena o inexistente se informa
-     * como no encontrada; el estado físico debe permitir el despacho.</p>
+     * <p>Solo el distribuidor propietario puede iniciarla y debe estar en estado asignado.</p>
      */
-    @Operation(summary = "Despachar entrega",
-            description = "Avanza la entrega del distribuidor autenticado al estado de despacho cuando la transición física es válida.")
+    @Operation(summary = "Iniciar entrega",
+            description = "Avanza a iniciada una entrega propia que actualmente está asignada.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Entrega despachada."),
-            @ApiResponse(responseCode = "404", description = "La entrega no existe o no pertenece al distribuidor autenticado."),
-            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite despachar la entrega.")
+            @ApiResponse(responseCode = "200", description = "Entrega iniciada."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite iniciar la entrega.")
     })
-    @PostMapping("/{deliveryId}/dispatch")
-    public ResponseEntity<?> dispatchDelivery(@PathVariable Long deliveryId) {
-        if (!ownsDeliveryAsProvider(deliveryId)) return ResponseEntity.notFound().build();
-        var result = deliveryCommandService.handle(new DispatchDeliveryCommand(deliveryId));
-        return ResponseEntityAssembler.toResponseEntityFromResult(
-                result,
-                DeliveryResourceFromEntityAssembler::toResourceFromEntity,
-                HttpStatus.OK);
+    @PostMapping("/{deliveryId}/start")
+    public ResponseEntity<?> start(@PathVariable Long deliveryId) {
+        return advance(deliveryId, () -> deliveryLifecycleService.handle(new StartDeliveryCommand(deliveryId)));
     }
 
     /**
-     * Completa una entrega.
+     * Marca la llegada de una entrega.
      *
-     * <p>Solo el tenant propietario puede cerrarla. Como el contrato v1 no recibe volumen entregado,
-     * se usa la cantidad solicitada por la orden como evidencia y se registran los estados intermedios
-     * necesarios para respetar las invariantes de la máquina física.</p>
+     * <p>Solo el distribuidor propietario puede registrarla y la entrega debe estar en ruta.</p>
+     */
+    @Operation(summary = "Registrar llegada de entrega",
+            description = "Avanza a llegada una entrega en ruta del distribuidor autenticado.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Llegada de la entrega registrada."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite registrar la llegada.")
+    })
+    @PostMapping("/{deliveryId}/arrive")
+    public ResponseEntity<?> arrive(@PathVariable Long deliveryId) {
+        return advance(deliveryId, () -> deliveryLifecycleService.handle(new ArriveDeliveryCommand(deliveryId)));
+    }
+
+    /**
+     * Completa una entrega y registra el volumen entregado como evidencia.
+     *
+     * <p>Solo el distribuidor propietario puede completarla. El volumen entregado debe ser válido y también debe poder resolverse el volumen solicitado de la orden; al completar desde llegada se registra la descarga dentro de la misma transacción.</p>
      */
     @Operation(summary = "Completar entrega",
-            description = "Cierra la entrega del distribuidor autenticado usando como evidencia el volumen solicitado en la orden.")
+            description = "Cierra una entrega propia y registra el volumen entregado. La orden debe aportar el volumen solicitado para cerrar el historial.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Entrega completada."),
-            @ApiResponse(responseCode = "404", description = "La entrega no existe o no pertenece al distribuidor autenticado."),
-            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite completar la entrega."),
-            @ApiResponse(responseCode = "422", description = "No se pudo obtener de la orden el volumen requerido como evidencia de cierre.")
+            @ApiResponse(responseCode = "400", description = "El volumen entregado no es válido como evidencia."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado actual impide completar la entrega o hubo una transición concurrente."),
+            @ApiResponse(responseCode = "422", description = "No se pudo resolver el volumen solicitado para cerrar la entrega.")
     })
     @PostMapping("/{deliveryId}/complete")
-    public ResponseEntity<?> completeDelivery(@PathVariable Long deliveryId) {
-        if (!ownsDeliveryAsProvider(deliveryId)) return ResponseEntity.notFound().build();
-        var result = deliveryCommandService.handle(new CompleteDeliveryCommand(deliveryId));
-        return ResponseEntityAssembler.toResponseEntityFromResult(
-                result,
-                DeliveryResourceFromEntityAssembler::toResourceFromEntity,
-                HttpStatus.OK);
+    public ResponseEntity<?> complete(@PathVariable Long deliveryId,
+                                      @RequestBody CompleteDeliveryResource resource) {
+        return advance(deliveryId, () -> deliveryLifecycleService.handle(
+                new CompletePhysicalDeliveryCommand(deliveryId, resource.deliveredVolume())));
     }
 
     /**
-     * Registra el fallo de una entrega.
+     * Marca una entrega como fallida.
      *
-     * <p>Solo el tenant propietario puede marcarla como fallida; se registra el motivo y se valida la transición física.</p>
+     * <p>Solo el distribuidor propietario puede hacerlo. El motivo es obligatorio y el estado fallido es terminal.</p>
      */
-    @Operation(summary = "Marcar entrega como fallida",
-            description = "Registra el motivo y cambia al estado fallido una entrega del distribuidor autenticado si la transición es válida.")
+    @Operation(summary = "Marcar entrega fallida",
+            description = "Registra un fallo terminal para la entrega propia y guarda el motivo indicado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Entrega marcada como fallida."),
-            @ApiResponse(responseCode = "404", description = "La entrega no existe o no pertenece al distribuidor autenticado."),
-            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite marcar la entrega como fallida.")
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado actual impide marcarla como fallida o hubo una transición concurrente.")
     })
     @PostMapping("/{deliveryId}/fail")
-    public ResponseEntity<?> failDelivery(@PathVariable Long deliveryId,
-                                          @RequestBody FailDeliveryResource resource) {
-        if (!ownsDeliveryAsProvider(deliveryId)) return ResponseEntity.notFound().build();
-        var result = deliveryCommandService.handle(new FailDeliveryCommand(deliveryId, resource.reason()));
-        return ResponseEntityAssembler.toResponseEntityFromResult(
-                result,
-                DeliveryResourceFromEntityAssembler::toResourceFromEntity,
-                HttpStatus.OK);
+    public ResponseEntity<?> fail(@PathVariable Long deliveryId,
+                                  @RequestBody FailDeliveryResource resource) {
+        return advance(deliveryId, () -> deliveryLifecycleService.handle(
+                new FailDeliveryCommand(deliveryId, resource.reason())));
     }
 
     /**
-     * Lista todas las entregas de la plataforma.
+     * Cancela una entrega.
      *
-     * <p>Disponible únicamente para usuarios con autoridad ROLE_ADMIN.</p>
+     * <p>Solo el distribuidor propietario puede cancelarla. La cancelación es terminal y requiere motivo.</p>
      */
-    @Operation(summary = "Listar todas las entregas",
-            description = "Devuelve todas las entregas registradas; requiere autoridad administrativa ROLE_ADMIN.")
+    @Operation(summary = "Cancelar entrega",
+            description = "Registra la cancelación terminal de una entrega propia y guarda el motivo indicado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de entregas."),
-            @ApiResponse(responseCode = "403", description = "El usuario no cuenta con autoridad ROLE_ADMIN.")
+            @ApiResponse(responseCode = "200", description = "Entrega cancelada."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado actual impide cancelarla o hubo una transición concurrente.")
     })
-    @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<List<DeliveryResource>> getAllDeliveries() {
-        var deliveries = deliveryQueryService.handle(new GetAllDeliveriesQuery());
-        var resources = deliveries.stream().map(DeliveryResourceFromEntityAssembler::toResourceFromEntity).toList();
+    @PostMapping("/{deliveryId}/cancel")
+    public ResponseEntity<?> cancel(@PathVariable Long deliveryId,
+                                    @RequestBody FailDeliveryResource resource) {
+        return advance(deliveryId, () -> deliveryLifecycleService.handle(
+                new CancelDeliveryCommand(deliveryId, resource.reason())));
+    }
+
+    /**
+     * Consulta una entrega y su estado físico.
+     *
+     * <p>Solo consulta entregas propias del distribuidor autenticado; las ajenas responden como no encontradas.</p>
+     */
+    @Operation(summary = "Consultar entrega",
+            description = "Devuelve una entrega propia con su estado heredado y su estado físico vigente.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Entrega devuelta."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor.")
+    })
+    @GetMapping("/{deliveryId}")
+    public ResponseEntity<DeliveryResource> get(@PathVariable Long deliveryId) {
+        if (!owns(deliveryId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return deliveryQueryService.handle(new GetDeliveryByIdQuery(deliveryId))
+                .map(delivery -> new ResponseEntity<>(toResource(delivery), HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    /**
+     * Lista el historial inmutable de estados de una entrega.
+     *
+     * <p>Solo lo consulta el distribuidor propietario. Cada registro conserva la transición física, la versión del agregado y su instante para reconstruir la historia.</p>
+     */
+    @Operation(summary = "Listar transiciones de una entrega",
+            description = "Devuelve el historial inmutable de transiciones físicas de una entrega propia, con sus versiones e instantes.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Transiciones de estado devueltas."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor.")
+    })
+    @GetMapping("/{deliveryId}/transitions")
+    public ResponseEntity<List<DeliveryTransitionResource>> transitions(@PathVariable Long deliveryId) {
+        if (!owns(deliveryId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        var resources = transitionRepository.findByDeliveryId(deliveryId).stream()
+                .map(transition -> new DeliveryTransitionResource(transition.id(), transition.fromState(),
+                        transition.toState(), transition.aggregateVersion(), transition.occurredAt()))
+                .toList();
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
-    /**
-     * Lista las entregas de un distribuidor.
-     *
-     * <p>El tenant autenticado solo puede consultar sus propias entregas.</p>
-     */
-    @Operation(summary = "Listar entregas por distribuidor",
-            description = "Devuelve las entregas del distribuidor indicado cuando coincide con el tenant autenticado.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de entregas del distribuidor."),
-            @ApiResponse(responseCode = "403", description = "El tenant autenticado no es propietario del distribuidor solicitado.")
-    })
-    @GetMapping("/provider/{providerId}")
-    @PreAuthorize("@tenantAccess.ownsProvider(#providerId)")
-    public ResponseEntity<List<DeliveryResource>> getDeliveriesByProvider(@PathVariable Long providerId) {
-        var resources = deliveryQueryService.handle(new GetAllDeliveriesQuery()).stream()
-                .filter(delivery -> providerId.equals(delivery.getProviderId()))
-                .map(DeliveryResourceFromEntityAssembler::toResourceFromEntity)
-                .toList();
-        return ResponseEntity.ok(resources);
+    private ResponseEntity<?> advance(Long deliveryId, Supplier<Result<Delivery, ApplicationError>> action) {
+        if (!owns(deliveryId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                action.get(), DeliveriesController::toResource, HttpStatus.OK);
     }
 
-    /**
-     * Consulta una entrega por su identificador.
-     *
-     * <p>Puede consultarla el tenant del distribuidor o la empresa compradora de la orden; para otros usuarios se responde como no encontrada.</p>
-     */
-    @Operation(summary = "Consultar entrega por identificador",
-            description = "Devuelve la entrega cuando el usuario pertenece al distribuidor o a la empresa compradora de la orden.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Entrega devuelta."),
-            @ApiResponse(responseCode = "404", description = "La entrega no existe o no es visible para el usuario.")
-    })
-    @GetMapping("/{deliveryId}")
-    public ResponseEntity<DeliveryResource> getDeliveryById(@PathVariable Long deliveryId) {
-        var result = deliveryQueryService.handle(new GetDeliveryByIdQuery(deliveryId))
-                .filter(this::ownsDelivery);
-        return result.map(d -> new ResponseEntity<>(
-                        DeliveryResourceFromEntityAssembler.toResourceFromEntity(d), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    private boolean owns(Long deliveryId) {
+        var providerId = tenantAccess.currentProviderId();
+        return providerId.isPresent()
+                && deliveryQueryService.handle(new GetDeliveryByIdQuery(deliveryId))
+                .map(delivery -> providerId.get().equals(delivery.getProviderId()))
+                .orElse(false);
     }
 
-    /**
-     * Consulta la entrega asociada a una orden.
-     *
-     * <p>Puede consultarla el tenant del distribuidor o la empresa compradora; para otros usuarios se responde como no encontrada.</p>
-     */
-    @Operation(summary = "Consultar entrega de una orden",
-            description = "Devuelve la entrega asociada cuando el usuario pertenece al distribuidor o a la empresa compradora de la orden.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Entrega devuelta."),
-            @ApiResponse(responseCode = "404", description = "La orden no tiene entrega o esta no es visible para el usuario.")
-    })
-    @GetMapping("/order/{orderId}")
-    public ResponseEntity<DeliveryResource> getDeliveryByOrder(@PathVariable Long orderId) {
-        var result = deliveryQueryService.handle(new GetDeliveryByOrderIdQuery(orderId));
-        return result.filter(this::ownsDelivery).map(d -> new ResponseEntity<>(
-                        DeliveryResourceFromEntityAssembler.toResourceFromEntity(d), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    private boolean ownsDeliveryAsProvider(Long deliveryId) {
-        return deliveryQueryService.handle(new GetDeliveryByIdQuery(deliveryId))
-                .filter(delivery -> tenantAccess.ownsProvider(delivery.getProviderId()))
-                .isPresent();
-    }
-
-    private boolean ownsDelivery(com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery delivery) {
-        if (tenantAccess.ownsProvider(delivery.getProviderId())) return true;
-        return fuelOrderQueryService.handle(new GetFuelOrderByIdQuery(delivery.getOrderId()))
-                .filter(order -> tenantAccess.ownsCompany(order.getCompanyId()))
-                .isPresent();
+    private static DeliveryResource toResource(Delivery delivery) {
+        return new DeliveryResource(delivery.getId(), delivery.getOrderId(), delivery.getProviderId(),
+                delivery.getDriverId(), delivery.getVehicleId(), delivery.getStatus(),
+                delivery.currentPhysicalState(), delivery.getRequestedVolume(), delivery.getDeliveredVolume(),
+                delivery.getDispatchedAt(), delivery.getStartedAt(), delivery.getArrivedAt(),
+                delivery.getDeliveringAt(), delivery.getDeliveredAt(), delivery.getNotes(),
+                delivery.getVersion());
     }
 }

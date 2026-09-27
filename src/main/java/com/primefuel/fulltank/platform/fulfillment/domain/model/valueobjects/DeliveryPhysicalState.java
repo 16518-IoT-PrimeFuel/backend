@@ -9,7 +9,7 @@ import java.util.Set;
  * COMPLETED}, plus two explicit terminal exits, {@code FAILED} and {@code CANCELLED}.
  *
  * <p>The legacy {@link DeliveryStatus} (SCHEDULED/DISPATCHED/DELIVERED/FAILED) is <em>not</em> replaced:
- * it is kept and kept coherent through the compatibility map below, so v1 readers see no regression while
+ * it is kept and kept coherent through the compatibility map below, so legacy readers see no regression while
  * the physical machine advances.
  */
 public enum DeliveryPhysicalState {
@@ -56,7 +56,7 @@ public enum DeliveryPhysicalState {
     }
 
     /**
-     * Compatibility map, physical → legacy, so the v1 {@code status} keeps meaning something. The legacy
+     * Compatibility map, physical → legacy, so the legacy {@code status} keeps meaning something. The legacy
      * enum has no CANCELLED, so a cancellation is reported as FAILED (the reason is kept in the notes).
      */
     public DeliveryStatus toLegacyStatus() {

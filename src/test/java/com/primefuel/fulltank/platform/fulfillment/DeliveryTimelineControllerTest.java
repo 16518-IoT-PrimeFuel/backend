@@ -93,7 +93,7 @@ class DeliveryTimelineControllerTest {
                 10.0, Instant.now(), null));
         assertThat(lifecycle.handle(new CompletePhysicalDeliveryCommand(f.id(), 70.0)).isSuccess()).isTrue();
 
-        mvc.perform(get("/api/v2/deliveries/{id}/timeline", f.id()).with(auth(f.user(), f.provider(), "ROLE_PROVIDER")))
+        mvc.perform(get("/api/deliveries/{id}/timeline", f.id()).with(auth(f.user(), f.provider(), "ROLE_PROVIDER")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[?(@.type=='STATE_TRANSITION')]").isArray())
                 .andExpect(jsonPath("$[?(@.type=='SAFETY_DECISION' && @.summary=='AUTHORIZED')]").isNotEmpty())
                 .andExpect(jsonPath("$[?(@.type=='VALVE_COMMAND' && @.summary=='OPEN')]").isNotEmpty());
@@ -105,13 +105,13 @@ class DeliveryTimelineControllerTest {
 
     @Test void preV17DeliveryShowsLegacyGap() throws Exception {
         var f = fixture();
-        mvc.perform(get("/api/v2/deliveries/{id}/timeline", f.id()).with(auth(f.user(), f.provider(), "ROLE_PROVIDER")))
+        mvc.perform(get("/api/deliveries/{id}/timeline", f.id()).with(auth(f.user(), f.provider(), "ROLE_PROVIDER")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].type").value("LEGACY_GAP"));
     }
 
     @Test void foreignTenantCannotReadTimeline() throws Exception {
         var f = fixture();
-        mvc.perform(get("/api/v2/deliveries/{id}/timeline", f.id()).with(auth(f.user() + 90000, f.provider() + 90000, "ROLE_PROVIDER")))
+        mvc.perform(get("/api/deliveries/{id}/timeline", f.id()).with(auth(f.user() + 90000, f.provider() + 90000, "ROLE_PROVIDER")))
                 .andExpect(status().isForbidden());
     }
 
@@ -125,12 +125,12 @@ class DeliveryTimelineControllerTest {
         evidence.recordPosition(new RecordPositionEvidenceCommand(f.id(), f.provider(), f.driver(), 10.0, 20.0,
                 10.0, Instant.now(), null));
         assertThat(lifecycle.handle(new CompletePhysicalDeliveryCommand(f.id(), 50.0)).isSuccess()).isTrue();
-        mvc.perform(get("/api/v2/deliveries/{id}/timeline", f.id()).with(auth(f.user(), f.provider(), "ROLE_PROVIDER")))
+        mvc.perform(get("/api/deliveries/{id}/timeline", f.id()).with(auth(f.user(), f.provider(), "ROLE_PROVIDER")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[?(@.type=='LOAD_MILESTONE')]").isNotEmpty());
-        mvc.perform(delete("/api/v2/admin/deliveries/{id}/transport-evidence", f.id())
+        mvc.perform(delete("/api/admin/deliveries/{id}/transport-evidence", f.id())
                         .with(auth(999999, 1, "ROLE_ADMIN"))).andExpect(status().isNoContent());
         assertThat(samples.countByDeliveryId(f.id())).isZero();
-        mvc.perform(get("/api/v2/deliveries/{id}/timeline", f.id()).with(auth(f.user(), f.provider(), "ROLE_PROVIDER")))
+        mvc.perform(get("/api/deliveries/{id}/timeline", f.id()).with(auth(f.user(), f.provider(), "ROLE_PROVIDER")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[?(@.type=='LOAD_MILESTONE')]").isEmpty())
                 .andExpect(jsonPath("$[?(@.type=='STATE_TRANSITION')]").isNotEmpty())
                 .andExpect(jsonPath("$[?(@.type=='SAFETY_DECISION')]").isNotEmpty())
