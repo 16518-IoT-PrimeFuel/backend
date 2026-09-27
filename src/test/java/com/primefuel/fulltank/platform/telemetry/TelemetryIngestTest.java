@@ -106,6 +106,22 @@ class TelemetryIngestTest {
     }
 
     @Test
+    void aForgedReadingCannotSquatTheSequenceOfTheRealDevice() {
+        var token = provisionAndBind(300L);
+        ingestService.handle(new IngestTelemetryCommand(1, DEVICE, CHANNEL, 20L, CAPTURED, 1.0, "LITRE", "forged"));
+
+        var genuine = ingestService.handle(new IngestTelemetryCommand(
+                1, DEVICE, CHANNEL, 20L, CAPTURED, 250.0, "LITRE", token));
+
+        assertThat(genuine.getOrElse(null).duplicate()).isFalse();
+        assertThat(genuine.getOrElse(null).quality()).isEqualTo(ReadingQuality.ACCEPTED.name());
+        var stored = repository.findByDeviceChannelAndSequence(DEVICE, CHANNEL, 20L).orElseThrow();
+        assertThat(stored.getLevel().amount()).isEqualTo(250.0);
+        assertThat(stored.getQuarantineReason()).isNull();
+        assertThat(applicationEvents.stream(ValidatedTankReadingEvent.class)).hasSize(1);
+    }
+
+    @Test
     void rejectsUnsupportedSchemaVersionsAndNonFiniteLevels() {
         var token = provisionAndBind(300L);
 

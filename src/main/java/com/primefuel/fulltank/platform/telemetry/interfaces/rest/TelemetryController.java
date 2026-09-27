@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * separado de la cadena de autenticación JWT de usuarios.
  */
 @RestController
-@RequestMapping(value = "/api/v2/telemetry", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/telemetry", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Telemetría", description = "Recepción de mediciones autenticadas de dispositivos")
 public class TelemetryController {
 

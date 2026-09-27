@@ -18,8 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 
 /**
- * Protocol adapter, observation only: it version-checks and normalises the payload, deduplicates by
- * device/channel/sequence, authenticates the machine and stores the reading. It applies **no commercial
+ * Protocol adapter, observation only: it version-checks and normalises the payload, authenticates the
+ * machine, deduplicates by device/channel/sequence and stores the reading. It applies **no commercial
  * policy** (no thresholds, no orders) — that is S09's job.
  */
 @Service
@@ -52,10 +52,20 @@ public class TelemetryIngestServiceImpl {
             return Result.failure(ApplicationError.validationError("capturedAt", "A capture instant is required"));
         }
 
-        // Replay safety: a sequence already stored is acknowledged without writing anything.
+        // Authenticate before deduplicating: an unauthenticated sender must not be able to claim a real
+        // device's sequence and get the genuine reading discarded as a replay.
+        var decision = deviceAuthentication.authenticate(
+                command.deviceId(), command.channel(), command.token(), command.capturedAt());
+
+        // Replay safety: a sequence already stored is acknowledged without writing anything, unless it was
+        // only quarantined and this copy authenticates — then the authenticated reading takes its place.
         var existing = repository.findByDeviceChannelAndSequence(
                 command.deviceId(), command.channel(), command.sequence());
-        if (existing.isPresent()) {
+        if (existing.isPresent() && (existing.get().isAccepted() || !decision.authenticated())) {
+            if (!decision.authenticated()) {
+                // An unauthenticated replay learns nothing about the stored reading.
+                return Result.success(new IngestResult(null, ReadingQuality.QUARANTINED.name(), null, true));
+            }
             return Result.success(new IngestResult(
                     existing.get().getId(), existing.get().getQuality().name(),
                     existing.get().getTankId(), true));
@@ -68,8 +78,6 @@ public class TelemetryIngestServiceImpl {
             return Result.failure(ApplicationError.validationError("level", exception.getMessage()));
         }
 
-        var decision = deviceAuthentication.authenticate(
-                command.deviceId(), command.channel(), command.token(), command.capturedAt());
         var quarantineReason = decision.authenticated() ? null : decision.outcome();
         var quality = decision.authenticated() ? ReadingQuality.ACCEPTED : ReadingQuality.QUARANTINED;
 
@@ -81,6 +89,9 @@ public class TelemetryIngestServiceImpl {
                     decision.tankId(), decision.organizationId(), quality, quarantineReason);
         } catch (IllegalArgumentException exception) {
             return Result.failure(ApplicationError.validationError("reading", exception.getMessage()));
+        }
+        if (existing.isPresent()) {
+            reading.setId(existing.get().getId());
         }
 
         try {

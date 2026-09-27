@@ -15,6 +15,8 @@ import com.primefuel.fulltank.platform.payment.interfaces.rest.transform.CreateP
 import com.primefuel.fulltank.platform.payment.interfaces.rest.transform.PaymentResourceFromEntityAssembler;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import com.primefuel.fulltank.platform.ordering.api.OrderLookup;
+import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
+import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ErrorResponseAssembler;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,7 +31,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v1/payments", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/payments", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Pagos", description = "Registro, consulta y gestión del estado de pagos de órdenes")
 public class PaymentsController {
 
@@ -71,7 +73,8 @@ public class PaymentsController {
         // company, amount positive and matching the order snapshot, one payment per order) live in the
         // application layer (PaymentCommandServiceImpl).
         if (resource.orderId() == null || resource.companyId() == null) {
-            return ResponseEntity.badRequest().body("Order and buyer company are required");
+            return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                    ApplicationError.validationError("payment", "Order and buyer company are required"));
         }
         if (!tenantAccess.ownsCompany(resource.companyId())) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);

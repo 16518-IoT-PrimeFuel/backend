@@ -73,13 +73,13 @@ public class WebSecurityConfiguration {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST,
-                                "/api/v1/buyer-companies",
-                                "/api/v1/provider-companies").permitAll()
-                        .requestMatchers(
-                                "/api/v1/authentication/**",
+                                "/api/buyer-companies",
+                                "/api/provider-companies",
                                 // Machine ingestion authenticates with a rotating device token (T07-B), not
                                 // with the user JWT, so it is exempt from the bearer filter chain.
-                                "/api/v2/telemetry/**",
+                                "/api/telemetry/readings").permitAll()
+                        .requestMatchers(
+                                "/api/authentication/**",
                                 "/api-docs/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
