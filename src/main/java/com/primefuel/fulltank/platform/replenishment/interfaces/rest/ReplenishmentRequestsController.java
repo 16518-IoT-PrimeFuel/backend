@@ -167,7 +167,7 @@ public class ReplenishmentRequestsController {
             @ApiResponse(responseCode = "200", description = "Solicitud aceptada y orden creada y vinculada; la respuesta incluye orderId."),
             @ApiResponse(responseCode = "403", description = "El usuario no representa al distribuidor destinatario."),
             @ApiResponse(responseCode = "404", description = "No existe la solicitud indicada."),
-            @ApiResponse(responseCode = "409", description = "La solicitud ya no está pendiente o se decidió en paralelo.")
+            @ApiResponse(responseCode = "409", description = "La solicitud ya no está pendiente, se decidió en paralelo o carece de dirección y fecha de entrega.")
     })
     @PostMapping("/{requestId}/accept")
     public ResponseEntity<?> accept(@PathVariable Long requestId) {

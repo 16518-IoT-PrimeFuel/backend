@@ -29,4 +29,4 @@ En los consumidores externos inspeccionados, `frontend` no contiene llamadas a l
 
 ## Riesgos y verificación
 
-El despliegue requiere aplicar V33 antes de usar los nuevos campos y V34 después de confirmar que ningún dato histórico de `fuel_requests` deba conservarse. El cambio no valida MySQL desde este repositorio. La verificación local ejecuta la suite Maven con H2.
+El despliegue requiere aplicar V33 antes de usar los nuevos campos y V34 después de confirmar que ningún dato histórico de `fuel_requests` deba conservarse. Las solicitudes de abastecimiento v2 creadas antes de V33 conservan dirección y fecha nulas; su aceptación responde 409 sin cambiar estado ni crear orden. Deben recrearse con los datos de entrega antes de aceptarlas, ya que la fecha original no puede inferirse. El cambio no valida MySQL desde este repositorio. La verificación local ejecuta la suite Maven con H2.

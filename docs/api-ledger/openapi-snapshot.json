@@ -6904,7 +6904,7 @@
                 }
               }
             },
-            "description" : "La solicitud ya no está pendiente o se decidió en paralelo."
+            "description" : "La solicitud ya no está pendiente, se decidió en paralelo o carece de dirección y fecha de entrega."
           }
         },
         "summary" : "Aceptar solicitud de abastecimiento",

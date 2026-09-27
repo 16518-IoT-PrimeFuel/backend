@@ -132,6 +132,26 @@ class ReplenishmentAcceptanceIntegrationTest {
         assertThat(orders.findByProviderId(fixture.providerId())).isEmpty();
     }
 
+    @Test
+    void requestWithoutPersistedDeliveryDetailsCannotBeAccepted() throws Exception {
+        var fixture = fixture();
+        var created = replenishmentCommands.handle(new CreateReplenishmentRequestCommand(
+                fixture.organizationId(), fixture.customerId(), fixture.tankId(), fixture.providerId(),
+                fixture.productId(), 100.0, "LITRE", ReplenishmentSource.MANUAL, null))
+                .getOrElse(null);
+
+        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", created.getId())
+                        .with(auth(fixture.providerId(), "ROLE_PROVIDER")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.details").value(
+                        "La solicitud no tiene dirección y fecha de entrega; cree una nueva solicitud con esos datos"));
+
+        var unchanged = replenishmentLookup.findById(created.getId()).orElseThrow();
+        assertThat(unchanged.status()).isEqualTo("PENDING");
+        assertThat(unchanged.acceptanceConsumed()).isFalse();
+        assertThat(orders.findByProviderId(fixture.providerId())).isEmpty();
+    }
+
     private Fixture fixture() {
         var id = IDS.incrementAndGet();
         var organizationId = 80000L + id;

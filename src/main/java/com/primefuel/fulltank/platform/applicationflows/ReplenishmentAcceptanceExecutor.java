@@ -38,6 +38,11 @@ public class ReplenishmentAcceptanceExecutor {
     public ReplenishmentRequest execute(Long requestId) {
         var request = requests.findById(requestId).orElseThrow(() -> fail(
                 ApplicationError.notFound("ReplenishmentRequest", String.valueOf(requestId))));
+        if (request.deliveryAddress() == null || request.deliveryAddress().isBlank()
+                || request.deliveryDate() == null) {
+            throw fail(ApplicationError.conflict("ReplenishmentRequest",
+                    "La solicitud no tiene dirección y fecha de entrega; cree una nueva solicitud con esos datos"));
+        }
         var accepted = replenishmentCommands.handle(new AcceptReplenishmentRequestCommand(requestId));
         if (accepted.isFailure()) throw fail(errorOf(accepted));
         var consumed = replenishmentCommands.handle(new ConsumeReplenishmentAcceptanceCommand(requestId));
