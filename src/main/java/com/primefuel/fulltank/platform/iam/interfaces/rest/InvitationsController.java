@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/api/v2", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Invitations", description = "Organization membership invitations (v2)")
+@Tag(name = "Invitaciones", description = "Invitación y administración de membresías de organización")
 public class InvitationsController {
 
     private final InvitationCommandService invitationCommandService;
@@ -41,20 +41,19 @@ public class InvitationsController {
     }
 
     /**
-     * Invites an email address to join an organization.
+     * Invita una dirección de correo a una organización.
      *
-     * <p>Only members of the target organization may invite. A pending invitation for the same email
-     * cannot be duplicated; the role is resolved from the request and must be a known membership role.
-     * The invitation carries a single-use token with a limited lifetime.</p>
+     * <p>Solo los miembros de la organización pueden invitar. No se duplican invitaciones pendientes al mismo correo;
+     * el rol debe estar admitido y el token es de un solo uso y tiene vigencia limitada.</p>
      */
-    @Operation(summary = "Invite a member to an organization",
-            description = "Creates a pending membership invitation for the given email and role in the target organization.")
+    @Operation(summary = "Invitar miembro a una organización",
+            description = "Crea una invitación pendiente para el correo y rol indicados en la organización de la ruta. Requiere una membresía en esa organización.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Invitation created."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation or the role is not a known membership role."),
-            @ApiResponse(responseCode = "403", description = "Caller does not belong to the target organization."),
-            @ApiResponse(responseCode = "404", description = "Organization does not exist."),
-            @ApiResponse(responseCode = "409", description = "A pending invitation already exists for this email.")
+            @ApiResponse(responseCode = "201", description = "Invitación creada."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no supera la validación o el rol no está admitido."),
+            @ApiResponse(responseCode = "403", description = "El usuario no pertenece a la organización indicada."),
+            @ApiResponse(responseCode = "404", description = "La organización no existe."),
+            @ApiResponse(responseCode = "409", description = "Ya existe una invitación pendiente para este correo.")
     })
     @PostMapping("/organizations/{organizationId}/invitations")
     @PreAuthorize("@membershipAccess.belongsToOrganization(#organizationId)")
@@ -74,19 +73,18 @@ public class InvitationsController {
     }
 
     /**
-     * Accepts a pending invitation for the authenticated user.
+     * Acepta una invitación pendiente para el usuario autenticado.
      *
-     * <p>The caller must be authenticated. The token must still be usable (not expired, accepted or
-     * revoked); accepting grants the invited role as an active membership in the organization.</p>
+     * <p>El token debe estar vigente, pendiente y no revocado. Al aceptarlo, se concede el rol invitado como membresía activa.</p>
      */
-    @Operation(summary = "Accept an invitation",
-            description = "Accepts the invitation identified by its token and grants the invited membership to the caller.")
+    @Operation(summary = "Aceptar invitación",
+            description = "Acepta la invitación identificada por el token y concede la membresía al usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Invitation accepted and membership granted."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated."),
-            @ApiResponse(responseCode = "404", description = "No invitation matches the given token."),
-            @ApiResponse(responseCode = "409", description = "A membership conflict occurred while granting access."),
-            @ApiResponse(responseCode = "422", description = "The invitation is expired, already accepted or revoked.")
+            @ApiResponse(responseCode = "200", description = "Invitación aceptada y membresía concedida."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado."),
+            @ApiResponse(responseCode = "404", description = "No existe una invitación asociada al token."),
+            @ApiResponse(responseCode = "409", description = "Se produjo un conflicto al conceder la membresía."),
+            @ApiResponse(responseCode = "422", description = "La invitación venció, ya fue aceptada o fue revocada.")
     })
     @PostMapping("/invitations/{token}/accept")
     public ResponseEntity<?> accept(@PathVariable String token) {
@@ -100,17 +98,17 @@ public class InvitationsController {
     }
 
     /**
-     * Revokes a pending invitation.
+     * Revoca una invitación pendiente.
      *
-     * <p>Only members of the invitation's organization may revoke it, and only while it is pending.</p>
+     * <p>Solo los miembros de la organización pueden revocarla y únicamente mientras esté pendiente.</p>
      */
-    @Operation(summary = "Revoke an invitation",
-            description = "Revokes a pending invitation owned by the caller's organization.")
+    @Operation(summary = "Revocar invitación",
+            description = "Revoca una invitación pendiente de una organización a la que pertenece el usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Invitation revoked."),
-            @ApiResponse(responseCode = "403", description = "Caller does not belong to the invitation's organization."),
-            @ApiResponse(responseCode = "404", description = "Invitation does not exist."),
-            @ApiResponse(responseCode = "409", description = "The invitation is not pending and cannot be revoked.")
+            @ApiResponse(responseCode = "200", description = "Invitación revocada."),
+            @ApiResponse(responseCode = "403", description = "El usuario no pertenece a la organización de la invitación."),
+            @ApiResponse(responseCode = "404", description = "La invitación no existe."),
+            @ApiResponse(responseCode = "409", description = "La invitación no está pendiente y no puede revocarse.")
     })
     @DeleteMapping("/invitations/{invitationId}")
     public ResponseEntity<?> revoke(@PathVariable Long invitationId) {

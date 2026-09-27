@@ -26,13 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * S20/T20-B: the current user's own inbox. Every operation is scoped to the user resolved from the
- * principal — there is no user id in the path, so a caller can only ever read or mark their own
- * notifications. This is the v2 replacement for the v1 user/company/provider routes.
+ * Bandeja v2 del usuario autenticado. Todas las operaciones se limitan al usuario del principal; las rutas no
+ * reciben un identificador de usuario y solo permiten consultar o actualizar sus propias notificaciones.
  */
 @RestController
 @RequestMapping(value = "/api/v2/me/notifications", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "My notifications", description = "Current user's in-app notification inbox (v2)")
+@Tag(name = "Mis notificaciones", description = "Bandeja personal de notificaciones de la API v2")
 public class MeNotificationsController {
 
     private final NotificationQueryService notificationQueryService;
@@ -47,12 +46,12 @@ public class MeNotificationsController {
         this.membershipAccess = membershipAccess;
     }
 
-    /** Lists the caller's notifications. */
-    @Operation(summary = "List my notifications",
-            description = "Returns the in-app notifications of the authenticated user.")
+    /** Lista las notificaciones del usuario autenticado. */
+    @Operation(summary = "Listar mis notificaciones",
+            description = "Devuelve las notificaciones de la bandeja del usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Notifications returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de notificaciones."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado.")
     })
     @GetMapping
     public ResponseEntity<List<NotificationResource>> list() {
@@ -64,12 +63,12 @@ public class MeNotificationsController {
                 notificationQueryService.handle(new GetNotificationsByUserIdQuery(userId.get()))));
     }
 
-    /** Lists the caller's unread notifications. */
-    @Operation(summary = "List my unread notifications",
-            description = "Returns the unread in-app notifications of the authenticated user.")
+    /** Lista las notificaciones no leídas del usuario autenticado. */
+    @Operation(summary = "Listar mis notificaciones no leídas",
+            description = "Devuelve las notificaciones pendientes de lectura en la bandeja del usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Unread notifications returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de notificaciones no leídas."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado.")
     })
     @GetMapping("/unread")
     public ResponseEntity<List<NotificationResource>> listUnread() {
@@ -82,17 +81,16 @@ public class MeNotificationsController {
     }
 
     /**
-     * Marks one of the caller's notifications as read.
+     * Marca como leída una notificación del usuario autenticado.
      *
-     * <p>A notification that does not belong to the caller is reported as not found. Repeating the
-     * operation is idempotent: the state stays read and nothing is duplicated.</p>
+     * <p>Una notificación ajena se informa como no encontrada. La operación es idempotente y no duplica efectos.</p>
      */
-    @Operation(summary = "Mark one of my notifications as read",
-            description = "Marks the notification as read when it belongs to the authenticated user; idempotent.")
+    @Operation(summary = "Marcar una notificación propia como leída",
+            description = "Marca la notificación cuando pertenece al usuario autenticado; repetir la operación no duplica efectos.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Notification marked as read."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated."),
-            @ApiResponse(responseCode = "404", description = "Notification does not exist or does not belong to the caller.")
+            @ApiResponse(responseCode = "200", description = "Notificación marcada como leída."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado."),
+            @ApiResponse(responseCode = "404", description = "La notificación no existe o no pertenece al usuario autenticado.")
     })
     @PostMapping("/{notificationId}/read")
     public ResponseEntity<?> markAsRead(@PathVariable Long notificationId) {

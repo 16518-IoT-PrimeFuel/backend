@@ -43,7 +43,7 @@ public class AuthenticationController {
     }
 
     /**
-     * Registers a new buyer or provider account and bootstraps its organization.
+     * Registra una cuenta de comprador o distribuidor y configura su organización.
      *
      * <p>Public endpoint. Exactly one role must be supplied together with the matching business
      * profile (buyer or provider, never both); the username is tied to the buyer company's contact
@@ -115,7 +115,7 @@ public class AuthenticationController {
     }
 
     /**
-     * Completes a password reset using a valid token.
+     * Completa el restablecimiento de contraseña con un token vigente.
      *
      * <p>Public endpoint. The token must be unexpired and unused; on success it is consumed and the
      * password is replaced by a hash of the new value.</p>

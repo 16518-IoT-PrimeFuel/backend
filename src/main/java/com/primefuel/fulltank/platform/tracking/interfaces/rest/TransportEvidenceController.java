@@ -30,22 +30,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Driver-app transport evidence (S16/T16-A, redesign W6). The driver's phone reports position pings and load
- * milestones over an ordinary authenticated v2 call — no IoT device, no device credential.
+ * Evidencia de transporte informada desde la aplicación del conductor mediante una solicitud v2 autenticada.
  *
- * <p><strong>Authorization:</strong> the caller must be the driver <em>assigned to that delivery</em>. The
- * assigned driver and its tenant are resolved from the delivery assignment (S14/S15) and the fleet catalog,
- * never from the body. A delivery the caller cannot see is a 404; an inconsistent cross-tenant assignment or
- * a caller who is not the assigned driver is a 403. An invalid body is a 400 and an impossible load sequence
- * is a 422.
+ * <p>Solo puede informar el conductor asignado, resuelto desde la asignación y el catálogo de flota, nunca desde
+ * el cuerpo. Una entrega inexistente devuelve 404; una asignación inconsistente o conductor distinto, 403;
+ * un cuerpo inválido, 400; y una secuencia de carga imposible, 422.
  *
- * <p>A late position sample (older than the last one already stored) is accepted and kept as raw evidence,
- * but does not move the projection's latest value — the acknowledgement reports this through
- * {@code latestAdvanced}.
+ * <p>Una ubicación tardía se conserva como evidencia, pero no reemplaza el último valor de la proyección; la respuesta lo indica en {@code latestAdvanced}.</p>
  */
 @RestController
 @RequestMapping(value = "/api/v2/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Transport evidence", description = "Driver-app-reported transport evidence (v2)")
+@Tag(name = "Evidencias de transporte", description = "Ubicaciones y eventos de carga informados por el conductor")
 public class TransportEvidenceController {
 
     private final TransportEvidenceRecorder transportEvidenceRecorder;
@@ -64,21 +59,19 @@ public class TransportEvidenceController {
     }
 
     /**
-     * Records a transport-evidence sample for a delivery.
+     * Registra una evidencia de transporte para una entrega.
      *
-     * <p>Only the driver assigned to the delivery may report evidence; the assignment is resolved
-     * server-side, so a body can never impersonate another driver. A late position sample is stored as raw
-     * evidence without regressing the projection.</p>
+     * <p>Solo el conductor asignado puede informar evidencias. La asignación se resuelve en el servidor y una ubicación tardía se conserva sin retroceder la proyección.</p>
      */
-    @Operation(summary = "Record transport evidence for a delivery",
-            description = "Accepts a driver-app position ping or load milestone for a delivery whose assigned driver is the caller; a late sample is preserved without moving the latest value.")
+    @Operation(summary = "Registrar evidencia de transporte",
+            description = "Acepta una ubicación o hito de carga enviado por el conductor asignado; conserva las muestras tardías sin reemplazar el último valor.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Replay: this eventId was already recorded for the delivery; the original ack is returned and nothing new is stored."),
-            @ApiResponse(responseCode = "201", description = "Evidence recorded (latestAdvanced=false for a late sample)."),
-            @ApiResponse(responseCode = "400", description = "The body is malformed (unknown type/milestone, missing coordinates, non-positive volume)."),
-            @ApiResponse(responseCode = "403", description = "The caller is not the driver assigned to the delivery, or the assignment crosses tenants."),
-            @ApiResponse(responseCode = "404", description = "The delivery (or its assigned driver) does not exist."),
-            @ApiResponse(responseCode = "422", description = "The load milestone is not possible from the current state (e.g. UNLOADED before LOADED).")
+            @ApiResponse(responseCode = "200", description = "El eventId ya se registró para la entrega; se devuelve la confirmación original sin guardar otra muestra."),
+            @ApiResponse(responseCode = "201", description = "Evidencia registrada; una muestra tardía puede no actualizar el último valor."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no es válido: tipo o hito desconocido, coordenadas ausentes o volumen no positivo."),
+            @ApiResponse(responseCode = "403", description = "El usuario no es el conductor asignado o la asignación cruza tenants."),
+            @ApiResponse(responseCode = "404", description = "La entrega o el conductor asignado no existe."),
+            @ApiResponse(responseCode = "422", description = "El hito de carga no es válido para el estado actual, por ejemplo, descargar antes de cargar.")
     })
     @PostMapping("/{deliveryId}/transport-evidence")
     public ResponseEntity<?> record(@PathVariable Long deliveryId,

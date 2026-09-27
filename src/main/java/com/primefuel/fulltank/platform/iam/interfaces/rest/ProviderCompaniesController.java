@@ -24,7 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/provider-companies", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Provider Companies", description = "Provider company management endpoints")
+@Tag(name = "Distribuidores", description = "Registro, consulta y actualización de perfiles de distribuidores")
 public class ProviderCompaniesController {
 
     private final ProviderCompanyCommandService providerCompanyCommandService;
@@ -40,17 +40,16 @@ public class ProviderCompaniesController {
     }
 
     /**
-     * Creates a standalone provider company profile.
+     * Registra un perfil independiente de distribuidor.
      *
-     * <p>Public endpoint (self-service): it does not require an authenticated caller and does not
-     * create a user or membership. A persistence failure is surfaced as a server error instead of a
-     * validation error.</p>
+     * <p>Es una operación pública de autoservicio: no requiere autenticación ni crea una cuenta de usuario o membresía.
+     * Los fallos de persistencia se responden como error del servidor.</p>
      */
-    @Operation(summary = "Create a provider company",
-            description = "Persists a new provider company profile. This registration endpoint is open to unauthenticated callers.")
+    @Operation(summary = "Registrar distribuidor",
+            description = "Persiste un nuevo perfil de distribuidor. La ruta está disponible sin autenticación y no crea usuarios ni membresías.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Provider company created."),
-            @ApiResponse(responseCode = "500", description = "Unexpected error while persisting the provider company.")
+            @ApiResponse(responseCode = "201", description = "Perfil de distribuidor creado."),
+            @ApiResponse(responseCode = "500", description = "Se produjo un error inesperado al guardar el perfil.")
     })
     @PostMapping
     public ResponseEntity<?> createProviderCompany(@RequestBody CreateProviderCompanyResource resource) {
@@ -63,15 +62,15 @@ public class ProviderCompaniesController {
     }
 
     /**
-     * Lists every provider company in the platform.
+     * Lista todos los distribuidores registrados.
      *
-     * <p>Visible to buyers (so they can pick a supplier) and to providers themselves.</p>
+     * <p>Requiere rol de comprador para permitir la selección de distribuidores.</p>
      */
-    @Operation(summary = "List all provider companies",
-            description = "Returns every registered provider company. Available to buyer and provider roles.")
+    @Operation(summary = "Listar distribuidores",
+            description = "Devuelve todos los perfiles de distribuidor. Requiere el rol comprador.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Provider companies returned."),
-            @ApiResponse(responseCode = "403", description = "Caller holds neither the buyer nor the provider role.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de distribuidores."),
+            @ApiResponse(responseCode = "403", description = "El usuario no cuenta con el rol comprador.")
     })
     @GetMapping
     @PreAuthorize("@currentUserAccess.isBuyerRole()")
@@ -82,16 +81,16 @@ public class ProviderCompaniesController {
     }
 
     /**
-     * Retrieves a single provider company.
+     * Consulta un distribuidor.
      *
-     * <p>Readable by any buyer, or by the provider that owns the profile.</p>
+     * <p>Puede consultarlo un usuario con rol comprador o el tenant propietario del perfil.</p>
      */
-    @Operation(summary = "Get a provider company by id",
-            description = "Returns the provider company identified by the path id to a buyer or its owning provider.")
+    @Operation(summary = "Consultar distribuidor por identificador",
+            description = "Devuelve el perfil indicado a un usuario con rol comprador o al tenant distribuidor propietario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Provider company returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is neither a buyer nor the owner of this provider company."),
-            @ApiResponse(responseCode = "404", description = "Provider company does not exist.")
+            @ApiResponse(responseCode = "200", description = "Perfil de distribuidor devuelto."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene rol comprador ni pertenece al distribuidor indicado."),
+            @ApiResponse(responseCode = "404", description = "El distribuidor no existe.")
     })
     @GetMapping("/{providerId}")
     @PreAuthorize("@currentUserAccess.isBuyerRole() or @currentUserAccess.ownsProvider(#providerId)")
@@ -103,17 +102,16 @@ public class ProviderCompaniesController {
     }
 
     /**
-     * Updates a provider company profile in place.
+     * Actualiza el perfil de un distribuidor.
      *
-     * <p>Only the owning provider may update the profile. Fields are overwritten directly through the
-     * repository without running the command pipeline.</p>
+     * <p>Solo el tenant propietario puede actualizarlo. Los campos editables se sustituyen con los valores recibidos.</p>
      */
-    @Operation(summary = "Update a provider company",
-            description = "Replaces the editable fields of the provider company identified by the path id.")
+    @Operation(summary = "Actualizar distribuidor",
+            description = "Reemplaza los campos editables del perfil indicado. Requiere pertenecer a ese tenant distribuidor.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Provider company updated."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the owner of this provider company."),
-            @ApiResponse(responseCode = "404", description = "Provider company does not exist.")
+            @ApiResponse(responseCode = "200", description = "Perfil de distribuidor actualizado."),
+            @ApiResponse(responseCode = "403", description = "El distribuidor indicado no pertenece al usuario autenticado."),
+            @ApiResponse(responseCode = "404", description = "El distribuidor no existe.")
     })
     @PutMapping("/{providerId}")
     @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")

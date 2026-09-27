@@ -19,7 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v2/admin/users")
-@Tag(name = "Platform administration", description = "Platform-wide administrative operations")
+@Tag(name = "Administración de plataforma", description = "Operaciones administrativas globales de cuentas")
 public class AdminUsersV2Controller {
     private final UserRepository users;
     private final RoleRepository roles;
@@ -29,16 +29,16 @@ public class AdminUsersV2Controller {
         this.roles = roles;
     }
 
-    /** Grants platform administrator access while preserving every existing user role. */
+    /** Otorga acceso de administración de plataforma y conserva los demás roles del usuario. */
     @PostMapping("/{userId}/promote")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Transactional
-    @Operation(summary = "Promote a user to platform administrator",
-            description = "Adds ROLE_ADMIN to the user without removing existing roles.")
+    @Operation(summary = "Otorgar rol de administrador de plataforma",
+            description = "Añade ROLE_ADMIN a la cuenta sin retirar los roles existentes. Solo puede hacerlo un administrador de plataforma.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User has ROLE_ADMIN."),
-            @ApiResponse(responseCode = "403", description = "Caller is not a platform administrator."),
-            @ApiResponse(responseCode = "404", description = "User does not exist.")
+            @ApiResponse(responseCode = "200", description = "La cuenta tiene el rol ROLE_ADMIN."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene autoridad de administrador de plataforma."),
+            @ApiResponse(responseCode = "404", description = "La cuenta no existe.")
     })
     public ResponseEntity<PromotedUser> promote(@PathVariable Long userId) {
         var user = users.findById(userId);

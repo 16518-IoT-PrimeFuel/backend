@@ -31,7 +31,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Deliveries", description = "Fulfillment management endpoints")
+@Tag(name = "Entregas", description = "Creación, consulta y actualización de entregas de combustible")
 public class DeliveriesController {
 
     private final DeliveryCommandService deliveryCommandService;
@@ -50,21 +50,19 @@ public class DeliveriesController {
     }
 
     /**
-     * Creates a delivery for an order on behalf of the caller's provider tenant.
+     * Crea una entrega para una orden del distribuidor autenticado.
      *
-     * <p>The provider in the body must be the caller's own. The driver, the vehicle and the order must
-     * all belong to that provider, the driver/vehicle must be available, the vehicle capacity must be
-     * sufficient and the product must have enough stock; several of those preconditions answer 409.
-     * Creating the delivery assigns the driver, routes the vehicle, decrements stock and dispatches the
-     * order, all in one transaction.</p>
+     * <p>El distribuidor del cuerpo debe coincidir con el tenant autenticado; el conductor, la cisterna y
+     * la orden deben pertenecerle. También se exige disponibilidad, capacidad y existencias suficientes.
+     * La operación asigna conductor y cisterna, descuenta existencias y despacha la orden en una transacción.</p>
      */
-    @Operation(summary = "Create a delivery",
-            description = "Creates a delivery for a provider order after validating fleet availability, vehicle capacity, stock and ownership.")
+    @Operation(summary = "Crear entrega",
+            description = "Crea y despacha una entrega del distribuidor tras validar la propiedad, disponibilidad de flota, capacidad de la cisterna y existencias.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Delivery created and order dispatched."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the provider in the request body."),
-            @ApiResponse(responseCode = "404", description = "The driver/vehicle or the fuel order could not be found for the provider."),
-            @ApiResponse(responseCode = "409", description = "Driver/vehicle not available or not owned by the provider, insufficient capacity or stock, or a delivery already exists for the order.")
+            @ApiResponse(responseCode = "201", description = "Entrega creada y orden despachada."),
+            @ApiResponse(responseCode = "403", description = "El tenant autenticado no es propietario del distribuidor indicado."),
+            @ApiResponse(responseCode = "404", description = "No se encontró para el distribuidor el conductor, la cisterna o la orden."),
+            @ApiResponse(responseCode = "409", description = "La flota no está disponible, la capacidad o las existencias son insuficientes, o la orden ya tiene una entrega.")
     })
     @PostMapping
     @PreAuthorize("@tenantAccess.ownsProvider(#resource.providerId())")
@@ -78,18 +76,17 @@ public class DeliveriesController {
     }
 
     /**
-     * Dispatches a delivery.
+     * Despacha una entrega.
      *
-     * <p>Only the owning provider tenant may advance it; a foreign or missing delivery is reported as not
-     * found. Dispatch is routed through the physical machine and is idempotent for an already-assigned
-     * delivery.</p>
+     * <p>Solo el tenant propietario puede avanzar la entrega. Una entrega ajena o inexistente se informa
+     * como no encontrada; el estado físico debe permitir el despacho.</p>
      */
-    @Operation(summary = "Dispatch a delivery",
-            description = "Moves a delivery to the assigned/dispatched state on behalf of its owning provider tenant.")
+    @Operation(summary = "Despachar entrega",
+            description = "Avanza la entrega del distribuidor autenticado al estado de despacho cuando la transición física es válida.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery dispatched."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller."),
-            @ApiResponse(responseCode = "409", description = "The delivery cannot be dispatched from its current physical state.")
+            @ApiResponse(responseCode = "200", description = "Entrega despachada."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o no pertenece al distribuidor autenticado."),
+            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite despachar la entrega.")
     })
     @PostMapping("/{deliveryId}/dispatch")
     public ResponseEntity<?> dispatchDelivery(@PathVariable Long deliveryId) {
@@ -102,20 +99,19 @@ public class DeliveriesController {
     }
 
     /**
-     * Completes a delivery.
+     * Completa una entrega.
      *
-     * <p>Only the owning provider tenant may close it. The v1 close carries no delivered volume, so the
-     * adapter uses the order's requested quantity as evidence and materialises the intermediate states
-     * v1 never recorded before closing; this keeps the legacy contract while the physical machine still
-     * enforces its invariant.</p>
+     * <p>Solo el tenant propietario puede cerrarla. Como el contrato v1 no recibe volumen entregado,
+     * se usa la cantidad solicitada por la orden como evidencia y se registran los estados intermedios
+     * necesarios para respetar las invariantes de la máquina física.</p>
      */
-    @Operation(summary = "Complete a delivery",
-            description = "Closes a delivery on behalf of its owning provider tenant, using the order's requested quantity as delivered evidence.")
+    @Operation(summary = "Completar entrega",
+            description = "Cierra la entrega del distribuidor autenticado usando como evidencia el volumen solicitado en la orden.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery completed."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller."),
-            @ApiResponse(responseCode = "409", description = "The delivery cannot be completed from its current physical state."),
-            @ApiResponse(responseCode = "422", description = "The requested volume of the order could not be resolved to serve as close evidence.")
+            @ApiResponse(responseCode = "200", description = "Entrega completada."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o no pertenece al distribuidor autenticado."),
+            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite completar la entrega."),
+            @ApiResponse(responseCode = "422", description = "No se pudo obtener de la orden el volumen requerido como evidencia de cierre.")
     })
     @PostMapping("/{deliveryId}/complete")
     public ResponseEntity<?> completeDelivery(@PathVariable Long deliveryId) {
@@ -128,17 +124,16 @@ public class DeliveriesController {
     }
 
     /**
-     * Fails a delivery.
+     * Registra el fallo de una entrega.
      *
-     * <p>Only the owning provider tenant may fail it; the reason is recorded. Failure is routed through
-     * the physical machine.</p>
+     * <p>Solo el tenant propietario puede marcarla como fallida; se registra el motivo y se valida la transición física.</p>
      */
-    @Operation(summary = "Fail a delivery",
-            description = "Moves a delivery to the failed state on behalf of its owning provider tenant, recording a reason.")
+    @Operation(summary = "Marcar entrega como fallida",
+            description = "Registra el motivo y cambia al estado fallido una entrega del distribuidor autenticado si la transición es válida.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery failed."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller."),
-            @ApiResponse(responseCode = "409", description = "The delivery cannot be failed from its current physical state.")
+            @ApiResponse(responseCode = "200", description = "Entrega marcada como fallida."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o no pertenece al distribuidor autenticado."),
+            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite marcar la entrega como fallida.")
     })
     @PostMapping("/{deliveryId}/fail")
     public ResponseEntity<?> failDelivery(@PathVariable Long deliveryId,
@@ -152,15 +147,15 @@ public class DeliveriesController {
     }
 
     /**
-     * Lists every delivery in the platform.
+     * Lista todas las entregas de la plataforma.
      *
-     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     * <p>Disponible únicamente para usuarios con autoridad ROLE_ADMIN.</p>
      */
-    @Operation(summary = "List all deliveries",
-            description = "Returns every registered delivery. Restricted to administrators.")
+    @Operation(summary = "Listar todas las entregas",
+            description = "Devuelve todas las entregas registradas; requiere autoridad administrativa ROLE_ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Deliveries returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de entregas."),
+            @ApiResponse(responseCode = "403", description = "El usuario no cuenta con autoridad ROLE_ADMIN.")
     })
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -171,15 +166,15 @@ public class DeliveriesController {
     }
 
     /**
-     * Lists the deliveries of a provider tenant.
+     * Lista las entregas de un distribuidor.
      *
-     * <p>Only the owning provider tenant may list them.</p>
+     * <p>El tenant autenticado solo puede consultar sus propias entregas.</p>
      */
-    @Operation(summary = "List deliveries by provider",
-            description = "Returns the deliveries of the given provider tenant when it matches the caller's own provider.")
+    @Operation(summary = "Listar entregas por distribuidor",
+            description = "Devuelve las entregas del distribuidor indicado cuando coincide con el tenant autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Deliveries returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the requested provider tenant.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de entregas del distribuidor."),
+            @ApiResponse(responseCode = "403", description = "El tenant autenticado no es propietario del distribuidor solicitado.")
     })
     @GetMapping("/provider/{providerId}")
     @PreAuthorize("@tenantAccess.ownsProvider(#providerId)")
@@ -192,16 +187,15 @@ public class DeliveriesController {
     }
 
     /**
-     * Retrieves a single delivery.
+     * Consulta una entrega por su identificador.
      *
-     * <p>Readable by the delivery's provider tenant or by the buyer company of its order; anything else
-     * is reported as not found.</p>
+     * <p>Puede consultarla el tenant del distribuidor o la empresa compradora de la orden; para otros usuarios se responde como no encontrada.</p>
      */
-    @Operation(summary = "Get a delivery by id",
-            description = "Returns the delivery identified by the path id when the caller is its provider tenant or its order's buyer company.")
+    @Operation(summary = "Consultar entrega por identificador",
+            description = "Devuelve la entrega cuando el usuario pertenece al distribuidor o a la empresa compradora de la orden.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery returned."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not visible to the caller.")
+            @ApiResponse(responseCode = "200", description = "Entrega devuelta."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o no es visible para el usuario.")
     })
     @GetMapping("/{deliveryId}")
     public ResponseEntity<DeliveryResource> getDeliveryById(@PathVariable Long deliveryId) {
@@ -213,16 +207,15 @@ public class DeliveriesController {
     }
 
     /**
-     * Retrieves the delivery of an order.
+     * Consulta la entrega asociada a una orden.
      *
-     * <p>Readable by the delivery's provider tenant or by the buyer company of the order; anything else
-     * is reported as not found.</p>
+     * <p>Puede consultarla el tenant del distribuidor o la empresa compradora; para otros usuarios se responde como no encontrada.</p>
      */
-    @Operation(summary = "Get the delivery of an order",
-            description = "Returns the delivery attached to the given order when the caller is its provider tenant or the order's buyer company.")
+    @Operation(summary = "Consultar entrega de una orden",
+            description = "Devuelve la entrega asociada cuando el usuario pertenece al distribuidor o a la empresa compradora de la orden.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery returned."),
-            @ApiResponse(responseCode = "404", description = "No delivery exists for the order or it is not visible to the caller.")
+            @ApiResponse(responseCode = "200", description = "Entrega devuelta."),
+            @ApiResponse(responseCode = "404", description = "La orden no tiene entrega o esta no es visible para el usuario.")
     })
     @GetMapping("/order/{orderId}")
     public ResponseEntity<DeliveryResource> getDeliveryByOrder(@PathVariable Long orderId) {

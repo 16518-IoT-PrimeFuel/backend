@@ -22,20 +22,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * v2 geofence-policy administration (S17). It creates a new <em>version</em> of the circle a delivery's
- * safety decision is evaluated against; it never edits the previous version in place.
+ * Administración v2 de políticas de geocerca. Crea una nueva versión del círculo usado para evaluar
+ * decisiones de seguridad de una entrega, sin modificar versiones anteriores.
  *
- * <p><strong>It is a decision input, not a prevention mechanism.</strong> This endpoint configures the
- * geofence; whether it authorizes or blocks a valve is a separate, non-physical decision (see
- * {@code GeofenceEvaluation}). Nothing here prevents a physical event.
+ * <p>La geocerca es un dato para la decisión de seguridad, no un mecanismo de prevención física. La autorización
+ * o bloqueo lógico de una válvula se resuelve por separado.
  *
- * <p>Restricted to the delivery's owning provider: the tenant comes from the principal
- * ({@code iam.api.TenantAccess}) and the delivery, never from the body. A delivery the caller does not own
- * is a 403, a missing delivery a 404.
+ * <p>Solo el distribuidor propietario puede configurarla. El tenant se obtiene del principal y la entrega, nunca
+ * del cuerpo; una entrega ajena devuelve 403 y una inexistente, 404.
  */
 @RestController
 @RequestMapping(value = "/api/v2/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Geofence policy", description = "Geofence-policy administration (v2, decision input)")
+@Tag(name = "Políticas de geocerca", description = "Configuración versionada del área de seguridad de una entrega")
 public class GeofencePoliciesController {
 
     private final GeofencePolicies geofencePolicies;
@@ -51,19 +49,18 @@ public class GeofencePoliciesController {
     }
 
     /**
-     * Creates a new geofence-policy version for a delivery.
+     * Crea una versión nueva de la política de geocerca de una entrega.
      *
-     * <p>The provider is resolved server-side; a foreign delivery is a 403. The radius is a circle in metres;
-     * invalid geometry is a 400.
+     * <p>El distribuidor se resuelve en el servidor. El radio define un círculo en metros; la geometría inválida devuelve 400.
      */
-    @Operation(summary = "Create a geofence-policy version for a delivery",
-            description = "Creates a new version of the delivery's geofence circle, owned by the caller's provider tenant; the previous version is kept.")
+    @Operation(summary = "Crear versión de geocerca para entrega",
+            description = "Crea una nueva versión del círculo de seguridad de una entrega para el distribuidor autenticado y conserva las versiones previas.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Policy version created."),
-            @ApiResponse(responseCode = "400", description = "The geometry is invalid (missing/invalid centre or non-positive radius)."),
-            @ApiResponse(responseCode = "403", description = "The caller has no provider identity, or does not own the delivery."),
-            @ApiResponse(responseCode = "404", description = "The delivery does not exist."),
-            @ApiResponse(responseCode = "409", description = "A concurrent policy version already exists for this delivery.")
+            @ApiResponse(responseCode = "201", description = "Versión de política creada."),
+            @ApiResponse(responseCode = "400", description = "Geometría inválida: falta el centro, sus coordenadas no son válidas o el radio no es positivo."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene identidad de distribuidor o no es propietario de la entrega."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe."),
+            @ApiResponse(responseCode = "409", description = "Ya existe una versión concurrente de la política para esta entrega.")
     })
     @PostMapping("/{deliveryId}/geofence-policies")
     public ResponseEntity<?> create(@PathVariable Long deliveryId,

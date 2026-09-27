@@ -30,7 +30,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v2/replenishment-requests", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Replenishment", description = "Replenishment request lifecycle (v2)")
+@Tag(name = "Solicitudes de abastecimiento", description = "Creación y ciclo de decisión de solicitudes por organización")
 public class ReplenishmentRequestsController {
 
     private final ReplenishmentCommandService commandService;
@@ -49,19 +49,17 @@ public class ReplenishmentRequestsController {
     }
 
     /**
-     * Creates a replenishment request for the caller's organization.
+     * Crea una solicitud de abastecimiento para la organización activa.
      *
-     * <p>The organization comes from the principal. The referenced fuel product must be visible to the
-     * given provider tenant, and when an {@code episodeKey} is supplied the call is idempotent: a
-     * request already created for that episode is returned instead of a duplicate.</p>
+     * <p>La organización se deriva de la membresía autenticada. El producto debe estar disponible para el distribuidor indicado; {@code episodeKey} evita duplicados de episodios automáticos.</p>
      */
-    @Operation(summary = "Create a replenishment request",
-            description = "Creates a replenishment request owned by the caller's organization; creation is idempotent per episodeKey.")
+    @Operation(summary = "Crear solicitud de abastecimiento",
+            description = "Registra una solicitud para la organización activa. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Replenishment request created (or the existing episode request returned)."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation, no organization was resolved, or a field value (e.g. source) is invalid."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated or has no active organization."),
-            @ApiResponse(responseCode = "404", description = "The referenced fuel product is not available for the given provider.")
+            @ApiResponse(responseCode = "201", description = "Solicitud creada o solicitud existente del episodio devuelta."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo es inválido, no se resolvió una organización o el valor de un campo no está permitido."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
+            @ApiResponse(responseCode = "404", description = "El producto no está disponible para el distribuidor indicado.")
     })
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody CreateReplenishmentRequestResource resource) {
@@ -80,15 +78,15 @@ public class ReplenishmentRequestsController {
     }
 
     /**
-     * Lists the replenishment requests of the caller's organization.
+     * Lista las solicitudes de abastecimiento de la organización activa.
      *
-     * <p>Scoped to the organization resolved from the principal.</p>
+     * <p>La organización se obtiene de la identidad autenticada y no se acepta como parámetro.</p>
      */
-    @Operation(summary = "List replenishment requests",
-            description = "Returns the replenishment requests belonging to the caller's organization.")
+    @Operation(summary = "Listar solicitudes de abastecimiento",
+            description = "Devuelve las solicitudes que pertenecen a la organización activa del usuario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Replenishment requests returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated or has no active organization.")
+            @ApiResponse(responseCode = "200", description = "Solicitudes de abastecimiento devueltas."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa.")
     })
     @GetMapping
     public ResponseEntity<List<ReplenishmentRequestResource>> list() {
@@ -102,17 +100,16 @@ public class ReplenishmentRequestsController {
     }
 
     /**
-     * Retrieves a single replenishment request.
+     * Consulta una solicitud de abastecimiento por identificador.
      *
-     * <p>The request must belong to the caller's organization; anything else is reported as not
-     * found.</p>
+     * <p>La solicitud debe pertenecer a la organización activa; las de otros tenants responden como no encontradas.</p>
      */
-    @Operation(summary = "Get a replenishment request by id",
-            description = "Returns the replenishment request identified by the path id when it belongs to the caller's organization.")
+    @Operation(summary = "Consultar solicitud por identificador",
+            description = "Devuelve la solicitud indicada solo si pertenece a la organización activa del usuario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Replenishment request returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated or has no active organization."),
-            @ApiResponse(responseCode = "404", description = "Replenishment request does not exist or belongs to another organization.")
+            @ApiResponse(responseCode = "200", description = "Solicitud de abastecimiento devuelta."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
+            @ApiResponse(responseCode = "404", description = "La solicitud no existe o pertenece a otra organización.")
     })
     @GetMapping("/{requestId}")
     public ResponseEntity<ReplenishmentRequestResource> get(@PathVariable Long requestId) {
@@ -128,19 +125,18 @@ public class ReplenishmentRequestsController {
     }
 
     /**
-     * Accepts a pending replenishment request.
+     * Acepta una solicitud de abastecimiento pendiente.
      *
-     * <p>Only the provider tenant the request was addressed to may accept it. The request must still
-     * be pending; an already-decided request (or a concurrent decision) is reported as a conflict.</p>
+     * <p>Solo el distribuidor destinatario puede aceptarla. La decisión requiere que siga pendiente; una decisión previa o concurrente produce conflicto.</p>
      */
-    @Operation(summary = "Accept a replenishment request",
-            description = "Accepts a pending replenishment request on behalf of the addressed provider tenant.")
+    @Operation(summary = "Aceptar solicitud de abastecimiento",
+            description = "Registra la aceptación para el distribuidor destinatario mientras la solicitud siga pendiente.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Replenishment request accepted."),
-            @ApiResponse(responseCode = "400", description = "The request could not be accepted because its state or arguments are invalid."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the addressed provider tenant, or the request does not exist."),
-            @ApiResponse(responseCode = "404", description = "Replenishment request does not exist."),
-            @ApiResponse(responseCode = "409", description = "The request is not pending or was decided concurrently.")
+            @ApiResponse(responseCode = "200", description = "Solicitud de abastecimiento aceptada."),
+            @ApiResponse(responseCode = "400", description = "El estado o los argumentos no permiten aceptar la solicitud."),
+            @ApiResponse(responseCode = "403", description = "El usuario no representa al distribuidor destinatario."),
+            @ApiResponse(responseCode = "404", description = "No existe la solicitud indicada."),
+            @ApiResponse(responseCode = "409", description = "La solicitud ya no está pendiente o se decidió en paralelo.")
     })
     @PostMapping("/{requestId}/accept")
     public ResponseEntity<?> accept(@PathVariable Long requestId) {
@@ -153,19 +149,18 @@ public class ReplenishmentRequestsController {
     }
 
     /**
-     * Rejects a pending replenishment request.
+     * Rechaza una solicitud de abastecimiento pendiente.
      *
-     * <p>Only the addressed provider tenant may reject it; the reason is required and the request must
-     * still be pending.</p>
+     * <p>Solo el distribuidor destinatario puede rechazarla. Debe incluirse el motivo y la solicitud debe seguir pendiente.</p>
      */
-    @Operation(summary = "Reject a replenishment request",
-            description = "Rejects a pending replenishment request on behalf of the addressed provider tenant, recording a reason.")
+    @Operation(summary = "Rechazar solicitud de abastecimiento",
+            description = "Registra el rechazo y su motivo para el distribuidor destinatario, siempre que la solicitud siga pendiente.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Replenishment request rejected."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation or the request could not be rejected."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the addressed provider tenant, or the request does not exist."),
-            @ApiResponse(responseCode = "404", description = "Replenishment request does not exist."),
-            @ApiResponse(responseCode = "409", description = "The request is not pending or was decided concurrently.")
+            @ApiResponse(responseCode = "200", description = "Solicitud de abastecimiento rechazada."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo es inválido o no se pudo rechazar la solicitud."),
+            @ApiResponse(responseCode = "403", description = "El usuario no representa al distribuidor destinatario."),
+            @ApiResponse(responseCode = "404", description = "No existe la solicitud indicada."),
+            @ApiResponse(responseCode = "409", description = "La solicitud ya no está pendiente o se decidió en paralelo.")
     })
     @PostMapping("/{requestId}/reject")
     public ResponseEntity<?> reject(@PathVariable Long requestId,
@@ -179,17 +174,17 @@ public class ReplenishmentRequestsController {
     }
 
     /**
-     * Cancels a replenishment request.
+     * Cancela una solicitud de abastecimiento.
      *
-     * <p>Only the organization that owns the request may cancel it, and only while it is pending.</p>
+     * <p>Solo la organización propietaria puede cancelarla mientras siga pendiente.</p>
      */
-    @Operation(summary = "Cancel a replenishment request",
-            description = "Cancels a pending replenishment request on behalf of the owning organization.")
+    @Operation(summary = "Cancelar solicitud de abastecimiento",
+            description = "Registra la cancelación por la organización propietaria; la solicitud debe permanecer pendiente.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Replenishment request cancelled."),
-            @ApiResponse(responseCode = "403", description = "Caller has no active organization, does not own the request, or the request does not exist."),
-            @ApiResponse(responseCode = "404", description = "Replenishment request does not exist."),
-            @ApiResponse(responseCode = "409", description = "The request is not pending or was decided concurrently.")
+            @ApiResponse(responseCode = "200", description = "Solicitud de abastecimiento cancelada."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene organización activa o no es propietario de la solicitud."),
+            @ApiResponse(responseCode = "404", description = "No existe la solicitud indicada."),
+            @ApiResponse(responseCode = "409", description = "La solicitud ya no está pendiente o se decidió en paralelo.")
     })
     @PostMapping("/{requestId}/cancel")
     public ResponseEntity<?> cancel(@PathVariable Long requestId) {

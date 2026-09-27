@@ -16,10 +16,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/** Receives logical driver-app observations; it does not communicate with physical hardware. */
+/** Recibe observaciones lógicas de la aplicación del conductor; no se comunica con hardware físico. */
 @RestController
 @RequestMapping("/api/v2/deliveries")
-@Tag(name = "Valve observations", description = "Logical valve ACK and safety observations")
+@Tag(name = "Observaciones de válvula", description = "Confirmaciones lógicas y eventos de seguridad informados por el conductor")
 public class ValveObservationsController {
     private final ValveObservationService observations;
     private final DeliveryTrackingLookup deliveries;
@@ -31,14 +31,14 @@ public class ValveObservationsController {
         this.observations = observations; this.deliveries = deliveries; this.fleet = fleet; this.membership = membership;
     }
 
-    /** Records a valve state reported by the assigned driver and reconciles any pending OPEN command. */
-    @Operation(summary = "Report a valve observation", description = "The assigned driver reports OPEN or CLOSED; invalid OPEN acknowledgements are recorded as safety incidents.")
+    /** Registra el estado informado por el conductor asignado y concilia una orden OPEN pendiente. */
+    @Operation(summary = "Informar observación de válvula", description = "El conductor asignado informa OPEN o CLOSED; una confirmación OPEN no autorizada se registra como incidente de seguridad.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Observation recorded or ACK replayed idempotently."),
-            @ApiResponse(responseCode = "202", description = "Unmatched OPEN recorded as a safety incident."),
-            @ApiResponse(responseCode = "400", description = "Invalid observation body."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the assigned driver or assignment crosses tenants."),
-            @ApiResponse(responseCode = "404", description = "Delivery or assigned driver does not exist.")
+            @ApiResponse(responseCode = "200", description = "Observación registrada o confirmación repetida sin duplicar efectos."),
+            @ApiResponse(responseCode = "202", description = "La confirmación OPEN no coincide con una orden y se registró como incidente de seguridad."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo de la observación no es válido."),
+            @ApiResponse(responseCode = "403", description = "El usuario no es el conductor asignado o la asignación cruza tenants."),
+            @ApiResponse(responseCode = "404", description = "La entrega o el conductor asignado no existe.")
     })
     @PostMapping("/{deliveryId}/valve-observations")
     public ResponseEntity<?> observe(@PathVariable Long deliveryId, @Valid @RequestBody ValveObservationResource body) {

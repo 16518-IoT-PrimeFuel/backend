@@ -25,7 +25,7 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/api/v2/admin/deliveries/{deliveryId}/transport-evidence",
         produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Transport evidence retention", description = "Administrative export and deletion of GPS evidence")
+@Tag(name = "Retención de evidencias de transporte", description = "Exportación y eliminación administrativa de evidencias GPS")
 public class TransportEvidenceAdminController {
     private final DeliveryTrackingLookup deliveryLookup;
     private final DeliveryTrackingQuery trackingQuery;
@@ -42,16 +42,16 @@ public class TransportEvidenceAdminController {
         this.tracking = tracking;
     }
 
-    /** Deletes GPS evidence and its rebuildable projection; business transitions and safety decisions remain. */
+    /** Elimina muestras GPS y su proyección reconstruible; conserva transiciones de negocio y decisiones de seguridad. */
     @DeleteMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Transactional
-    @Operation(summary = "Delete transport evidence",
-            description = "Removes only raw GPS samples and the tracking projection for the delivery.")
+    @Operation(summary = "Eliminar evidencias de transporte",
+            description = "Elimina únicamente muestras GPS y la proyección de seguimiento de la entrega. Requiere ROLE_ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Transport evidence deleted (idempotent)."),
-            @ApiResponse(responseCode = "403", description = "Caller is not a platform administrator."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist.")
+            @ApiResponse(responseCode = "204", description = "Evidencias eliminadas; repetir la operación no produce cambios adicionales."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene autoridad de administrador de plataforma."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe.")
     })
     public ResponseEntity<Void> delete(@PathVariable Long deliveryId) {
         if (deliveryLookup.findAssignedDelivery(deliveryId).isEmpty()) {
@@ -62,15 +62,15 @@ public class TransportEvidenceAdminController {
         return ResponseEntity.noContent().build();
     }
 
-    /** Exports evidence with the same fields and ordering as the delivery tracking samples query. */
+    /** Exporta evidencias con los mismos campos y orden que la consulta de muestras de seguimiento. */
     @GetMapping("/export")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Export transport evidence",
-            description = "Returns GPS and load evidence ordered by recordedAt.")
+    @Operation(summary = "Exportar evidencias de transporte",
+            description = "Devuelve evidencias GPS y de carga ordenadas por instante de registro. Requiere ROLE_ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Evidence exported; samples may be empty."),
-            @ApiResponse(responseCode = "403", description = "Caller is not a platform administrator."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist.")
+            @ApiResponse(responseCode = "200", description = "Evidencias exportadas; la lista puede estar vacía."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene autoridad de administrador de plataforma."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe.")
     })
     public ResponseEntity<?> export(@PathVariable Long deliveryId) {
         if (deliveryLookup.findAssignedDelivery(deliveryId).isEmpty()) {

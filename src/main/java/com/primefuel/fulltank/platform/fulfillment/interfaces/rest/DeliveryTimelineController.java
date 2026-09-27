@@ -19,10 +19,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/** Reconstructs the delivery's business timeline from append-only sources plus current GPS load samples. */
+/** Reconstruye la cronología de negocio de una entrega con sus fuentes históricas y las muestras retenidas. */
 @RestController
 @RequestMapping("/api/v2/deliveries")
-@Tag(name = "Delivery timeline", description = "Reconstructed physical and safety history")
+@Tag(name = "Cronología de entregas", description = "Historial físico y de seguridad reconstruido")
 public class DeliveryTimelineController {
     private final DeliveryTrackingLookup deliveries;
     private final FleetCatalog fleet;
@@ -39,12 +39,12 @@ public class DeliveryTimelineController {
         this.transitions = transitions; this.journal = journal; this.tracking = tracking;
     }
 
-    /** Returns the reconstructed timeline to the owning provider or the assigned driver. */
-    @Operation(summary = "Get a delivery timeline", description = "Combines state transitions, safety decisions, valve facts, and retained load milestones; deleted GPS samples are absent.")
+    /** Devuelve la cronología al distribuidor propietario o al conductor asignado. */
+    @Operation(summary = "Consultar cronología de entrega", description = "Combina cambios de estado, decisiones de seguridad, eventos de válvula y registros de carga retenidos; las muestras GPS eliminadas no se incluyen.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Timeline returned in occurredAt/type/id order."),
-            @ApiResponse(responseCode = "403", description = "Caller is outside the provider tenant and is not its assigned driver."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist.")
+            @ApiResponse(responseCode = "200", description = "Cronología devuelta, ordenada por instante, tipo e identificador."),
+            @ApiResponse(responseCode = "403", description = "El usuario no pertenece al distribuidor ni es el conductor asignado."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe.")
     })
     @GetMapping("/{deliveryId}/timeline")
     public ResponseEntity<List<DeliveryTimelineItemResource>> get(@PathVariable Long deliveryId) {

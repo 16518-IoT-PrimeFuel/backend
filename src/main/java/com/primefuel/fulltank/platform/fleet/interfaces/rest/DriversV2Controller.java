@@ -23,12 +23,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * v2 driver catalog (S12/T12-A). The provider is always the principal's tenant; a resource the principal
- * does not own is simply not found. Enabling/disabling is explicit — there is no hard delete.
+ * Catálogo v2 de conductores. El distribuidor se obtiene del principal; los recursos de otro tenant se
+ * informan como no encontrados. La activación y desactivación preservan el registro.
  */
 @RestController
 @RequestMapping(value = "/api/v2/drivers", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Fleet drivers", description = "Driver catalog and lifecycle (v2)")
+@Tag(name = "Conductores de flota", description = "Administración y ciclo de vida de conductores por distribuidor")
 public class DriversV2Controller {
 
     private final FleetCatalog fleetCatalog;
@@ -47,17 +47,16 @@ public class DriversV2Controller {
     }
 
     /**
-     * Registers a driver in the caller's provider tenant.
+     * Registra un conductor para el distribuidor autenticado.
      *
-     * <p>The provider always comes from the principal, never the body, so a caller cannot create drivers
-     * for another tenant.</p>
+     * <p>El distribuidor se toma del principal y nunca del cuerpo, por lo que no se pueden crear conductores para otro tenant.</p>
      */
-    @Operation(summary = "Register a driver",
-            description = "Creates a driver in the caller's provider tenant; the tenant is taken from the principal.")
+    @Operation(summary = "Registrar conductor",
+            description = "Crea un conductor para el tenant distribuidor autenticado, identificado a partir del principal.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Driver created."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation or the driver data is invalid."),
-            @ApiResponse(responseCode = "403", description = "Caller has no provider identity.")
+            @ApiResponse(responseCode = "201", description = "Conductor registrado."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no supera la validación o los datos del conductor no son válidos."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor.")
     })
     @PostMapping
     public ResponseEntity<?> register(@Valid @RequestBody DriverInputResource resource) {
@@ -73,15 +72,15 @@ public class DriversV2Controller {
     }
 
     /**
-     * Lists the drivers of the caller's provider tenant.
+     * Lista los conductores del distribuidor autenticado.
      *
-     * <p>Always tenant-scoped through the principal.</p>
+     * <p>La consulta siempre se limita al tenant obtenido del principal.</p>
      */
-    @Operation(summary = "List drivers",
-            description = "Returns all drivers of the caller's provider tenant.")
+    @Operation(summary = "Listar conductores",
+            description = "Devuelve los conductores registrados para el tenant distribuidor autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Drivers returned."),
-            @ApiResponse(responseCode = "403", description = "Caller has no provider identity.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de conductores."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor.")
     })
     @GetMapping
     public ResponseEntity<List<DriverV2Resource>> list() {
@@ -94,16 +93,16 @@ public class DriversV2Controller {
     }
 
     /**
-     * Retrieves a single driver.
+     * Consulta un conductor por identificador.
      *
-     * <p>Tenant-scoped through the principal; a driver of another tenant is reported as not found.</p>
+     * <p>La consulta se limita al tenant del principal; un conductor de otro tenant se informa como no encontrado.</p>
      */
-    @Operation(summary = "Get a driver by id",
-            description = "Returns the driver identified by the path id when it belongs to the caller's provider tenant.")
+    @Operation(summary = "Consultar conductor por identificador",
+            description = "Devuelve el conductor indicado si pertenece al tenant distribuidor autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Driver returned."),
-            @ApiResponse(responseCode = "403", description = "Caller has no provider identity."),
-            @ApiResponse(responseCode = "404", description = "Driver does not exist or belongs to another provider tenant.")
+            @ApiResponse(responseCode = "200", description = "Conductor devuelto."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor."),
+            @ApiResponse(responseCode = "404", description = "El conductor no existe o pertenece a otro tenant distribuidor.")
     })
     @GetMapping("/{driverId}")
     public ResponseEntity<DriverV2Resource> get(@PathVariable Long driverId) {
@@ -118,17 +117,16 @@ public class DriversV2Controller {
     }
 
     /**
-     * Updates a driver.
+     * Actualiza los datos de un conductor.
      *
-     * <p>Only the owning provider tenant may update it; a foreign or missing driver is reported as not
-     * found and invalid data as a bad request.</p>
+     * <p>Solo el tenant propietario puede modificarlo; si no existe o pertenece a otro tenant se informa como no encontrado.</p>
      */
-    @Operation(summary = "Update a driver",
-            description = "Applies field changes to a driver owned by the caller's provider tenant.")
+    @Operation(summary = "Actualizar conductor",
+            description = "Aplica los cambios recibidos a un conductor del tenant distribuidor autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Driver updated."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation or the driver data is invalid."),
-            @ApiResponse(responseCode = "404", description = "Driver does not exist or is not owned by the caller.")
+            @ApiResponse(responseCode = "200", description = "Conductor actualizado."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no supera la validación o los datos del conductor no son válidos."),
+            @ApiResponse(responseCode = "404", description = "El conductor no existe o no pertenece al tenant autenticado.")
     })
     @PutMapping("/{driverId}")
     public ResponseEntity<?> update(@PathVariable Long driverId,
@@ -144,16 +142,15 @@ public class DriversV2Controller {
     }
 
     /**
-     * Disables a driver.
+     * Desactiva un conductor.
      *
-     * <p>Only the owning provider tenant may disable it. Disabling never deletes the row; it flips the
-     * lifecycle flag and publishes a resource-disabled event.</p>
+     * <p>Solo el tenant propietario puede desactivarlo. El registro se conserva y se publica el evento correspondiente.</p>
      */
-    @Operation(summary = "Disable a driver",
-            description = "Soft-disables a driver owned by the caller's provider tenant, preserving the record.")
+    @Operation(summary = "Desactivar conductor",
+            description = "Desactiva el conductor del tenant autenticado sin eliminar su registro.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Driver disabled."),
-            @ApiResponse(responseCode = "404", description = "Driver does not exist or is not owned by the caller.")
+            @ApiResponse(responseCode = "200", description = "Conductor desactivado."),
+            @ApiResponse(responseCode = "404", description = "El conductor no existe o no pertenece al tenant autenticado.")
     })
     @PostMapping("/{driverId}/deactivate")
     public ResponseEntity<?> deactivate(@PathVariable Long driverId) {
@@ -165,15 +162,15 @@ public class DriversV2Controller {
     }
 
     /**
-     * Enables a previously disabled driver.
+     * Reactiva un conductor previamente desactivado.
      *
-     * <p>Only the owning provider tenant may enable it; this publishes a resource-enabled event.</p>
+     * <p>Solo el tenant propietario puede reactivarlo; se publica el evento correspondiente.</p>
      */
-    @Operation(summary = "Enable a driver",
-            description = "Re-enables a disabled driver owned by the caller's provider tenant.")
+    @Operation(summary = "Reactivar conductor",
+            description = "Reactiva un conductor desactivado que pertenece al tenant distribuidor autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Driver enabled."),
-            @ApiResponse(responseCode = "404", description = "Driver does not exist or is not owned by the caller.")
+            @ApiResponse(responseCode = "200", description = "Conductor reactivado."),
+            @ApiResponse(responseCode = "404", description = "El conductor no existe o no pertenece al tenant autenticado.")
     })
     @PostMapping("/{driverId}/activate")
     public ResponseEntity<?> activate(@PathVariable Long driverId) {
@@ -185,16 +182,15 @@ public class DriversV2Controller {
     }
 
     /**
-     * Lists the drivers that may actually be suggested for a delivery.
+     * Lista los conductores que pueden proponerse para una entrega.
      *
-     * <p>U07: eligible = allowed status + active + same tenant. Drivers that are busy are excluded from
-     * this suggestion list.</p>
+     * <p>Solo incluye conductores activos, con estado permitido y del mismo tenant; los ocupados se excluyen.</p>
      */
-    @Operation(summary = "List eligible drivers",
-            description = "Returns the drivers of the caller's provider tenant that are currently eligible to be suggested.")
+    @Operation(summary = "Listar conductores elegibles",
+            description = "Devuelve conductores activos del tenant autenticado que pueden asignarse y no están ocupados.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Eligible drivers returned."),
-            @ApiResponse(responseCode = "403", description = "Caller has no provider identity.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de conductores elegibles."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor.")
     })
     @GetMapping("/eligible")
     public ResponseEntity<List<DriverV2Resource>> listEligible() {
@@ -207,17 +203,16 @@ public class DriversV2Controller {
     }
 
     /**
-     * Assesses the eligibility of a single driver.
+     * Evalúa la elegibilidad de un conductor.
      *
-     * <p>Returns a three-valued outcome (eligible / busy / ineligible) with a reason. Tenant-scoped
-     * through the principal; a foreign or missing driver is reported as not found.</p>
+     * <p>Devuelve uno de tres resultados (elegible, ocupado o no elegible) y el motivo. Se limita al tenant del principal.</p>
      */
-    @Operation(summary = "Assess driver eligibility",
-            description = "Returns the eligibility outcome and reason for a driver owned by the caller's provider tenant.")
+    @Operation(summary = "Evaluar elegibilidad del conductor",
+            description = "Devuelve el resultado y motivo de elegibilidad para un conductor del tenant autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Eligibility assessment returned."),
-            @ApiResponse(responseCode = "403", description = "Caller has no provider identity."),
-            @ApiResponse(responseCode = "404", description = "Driver does not exist or belongs to another provider tenant.")
+            @ApiResponse(responseCode = "200", description = "Evaluación de elegibilidad devuelta."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor."),
+            @ApiResponse(responseCode = "404", description = "El conductor no existe o pertenece a otro tenant distribuidor.")
     })
     @GetMapping("/{driverId}/eligibility")
     public ResponseEntity<EligibilityResource> eligibility(@PathVariable Long driverId) {

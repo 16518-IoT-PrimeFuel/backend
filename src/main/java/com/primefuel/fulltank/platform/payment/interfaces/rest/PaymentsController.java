@@ -30,7 +30,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/payments", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Payments", description = "Payment management endpoints")
+@Tag(name = "Pagos", description = "Registro, consulta y gestión del estado de pagos de órdenes")
 public class PaymentsController {
 
     private final PaymentCommandService paymentCommandService;
@@ -49,19 +49,19 @@ public class PaymentsController {
     }
 
     /**
-     * Creates a payment for an order on behalf of the caller's buyer company.
+     * Registra un pago para una orden de la empresa compradora autenticada.
      *
-     * <p>The company in the body must be the caller's own and must match the order's company; the amount
-     * must equal the order total. At most one payment may exist per order.</p>
+     * <p>La empresa del cuerpo debe pertenecer al usuario y coincidir con la de la orden. El importe debe
+     * igualar el total de la orden y solo se permite un pago por orden.</p>
      */
-    @Operation(summary = "Create a payment",
-            description = "Creates a payment for the caller's order after checking ownership and that the amount matches the order total.")
+    @Operation(summary = "Registrar pago",
+            description = "Registra el pago de una orden después de verificar la empresa propietaria, la existencia de la orden y la coincidencia del importe total.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Payment created."),
-            @ApiResponse(responseCode = "400", description = "The order/company is missing or the amount does not match the order total."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the buyer company in the request body."),
-            @ApiResponse(responseCode = "404", description = "The referenced order does not exist or does not belong to the given company."),
-            @ApiResponse(responseCode = "409", description = "A payment already exists for the order.")
+            @ApiResponse(responseCode = "201", description = "Pago registrado."),
+            @ApiResponse(responseCode = "400", description = "Falta la orden o la empresa, o el importe no coincide con el total de la orden."),
+            @ApiResponse(responseCode = "403", description = "La empresa compradora indicada no pertenece al usuario autenticado."),
+            @ApiResponse(responseCode = "404", description = "La orden no existe o no pertenece a la empresa indicada."),
+            @ApiResponse(responseCode = "409", description = "La orden ya tiene un pago registrado.")
     })
     @PostMapping
     public ResponseEntity<?> createPayment(@RequestBody CreatePaymentResource resource) {
@@ -85,18 +85,17 @@ public class PaymentsController {
     }
 
     /**
-     * Completes a payment and marks the order as paid.
+     * Completa un pago y marca la orden como pagada.
      *
-     * <p>Readable/operable by the buyer company or the provider of the order. Completing also moves the
-     * order to paid, which the order aggregate refuses for a cancelled order — that refusal surfaces as an
-     * unexpected error rather than a domain conflict.</p>
+     * <p>Puede operarlo la empresa compradora o el distribuidor de la orden. La orden cancelada no admite
+     * el pago; esa condición actualmente se informa como error interno.</p>
      */
-    @Operation(summary = "Complete a payment",
-            description = "Marks the payment as completed with a transaction reference and moves its order to paid.")
+    @Operation(summary = "Completar pago",
+            description = "Marca el pago como completado con la referencia de transacción y actualiza la orden a pagada.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Payment completed and order marked paid."),
-            @ApiResponse(responseCode = "404", description = "Payment or its order does not exist, or the caller is not allowed to see it."),
-            @ApiResponse(responseCode = "500", description = "The order cannot be paid (for example, it was cancelled).")
+            @ApiResponse(responseCode = "200", description = "Pago completado y orden marcada como pagada."),
+            @ApiResponse(responseCode = "404", description = "El pago o su orden no existe, o el usuario no puede consultarlo."),
+            @ApiResponse(responseCode = "500", description = "La orden no puede marcarse como pagada, por ejemplo, porque fue cancelada.")
     })
     @PostMapping("/{paymentId}/complete")
     public ResponseEntity<?> completePayment(@PathVariable Long paymentId,
@@ -110,16 +109,15 @@ public class PaymentsController {
     }
 
     /**
-     * Refunds a payment.
+     * Reembolsa un pago.
      *
-     * <p>Operable by the buyer company or the provider of the order. The status is set to refunded without
-     * a state guard, so the transition is accepted from any current status.</p>
+     * <p>Puede operarlo la empresa compradora o el distribuidor de la orden. El estado pasa a reembolsado sin restricción del estado previo.</p>
      */
-    @Operation(summary = "Refund a payment",
-            description = "Marks the payment as refunded; the operation is idempotent with respect to payment state.")
+    @Operation(summary = "Reembolsar pago",
+            description = "Marca el pago como reembolsado; repetir la operación conserva ese estado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Payment refunded."),
-            @ApiResponse(responseCode = "404", description = "Payment does not exist or the caller is not allowed to see it.")
+            @ApiResponse(responseCode = "200", description = "Pago reembolsado."),
+            @ApiResponse(responseCode = "404", description = "El pago no existe o el usuario no puede consultarlo.")
     })
     @PostMapping("/{paymentId}/refund")
     public ResponseEntity<?> refundPayment(@PathVariable Long paymentId) {
@@ -132,15 +130,15 @@ public class PaymentsController {
     }
 
     /**
-     * Lists every payment in the platform.
+     * Lista todos los pagos de la plataforma.
      *
-     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     * <p>Disponible únicamente para usuarios con autoridad ROLE_ADMIN.</p>
      */
-    @Operation(summary = "List all payments",
-            description = "Returns every registered payment. Restricted to administrators.")
+    @Operation(summary = "Listar todos los pagos",
+            description = "Devuelve todos los pagos registrados; requiere autoridad administrativa ROLE_ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Payments returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de pagos."),
+            @ApiResponse(responseCode = "403", description = "El usuario no cuenta con autoridad ROLE_ADMIN.")
     })
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -151,16 +149,15 @@ public class PaymentsController {
     }
 
     /**
-     * Retrieves a single payment.
+     * Consulta un pago por identificador.
      *
-     * <p>Visible to the payment's buyer company or to the provider of its order; anything else is reported
-     * as not found.</p>
+     * <p>Visible para la empresa compradora o el distribuidor de la orden; los demás usuarios reciben una respuesta de no encontrado.</p>
      */
-    @Operation(summary = "Get a payment by id",
-            description = "Returns the payment identified by the path id when the caller is its buyer company or its order's provider.")
+    @Operation(summary = "Consultar pago por identificador",
+            description = "Devuelve el pago si el usuario pertenece a la empresa compradora o al distribuidor de la orden.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Payment returned."),
-            @ApiResponse(responseCode = "404", description = "Payment does not exist or is not visible to the caller.")
+            @ApiResponse(responseCode = "200", description = "Pago devuelto."),
+            @ApiResponse(responseCode = "404", description = "El pago no existe o no es visible para el usuario.")
     })
     @GetMapping("/{paymentId}")
     public ResponseEntity<PaymentResource> getPaymentById(@PathVariable Long paymentId) {
@@ -173,16 +170,15 @@ public class PaymentsController {
     }
 
     /**
-     * Retrieves the payment of an order.
+     * Consulta el pago asociado a una orden.
      *
-     * <p>Visible to the payment's buyer company or to the provider of the order; anything else is reported
-     * as not found.</p>
+     * <p>Visible para la empresa compradora o el distribuidor de la orden; los demás usuarios reciben una respuesta de no encontrado.</p>
      */
-    @Operation(summary = "Get the payment of an order",
-            description = "Returns the payment attached to the given order when the caller is its buyer company or the order's provider.")
+    @Operation(summary = "Consultar pago de una orden",
+            description = "Devuelve el pago asociado a la orden si el usuario pertenece a la empresa compradora o al distribuidor.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Payment returned."),
-            @ApiResponse(responseCode = "404", description = "No payment exists for the order or it is not visible to the caller.")
+            @ApiResponse(responseCode = "200", description = "Pago devuelto."),
+            @ApiResponse(responseCode = "404", description = "La orden no tiene pago o este no es visible para el usuario.")
     })
     @GetMapping("/order/{orderId}")
     public ResponseEntity<PaymentResource> getPaymentByOrder(@PathVariable Long orderId) {
@@ -195,15 +191,15 @@ public class PaymentsController {
     }
 
     /**
-     * Lists the payments of a buyer company.
+     * Lista los pagos de una empresa compradora.
      *
-     * <p>Only the owning company may list them.</p>
+     * <p>Solo el tenant de la empresa propietaria puede consultarlos.</p>
      */
-    @Operation(summary = "List payments by company",
-            description = "Returns the payments of the given buyer company when it matches the caller's own company.")
+    @Operation(summary = "Listar pagos por empresa",
+            description = "Devuelve los pagos de la empresa indicada si coincide con la empresa del usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Payments returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the requested company.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de pagos de la empresa."),
+            @ApiResponse(responseCode = "403", description = "La empresa solicitada no pertenece al usuario autenticado.")
     })
     @GetMapping("/company/{companyId}")
     @PreAuthorize("@tenantAccess.ownsCompany(#companyId)")

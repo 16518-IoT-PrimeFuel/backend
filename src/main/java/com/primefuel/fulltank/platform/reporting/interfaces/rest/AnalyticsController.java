@@ -25,7 +25,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping(value = "/api/v1/analytics", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Analytics", description = "Analytics and reporting endpoints")
+@Tag(name = "Analítica", description = "Indicadores agregados para administración, distribuidores y empresas compradoras")
 public class AnalyticsController {
 
     private final AnalyticsQueryService analyticsQueryService;
@@ -35,15 +35,15 @@ public class AnalyticsController {
     }
 
     /**
-     * Returns the platform-wide summary.
+     * Consulta el resumen agregado de la plataforma.
      *
-     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     * <p>Disponible únicamente para usuarios con autoridad ROLE_ADMIN.</p>
      */
-    @Operation(summary = "Get the platform summary",
-            description = "Returns aggregated platform-wide metrics. Restricted to administrators.")
+    @Operation(summary = "Consultar resumen de plataforma",
+            description = "Devuelve métricas agregadas de toda la plataforma; requiere autoridad ROLE_ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Platform summary returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+            @ApiResponse(responseCode = "200", description = "Resumen de plataforma devuelto."),
+            @ApiResponse(responseCode = "403", description = "El usuario no cuenta con autoridad ROLE_ADMIN.")
     })
     @GetMapping("/platform")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -55,16 +55,15 @@ public class AnalyticsController {
     }
 
     /**
-     * Returns the analytics of a provider company.
+     * Consulta los indicadores de un distribuidor.
      *
-     * <p>Only the provider that owns the requested company may read its analytics; results are
-     * computed for the whole provider tenant.</p>
+     * <p>Solo el distribuidor propietario puede consultarlos; los resultados abarcan su tenant completo.</p>
      */
-    @Operation(summary = "Get provider analytics",
-            description = "Returns the aggregated metrics of the given provider company when the caller owns it.")
+    @Operation(summary = "Consultar indicadores del distribuidor",
+            description = "Devuelve métricas agregadas del tenant distribuidor cuando el usuario pertenece a esa empresa.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Provider analytics returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the owner of this provider company.")
+            @ApiResponse(responseCode = "200", description = "Indicadores del distribuidor devueltos."),
+            @ApiResponse(responseCode = "403", description = "El usuario no pertenece al distribuidor solicitado.")
     })
     @GetMapping("/providers/{providerId}")
     @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
@@ -76,15 +75,15 @@ public class AnalyticsController {
     }
 
     /**
-     * Returns the analytics of a buyer company.
+     * Consulta los indicadores de una empresa compradora.
      *
-     * <p>Only the buyer that owns the requested company may read its analytics.</p>
+     * <p>Solo el tenant de la empresa compradora propietaria puede consultarlos.</p>
      */
-    @Operation(summary = "Get buyer analytics",
-            description = "Returns the aggregated metrics of the given buyer company when the caller owns it.")
+    @Operation(summary = "Consultar indicadores de empresa compradora",
+            description = "Devuelve métricas agregadas de la empresa indicada cuando el usuario pertenece a ella.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Buyer analytics returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the owner of this buyer company.")
+            @ApiResponse(responseCode = "200", description = "Indicadores de la empresa compradora devueltos."),
+            @ApiResponse(responseCode = "403", description = "El usuario no pertenece a la empresa compradora solicitada.")
     })
     @GetMapping("/buyers/{companyId}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")

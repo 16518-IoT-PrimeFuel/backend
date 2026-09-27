@@ -20,17 +20,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * v2 transport-tracking query (S16/T16-B). It exposes the delivery's latest trusted projection and its
- * chronological trail through the public {@link DeliveryTrackingQuery} seam.
+ * Consulta v2 del seguimiento de transporte. Expone la última proyección confiable de la entrega y su
+ * historial cronológico mediante {@link DeliveryTrackingQuery}.
  *
- * <p><strong>Authorization</strong> is resolved server-side from the delivery assignment and the principal
- * (never from the path beyond the delivery id): the delivery's <em>owning provider</em> or the <em>assigned
- * driver</em> may read the tracking. A caller from another tenant is rejected with 403 and a missing delivery
- * (or delivery without tracking) is a 404.
+ * <p>El acceso se resuelve en el servidor con la asignación y el principal: pueden consultar el distribuidor
+ * propietario y el conductor asignado. Otro tenant recibe 403; una entrega inexistente recibe 404.
  */
 @RestController
 @RequestMapping(value = "/api/v2/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Transport tracking", description = "Transport tracking query (v2)")
+@Tag(name = "Seguimiento de transporte", description = "Consulta de ubicación y evidencias de transporte de entregas")
 public class DeliveryTrackingQueryController {
 
     private final DeliveryTrackingQuery trackingQuery;
@@ -52,17 +50,16 @@ public class DeliveryTrackingQueryController {
     }
 
     /**
-     * Returns the latest trusted tracking of a delivery.
+     * Consulta el último seguimiento confiable de una entrega.
      *
-     * <p>Visible to the owning provider or the assigned driver; a foreign tenant is rejected and a delivery
-     * without tracking yet is reported as not found.</p>
+     * <p>Visible para el distribuidor propietario o el conductor asignado. Se rechaza otro tenant y se informa como no encontrada una entrega sin seguimiento.</p>
      */
-    @Operation(summary = "Get the latest tracking of a delivery",
-            description = "Returns the latest trusted position and load state of a delivery visible to the owning provider or the assigned driver.")
+    @Operation(summary = "Consultar último seguimiento de entrega",
+            description = "Devuelve la última ubicación confiable y el estado de carga para el distribuidor propietario o el conductor asignado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Latest tracking returned."),
-            @ApiResponse(responseCode = "403", description = "The caller is neither the owning provider nor the assigned driver."),
-            @ApiResponse(responseCode = "404", description = "The delivery does not exist or has no tracking yet.")
+            @ApiResponse(responseCode = "200", description = "Último seguimiento devuelto."),
+            @ApiResponse(responseCode = "403", description = "El usuario no pertenece al distribuidor propietario ni es el conductor asignado."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o todavía no tiene seguimiento.")
     })
     @GetMapping("/{deliveryId}/tracking")
     public ResponseEntity<?> latest(@PathVariable Long deliveryId) {
@@ -76,17 +73,16 @@ public class DeliveryTrackingQueryController {
     }
 
     /**
-     * Returns the chronological trail of a delivery, ordered by the device clock.
+     * Consulta el historial cronológico de seguimiento según la hora del dispositivo.
      *
-     * <p>Each sample keeps its reception instant and whether it advanced the latest, so out-of-order (jitter)
-     * samples are visible in place. Visible to the owning provider or the assigned driver.</p>
+     * <p>Cada muestra conserva el instante de recepción y si actualizó el último dato, incluso ante muestras desordenadas. Visible para el distribuidor propietario o el conductor asignado.</p>
      */
-    @Operation(summary = "List the tracking trail of a delivery",
-            description = "Returns the delivery's transport-evidence samples ordered by device timestamp, with reception instant and latestAdvanced visible.")
+    @Operation(summary = "Listar muestras de seguimiento de entrega",
+            description = "Devuelve las evidencias de transporte ordenadas por hora del dispositivo, incluyendo la recepción y si cada muestra actualizó el dato más reciente.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Timeline returned (possibly empty)."),
-            @ApiResponse(responseCode = "403", description = "The caller is neither the owning provider nor the assigned driver."),
-            @ApiResponse(responseCode = "404", description = "The delivery does not exist.")
+            @ApiResponse(responseCode = "200", description = "Historial devuelto; puede estar vacío."),
+            @ApiResponse(responseCode = "403", description = "El usuario no pertenece al distribuidor propietario ni es el conductor asignado."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe.")
     })
     @GetMapping("/{deliveryId}/tracking/samples")
     public ResponseEntity<?> samples(@PathVariable Long deliveryId) {
@@ -104,10 +100,9 @@ public class DeliveryTrackingQueryController {
     }
 
     /**
-     * Resolves whether the caller may read the delivery's tracking. Returns {@code null} when allowed, or the
-     * denial response otherwise. The owning provider (any principal of that provider tenant) or the assigned
-     * driver of a tenant-consistent assignment may read; everything else is forbidden, and a missing delivery
-     * or driver is not found.
+     * Determina si el usuario puede consultar el seguimiento. Devuelve {@code null} cuando está autorizado o la
+     * respuesta de denegación correspondiente. Puede acceder el distribuidor propietario o el conductor asignado
+     * en una asignación consistente entre tenants; si faltan la entrega o el conductor, se informa como no encontrado.
      */
     private ResponseEntity<?> denialOrNull(Long deliveryId) {
         var delivery = deliveryTrackingLookup.findAssignedDelivery(deliveryId);

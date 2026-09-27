@@ -23,12 +23,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * v2 tanker catalog (S12/T12-A). Same tenancy and lifecycle rules as drivers: the tenant comes from the
- * principal, and disabling preserves the row.
+ * Catálogo v2 de cisternas. El distribuidor se obtiene del principal y la desactivación conserva el registro.
  */
 @RestController
 @RequestMapping(value = "/api/v2/tankers", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Fleet tankers", description = "Tanker catalog and lifecycle (v2)")
+@Tag(name = "Cisternas de flota", description = "Administración y ciclo de vida de cisternas por distribuidor")
 public class TankersV2Controller {
 
     private final FleetCatalog fleetCatalog;
@@ -47,16 +46,16 @@ public class TankersV2Controller {
     }
 
     /**
-     * Registers a tanker in the caller's provider tenant.
+     * Registra una cisterna para el distribuidor autenticado.
      *
-     * <p>The provider always comes from the principal, never the body.</p>
+     * <p>El distribuidor se obtiene del principal y nunca del cuerpo.</p>
      */
-    @Operation(summary = "Register a tanker",
-            description = "Creates a tanker in the caller's provider tenant; the tenant is taken from the principal.")
+    @Operation(summary = "Registrar cisterna",
+            description = "Crea una cisterna para el tenant distribuidor autenticado, identificado a partir del principal.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Tanker created."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation or the tanker data is invalid."),
-            @ApiResponse(responseCode = "403", description = "Caller has no provider identity.")
+            @ApiResponse(responseCode = "201", description = "Cisterna registrada."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no supera la validación o los datos de la cisterna no son válidos."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor.")
     })
     @PostMapping
     public ResponseEntity<?> register(@Valid @RequestBody TankerInputResource resource) {
@@ -72,15 +71,15 @@ public class TankersV2Controller {
     }
 
     /**
-     * Lists the tankers of the caller's provider tenant.
+     * Lista las cisternas del distribuidor autenticado.
      *
-     * <p>Always tenant-scoped through the principal.</p>
+     * <p>La consulta siempre se limita al tenant obtenido del principal.</p>
      */
-    @Operation(summary = "List tankers",
-            description = "Returns all tankers of the caller's provider tenant.")
+    @Operation(summary = "Listar cisternas",
+            description = "Devuelve las cisternas registradas para el tenant distribuidor autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tankers returned."),
-            @ApiResponse(responseCode = "403", description = "Caller has no provider identity.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de cisternas."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor.")
     })
     @GetMapping
     public ResponseEntity<List<TankerV2Resource>> list() {
@@ -93,16 +92,16 @@ public class TankersV2Controller {
     }
 
     /**
-     * Retrieves a single tanker.
+     * Consulta una cisterna por identificador.
      *
-     * <p>Tenant-scoped through the principal; a tanker of another tenant is reported as not found.</p>
+     * <p>La consulta se limita al tenant del principal; una cisterna de otro tenant se informa como no encontrada.</p>
      */
-    @Operation(summary = "Get a tanker by id",
-            description = "Returns the tanker identified by the path id when it belongs to the caller's provider tenant.")
+    @Operation(summary = "Consultar cisterna por identificador",
+            description = "Devuelve la cisterna indicada si pertenece al tenant distribuidor autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tanker returned."),
-            @ApiResponse(responseCode = "403", description = "Caller has no provider identity."),
-            @ApiResponse(responseCode = "404", description = "Tanker does not exist or belongs to another provider tenant.")
+            @ApiResponse(responseCode = "200", description = "Cisterna devuelta."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor."),
+            @ApiResponse(responseCode = "404", description = "La cisterna no existe o pertenece a otro tenant distribuidor.")
     })
     @GetMapping("/{tankerId}")
     public ResponseEntity<TankerV2Resource> get(@PathVariable Long tankerId) {
@@ -117,17 +116,16 @@ public class TankersV2Controller {
     }
 
     /**
-     * Updates a tanker.
+     * Actualiza los datos de una cisterna.
      *
-     * <p>Only the owning provider tenant may update it; a foreign or missing tanker is reported as not
-     * found and invalid data as a bad request.</p>
+     * <p>Solo el tenant propietario puede modificarla; si no existe o pertenece a otro tenant se informa como no encontrada.</p>
      */
-    @Operation(summary = "Update a tanker",
-            description = "Applies field changes to a tanker owned by the caller's provider tenant.")
+    @Operation(summary = "Actualizar cisterna",
+            description = "Aplica los cambios recibidos a una cisterna del tenant distribuidor autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tanker updated."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation or the tanker data is invalid."),
-            @ApiResponse(responseCode = "404", description = "Tanker does not exist or is not owned by the caller.")
+            @ApiResponse(responseCode = "200", description = "Cisterna actualizada."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no supera la validación o los datos de la cisterna no son válidos."),
+            @ApiResponse(responseCode = "404", description = "La cisterna no existe o no pertenece al tenant autenticado.")
     })
     @PutMapping("/{tankerId}")
     public ResponseEntity<?> update(@PathVariable Long tankerId,
@@ -143,16 +141,15 @@ public class TankersV2Controller {
     }
 
     /**
-     * Disables a tanker.
+     * Desactiva una cisterna.
      *
-     * <p>Only the owning provider tenant may disable it. Disabling never deletes the row; it flips the
-     * lifecycle flag and publishes a resource-disabled event.</p>
+     * <p>Solo el tenant propietario puede desactivarla. El registro se conserva y se publica el evento correspondiente.</p>
      */
-    @Operation(summary = "Disable a tanker",
-            description = "Soft-disables a tanker owned by the caller's provider tenant, preserving the record.")
+    @Operation(summary = "Desactivar cisterna",
+            description = "Desactiva una cisterna del tenant autenticado sin eliminar su registro.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tanker disabled."),
-            @ApiResponse(responseCode = "404", description = "Tanker does not exist or is not owned by the caller.")
+            @ApiResponse(responseCode = "200", description = "Cisterna desactivada."),
+            @ApiResponse(responseCode = "404", description = "La cisterna no existe o no pertenece al tenant autenticado.")
     })
     @PostMapping("/{tankerId}/deactivate")
     public ResponseEntity<?> deactivate(@PathVariable Long tankerId) {
@@ -164,15 +161,15 @@ public class TankersV2Controller {
     }
 
     /**
-     * Enables a previously disabled tanker.
+     * Reactiva una cisterna previamente desactivada.
      *
-     * <p>Only the owning provider tenant may enable it; this publishes a resource-enabled event.</p>
+     * <p>Solo el tenant propietario puede reactivarla; se publica el evento correspondiente.</p>
      */
-    @Operation(summary = "Enable a tanker",
-            description = "Re-enables a disabled tanker owned by the caller's provider tenant.")
+    @Operation(summary = "Reactivar cisterna",
+            description = "Reactiva una cisterna desactivada que pertenece al tenant distribuidor autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tanker enabled."),
-            @ApiResponse(responseCode = "404", description = "Tanker does not exist or is not owned by the caller.")
+            @ApiResponse(responseCode = "200", description = "Cisterna reactivada."),
+            @ApiResponse(responseCode = "404", description = "La cisterna no existe o no pertenece al tenant autenticado.")
     })
     @PostMapping("/{tankerId}/activate")
     public ResponseEntity<?> activate(@PathVariable Long tankerId) {
@@ -184,16 +181,15 @@ public class TankersV2Controller {
     }
 
     /**
-     * Lists the tankers that may actually be suggested for a delivery.
+     * Lista las cisternas que pueden proponerse para una entrega.
      *
-     * <p>U07: eligible = allowed status + active + same tenant. Tankers that are busy are excluded from
-     * this suggestion list.</p>
+     * <p>Solo incluye cisternas activas, con estado permitido y del mismo tenant; las ocupadas se excluyen.</p>
      */
-    @Operation(summary = "List eligible tankers",
-            description = "Returns the tankers of the caller's provider tenant that are currently eligible to be suggested.")
+    @Operation(summary = "Listar cisternas elegibles",
+            description = "Devuelve cisternas activas del tenant autenticado que pueden asignarse y no están ocupadas.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Eligible tankers returned."),
-            @ApiResponse(responseCode = "403", description = "Caller has no provider identity.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de cisternas elegibles."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor.")
     })
     @GetMapping("/eligible")
     public ResponseEntity<List<TankerV2Resource>> listEligible() {
@@ -206,17 +202,16 @@ public class TankersV2Controller {
     }
 
     /**
-     * Assesses the eligibility of a single tanker.
+     * Evalúa la elegibilidad de una cisterna.
      *
-     * <p>Returns a three-valued outcome (eligible / busy / ineligible) with a reason. Tenant-scoped
-     * through the principal; a foreign or missing tanker is reported as not found.</p>
+     * <p>Devuelve uno de tres resultados (elegible, ocupada o no elegible) y el motivo. Se limita al tenant del principal.</p>
      */
-    @Operation(summary = "Assess tanker eligibility",
-            description = "Returns the eligibility outcome and reason for a tanker owned by the caller's provider tenant.")
+    @Operation(summary = "Evaluar elegibilidad de cisterna",
+            description = "Devuelve el resultado y motivo de elegibilidad para una cisterna del tenant autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Eligibility assessment returned."),
-            @ApiResponse(responseCode = "403", description = "Caller has no provider identity."),
-            @ApiResponse(responseCode = "404", description = "Tanker does not exist or belongs to another provider tenant.")
+            @ApiResponse(responseCode = "200", description = "Evaluación de elegibilidad devuelta."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor."),
+            @ApiResponse(responseCode = "404", description = "La cisterna no existe o pertenece a otro tenant distribuidor.")
     })
     @GetMapping("/{tankerId}/eligibility")
     public ResponseEntity<EligibilityResource> eligibility(@PathVariable Long tankerId) {

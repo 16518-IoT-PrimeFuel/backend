@@ -27,7 +27,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/notifications", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Notifications", description = "Notification management endpoints")
+@Tag(name = "Notificaciones", description = "Consulta de notificaciones y gestión de su estado de lectura")
 public class NotificationsController {
 
     private final NotificationCommandService notificationCommandService;
@@ -46,25 +46,23 @@ public class NotificationsController {
     }
 
     /**
-     * Creates a notification for exactly one recipient.
+     * Crea una notificación para un único destinatario.
      *
-     * <p>Exactly one of userId/companyId/providerId must be supplied, and the caller must own the
-     * referenced recipient (user, company or provider). A company/provider recipient is resolved to its
-     * user; when that user does not exist the request is rejected as a bad request.</p>
+     * <p>Debe indicarse exactamente uno de userId, companyId o providerId y el usuario debe pertenecer al destinatario.
+     * Las empresas se resuelven a su usuario asociado; si no existe, se responde con una solicitud inválida.</p>
      *
-     * <p><strong>Deprecated (S20/T20-B):</strong> the frontend must no longer fabricate notifications;
-     * the inbox is generated from events (T20-A) and read through {@code /api/v2/me/notifications}. The
-     * route is kept working (not removed) until the consumer ledger proves no caller (S22/T24-B).</p>
+     * <p><strong>Obsoleto:</strong> la bandeja se genera a partir de eventos y se consulta en
+     * {@code /api/v2/me/notifications}. Esta ruta se conserva mientras existan consumidores registrados.</p>
      */
     @Deprecated
-    @Operation(summary = "Create a notification",
-            description = "Deprecated: prefer the event-driven inbox and /api/v2/me/notifications. Creates a notification addressed to exactly one owned recipient (user, company or provider).",
+    @Operation(summary = "Crear notificación",
+            description = "Operación obsoleta; se recomienda la bandeja generada por eventos en /api/v2/me/notifications. Crea una notificación para un usuario, empresa compradora o distribuidor del usuario autenticado.",
             deprecated = true)
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Notification created."),
-            @ApiResponse(responseCode = "400", description = "Not exactly one recipient was supplied, or the referenced recipient user does not exist."),
-            @ApiResponse(responseCode = "403", description = "Caller owns none of the referenced user/company/provider."),
-            @ApiResponse(responseCode = "404", description = "The referenced recipient is not owned by the caller.")
+            @ApiResponse(responseCode = "201", description = "Notificación creada."),
+            @ApiResponse(responseCode = "400", description = "No se indicó exactamente un destinatario o el usuario asociado no existe."),
+            @ApiResponse(responseCode = "403", description = "El usuario no pertenece a ninguno de los destinatarios indicados."),
+            @ApiResponse(responseCode = "404", description = "El destinatario indicado no pertenece al usuario autenticado.")
     })
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsUser(#resource.userId()) or @currentUserAccess.ownsCompany(#resource.companyId()) or @currentUserAccess.ownsProvider(#resource.providerId())")
@@ -93,16 +91,15 @@ public class NotificationsController {
     }
 
     /**
-     * Marks a notification as read.
+     * Marca una notificación como leída.
      *
-     * <p>Only the user the notification belongs to may change it; anything else is reported as not
-     * found.</p>
+     * <p>Solo el usuario destinatario puede actualizarla; una notificación ajena o inexistente se informa como no encontrada.</p>
      */
-    @Operation(summary = "Mark a notification as read",
-            description = "Marks the given notification as read when it belongs to the caller.")
+    @Operation(summary = "Marcar notificación como leída",
+            description = "Actualiza el estado de lectura de una notificación perteneciente al usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Notification marked as read."),
-            @ApiResponse(responseCode = "404", description = "Notification does not exist or does not belong to the caller.")
+            @ApiResponse(responseCode = "200", description = "Notificación marcada como leída."),
+            @ApiResponse(responseCode = "404", description = "La notificación no existe o no pertenece al usuario autenticado.")
     })
     @PostMapping("/{notificationId}/mark-as-read")
     public ResponseEntity<?> markAsRead(@PathVariable Long notificationId) {
@@ -118,15 +115,15 @@ public class NotificationsController {
     }
 
     /**
-     * Retrieves a single notification.
+     * Consulta una notificación por identificador.
      *
-     * <p>Only the user it belongs to may read it; anything else is reported as not found.</p>
+     * <p>Solo el usuario destinatario puede consultarla; una notificación ajena o inexistente se informa como no encontrada.</p>
      */
-    @Operation(summary = "Get a notification by id",
-            description = "Returns the notification identified by the path id when it belongs to the caller.")
+    @Operation(summary = "Consultar notificación por identificador",
+            description = "Devuelve la notificación indicada cuando pertenece al usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Notification returned."),
-            @ApiResponse(responseCode = "404", description = "Notification does not exist or does not belong to the caller.")
+            @ApiResponse(responseCode = "200", description = "Notificación devuelta."),
+            @ApiResponse(responseCode = "404", description = "La notificación no existe o no pertenece al usuario autenticado.")
     })
     @GetMapping("/{notificationId}")
     public ResponseEntity<NotificationResource> getNotificationById(@PathVariable Long notificationId) {
@@ -138,15 +135,15 @@ public class NotificationsController {
     }
 
     /**
-     * Lists the notifications of a user.
+     * Lista las notificaciones de un usuario.
      *
-     * <p>A caller may only list their own notifications.</p>
+     * <p>El usuario solo puede consultar sus propias notificaciones.</p>
      */
-    @Operation(summary = "List notifications by user",
-            description = "Returns the notifications of the given user when it is the caller.")
+    @Operation(summary = "Listar notificaciones por usuario",
+            description = "Devuelve las notificaciones del usuario indicado cuando coincide con el usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Notifications returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the requested user.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de notificaciones."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no coincide con el usuario solicitado.")
     })
     @GetMapping("/user/{userId}")
     @PreAuthorize("@currentUserAccess.ownsUser(#userId)")
@@ -157,16 +154,15 @@ public class NotificationsController {
     }
 
     /**
-     * Lists the notifications addressed to a buyer company.
+     * Lista las notificaciones destinadas a una empresa compradora.
      *
-     * <p>Only the owning company may list them; the company is resolved to its user. A company without a
-     * user yields an empty list rather than an error.</p>
+     * <p>Solo el tenant propietario puede consultarlas. La empresa se resuelve a su usuario y, si no tiene uno, se devuelve una lista vacía.</p>
      */
-    @Operation(summary = "List notifications by buyer company",
-            description = "Returns the notifications addressed to the given buyer company's user when the caller owns the company.")
+    @Operation(summary = "Listar notificaciones por empresa compradora",
+            description = "Devuelve las notificaciones del usuario asociado a la empresa compradora cuando el tenant autenticado es propietario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Notifications returned (possibly empty)."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the requested company.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista, que puede estar vacía si la empresa no tiene usuario asociado."),
+            @ApiResponse(responseCode = "403", description = "La empresa solicitada no pertenece al tenant autenticado.")
     })
     @GetMapping("/buyer/{companyId}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
@@ -177,16 +173,15 @@ public class NotificationsController {
     }
 
     /**
-     * Lists the notifications addressed to a provider tenant.
+     * Lista las notificaciones destinadas a un distribuidor.
      *
-     * <p>Only the owning provider may list them; the provider is resolved to its user. A provider without a
-     * user yields an empty list rather than an error.</p>
+     * <p>Solo el tenant propietario puede consultarlas. El distribuidor se resuelve a su usuario asociado; si no existe, se devuelve una lista vacía.</p>
      */
-    @Operation(summary = "List notifications by provider",
-            description = "Returns the notifications addressed to the given provider tenant's user when the caller owns the provider.")
+    @Operation(summary = "Listar notificaciones por distribuidor",
+            description = "Devuelve las notificaciones del usuario asociado al distribuidor cuando el tenant autenticado es propietario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Notifications returned (possibly empty)."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the requested provider tenant.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista, que puede estar vacía si el distribuidor no tiene usuario asociado."),
+            @ApiResponse(responseCode = "403", description = "El distribuidor solicitado no pertenece al tenant autenticado.")
     })
     @GetMapping("/provider/{providerId}")
     @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
@@ -197,15 +192,15 @@ public class NotificationsController {
     }
 
     /**
-     * Lists the unread notifications of a user.
+     * Lista las notificaciones no leídas de un usuario.
      *
-     * <p>A caller may only list their own unread notifications.</p>
+     * <p>El usuario solo puede consultar sus propias notificaciones pendientes de lectura.</p>
      */
-    @Operation(summary = "List unread notifications by user",
-            description = "Returns the unread notifications of the given user when it is the caller.")
+    @Operation(summary = "Listar notificaciones no leídas por usuario",
+            description = "Devuelve las notificaciones no leídas cuando el identificador corresponde al usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Unread notifications returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the requested user.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de notificaciones no leídas."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no coincide con el usuario solicitado.")
     })
     @GetMapping("/user/{userId}/unread")
     @PreAuthorize("@currentUserAccess.ownsUser(#userId)")

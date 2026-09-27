@@ -32,16 +32,15 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * v2 physical delivery lifecycle (S14/T14-A): {@code assign|start|arrive|complete|fail} (+ {@code cancel}).
- * Only the provider that owns the delivery may advance it; a foreign delivery answers 404. An illegal
- * transition answers 409 (the machine rejects it), a bad evidence volume answers 400 and a
- * {@code complete} whose requested volume cannot be resolved answers 422.
+ * Ciclo físico v2 de entrega (S14/T14-A): asignar, iniciar, llegar, completar, fallar y cancelar.
+ * Solo el distribuidor propietario puede avanzar la entrega. Las transiciones inválidas responden 409,
+ * el volumen de evidencia inválido responde 400 y un volumen de orden no resoluble al completar responde 422.
  *
- * <p>The legacy v1 routes are untouched — T14-B is the ticket that reroutes them through this machine.
+ * <p>Las rutas v1 conservan su contrato y usan este ciclo físico como máquina de estados.
  */
 @RestController
 @RequestMapping(value = "/api/v2/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Delivery lifecycle", description = "Physical delivery state machine (v2)")
+@Tag(name = "Ciclo de entrega", description = "Transiciones del estado físico de una entrega")
 public class DeliveriesV2Controller {
 
     private final DeliveryLifecycleServiceImpl deliveryLifecycleService;
@@ -60,18 +59,16 @@ public class DeliveriesV2Controller {
     }
 
     /**
-     * Assigns a delivery to its driver/vehicle.
+     * Asigna una entrega a su conductor y cisterna.
      *
-     * <p>Tenant-scoped: a delivery the caller's provider tenant does not own is reported as not found.
-     * Assigning an already-assigned delivery is idempotent and produces no duplicate journal row or
-     * event.</p>
+     * <p>Solo opera sobre entregas del distribuidor autenticado; las ajenas responden como no encontradas. Repetir la asignación no duplica el historial ni los eventos.</p>
      */
-    @Operation(summary = "Assign a delivery",
-            description = "Materialises the assigned state of a delivery owned by the caller's provider tenant; idempotent when already assigned.")
+    @Operation(summary = "Asignar entrega",
+            description = "Avanza a asignada una entrega propia del distribuidor autenticado. Repetir la operación en ese estado no genera efectos duplicados.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery assigned (or already assigned)."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller's provider tenant."),
-            @ApiResponse(responseCode = "409", description = "The delivery cannot be assigned from its current physical state.")
+            @ApiResponse(responseCode = "200", description = "Entrega asignada o ya se encontraba asignada."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite asignar la entrega.")
     })
     @PostMapping("/{deliveryId}/assign")
     public ResponseEntity<?> assign(@PathVariable Long deliveryId) {
@@ -79,16 +76,16 @@ public class DeliveriesV2Controller {
     }
 
     /**
-     * Starts a delivery (in route).
+     * Inicia una entrega en ruta.
      *
-     * <p>Tenant-scoped. The machine only accepts a start from the assigned state.</p>
+     * <p>Solo el distribuidor propietario puede iniciarla y debe estar en estado asignado.</p>
      */
-    @Operation(summary = "Start a delivery",
-            description = "Moves a delivery owned by the caller's provider tenant to the started state.")
+    @Operation(summary = "Iniciar entrega",
+            description = "Avanza a iniciada una entrega propia que actualmente está asignada.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery started."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller's provider tenant."),
-            @ApiResponse(responseCode = "409", description = "The delivery cannot be started from its current physical state.")
+            @ApiResponse(responseCode = "200", description = "Entrega iniciada."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite iniciar la entrega.")
     })
     @PostMapping("/{deliveryId}/start")
     public ResponseEntity<?> start(@PathVariable Long deliveryId) {
@@ -96,16 +93,16 @@ public class DeliveriesV2Controller {
     }
 
     /**
-     * Marks a delivery as arrived.
+     * Marca la llegada de una entrega.
      *
-     * <p>Tenant-scoped. The machine only accepts an arrival from the started state.</p>
+     * <p>Solo el distribuidor propietario puede registrarla y la entrega debe estar en ruta.</p>
      */
-    @Operation(summary = "Mark a delivery as arrived",
-            description = "Moves a delivery owned by the caller's provider tenant to the arrived state.")
+    @Operation(summary = "Registrar llegada de entrega",
+            description = "Avanza a llegada una entrega en ruta del distribuidor autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery marked as arrived."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller's provider tenant."),
-            @ApiResponse(responseCode = "409", description = "The delivery cannot arrive from its current physical state.")
+            @ApiResponse(responseCode = "200", description = "Llegada de la entrega registrada."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite registrar la llegada.")
     })
     @PostMapping("/{deliveryId}/arrive")
     public ResponseEntity<?> arrive(@PathVariable Long deliveryId) {
@@ -113,21 +110,18 @@ public class DeliveriesV2Controller {
     }
 
     /**
-     * Completes a delivery with the delivered volume as evidence.
+     * Completa una entrega y registra el volumen entregado como evidencia.
      *
-     * <p>Tenant-scoped. U11 keeps both the requested and delivered volumes; the delivered volume must be
-     * a valid quantity (otherwise 400) and the order's requested volume must be resolvable to record the
-     * evidence (otherwise 422). A close from the arrived state also journals the implicit discharge, so
-     * the whole operation stays in one transaction.</p>
+     * <p>Solo el distribuidor propietario puede completarla. El volumen entregado debe ser válido y también debe poder resolverse el volumen solicitado de la orden; al completar desde llegada se registra la descarga dentro de la misma transacción.</p>
      */
-    @Operation(summary = "Complete a delivery",
-            description = "Closes a delivery owned by the caller's provider tenant, recording the delivered volume as evidence.")
+    @Operation(summary = "Completar entrega",
+            description = "Cierra una entrega propia y registra el volumen entregado. La orden debe aportar el volumen solicitado para cerrar el historial.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery completed."),
-            @ApiResponse(responseCode = "400", description = "The delivered volume is not a valid evidence quantity."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller's provider tenant."),
-            @ApiResponse(responseCode = "409", description = "The delivery cannot be completed from its current physical state, or it was advanced concurrently."),
-            @ApiResponse(responseCode = "422", description = "The requested volume of the order could not be resolved to serve as close evidence.")
+            @ApiResponse(responseCode = "200", description = "Entrega completada."),
+            @ApiResponse(responseCode = "400", description = "El volumen entregado no es válido como evidencia."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado actual impide completar la entrega o hubo una transición concurrente."),
+            @ApiResponse(responseCode = "422", description = "No se pudo resolver el volumen solicitado para cerrar la entrega.")
     })
     @PostMapping("/{deliveryId}/complete")
     public ResponseEntity<?> complete(@PathVariable Long deliveryId,
@@ -137,16 +131,16 @@ public class DeliveriesV2Controller {
     }
 
     /**
-     * Fails a delivery.
+     * Marca una entrega como fallida.
      *
-     * <p>Tenant-scoped. Failing is a terminal outcome and requires a reason.</p>
+     * <p>Solo el distribuidor propietario puede hacerlo. El motivo es obligatorio y el estado fallido es terminal.</p>
      */
-    @Operation(summary = "Fail a delivery",
-            description = "Moves a delivery owned by the caller's provider tenant to the failed terminal state, recording a reason.")
+    @Operation(summary = "Marcar entrega fallida",
+            description = "Registra un fallo terminal para la entrega propia y guarda el motivo indicado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery failed."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller's provider tenant."),
-            @ApiResponse(responseCode = "409", description = "The delivery cannot be failed from its current physical state, or it was advanced concurrently.")
+            @ApiResponse(responseCode = "200", description = "Entrega marcada como fallida."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado actual impide marcarla como fallida o hubo una transición concurrente.")
     })
     @PostMapping("/{deliveryId}/fail")
     public ResponseEntity<?> fail(@PathVariable Long deliveryId,
@@ -156,16 +150,16 @@ public class DeliveriesV2Controller {
     }
 
     /**
-     * Cancels a delivery.
+     * Cancela una entrega.
      *
-     * <p>Tenant-scoped. Cancelling is a terminal outcome distinct from failure and requires a reason.</p>
+     * <p>Solo el distribuidor propietario puede cancelarla. La cancelación es terminal y requiere motivo.</p>
      */
-    @Operation(summary = "Cancel a delivery",
-            description = "Moves a delivery owned by the caller's provider tenant to the cancelled terminal state, recording a reason.")
+    @Operation(summary = "Cancelar entrega",
+            description = "Registra la cancelación terminal de una entrega propia y guarda el motivo indicado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery cancelled."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller's provider tenant."),
-            @ApiResponse(responseCode = "409", description = "The delivery cannot be cancelled from its current physical state, or it was advanced concurrently.")
+            @ApiResponse(responseCode = "200", description = "Entrega cancelada."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
+            @ApiResponse(responseCode = "409", description = "El estado actual impide cancelarla o hubo una transición concurrente.")
     })
     @PostMapping("/{deliveryId}/cancel")
     public ResponseEntity<?> cancel(@PathVariable Long deliveryId,
@@ -175,15 +169,15 @@ public class DeliveriesV2Controller {
     }
 
     /**
-     * Retrieves a single delivery with its physical state.
+     * Consulta una entrega y su estado físico.
      *
-     * <p>Tenant-scoped to the caller's provider; a foreign delivery is reported as not found.</p>
+     * <p>Solo consulta entregas propias del distribuidor autenticado; las ajenas responden como no encontradas.</p>
      */
-    @Operation(summary = "Get a delivery",
-            description = "Returns the delivery (with both legacy status and physical state) owned by the caller's provider tenant.")
+    @Operation(summary = "Consultar entrega",
+            description = "Devuelve una entrega propia con su estado heredado y su estado físico vigente.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Delivery returned."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller's provider tenant.")
+            @ApiResponse(responseCode = "200", description = "Entrega devuelta."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor.")
     })
     @GetMapping("/{deliveryId}")
     public ResponseEntity<DeliveryV2Resource> get(@PathVariable Long deliveryId) {
@@ -196,16 +190,15 @@ public class DeliveriesV2Controller {
     }
 
     /**
-     * Lists the append-only state journal of a delivery.
+     * Lista el historial inmutable de estados de una entrega.
      *
-     * <p>Tenant-scoped to the caller's provider. Each row records a physical transition, the aggregate
-     * version it happened at and its timestamp, which is what makes the history reconstructible.</p>
+     * <p>Solo lo consulta el distribuidor propietario. Cada registro conserva la transición física, la versión del agregado y su instante para reconstruir la historia.</p>
      */
-    @Operation(summary = "List a delivery's state transitions",
-            description = "Returns the append-only journal of physical state transitions of a delivery owned by the caller's provider tenant.")
+    @Operation(summary = "Listar transiciones de una entrega",
+            description = "Devuelve el historial inmutable de transiciones físicas de una entrega propia, con sus versiones e instantes.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Transitions returned."),
-            @ApiResponse(responseCode = "404", description = "Delivery does not exist or is not owned by the caller's provider tenant.")
+            @ApiResponse(responseCode = "200", description = "Transiciones de estado devueltas."),
+            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor.")
     })
     @GetMapping("/{deliveryId}/transitions")
     public ResponseEntity<List<DeliveryTransitionResource>> transitions(@PathVariable Long deliveryId) {

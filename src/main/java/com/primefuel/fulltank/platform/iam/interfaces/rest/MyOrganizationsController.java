@@ -24,7 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v2/me/organizations", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Organizations", description = "Organizations the authenticated user belongs to (v2)")
+@Tag(name = "Mis organizaciones", description = "Organizaciones con membresía activa del usuario autenticado")
 public class MyOrganizationsController {
 
     private final MembershipAccess membershipAccess;
@@ -40,17 +40,16 @@ public class MyOrganizationsController {
     }
 
     /**
-     * Lists the organizations the authenticated user currently belongs to.
+     * Lista las organizaciones a las que pertenece actualmente el usuario autenticado.
      *
-     * <p>The query is scoped to the caller's own user id — no organization id is accepted from the
-     * client, so a tenant can never enumerate another tenant's organizations. Only active
-     * memberships are returned, each with the role the user holds in that organization.</p>
+     * <p>La consulta usa el identificador del principal y no recibe identificadores de organización. Devuelve
+     * únicamente membresías activas y el rol que tiene el usuario en cada organización.</p>
      */
-    @Operation(summary = "List my organizations",
-            description = "Returns the organizations the authenticated caller is an active member of, with the caller's role in each.")
+    @Operation(summary = "Listar mis organizaciones",
+            description = "Devuelve las organizaciones en las que el usuario autenticado tiene membresía activa, junto con su rol.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Memberships returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de membresías activas."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado.")
     })
     @GetMapping
     public ResponseEntity<List<OrganizationResource>> getMyOrganizations() {

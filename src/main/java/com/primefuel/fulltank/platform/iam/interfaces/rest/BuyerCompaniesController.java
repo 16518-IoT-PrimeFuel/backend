@@ -24,7 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/buyer-companies", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Buyer Companies", description = "Buyer company management endpoints")
+@Tag(name = "Empresas compradoras", description = "Registro, consulta y actualización de perfiles de empresas compradoras")
 public class BuyerCompaniesController {
 
     private final BuyerCompanyCommandService buyerCompanyCommandService;
@@ -40,17 +40,16 @@ public class BuyerCompaniesController {
     }
 
     /**
-     * Creates a standalone buyer company profile.
+     * Registra un perfil independiente de empresa compradora.
      *
-     * <p>Public endpoint (self-service): it does not require an authenticated caller and does not
-     * create a user or membership. Any failure while persisting the profile is surfaced as a
-     * server error rather than a validation error.</p>
+     * <p>Es una operación pública de autoservicio: no requiere autenticación ni crea una cuenta de usuario o membresía.
+     * Los fallos de persistencia se responden como error del servidor.</p>
      */
-    @Operation(summary = "Create a buyer company",
-            description = "Persists a new buyer company profile. This registration endpoint is open to unauthenticated callers.")
+    @Operation(summary = "Registrar empresa compradora",
+            description = "Persiste un nuevo perfil de empresa compradora. La ruta está disponible sin autenticación y no crea usuarios ni membresías.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Buyer company created."),
-            @ApiResponse(responseCode = "500", description = "Unexpected error while persisting the buyer company.")
+            @ApiResponse(responseCode = "201", description = "Perfil de empresa compradora creado."),
+            @ApiResponse(responseCode = "500", description = "Se produjo un error inesperado al guardar el perfil.")
     })
     @PostMapping
     public ResponseEntity<?> createBuyerCompany(@RequestBody CreateBuyerCompanyResource resource) {
@@ -63,15 +62,15 @@ public class BuyerCompaniesController {
     }
 
     /**
-     * Lists every buyer company in the platform.
+     * Lista todas las empresas compradoras registradas.
      *
-     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     * <p>Requiere la autoridad ROLE_ADMIN.</p>
      */
-    @Operation(summary = "List all buyer companies",
-            description = "Returns every registered buyer company. Restricted to administrators.")
+    @Operation(summary = "Listar empresas compradoras",
+            description = "Devuelve todos los perfiles registrados. Solo está disponible para administradores de plataforma.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Buyer companies returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de empresas compradoras."),
+            @ApiResponse(responseCode = "403", description = "El usuario no cuenta con autoridad ROLE_ADMIN.")
     })
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -82,16 +81,16 @@ public class BuyerCompaniesController {
     }
 
     /**
-     * Retrieves a single buyer company.
+     * Consulta una empresa compradora.
      *
-     * <p>Only the buyer that owns the profile may read it.</p>
+     * <p>Solo puede consultarla el tenant propietario del perfil.</p>
      */
-    @Operation(summary = "Get a buyer company by id",
-            description = "Returns the buyer company identified by the path id when the caller owns it.")
+    @Operation(summary = "Consultar empresa compradora por identificador",
+            description = "Devuelve el perfil indicado cuando pertenece al tenant comprador autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Buyer company returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the owner of this buyer company."),
-            @ApiResponse(responseCode = "404", description = "Buyer company does not exist.")
+            @ApiResponse(responseCode = "200", description = "Perfil de empresa compradora devuelto."),
+            @ApiResponse(responseCode = "403", description = "La empresa compradora no pertenece al usuario autenticado."),
+            @ApiResponse(responseCode = "404", description = "La empresa compradora no existe.")
     })
     @GetMapping("/{companyId}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
@@ -103,17 +102,16 @@ public class BuyerCompaniesController {
     }
 
     /**
-     * Updates a buyer company profile in place.
+     * Actualiza el perfil de una empresa compradora.
      *
-     * <p>Only the owning buyer may update the profile. Fields are overwritten directly through the
-     * repository without running the command pipeline.</p>
+     * <p>Solo el tenant propietario puede actualizarlo. Los campos editables se sustituyen con los valores recibidos.</p>
      */
-    @Operation(summary = "Update a buyer company",
-            description = "Replaces the editable fields of the buyer company identified by the path id.")
+    @Operation(summary = "Actualizar empresa compradora",
+            description = "Reemplaza los campos editables del perfil identificado. Requiere que el usuario pertenezca a esa empresa.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Buyer company updated."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the owner of this buyer company."),
-            @ApiResponse(responseCode = "404", description = "Buyer company does not exist.")
+            @ApiResponse(responseCode = "200", description = "Perfil de empresa compradora actualizado."),
+            @ApiResponse(responseCode = "403", description = "La empresa compradora no pertenece al usuario autenticado."),
+            @ApiResponse(responseCode = "404", description = "La empresa compradora no existe.")
     })
     @PutMapping("/{companyId}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")

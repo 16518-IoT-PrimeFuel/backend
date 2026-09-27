@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "/api/v2/onboarding", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Onboarding", description = "Organization onboarding endpoints (v2)")
+@Tag(name = "Registro de organizaciones", description = "Alta de organizaciones y asignación de su propietario inicial")
 public class OnboardingController {
 
     private final OnboardingCommandService onboardingCommandService;
@@ -37,19 +37,18 @@ public class OnboardingController {
     }
 
     /**
-     * Creates a new organization owned by the authenticated user.
+     * Crea una organización cuyo propietario es el usuario autenticado.
      *
-     * <p>The caller must be authenticated; the owner is taken from the principal, never from the
-     * request body. The type must be a known organization type, the RUC must be unique, and the
-     * creator is granted an OWNER membership on the new organization.</p>
+     * <p>El propietario se toma del principal, no del cuerpo. El tipo debe estar admitido y el RUC ser único;
+     * al creador se le asigna una membresía OWNER.</p>
      */
-    @Operation(summary = "Onboard an organization",
-            description = "Creates an organization owned by the authenticated caller and grants the caller the OWNER membership.")
+    @Operation(summary = "Registrar organización",
+            description = "Crea una organización para el usuario autenticado y le asigna la membresía OWNER.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Organization created and ownership granted."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation, the type is unknown, or no owner could be resolved."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated."),
-            @ApiResponse(responseCode = "409", description = "An organization with the same RUC already exists, or ownership could not be granted.")
+            @ApiResponse(responseCode = "201", description = "Organización creada y propiedad asignada."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no supera la validación, el tipo no está admitido o no se pudo resolver al propietario."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado."),
+            @ApiResponse(responseCode = "409", description = "Ya existe una organización con el mismo RUC o no se pudo asignar la propiedad.")
     })
     @PostMapping
     public ResponseEntity<?> onboard(@Valid @RequestBody OnboardOrganizationResource resource) {

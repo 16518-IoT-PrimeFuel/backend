@@ -2001,7 +2001,7 @@
   "paths" : {
     "/api/v1/analytics/buyers/{companyId}" : {
       "get" : {
-        "description" : "Returns the aggregated metrics of the given buyer company when the caller owns it.",
+        "description" : "Devuelve métricas agregadas de la empresa indicada cuando el usuario pertenece a ella.",
         "operationId" : "getBuyerAnalytics",
         "parameters" : [ {
           "in" : "path",
@@ -2021,7 +2021,7 @@
                 }
               }
             },
-            "description" : "Buyer analytics returned."
+            "description" : "Indicadores de la empresa compradora devueltos."
           },
           "403" : {
             "content" : {
@@ -2031,16 +2031,16 @@
                 }
               }
             },
-            "description" : "Caller is not the owner of this buyer company."
+            "description" : "El usuario no pertenece a la empresa compradora solicitada."
           }
         },
-        "summary" : "Get buyer analytics",
-        "tags" : [ "Analytics" ]
+        "summary" : "Consultar indicadores de empresa compradora",
+        "tags" : [ "Analítica" ]
       }
     },
     "/api/v1/analytics/platform" : {
       "get" : {
-        "description" : "Returns aggregated platform-wide metrics. Restricted to administrators.",
+        "description" : "Devuelve métricas agregadas de toda la plataforma; requiere autoridad ROLE_ADMIN.",
         "operationId" : "getPlatformSummary",
         "responses" : {
           "200" : {
@@ -2051,7 +2051,7 @@
                 }
               }
             },
-            "description" : "Platform summary returned."
+            "description" : "Resumen de plataforma devuelto."
           },
           "403" : {
             "content" : {
@@ -2061,16 +2061,16 @@
                 }
               }
             },
-            "description" : "Caller does not hold the ROLE_ADMIN authority."
+            "description" : "El usuario no cuenta con autoridad ROLE_ADMIN."
           }
         },
-        "summary" : "Get the platform summary",
-        "tags" : [ "Analytics" ]
+        "summary" : "Consultar resumen de plataforma",
+        "tags" : [ "Analítica" ]
       }
     },
     "/api/v1/analytics/providers/{providerId}" : {
       "get" : {
-        "description" : "Returns the aggregated metrics of the given provider company when the caller owns it.",
+        "description" : "Devuelve métricas agregadas del tenant distribuidor cuando el usuario pertenece a esa empresa.",
         "operationId" : "getProviderAnalytics",
         "parameters" : [ {
           "in" : "path",
@@ -2090,7 +2090,7 @@
                 }
               }
             },
-            "description" : "Provider analytics returned."
+            "description" : "Indicadores del distribuidor devueltos."
           },
           "403" : {
             "content" : {
@@ -2100,11 +2100,11 @@
                 }
               }
             },
-            "description" : "Caller is not the owner of this provider company."
+            "description" : "El usuario no pertenece al distribuidor solicitado."
           }
         },
-        "summary" : "Get provider analytics",
-        "tags" : [ "Analytics" ]
+        "summary" : "Consultar indicadores del distribuidor",
+        "tags" : [ "Analítica" ]
       }
     },
     "/api/v1/authentication/password-reset/confirm" : {
@@ -2309,7 +2309,7 @@
     },
     "/api/v1/buyer-companies" : {
       "get" : {
-        "description" : "Returns every registered buyer company. Restricted to administrators.",
+        "description" : "Devuelve todos los perfiles registrados. Solo está disponible para administradores de plataforma.",
         "operationId" : "getAllBuyerCompanies",
         "responses" : {
           "200" : {
@@ -2323,7 +2323,7 @@
                 }
               }
             },
-            "description" : "Buyer companies returned."
+            "description" : "Se devuelve la lista de empresas compradoras."
           },
           "403" : {
             "content" : {
@@ -2336,14 +2336,14 @@
                 }
               }
             },
-            "description" : "Caller does not hold the ROLE_ADMIN authority."
+            "description" : "El usuario no cuenta con autoridad ROLE_ADMIN."
           }
         },
-        "summary" : "List all buyer companies",
-        "tags" : [ "Buyer Companies" ]
+        "summary" : "Listar empresas compradoras",
+        "tags" : [ "Empresas compradoras" ]
       },
       "post" : {
-        "description" : "Persists a new buyer company profile. This registration endpoint is open to unauthenticated callers.",
+        "description" : "Persiste un nuevo perfil de empresa compradora. La ruta está disponible sin autenticación y no crea usuarios ni membresías.",
         "operationId" : "createBuyerCompany",
         "requestBody" : {
           "content" : {
@@ -2364,7 +2364,7 @@
                 }
               }
             },
-            "description" : "Buyer company created."
+            "description" : "Perfil de empresa compradora creado."
           },
           "500" : {
             "content" : {
@@ -2374,16 +2374,16 @@
                 }
               }
             },
-            "description" : "Unexpected error while persisting the buyer company."
+            "description" : "Se produjo un error inesperado al guardar el perfil."
           }
         },
-        "summary" : "Create a buyer company",
-        "tags" : [ "Buyer Companies" ]
+        "summary" : "Registrar empresa compradora",
+        "tags" : [ "Empresas compradoras" ]
       }
     },
     "/api/v1/buyer-companies/{companyId}" : {
       "get" : {
-        "description" : "Returns the buyer company identified by the path id when the caller owns it.",
+        "description" : "Devuelve el perfil indicado cuando pertenece al tenant comprador autenticado.",
         "operationId" : "getBuyerCompanyById",
         "parameters" : [ {
           "in" : "path",
@@ -2403,7 +2403,7 @@
                 }
               }
             },
-            "description" : "Buyer company returned."
+            "description" : "Perfil de empresa compradora devuelto."
           },
           "403" : {
             "content" : {
@@ -2413,7 +2413,7 @@
                 }
               }
             },
-            "description" : "Caller is not the owner of this buyer company."
+            "description" : "La empresa compradora no pertenece al usuario autenticado."
           },
           "404" : {
             "content" : {
@@ -2423,14 +2423,14 @@
                 }
               }
             },
-            "description" : "Buyer company does not exist."
+            "description" : "La empresa compradora no existe."
           }
         },
-        "summary" : "Get a buyer company by id",
-        "tags" : [ "Buyer Companies" ]
+        "summary" : "Consultar empresa compradora por identificador",
+        "tags" : [ "Empresas compradoras" ]
       },
       "put" : {
-        "description" : "Replaces the editable fields of the buyer company identified by the path id.",
+        "description" : "Reemplaza los campos editables del perfil identificado. Requiere que el usuario pertenezca a esa empresa.",
         "operationId" : "updateBuyerCompany",
         "parameters" : [ {
           "in" : "path",
@@ -2460,7 +2460,7 @@
                 }
               }
             },
-            "description" : "Buyer company updated."
+            "description" : "Perfil de empresa compradora actualizado."
           },
           "403" : {
             "content" : {
@@ -2470,7 +2470,7 @@
                 }
               }
             },
-            "description" : "Caller is not the owner of this buyer company."
+            "description" : "La empresa compradora no pertenece al usuario autenticado."
           },
           "404" : {
             "content" : {
@@ -2480,16 +2480,16 @@
                 }
               }
             },
-            "description" : "Buyer company does not exist."
+            "description" : "La empresa compradora no existe."
           }
         },
-        "summary" : "Update a buyer company",
-        "tags" : [ "Buyer Companies" ]
+        "summary" : "Actualizar empresa compradora",
+        "tags" : [ "Empresas compradoras" ]
       }
     },
     "/api/v1/deliveries" : {
       "get" : {
-        "description" : "Returns every registered delivery. Restricted to administrators.",
+        "description" : "Devuelve todas las entregas registradas; requiere autoridad administrativa ROLE_ADMIN.",
         "operationId" : "getAllDeliveries",
         "responses" : {
           "200" : {
@@ -2503,7 +2503,7 @@
                 }
               }
             },
-            "description" : "Deliveries returned."
+            "description" : "Se devuelve la lista de entregas."
           },
           "403" : {
             "content" : {
@@ -2516,14 +2516,14 @@
                 }
               }
             },
-            "description" : "Caller does not hold the ROLE_ADMIN authority."
+            "description" : "El usuario no cuenta con autoridad ROLE_ADMIN."
           }
         },
-        "summary" : "List all deliveries",
-        "tags" : [ "Deliveries" ]
+        "summary" : "Listar todas las entregas",
+        "tags" : [ "Entregas" ]
       },
       "post" : {
-        "description" : "Creates a delivery for a provider order after validating fleet availability, vehicle capacity, stock and ownership.",
+        "description" : "Crea y despacha una entrega del distribuidor tras validar la propiedad, disponibilidad de flota, capacidad de la cisterna y existencias.",
         "operationId" : "createDelivery",
         "requestBody" : {
           "content" : {
@@ -2544,7 +2544,7 @@
                 }
               }
             },
-            "description" : "Delivery created and order dispatched."
+            "description" : "Entrega creada y orden despachada."
           },
           "403" : {
             "content" : {
@@ -2554,7 +2554,7 @@
                 }
               }
             },
-            "description" : "Caller does not own the provider in the request body."
+            "description" : "El tenant autenticado no es propietario del distribuidor indicado."
           },
           "404" : {
             "content" : {
@@ -2564,7 +2564,7 @@
                 }
               }
             },
-            "description" : "The driver/vehicle or the fuel order could not be found for the provider."
+            "description" : "No se encontró para el distribuidor el conductor, la cisterna o la orden."
           },
           "409" : {
             "content" : {
@@ -2574,16 +2574,16 @@
                 }
               }
             },
-            "description" : "Driver/vehicle not available or not owned by the provider, insufficient capacity or stock, or a delivery already exists for the order."
+            "description" : "La flota no está disponible, la capacidad o las existencias son insuficientes, o la orden ya tiene una entrega."
           }
         },
-        "summary" : "Create a delivery",
-        "tags" : [ "Deliveries" ]
+        "summary" : "Crear entrega",
+        "tags" : [ "Entregas" ]
       }
     },
     "/api/v1/deliveries/order/{orderId}" : {
       "get" : {
-        "description" : "Returns the delivery attached to the given order when the caller is its provider tenant or the order's buyer company.",
+        "description" : "Devuelve la entrega asociada cuando el usuario pertenece al distribuidor o a la empresa compradora de la orden.",
         "operationId" : "getDeliveryByOrder",
         "parameters" : [ {
           "in" : "path",
@@ -2603,7 +2603,7 @@
                 }
               }
             },
-            "description" : "Delivery returned."
+            "description" : "Entrega devuelta."
           },
           "404" : {
             "content" : {
@@ -2613,16 +2613,16 @@
                 }
               }
             },
-            "description" : "No delivery exists for the order or it is not visible to the caller."
+            "description" : "La orden no tiene entrega o esta no es visible para el usuario."
           }
         },
-        "summary" : "Get the delivery of an order",
-        "tags" : [ "Deliveries" ]
+        "summary" : "Consultar entrega de una orden",
+        "tags" : [ "Entregas" ]
       }
     },
     "/api/v1/deliveries/provider/{providerId}" : {
       "get" : {
-        "description" : "Returns the deliveries of the given provider tenant when it matches the caller's own provider.",
+        "description" : "Devuelve las entregas del distribuidor indicado cuando coincide con el tenant autenticado.",
         "operationId" : "getDeliveriesByProvider",
         "parameters" : [ {
           "in" : "path",
@@ -2645,7 +2645,7 @@
                 }
               }
             },
-            "description" : "Deliveries returned."
+            "description" : "Se devuelve la lista de entregas del distribuidor."
           },
           "403" : {
             "content" : {
@@ -2658,16 +2658,16 @@
                 }
               }
             },
-            "description" : "Caller does not own the requested provider tenant."
+            "description" : "El tenant autenticado no es propietario del distribuidor solicitado."
           }
         },
-        "summary" : "List deliveries by provider",
-        "tags" : [ "Deliveries" ]
+        "summary" : "Listar entregas por distribuidor",
+        "tags" : [ "Entregas" ]
       }
     },
     "/api/v1/deliveries/{deliveryId}" : {
       "get" : {
-        "description" : "Returns the delivery identified by the path id when the caller is its provider tenant or its order's buyer company.",
+        "description" : "Devuelve la entrega cuando el usuario pertenece al distribuidor o a la empresa compradora de la orden.",
         "operationId" : "getDeliveryById",
         "parameters" : [ {
           "in" : "path",
@@ -2687,7 +2687,7 @@
                 }
               }
             },
-            "description" : "Delivery returned."
+            "description" : "Entrega devuelta."
           },
           "404" : {
             "content" : {
@@ -2697,16 +2697,16 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not visible to the caller."
+            "description" : "La entrega no existe o no es visible para el usuario."
           }
         },
-        "summary" : "Get a delivery by id",
-        "tags" : [ "Deliveries" ]
+        "summary" : "Consultar entrega por identificador",
+        "tags" : [ "Entregas" ]
       }
     },
     "/api/v1/deliveries/{deliveryId}/complete" : {
       "post" : {
-        "description" : "Closes a delivery on behalf of its owning provider tenant, using the order's requested quantity as delivered evidence.",
+        "description" : "Cierra la entrega del distribuidor autenticado usando como evidencia el volumen solicitado en la orden.",
         "operationId" : "completeDelivery",
         "parameters" : [ {
           "in" : "path",
@@ -2726,7 +2726,7 @@
                 }
               }
             },
-            "description" : "Delivery completed."
+            "description" : "Entrega completada."
           },
           "404" : {
             "content" : {
@@ -2736,7 +2736,7 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller."
+            "description" : "La entrega no existe o no pertenece al distribuidor autenticado."
           },
           "409" : {
             "content" : {
@@ -2746,7 +2746,7 @@
                 }
               }
             },
-            "description" : "The delivery cannot be completed from its current physical state."
+            "description" : "El estado físico actual no permite completar la entrega."
           },
           "422" : {
             "content" : {
@@ -2756,16 +2756,16 @@
                 }
               }
             },
-            "description" : "The requested volume of the order could not be resolved to serve as close evidence."
+            "description" : "No se pudo obtener de la orden el volumen requerido como evidencia de cierre."
           }
         },
-        "summary" : "Complete a delivery",
-        "tags" : [ "Deliveries" ]
+        "summary" : "Completar entrega",
+        "tags" : [ "Entregas" ]
       }
     },
     "/api/v1/deliveries/{deliveryId}/dispatch" : {
       "post" : {
-        "description" : "Moves a delivery to the assigned/dispatched state on behalf of its owning provider tenant.",
+        "description" : "Avanza la entrega del distribuidor autenticado al estado de despacho cuando la transición física es válida.",
         "operationId" : "dispatchDelivery",
         "parameters" : [ {
           "in" : "path",
@@ -2785,7 +2785,7 @@
                 }
               }
             },
-            "description" : "Delivery dispatched."
+            "description" : "Entrega despachada."
           },
           "404" : {
             "content" : {
@@ -2795,7 +2795,7 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller."
+            "description" : "La entrega no existe o no pertenece al distribuidor autenticado."
           },
           "409" : {
             "content" : {
@@ -2805,16 +2805,16 @@
                 }
               }
             },
-            "description" : "The delivery cannot be dispatched from its current physical state."
+            "description" : "El estado físico actual no permite despachar la entrega."
           }
         },
-        "summary" : "Dispatch a delivery",
-        "tags" : [ "Deliveries" ]
+        "summary" : "Despachar entrega",
+        "tags" : [ "Entregas" ]
       }
     },
     "/api/v1/deliveries/{deliveryId}/fail" : {
       "post" : {
-        "description" : "Moves a delivery to the failed state on behalf of its owning provider tenant, recording a reason.",
+        "description" : "Registra el motivo y cambia al estado fallido una entrega del distribuidor autenticado si la transición es válida.",
         "operationId" : "failDelivery",
         "parameters" : [ {
           "in" : "path",
@@ -2844,7 +2844,7 @@
                 }
               }
             },
-            "description" : "Delivery failed."
+            "description" : "Entrega marcada como fallida."
           },
           "404" : {
             "content" : {
@@ -2854,7 +2854,7 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller."
+            "description" : "La entrega no existe o no pertenece al distribuidor autenticado."
           },
           "409" : {
             "content" : {
@@ -2864,16 +2864,16 @@
                 }
               }
             },
-            "description" : "The delivery cannot be failed from its current physical state."
+            "description" : "El estado físico actual no permite marcar la entrega como fallida."
           }
         },
-        "summary" : "Fail a delivery",
-        "tags" : [ "Deliveries" ]
+        "summary" : "Marcar entrega como fallida",
+        "tags" : [ "Entregas" ]
       }
     },
     "/api/v1/equipment" : {
       "get" : {
-        "description" : "Returns every registered piece of equipment. Restricted to administrators.",
+        "description" : "Devuelve los equipos de todas las empresas; requiere la autoridad ROLE_ADMIN.",
         "operationId" : "getAllEquipment",
         "responses" : {
           "200" : {
@@ -2887,7 +2887,7 @@
                 }
               }
             },
-            "description" : "Equipment returned."
+            "description" : "Equipos devueltos."
           },
           "403" : {
             "content" : {
@@ -2900,14 +2900,14 @@
                 }
               }
             },
-            "description" : "Caller does not hold the ROLE_ADMIN authority."
+            "description" : "El usuario no tiene la autoridad ROLE_ADMIN."
           }
         },
-        "summary" : "List all equipment",
-        "tags" : [ "Equipment" ]
+        "summary" : "Listar todos los equipos",
+        "tags" : [ "Equipos" ]
       },
       "post" : {
-        "description" : "Creates equipment for the caller's company; the supplied companyId must be the caller's own.",
+        "description" : "Registra un equipo heredado para la empresa indicada, que debe pertenecer al usuario autenticado.",
         "operationId" : "createEquipment",
         "requestBody" : {
           "content" : {
@@ -2928,7 +2928,7 @@
                 }
               }
             },
-            "description" : "Equipment created."
+            "description" : "Equipo creado."
           },
           "403" : {
             "content" : {
@@ -2938,16 +2938,16 @@
                 }
               }
             },
-            "description" : "Caller does not own the company in the request body."
+            "description" : "La empresa indicada no pertenece al usuario autenticado."
           }
         },
-        "summary" : "Create equipment",
-        "tags" : [ "Equipment" ]
+        "summary" : "Crear equipo",
+        "tags" : [ "Equipos" ]
       }
     },
     "/api/v1/equipment/company/{companyId}" : {
       "get" : {
-        "description" : "Returns all equipment of the given company when it matches the caller's own company.",
+        "description" : "Devuelve los equipos de la empresa indicada si coincide con el tenant del usuario.",
         "operationId" : "getEquipmentByCompany",
         "parameters" : [ {
           "in" : "path",
@@ -2970,7 +2970,7 @@
                 }
               }
             },
-            "description" : "Equipment returned."
+            "description" : "Equipos devueltos."
           },
           "403" : {
             "content" : {
@@ -2983,16 +2983,16 @@
                 }
               }
             },
-            "description" : "Caller does not own the requested company."
+            "description" : "La empresa solicitada no pertenece al usuario."
           }
         },
-        "summary" : "List equipment by company",
-        "tags" : [ "Equipment" ]
+        "summary" : "Listar equipos por empresa",
+        "tags" : [ "Equipos" ]
       }
     },
     "/api/v1/equipment/{equipmentId}" : {
       "get" : {
-        "description" : "Returns the equipment identified by the path id when it belongs to the caller's company.",
+        "description" : "Devuelve el equipo indicado si pertenece a la empresa del usuario autenticado.",
         "operationId" : "getEquipmentById",
         "parameters" : [ {
           "in" : "path",
@@ -3012,7 +3012,7 @@
                 }
               }
             },
-            "description" : "Equipment returned."
+            "description" : "Equipo devuelto."
           },
           "404" : {
             "content" : {
@@ -3022,16 +3022,16 @@
                 }
               }
             },
-            "description" : "Equipment does not exist or belongs to another company."
+            "description" : "El equipo no existe o pertenece a otra empresa."
           }
         },
-        "summary" : "Get equipment by id",
-        "tags" : [ "Equipment" ]
+        "summary" : "Consultar equipo por identificador",
+        "tags" : [ "Equipos" ]
       }
     },
     "/api/v1/equipment/{equipmentId}/favorite-provider" : {
       "post" : {
-        "description" : "Sets the preferred provider for the given equipment owned by the caller's company.",
+        "description" : "Registra el distribuidor preferido del equipo. Requiere rol comprador y propiedad del equipo por la empresa del usuario.",
         "operationId" : "assignFavoriteProvider",
         "parameters" : [ {
           "in" : "path",
@@ -3061,7 +3061,7 @@
                 }
               }
             },
-            "description" : "Favorite provider assigned."
+            "description" : "Distribuidor preferido asignado."
           },
           "403" : {
             "content" : {
@@ -3071,7 +3071,7 @@
                 }
               }
             },
-            "description" : "Caller does not hold the buyer role."
+            "description" : "El usuario no tiene el rol comprador."
           },
           "404" : {
             "content" : {
@@ -3081,16 +3081,16 @@
                 }
               }
             },
-            "description" : "Equipment does not exist or belongs to another company."
+            "description" : "El equipo no existe o pertenece a otra empresa."
           }
         },
-        "summary" : "Assign a favorite provider to equipment",
-        "tags" : [ "Equipment" ]
+        "summary" : "Asignar distribuidor preferido a un equipo",
+        "tags" : [ "Equipos" ]
       }
     },
     "/api/v1/equipment/{equipmentId}/update" : {
       "post" : {
-        "description" : "Applies field changes to the given equipment when it belongs to the caller's company.",
+        "description" : "Aplica los campos editables al equipo de la empresa del usuario y sincroniza el nivel con la cisterna vinculada cuando corresponde.",
         "operationId" : "updateEquipment",
         "parameters" : [ {
           "in" : "path",
@@ -3120,7 +3120,7 @@
                 }
               }
             },
-            "description" : "Equipment updated."
+            "description" : "Equipo actualizado."
           },
           "404" : {
             "content" : {
@@ -3130,16 +3130,16 @@
                 }
               }
             },
-            "description" : "Equipment does not exist or belongs to another company."
+            "description" : "El equipo no existe o pertenece a otra empresa."
           }
         },
-        "summary" : "Update equipment",
-        "tags" : [ "Equipment" ]
+        "summary" : "Actualizar equipo",
+        "tags" : [ "Equipos" ]
       }
     },
     "/api/v1/fuel-orders" : {
       "get" : {
-        "description" : "Returns every registered fuel order. Restricted to administrators.",
+        "description" : "Devuelve todas las órdenes registradas; solo está disponible para administradores con autoridad ROLE_ADMIN.",
         "operationId" : "getAllOrders",
         "responses" : {
           "200" : {
@@ -3153,7 +3153,7 @@
                 }
               }
             },
-            "description" : "Fuel orders returned."
+            "description" : "Órdenes de combustible devueltas."
           },
           "403" : {
             "content" : {
@@ -3166,14 +3166,14 @@
                 }
               }
             },
-            "description" : "Caller does not hold the ROLE_ADMIN authority."
+            "description" : "El usuario no tiene la autoridad ROLE_ADMIN."
           }
         },
-        "summary" : "List all fuel orders",
-        "tags" : [ "Fuel Orders" ]
+        "summary" : "Listar todas las órdenes de combustible",
+        "tags" : [ "Órdenes de combustible" ]
       },
       "post" : {
-        "description" : "Creates a fuel order for the caller's company, validating provider/product and company/equipment ownership.",
+        "description" : "Registra una orden para la empresa del usuario y valida la relación entre distribuidor, producto y equipo.",
         "operationId" : "createFuelOrder",
         "requestBody" : {
           "content" : {
@@ -3194,7 +3194,7 @@
                 }
               }
             },
-            "description" : "Fuel order created."
+            "description" : "Orden de combustible creada."
           },
           "403" : {
             "content" : {
@@ -3204,7 +3204,7 @@
                 }
               }
             },
-            "description" : "Caller does not own the company, or the product/equipment does not belong to the referenced provider/company."
+            "description" : "La empresa no pertenece al usuario o el producto/equipo no corresponde al tenant indicado."
           },
           "404" : {
             "content" : {
@@ -3214,16 +3214,16 @@
                 }
               }
             },
-            "description" : "The referenced fuel product or equipment does not exist."
+            "description" : "No existe el producto de combustible o el equipo indicado."
           }
         },
-        "summary" : "Create a fuel order",
-        "tags" : [ "Fuel Orders" ]
+        "summary" : "Crear orden de combustible",
+        "tags" : [ "Órdenes de combustible" ]
       }
     },
     "/api/v1/fuel-orders/company/{companyId}" : {
       "get" : {
-        "description" : "Returns all fuel orders of the given buyer company when it matches the caller's own company.",
+        "description" : "Devuelve las órdenes de la empresa indicada cuando pertenece al usuario autenticado.",
         "operationId" : "getOrdersByCompany",
         "parameters" : [ {
           "in" : "path",
@@ -3246,7 +3246,7 @@
                 }
               }
             },
-            "description" : "Fuel orders returned."
+            "description" : "Órdenes de combustible devueltas."
           },
           "403" : {
             "content" : {
@@ -3259,16 +3259,16 @@
                 }
               }
             },
-            "description" : "Caller does not own the requested company."
+            "description" : "La empresa solicitada no pertenece al usuario."
           }
         },
-        "summary" : "List fuel orders by company",
-        "tags" : [ "Fuel Orders" ]
+        "summary" : "Listar órdenes por empresa compradora",
+        "tags" : [ "Órdenes de combustible" ]
       }
     },
     "/api/v1/fuel-orders/provider/{providerId}" : {
       "get" : {
-        "description" : "Returns all fuel orders of the given provider when it matches the caller's own provider tenant.",
+        "description" : "Devuelve las órdenes del distribuidor indicado cuando el usuario es propietario de ese tenant.",
         "operationId" : "getOrdersByProvider",
         "parameters" : [ {
           "in" : "path",
@@ -3291,7 +3291,7 @@
                 }
               }
             },
-            "description" : "Fuel orders returned."
+            "description" : "Órdenes de combustible devueltas."
           },
           "403" : {
             "content" : {
@@ -3304,16 +3304,16 @@
                 }
               }
             },
-            "description" : "Caller does not own the requested provider tenant."
+            "description" : "El distribuidor solicitado no pertenece al usuario."
           }
         },
-        "summary" : "List fuel orders by provider",
-        "tags" : [ "Fuel Orders" ]
+        "summary" : "Listar órdenes por distribuidor",
+        "tags" : [ "Órdenes de combustible" ]
       }
     },
     "/api/v1/fuel-orders/{orderId}" : {
       "get" : {
-        "description" : "Returns the fuel order identified by the path id when the caller is its buyer company or provider tenant.",
+        "description" : "Devuelve la orden indicada a su empresa compradora o al distribuidor asociado.",
         "operationId" : "getOrderById",
         "parameters" : [ {
           "in" : "path",
@@ -3333,7 +3333,7 @@
                 }
               }
             },
-            "description" : "Fuel order returned."
+            "description" : "Orden de combustible devuelta."
           },
           "404" : {
             "content" : {
@@ -3343,16 +3343,16 @@
                 }
               }
             },
-            "description" : "Fuel order does not exist or is not owned by the caller."
+            "description" : "La orden no existe o no pertenece al usuario."
           }
         },
-        "summary" : "Get a fuel order by id",
-        "tags" : [ "Fuel Orders" ]
+        "summary" : "Consultar orden por identificador",
+        "tags" : [ "Órdenes de combustible" ]
       }
     },
     "/api/v1/fuel-orders/{orderId}/cancel" : {
       "post" : {
-        "description" : "Moves the given fuel order to the cancelled status on behalf of its buyer company or provider tenant.",
+        "description" : "Registra la cancelación solicitada por la empresa compradora o el distribuidor asociado a la orden.",
         "operationId" : "cancelOrder",
         "parameters" : [ {
           "in" : "path",
@@ -3372,7 +3372,7 @@
                 }
               }
             },
-            "description" : "Fuel order cancelled."
+            "description" : "Orden de combustible cancelada."
           },
           "404" : {
             "content" : {
@@ -3382,16 +3382,16 @@
                 }
               }
             },
-            "description" : "Fuel order does not exist or is not owned by the caller."
+            "description" : "La orden no existe o no pertenece al usuario."
           }
         },
-        "summary" : "Cancel a fuel order",
-        "tags" : [ "Fuel Orders" ]
+        "summary" : "Cancelar orden de combustible",
+        "tags" : [ "Órdenes de combustible" ]
       }
     },
     "/api/v1/fuel-orders/{orderId}/confirm" : {
       "post" : {
-        "description" : "Moves the given fuel order to the confirmed status on behalf of its owning buyer company.",
+        "description" : "Registra la confirmación solicitada por la empresa compradora propietaria de la orden.",
         "operationId" : "confirmOrder",
         "parameters" : [ {
           "in" : "path",
@@ -3411,7 +3411,7 @@
                 }
               }
             },
-            "description" : "Fuel order confirmed."
+            "description" : "Orden de combustible confirmada."
           },
           "404" : {
             "content" : {
@@ -3421,16 +3421,16 @@
                 }
               }
             },
-            "description" : "Fuel order does not exist or belongs to another buyer company."
+            "description" : "La orden no existe o pertenece a otra empresa compradora."
           }
         },
-        "summary" : "Confirm a fuel order",
-        "tags" : [ "Fuel Orders" ]
+        "summary" : "Confirmar orden de combustible",
+        "tags" : [ "Órdenes de combustible" ]
       }
     },
     "/api/v1/fuel-products" : {
       "get" : {
-        "description" : "Returns every registered fuel product. Restricted to buyers.",
+        "description" : "Devuelve los productos registrados en la plataforma para consulta de compradores.",
         "operationId" : "getAllFuelProducts",
         "responses" : {
           "200" : {
@@ -3444,7 +3444,7 @@
                 }
               }
             },
-            "description" : "Fuel products returned."
+            "description" : "Productos de combustible devueltos."
           },
           "403" : {
             "content" : {
@@ -3457,14 +3457,14 @@
                 }
               }
             },
-            "description" : "Caller does not hold the buyer role."
+            "description" : "El usuario no tiene el rol comprador."
           }
         },
-        "summary" : "List all fuel products",
-        "tags" : [ "Fuel Products" ]
+        "summary" : "Listar productos de combustible",
+        "tags" : [ "Productos de combustible" ]
       },
       "post" : {
-        "description" : "Creates a fuel product owned by the caller's provider tenant.",
+        "description" : "Registra un producto en el catálogo del distribuidor autenticado y verifica que el tenant del cuerpo sea propio.",
         "operationId" : "createFuelProduct",
         "requestBody" : {
           "content" : {
@@ -3485,7 +3485,7 @@
                 }
               }
             },
-            "description" : "Fuel product created."
+            "description" : "Producto de combustible creado."
           },
           "403" : {
             "content" : {
@@ -3495,16 +3495,16 @@
                 }
               }
             },
-            "description" : "Caller does not own the provider in the request body."
+            "description" : "El distribuidor indicado en la solicitud no pertenece al usuario."
           }
         },
-        "summary" : "Create a fuel product",
-        "tags" : [ "Fuel Products" ]
+        "summary" : "Crear producto de combustible",
+        "tags" : [ "Productos de combustible" ]
       }
     },
     "/api/v1/fuel-products/provider/{providerId}" : {
       "get" : {
-        "description" : "Returns all fuel products of the given provider to a buyer or to its owning provider tenant.",
+        "description" : "Devuelve los productos del distribuidor indicado a compradores o al mismo distribuidor.",
         "operationId" : "getFuelProductsByProvider",
         "parameters" : [ {
           "in" : "path",
@@ -3527,7 +3527,7 @@
                 }
               }
             },
-            "description" : "Fuel products returned."
+            "description" : "Productos de combustible devueltos."
           },
           "403" : {
             "content" : {
@@ -3540,16 +3540,16 @@
                 }
               }
             },
-            "description" : "Caller is neither a buyer nor the owner of the provider tenant."
+            "description" : "El usuario no es comprador ni propietario del distribuidor indicado."
           }
         },
-        "summary" : "List fuel products by provider",
-        "tags" : [ "Fuel Products" ]
+        "summary" : "Listar productos por distribuidor",
+        "tags" : [ "Productos de combustible" ]
       }
     },
     "/api/v1/fuel-products/{fuelProductId}" : {
       "delete" : {
-        "description" : "Removes a fuel product owned by the caller's provider tenant when it is not referenced by other records.",
+        "description" : "Elimina el producto del catálogo propio solo cuando ninguna solicitud ni orden existente lo utiliza.",
         "operationId" : "deleteFuelProduct",
         "parameters" : [ {
           "in" : "path",
@@ -3569,7 +3569,7 @@
                 }
               }
             },
-            "description" : "Fuel product deleted; no content returned."
+            "description" : "Producto eliminado sin cuerpo de respuesta."
           },
           "404" : {
             "content" : {
@@ -3579,7 +3579,7 @@
                 }
               }
             },
-            "description" : "Fuel product does not exist or belongs to another provider tenant."
+            "description" : "El producto no existe o pertenece a otro distribuidor."
           },
           "409" : {
             "content" : {
@@ -3589,14 +3589,14 @@
                 }
               }
             },
-            "description" : "Fuel product is still referenced by existing requests or orders."
+            "description" : "El producto sigue asociado a solicitudes u órdenes existentes."
           }
         },
-        "summary" : "Delete a fuel product",
-        "tags" : [ "Fuel Products" ]
+        "summary" : "Eliminar producto de combustible",
+        "tags" : [ "Productos de combustible" ]
       },
       "get" : {
-        "description" : "Returns the fuel product identified by the path id to a buyer or its owning provider tenant.",
+        "description" : "Devuelve el producto indicado a un comprador o al distribuidor propietario.",
         "operationId" : "getFuelProductById",
         "parameters" : [ {
           "in" : "path",
@@ -3616,7 +3616,7 @@
                 }
               }
             },
-            "description" : "Fuel product returned."
+            "description" : "Producto de combustible devuelto."
           },
           "404" : {
             "content" : {
@@ -3626,14 +3626,14 @@
                 }
               }
             },
-            "description" : "Fuel product does not exist or is not visible to the caller."
+            "description" : "El producto no existe o no es visible para el usuario."
           }
         },
-        "summary" : "Get a fuel product by id",
-        "tags" : [ "Fuel Products" ]
+        "summary" : "Consultar producto por identificador",
+        "tags" : [ "Productos de combustible" ]
       },
       "put" : {
-        "description" : "Applies field changes to a fuel product owned by the caller's provider tenant.",
+        "description" : "Aplica los cambios permitidos al producto propio del distribuidor autenticado.",
         "operationId" : "updateFuelProduct",
         "parameters" : [ {
           "in" : "path",
@@ -3663,7 +3663,7 @@
                 }
               }
             },
-            "description" : "Fuel product updated."
+            "description" : "Producto de combustible actualizado."
           },
           "404" : {
             "content" : {
@@ -3673,16 +3673,16 @@
                 }
               }
             },
-            "description" : "Fuel product does not exist or belongs to another provider tenant."
+            "description" : "El producto no existe o pertenece a otro distribuidor."
           }
         },
-        "summary" : "Update a fuel product",
-        "tags" : [ "Fuel Products" ]
+        "summary" : "Actualizar producto de combustible",
+        "tags" : [ "Productos de combustible" ]
       }
     },
     "/api/v1/fuel-products/{fuelProductId}/update-stock" : {
       "post" : {
-        "description" : "Sets the available stock of a fuel product owned by the caller's provider tenant.",
+        "description" : "Establece la cantidad disponible para un producto propio del distribuidor autenticado.",
         "operationId" : "updateStock",
         "parameters" : [ {
           "in" : "path",
@@ -3712,7 +3712,7 @@
                 }
               }
             },
-            "description" : "Stock updated."
+            "description" : "Existencias actualizadas."
           },
           "404" : {
             "content" : {
@@ -3722,16 +3722,16 @@
                 }
               }
             },
-            "description" : "Fuel product does not exist or belongs to another provider tenant."
+            "description" : "El producto no existe o pertenece a otro distribuidor."
           }
         },
-        "summary" : "Update fuel product stock",
-        "tags" : [ "Fuel Products" ]
+        "summary" : "Actualizar existencias del producto",
+        "tags" : [ "Productos de combustible" ]
       }
     },
     "/api/v1/fuel-requests" : {
       "get" : {
-        "description" : "Returns fuel requests for a single owned dimension: either the caller's buyer company or its provider tenant.",
+        "description" : "Devuelve solicitudes de una sola dimensión propia: la empresa compradora o el tenant distribuidor del usuario.",
         "operationId" : "findAll",
         "parameters" : [ {
           "in" : "query",
@@ -3762,7 +3762,7 @@
                 }
               }
             },
-            "description" : "Fuel requests returned."
+            "description" : "Se devuelve la lista de solicitudes."
           },
           "400" : {
             "content" : {
@@ -3775,7 +3775,7 @@
                 }
               }
             },
-            "description" : "Both buyerCompanyId and providerId were supplied."
+            "description" : "Se indicaron a la vez buyerCompanyId y providerId."
           },
           "403" : {
             "content" : {
@@ -3788,14 +3788,14 @@
                 }
               }
             },
-            "description" : "Neither filter was supplied, or the supplied filter is not owned by the caller."
+            "description" : "No se indicó filtro o el filtro indicado no pertenece al usuario."
           }
         },
-        "summary" : "List fuel requests",
-        "tags" : [ "fuel-requests-controller" ]
+        "summary" : "Listar solicitudes de combustible",
+        "tags" : [ "Solicitudes de combustible heredadas" ]
       },
       "post" : {
-        "description" : "Creates a legacy fuel request (and its linked replenishment review) for the caller's buyer company.",
+        "description" : "Crea una solicitud v1 y su solicitud de reposición vinculada para una empresa compradora del usuario autenticado.",
         "operationId" : "create_2",
         "requestBody" : {
           "content" : {
@@ -3816,7 +3816,7 @@
                 }
               }
             },
-            "description" : "Fuel request created."
+            "description" : "Solicitud de combustible creada."
           },
           "400" : {
             "content" : {
@@ -3826,7 +3826,7 @@
                 }
               }
             },
-            "description" : "The referenced fuel product does not exist or does not belong to the requested provider."
+            "description" : "El producto de combustible no existe o no pertenece al distribuidor indicado."
           },
           "403" : {
             "content" : {
@@ -3836,16 +3836,16 @@
                 }
               }
             },
-            "description" : "Caller does not own the buyer company in the request body."
+            "description" : "La empresa compradora del cuerpo no pertenece al usuario autenticado."
           }
         },
-        "summary" : "Create a fuel request",
-        "tags" : [ "fuel-requests-controller" ]
+        "summary" : "Crear solicitud de combustible heredada",
+        "tags" : [ "Solicitudes de combustible heredadas" ]
       }
     },
     "/api/v1/fuel-requests/{requestId}" : {
       "get" : {
-        "description" : "Returns the fuel request identified by the path id when the caller is its buyer company or provider tenant.",
+        "description" : "Devuelve la solicitud indicada cuando el usuario pertenece a la empresa compradora o al distribuidor correspondiente.",
         "operationId" : "findById",
         "parameters" : [ {
           "in" : "path",
@@ -3865,7 +3865,7 @@
                 }
               }
             },
-            "description" : "Fuel request returned."
+            "description" : "Solicitud de combustible devuelta."
           },
           "404" : {
             "content" : {
@@ -3875,16 +3875,16 @@
                 }
               }
             },
-            "description" : "Fuel request does not exist or is not owned by the caller."
+            "description" : "La solicitud no existe o no pertenece al usuario autenticado."
           }
         },
-        "summary" : "Get a fuel request by id",
-        "tags" : [ "fuel-requests-controller" ]
+        "summary" : "Consultar solicitud de combustible por identificador",
+        "tags" : [ "Solicitudes de combustible heredadas" ]
       }
     },
     "/api/v1/fuel-requests/{requestId}/accept" : {
       "post" : {
-        "description" : "Accepts a pending fuel request on behalf of the addressed provider tenant, creating the resulting fuel order.",
+        "description" : "Acepta una solicitud pendiente en nombre del distribuidor destinatario y crea la orden de combustible resultante.",
         "operationId" : "accept_2",
         "parameters" : [ {
           "in" : "path",
@@ -3904,7 +3904,7 @@
                 }
               }
             },
-            "description" : "Fuel request accepted and fuel order created."
+            "description" : "Solicitud aceptada y orden de combustible creada."
           },
           "400" : {
             "content" : {
@@ -3914,7 +3914,7 @@
                 }
               }
             },
-            "description" : "The request or its fuel product could not be found while materialising the order."
+            "description" : "No se encontró la solicitud o su producto al crear la orden."
           },
           "404" : {
             "content" : {
@@ -3924,7 +3924,7 @@
                 }
               }
             },
-            "description" : "Fuel request does not exist or is not addressed to the caller's provider tenant."
+            "description" : "La solicitud no existe o no está dirigida al tenant distribuidor autenticado."
           },
           "500" : {
             "content" : {
@@ -3934,16 +3934,16 @@
                 }
               }
             },
-            "description" : "The request was already accepted or the linked review could not be accepted."
+            "description" : "La solicitud ya fue aceptada o no se pudo aceptar la revisión vinculada."
           }
         },
-        "summary" : "Accept a fuel request",
-        "tags" : [ "fuel-requests-controller" ]
+        "summary" : "Aceptar solicitud de combustible",
+        "tags" : [ "Solicitudes de combustible heredadas" ]
       }
     },
     "/api/v1/fuel-requests/{requestId}/reject" : {
       "post" : {
-        "description" : "Rejects a pending fuel request on behalf of the addressed provider tenant, recording a reason.",
+        "description" : "Rechaza una solicitud pendiente para el distribuidor destinatario y registra el motivo indicado.",
         "operationId" : "reject_1",
         "parameters" : [ {
           "in" : "path",
@@ -3973,7 +3973,7 @@
                 }
               }
             },
-            "description" : "Fuel request rejected."
+            "description" : "Solicitud de combustible rechazada."
           },
           "400" : {
             "content" : {
@@ -3983,7 +3983,7 @@
                 }
               }
             },
-            "description" : "The rejection reason is missing or the request could not be found."
+            "description" : "Falta el motivo de rechazo o no se encontró la solicitud."
           },
           "404" : {
             "content" : {
@@ -3993,7 +3993,7 @@
                 }
               }
             },
-            "description" : "Fuel request does not exist or is not addressed to the caller's provider tenant."
+            "description" : "La solicitud no existe o no está dirigida al tenant distribuidor autenticado."
           },
           "500" : {
             "content" : {
@@ -4003,17 +4003,17 @@
                 }
               }
             },
-            "description" : "The request is not pending and cannot be rejected."
+            "description" : "La solicitud no está pendiente y no puede rechazarse."
           }
         },
-        "summary" : "Reject a fuel request",
-        "tags" : [ "fuel-requests-controller" ]
+        "summary" : "Rechazar solicitud de combustible",
+        "tags" : [ "Solicitudes de combustible heredadas" ]
       }
     },
     "/api/v1/notifications" : {
       "post" : {
         "deprecated" : true,
-        "description" : "Deprecated: prefer the event-driven inbox and /api/v2/me/notifications. Creates a notification addressed to exactly one owned recipient (user, company or provider).",
+        "description" : "Operación obsoleta; se recomienda la bandeja generada por eventos en /api/v2/me/notifications. Crea una notificación para un usuario, empresa compradora o distribuidor del usuario autenticado.",
         "operationId" : "createNotification",
         "requestBody" : {
           "content" : {
@@ -4034,7 +4034,7 @@
                 }
               }
             },
-            "description" : "Notification created."
+            "description" : "Notificación creada."
           },
           "400" : {
             "content" : {
@@ -4044,7 +4044,7 @@
                 }
               }
             },
-            "description" : "Not exactly one recipient was supplied, or the referenced recipient user does not exist."
+            "description" : "No se indicó exactamente un destinatario o el usuario asociado no existe."
           },
           "403" : {
             "content" : {
@@ -4054,7 +4054,7 @@
                 }
               }
             },
-            "description" : "Caller owns none of the referenced user/company/provider."
+            "description" : "El usuario no pertenece a ninguno de los destinatarios indicados."
           },
           "404" : {
             "content" : {
@@ -4064,16 +4064,16 @@
                 }
               }
             },
-            "description" : "The referenced recipient is not owned by the caller."
+            "description" : "El destinatario indicado no pertenece al usuario autenticado."
           }
         },
-        "summary" : "Create a notification",
-        "tags" : [ "Notifications" ]
+        "summary" : "Crear notificación",
+        "tags" : [ "Notificaciones" ]
       }
     },
     "/api/v1/notifications/buyer/{companyId}" : {
       "get" : {
-        "description" : "Returns the notifications addressed to the given buyer company's user when the caller owns the company.",
+        "description" : "Devuelve las notificaciones del usuario asociado a la empresa compradora cuando el tenant autenticado es propietario.",
         "operationId" : "getNotificationsByBuyer",
         "parameters" : [ {
           "in" : "path",
@@ -4096,7 +4096,7 @@
                 }
               }
             },
-            "description" : "Notifications returned (possibly empty)."
+            "description" : "Se devuelve la lista, que puede estar vacía si la empresa no tiene usuario asociado."
           },
           "403" : {
             "content" : {
@@ -4109,16 +4109,16 @@
                 }
               }
             },
-            "description" : "Caller does not own the requested company."
+            "description" : "La empresa solicitada no pertenece al tenant autenticado."
           }
         },
-        "summary" : "List notifications by buyer company",
-        "tags" : [ "Notifications" ]
+        "summary" : "Listar notificaciones por empresa compradora",
+        "tags" : [ "Notificaciones" ]
       }
     },
     "/api/v1/notifications/provider/{providerId}" : {
       "get" : {
-        "description" : "Returns the notifications addressed to the given provider tenant's user when the caller owns the provider.",
+        "description" : "Devuelve las notificaciones del usuario asociado al distribuidor cuando el tenant autenticado es propietario.",
         "operationId" : "getNotificationsByProvider",
         "parameters" : [ {
           "in" : "path",
@@ -4141,7 +4141,7 @@
                 }
               }
             },
-            "description" : "Notifications returned (possibly empty)."
+            "description" : "Se devuelve la lista, que puede estar vacía si el distribuidor no tiene usuario asociado."
           },
           "403" : {
             "content" : {
@@ -4154,16 +4154,16 @@
                 }
               }
             },
-            "description" : "Caller does not own the requested provider tenant."
+            "description" : "El distribuidor solicitado no pertenece al tenant autenticado."
           }
         },
-        "summary" : "List notifications by provider",
-        "tags" : [ "Notifications" ]
+        "summary" : "Listar notificaciones por distribuidor",
+        "tags" : [ "Notificaciones" ]
       }
     },
     "/api/v1/notifications/user/{userId}" : {
       "get" : {
-        "description" : "Returns the notifications of the given user when it is the caller.",
+        "description" : "Devuelve las notificaciones del usuario indicado cuando coincide con el usuario autenticado.",
         "operationId" : "getNotificationsByUser",
         "parameters" : [ {
           "in" : "path",
@@ -4186,7 +4186,7 @@
                 }
               }
             },
-            "description" : "Notifications returned."
+            "description" : "Se devuelve la lista de notificaciones."
           },
           "403" : {
             "content" : {
@@ -4199,16 +4199,16 @@
                 }
               }
             },
-            "description" : "Caller is not the requested user."
+            "description" : "El usuario autenticado no coincide con el usuario solicitado."
           }
         },
-        "summary" : "List notifications by user",
-        "tags" : [ "Notifications" ]
+        "summary" : "Listar notificaciones por usuario",
+        "tags" : [ "Notificaciones" ]
       }
     },
     "/api/v1/notifications/user/{userId}/unread" : {
       "get" : {
-        "description" : "Returns the unread notifications of the given user when it is the caller.",
+        "description" : "Devuelve las notificaciones no leídas cuando el identificador corresponde al usuario autenticado.",
         "operationId" : "getUnreadByUser",
         "parameters" : [ {
           "in" : "path",
@@ -4231,7 +4231,7 @@
                 }
               }
             },
-            "description" : "Unread notifications returned."
+            "description" : "Se devuelve la lista de notificaciones no leídas."
           },
           "403" : {
             "content" : {
@@ -4244,16 +4244,16 @@
                 }
               }
             },
-            "description" : "Caller is not the requested user."
+            "description" : "El usuario autenticado no coincide con el usuario solicitado."
           }
         },
-        "summary" : "List unread notifications by user",
-        "tags" : [ "Notifications" ]
+        "summary" : "Listar notificaciones no leídas por usuario",
+        "tags" : [ "Notificaciones" ]
       }
     },
     "/api/v1/notifications/{notificationId}" : {
       "get" : {
-        "description" : "Returns the notification identified by the path id when it belongs to the caller.",
+        "description" : "Devuelve la notificación indicada cuando pertenece al usuario autenticado.",
         "operationId" : "getNotificationById",
         "parameters" : [ {
           "in" : "path",
@@ -4273,7 +4273,7 @@
                 }
               }
             },
-            "description" : "Notification returned."
+            "description" : "Notificación devuelta."
           },
           "404" : {
             "content" : {
@@ -4283,16 +4283,16 @@
                 }
               }
             },
-            "description" : "Notification does not exist or does not belong to the caller."
+            "description" : "La notificación no existe o no pertenece al usuario autenticado."
           }
         },
-        "summary" : "Get a notification by id",
-        "tags" : [ "Notifications" ]
+        "summary" : "Consultar notificación por identificador",
+        "tags" : [ "Notificaciones" ]
       }
     },
     "/api/v1/notifications/{notificationId}/mark-as-read" : {
       "post" : {
-        "description" : "Marks the given notification as read when it belongs to the caller.",
+        "description" : "Actualiza el estado de lectura de una notificación perteneciente al usuario autenticado.",
         "operationId" : "markAsRead_1",
         "parameters" : [ {
           "in" : "path",
@@ -4312,7 +4312,7 @@
                 }
               }
             },
-            "description" : "Notification marked as read."
+            "description" : "Notificación marcada como leída."
           },
           "404" : {
             "content" : {
@@ -4322,16 +4322,16 @@
                 }
               }
             },
-            "description" : "Notification does not exist or does not belong to the caller."
+            "description" : "La notificación no existe o no pertenece al usuario autenticado."
           }
         },
-        "summary" : "Mark a notification as read",
-        "tags" : [ "Notifications" ]
+        "summary" : "Marcar notificación como leída",
+        "tags" : [ "Notificaciones" ]
       }
     },
     "/api/v1/payments" : {
       "get" : {
-        "description" : "Returns every registered payment. Restricted to administrators.",
+        "description" : "Devuelve todos los pagos registrados; requiere autoridad administrativa ROLE_ADMIN.",
         "operationId" : "getAllPayments",
         "responses" : {
           "200" : {
@@ -4345,7 +4345,7 @@
                 }
               }
             },
-            "description" : "Payments returned."
+            "description" : "Se devuelve la lista de pagos."
           },
           "403" : {
             "content" : {
@@ -4358,14 +4358,14 @@
                 }
               }
             },
-            "description" : "Caller does not hold the ROLE_ADMIN authority."
+            "description" : "El usuario no cuenta con autoridad ROLE_ADMIN."
           }
         },
-        "summary" : "List all payments",
-        "tags" : [ "Payments" ]
+        "summary" : "Listar todos los pagos",
+        "tags" : [ "Pagos" ]
       },
       "post" : {
-        "description" : "Creates a payment for the caller's order after checking ownership and that the amount matches the order total.",
+        "description" : "Registra el pago de una orden después de verificar la empresa propietaria, la existencia de la orden y la coincidencia del importe total.",
         "operationId" : "createPayment",
         "requestBody" : {
           "content" : {
@@ -4386,7 +4386,7 @@
                 }
               }
             },
-            "description" : "Payment created."
+            "description" : "Pago registrado."
           },
           "400" : {
             "content" : {
@@ -4396,7 +4396,7 @@
                 }
               }
             },
-            "description" : "The order/company is missing or the amount does not match the order total."
+            "description" : "Falta la orden o la empresa, o el importe no coincide con el total de la orden."
           },
           "403" : {
             "content" : {
@@ -4406,7 +4406,7 @@
                 }
               }
             },
-            "description" : "Caller does not own the buyer company in the request body."
+            "description" : "La empresa compradora indicada no pertenece al usuario autenticado."
           },
           "404" : {
             "content" : {
@@ -4416,7 +4416,7 @@
                 }
               }
             },
-            "description" : "The referenced order does not exist or does not belong to the given company."
+            "description" : "La orden no existe o no pertenece a la empresa indicada."
           },
           "409" : {
             "content" : {
@@ -4426,16 +4426,16 @@
                 }
               }
             },
-            "description" : "A payment already exists for the order."
+            "description" : "La orden ya tiene un pago registrado."
           }
         },
-        "summary" : "Create a payment",
-        "tags" : [ "Payments" ]
+        "summary" : "Registrar pago",
+        "tags" : [ "Pagos" ]
       }
     },
     "/api/v1/payments/company/{companyId}" : {
       "get" : {
-        "description" : "Returns the payments of the given buyer company when it matches the caller's own company.",
+        "description" : "Devuelve los pagos de la empresa indicada si coincide con la empresa del usuario autenticado.",
         "operationId" : "getPaymentsByCompany",
         "parameters" : [ {
           "in" : "path",
@@ -4458,7 +4458,7 @@
                 }
               }
             },
-            "description" : "Payments returned."
+            "description" : "Se devuelve la lista de pagos de la empresa."
           },
           "403" : {
             "content" : {
@@ -4471,16 +4471,16 @@
                 }
               }
             },
-            "description" : "Caller does not own the requested company."
+            "description" : "La empresa solicitada no pertenece al usuario autenticado."
           }
         },
-        "summary" : "List payments by company",
-        "tags" : [ "Payments" ]
+        "summary" : "Listar pagos por empresa",
+        "tags" : [ "Pagos" ]
       }
     },
     "/api/v1/payments/order/{orderId}" : {
       "get" : {
-        "description" : "Returns the payment attached to the given order when the caller is its buyer company or the order's provider.",
+        "description" : "Devuelve el pago asociado a la orden si el usuario pertenece a la empresa compradora o al distribuidor.",
         "operationId" : "getPaymentByOrder",
         "parameters" : [ {
           "in" : "path",
@@ -4500,7 +4500,7 @@
                 }
               }
             },
-            "description" : "Payment returned."
+            "description" : "Pago devuelto."
           },
           "404" : {
             "content" : {
@@ -4510,16 +4510,16 @@
                 }
               }
             },
-            "description" : "No payment exists for the order or it is not visible to the caller."
+            "description" : "La orden no tiene pago o este no es visible para el usuario."
           }
         },
-        "summary" : "Get the payment of an order",
-        "tags" : [ "Payments" ]
+        "summary" : "Consultar pago de una orden",
+        "tags" : [ "Pagos" ]
       }
     },
     "/api/v1/payments/{paymentId}" : {
       "get" : {
-        "description" : "Returns the payment identified by the path id when the caller is its buyer company or its order's provider.",
+        "description" : "Devuelve el pago si el usuario pertenece a la empresa compradora o al distribuidor de la orden.",
         "operationId" : "getPaymentById",
         "parameters" : [ {
           "in" : "path",
@@ -4539,7 +4539,7 @@
                 }
               }
             },
-            "description" : "Payment returned."
+            "description" : "Pago devuelto."
           },
           "404" : {
             "content" : {
@@ -4549,16 +4549,16 @@
                 }
               }
             },
-            "description" : "Payment does not exist or is not visible to the caller."
+            "description" : "El pago no existe o no es visible para el usuario."
           }
         },
-        "summary" : "Get a payment by id",
-        "tags" : [ "Payments" ]
+        "summary" : "Consultar pago por identificador",
+        "tags" : [ "Pagos" ]
       }
     },
     "/api/v1/payments/{paymentId}/complete" : {
       "post" : {
-        "description" : "Marks the payment as completed with a transaction reference and moves its order to paid.",
+        "description" : "Marca el pago como completado con la referencia de transacción y actualiza la orden a pagada.",
         "operationId" : "completePayment",
         "parameters" : [ {
           "in" : "path",
@@ -4588,7 +4588,7 @@
                 }
               }
             },
-            "description" : "Payment completed and order marked paid."
+            "description" : "Pago completado y orden marcada como pagada."
           },
           "404" : {
             "content" : {
@@ -4598,7 +4598,7 @@
                 }
               }
             },
-            "description" : "Payment or its order does not exist, or the caller is not allowed to see it."
+            "description" : "El pago o su orden no existe, o el usuario no puede consultarlo."
           },
           "500" : {
             "content" : {
@@ -4608,16 +4608,16 @@
                 }
               }
             },
-            "description" : "The order cannot be paid (for example, it was cancelled)."
+            "description" : "La orden no puede marcarse como pagada, por ejemplo, porque fue cancelada."
           }
         },
-        "summary" : "Complete a payment",
-        "tags" : [ "Payments" ]
+        "summary" : "Completar pago",
+        "tags" : [ "Pagos" ]
       }
     },
     "/api/v1/payments/{paymentId}/refund" : {
       "post" : {
-        "description" : "Marks the payment as refunded; the operation is idempotent with respect to payment state.",
+        "description" : "Marca el pago como reembolsado; repetir la operación conserva ese estado.",
         "operationId" : "refundPayment",
         "parameters" : [ {
           "in" : "path",
@@ -4637,7 +4637,7 @@
                 }
               }
             },
-            "description" : "Payment refunded."
+            "description" : "Pago reembolsado."
           },
           "404" : {
             "content" : {
@@ -4647,16 +4647,16 @@
                 }
               }
             },
-            "description" : "Payment does not exist or the caller is not allowed to see it."
+            "description" : "El pago no existe o el usuario no puede consultarlo."
           }
         },
-        "summary" : "Refund a payment",
-        "tags" : [ "Payments" ]
+        "summary" : "Reembolsar pago",
+        "tags" : [ "Pagos" ]
       }
     },
     "/api/v1/provider-companies" : {
       "get" : {
-        "description" : "Returns every registered provider company. Available to buyer and provider roles.",
+        "description" : "Devuelve todos los perfiles de distribuidor. Requiere el rol comprador.",
         "operationId" : "getAllProviderCompanies",
         "responses" : {
           "200" : {
@@ -4670,7 +4670,7 @@
                 }
               }
             },
-            "description" : "Provider companies returned."
+            "description" : "Se devuelve la lista de distribuidores."
           },
           "403" : {
             "content" : {
@@ -4683,14 +4683,14 @@
                 }
               }
             },
-            "description" : "Caller holds neither the buyer nor the provider role."
+            "description" : "El usuario no cuenta con el rol comprador."
           }
         },
-        "summary" : "List all provider companies",
-        "tags" : [ "Provider Companies" ]
+        "summary" : "Listar distribuidores",
+        "tags" : [ "Distribuidores" ]
       },
       "post" : {
-        "description" : "Persists a new provider company profile. This registration endpoint is open to unauthenticated callers.",
+        "description" : "Persiste un nuevo perfil de distribuidor. La ruta está disponible sin autenticación y no crea usuarios ni membresías.",
         "operationId" : "createProviderCompany",
         "requestBody" : {
           "content" : {
@@ -4711,7 +4711,7 @@
                 }
               }
             },
-            "description" : "Provider company created."
+            "description" : "Perfil de distribuidor creado."
           },
           "500" : {
             "content" : {
@@ -4721,16 +4721,16 @@
                 }
               }
             },
-            "description" : "Unexpected error while persisting the provider company."
+            "description" : "Se produjo un error inesperado al guardar el perfil."
           }
         },
-        "summary" : "Create a provider company",
-        "tags" : [ "Provider Companies" ]
+        "summary" : "Registrar distribuidor",
+        "tags" : [ "Distribuidores" ]
       }
     },
     "/api/v1/provider-companies/{providerId}" : {
       "get" : {
-        "description" : "Returns the provider company identified by the path id to a buyer or its owning provider.",
+        "description" : "Devuelve el perfil indicado a un usuario con rol comprador o al tenant distribuidor propietario.",
         "operationId" : "getProviderCompanyById",
         "parameters" : [ {
           "in" : "path",
@@ -4750,7 +4750,7 @@
                 }
               }
             },
-            "description" : "Provider company returned."
+            "description" : "Perfil de distribuidor devuelto."
           },
           "403" : {
             "content" : {
@@ -4760,7 +4760,7 @@
                 }
               }
             },
-            "description" : "Caller is neither a buyer nor the owner of this provider company."
+            "description" : "El usuario no tiene rol comprador ni pertenece al distribuidor indicado."
           },
           "404" : {
             "content" : {
@@ -4770,14 +4770,14 @@
                 }
               }
             },
-            "description" : "Provider company does not exist."
+            "description" : "El distribuidor no existe."
           }
         },
-        "summary" : "Get a provider company by id",
-        "tags" : [ "Provider Companies" ]
+        "summary" : "Consultar distribuidor por identificador",
+        "tags" : [ "Distribuidores" ]
       },
       "put" : {
-        "description" : "Replaces the editable fields of the provider company identified by the path id.",
+        "description" : "Reemplaza los campos editables del perfil indicado. Requiere pertenecer a ese tenant distribuidor.",
         "operationId" : "updateProviderCompany",
         "parameters" : [ {
           "in" : "path",
@@ -4807,7 +4807,7 @@
                 }
               }
             },
-            "description" : "Provider company updated."
+            "description" : "Perfil de distribuidor actualizado."
           },
           "403" : {
             "content" : {
@@ -4817,7 +4817,7 @@
                 }
               }
             },
-            "description" : "Caller is not the owner of this provider company."
+            "description" : "El distribuidor indicado no pertenece al usuario autenticado."
           },
           "404" : {
             "content" : {
@@ -4827,11 +4827,11 @@
                 }
               }
             },
-            "description" : "Provider company does not exist."
+            "description" : "El distribuidor no existe."
           }
         },
-        "summary" : "Update a provider company",
-        "tags" : [ "Provider Companies" ]
+        "summary" : "Actualizar distribuidor",
+        "tags" : [ "Distribuidores" ]
       }
     },
     "/api/v1/users" : {
@@ -4921,7 +4921,7 @@
     },
     "/api/v2/admin/api-metrics" : {
       "get" : {
-        "description" : "Returns per-pattern request counts, last-seen time and distinct caller count.",
+        "description" : "Devuelve por patrón la cantidad de solicitudes, el último acceso y el número de usuarios distintos. Solo para administradores.",
         "operationId" : "list_4",
         "parameters" : [ {
           "in" : "query",
@@ -4940,7 +4940,7 @@
                 }
               }
             },
-            "description" : "Route metrics returned."
+            "description" : "Métricas de rutas devueltas."
           },
           "400" : {
             "content" : {
@@ -4950,7 +4950,7 @@
                 }
               }
             },
-            "description" : "Version must be v1 or v2."
+            "description" : "La versión debe ser v1 o v2."
           },
           "403" : {
             "content" : {
@@ -4960,16 +4960,16 @@
                 }
               }
             },
-            "description" : "Caller is not a platform administrator."
+            "description" : "El usuario no tiene autoridad de administrador de plataforma."
           }
         },
-        "summary" : "List API route usage",
-        "tags" : [ "API route metrics" ]
+        "summary" : "Listar uso de rutas API",
+        "tags" : [ "Métricas de rutas API" ]
       }
     },
     "/api/v2/admin/deliveries/{deliveryId}/transport-evidence" : {
       "delete" : {
-        "description" : "Removes only raw GPS samples and the tracking projection for the delivery.",
+        "description" : "Elimina únicamente muestras GPS y la proyección de seguimiento de la entrega. Requiere ROLE_ADMIN.",
         "operationId" : "delete",
         "parameters" : [ {
           "in" : "path",
@@ -4982,22 +4982,22 @@
         } ],
         "responses" : {
           "204" : {
-            "description" : "Transport evidence deleted (idempotent)."
+            "description" : "Evidencias eliminadas; repetir la operación no produce cambios adicionales."
           },
           "403" : {
-            "description" : "Caller is not a platform administrator."
+            "description" : "El usuario no tiene autoridad de administrador de plataforma."
           },
           "404" : {
-            "description" : "Delivery does not exist."
+            "description" : "La entrega no existe."
           }
         },
-        "summary" : "Delete transport evidence",
-        "tags" : [ "Transport evidence retention" ]
+        "summary" : "Eliminar evidencias de transporte",
+        "tags" : [ "Retención de evidencias de transporte" ]
       }
     },
     "/api/v2/admin/deliveries/{deliveryId}/transport-evidence/export" : {
       "get" : {
-        "description" : "Returns GPS and load evidence ordered by recordedAt.",
+        "description" : "Devuelve evidencias GPS y de carga ordenadas por instante de registro. Requiere ROLE_ADMIN.",
         "operationId" : "export",
         "parameters" : [ {
           "in" : "path",
@@ -5017,7 +5017,7 @@
                 }
               }
             },
-            "description" : "Evidence exported; samples may be empty."
+            "description" : "Evidencias exportadas; la lista puede estar vacía."
           },
           "403" : {
             "content" : {
@@ -5027,7 +5027,7 @@
                 }
               }
             },
-            "description" : "Caller is not a platform administrator."
+            "description" : "El usuario no tiene autoridad de administrador de plataforma."
           },
           "404" : {
             "content" : {
@@ -5037,16 +5037,16 @@
                 }
               }
             },
-            "description" : "Delivery does not exist."
+            "description" : "La entrega no existe."
           }
         },
-        "summary" : "Export transport evidence",
-        "tags" : [ "Transport evidence retention" ]
+        "summary" : "Exportar evidencias de transporte",
+        "tags" : [ "Retención de evidencias de transporte" ]
       }
     },
     "/api/v2/admin/users/{userId}/promote" : {
       "post" : {
-        "description" : "Adds ROLE_ADMIN to the user without removing existing roles.",
+        "description" : "Añade ROLE_ADMIN a la cuenta sin retirar los roles existentes. Solo puede hacerlo un administrador de plataforma.",
         "operationId" : "promote",
         "parameters" : [ {
           "in" : "path",
@@ -5066,7 +5066,7 @@
                 }
               }
             },
-            "description" : "User has ROLE_ADMIN."
+            "description" : "La cuenta tiene el rol ROLE_ADMIN."
           },
           "403" : {
             "content" : {
@@ -5076,7 +5076,7 @@
                 }
               }
             },
-            "description" : "Caller is not a platform administrator."
+            "description" : "El usuario no tiene autoridad de administrador de plataforma."
           },
           "404" : {
             "content" : {
@@ -5086,16 +5086,16 @@
                 }
               }
             },
-            "description" : "User does not exist."
+            "description" : "La cuenta no existe."
           }
         },
-        "summary" : "Promote a user to platform administrator",
-        "tags" : [ "Platform administration" ]
+        "summary" : "Otorgar rol de administrador de plataforma",
+        "tags" : [ "Administración de plataforma" ]
       }
     },
     "/api/v2/customers" : {
       "get" : {
-        "description" : "Returns the customer accounts belonging to the caller's organization.",
+        "description" : "Devuelve las cuentas asociadas a la organización activa del usuario.",
         "operationId" : "listCustomers",
         "responses" : {
           "200" : {
@@ -5109,7 +5109,7 @@
                 }
               }
             },
-            "description" : "Customer accounts returned."
+            "description" : "Cuentas de cliente devueltas."
           },
           "403" : {
             "content" : {
@@ -5122,14 +5122,14 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated or has no active organization."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
           }
         },
-        "summary" : "List customer accounts",
-        "tags" : [ "Customers" ]
+        "summary" : "Listar cuentas de cliente",
+        "tags" : [ "Clientes" ]
       },
       "post" : {
-        "description" : "Creates a customer account owned by the caller's organization.",
+        "description" : "Crea la cuenta dentro de la organización activa del usuario. La organización se deriva de la membresía autenticada.",
         "operationId" : "registerCustomer",
         "requestBody" : {
           "content" : {
@@ -5150,7 +5150,7 @@
                 }
               }
             },
-            "description" : "Customer account created."
+            "description" : "Cuenta de cliente creada."
           },
           "400" : {
             "content" : {
@@ -5160,7 +5160,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation or no organization was resolved."
+            "description" : "El cuerpo no cumple las validaciones requeridas."
           },
           "403" : {
             "content" : {
@@ -5170,7 +5170,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated or has no active organization."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
           },
           "409" : {
             "content" : {
@@ -5180,16 +5180,16 @@
                 }
               }
             },
-            "description" : "A customer with the same RUC already exists for this organization."
+            "description" : "Ya existe una cuenta con el mismo RUC en esta organización."
           }
         },
-        "summary" : "Register a customer account",
-        "tags" : [ "Customers" ]
+        "summary" : "Registrar una cuenta de cliente",
+        "tags" : [ "Clientes" ]
       }
     },
     "/api/v2/customers/{customerId}/sites" : {
       "get" : {
-        "description" : "Returns the sites registered under a customer account owned by the caller's organization.",
+        "description" : "Devuelve los sitios registrados bajo una cuenta que pertenece a la organización activa.",
         "operationId" : "listSites",
         "parameters" : [ {
           "in" : "path",
@@ -5212,7 +5212,7 @@
                 }
               }
             },
-            "description" : "Sites returned."
+            "description" : "Sitios de entrega devueltos."
           },
           "403" : {
             "content" : {
@@ -5225,7 +5225,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated or has no active organization."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
           },
           "404" : {
             "content" : {
@@ -5238,14 +5238,14 @@
                 }
               }
             },
-            "description" : "Customer account does not exist or belongs to another organization."
+            "description" : "La cuenta no existe o pertenece a otra organización."
           }
         },
-        "summary" : "List sites of a customer",
-        "tags" : [ "Customers" ]
+        "summary" : "Listar sitios de una cuenta",
+        "tags" : [ "Clientes" ]
       },
       "post" : {
-        "description" : "Creates a site under the given customer account, which must belong to the caller's organization.",
+        "description" : "Crea un sitio bajo la cuenta indicada, que debe pertenecer a la organización activa del usuario.",
         "operationId" : "registerSite",
         "parameters" : [ {
           "in" : "path",
@@ -5275,7 +5275,7 @@
                 }
               }
             },
-            "description" : "Site created."
+            "description" : "Sitio creado."
           },
           "400" : {
             "content" : {
@@ -5285,7 +5285,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation or no organization was resolved."
+            "description" : "El cuerpo no cumple las validaciones requeridas."
           },
           "403" : {
             "content" : {
@@ -5295,7 +5295,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated, has no active organization, or the customer belongs to another organization."
+            "description" : "El usuario no está autenticado, no tiene organización activa o la cuenta pertenece a otro tenant."
           },
           "404" : {
             "content" : {
@@ -5305,16 +5305,16 @@
                 }
               }
             },
-            "description" : "Customer account does not exist."
+            "description" : "No existe la cuenta de cliente indicada."
           }
         },
-        "summary" : "Register a site for a customer",
-        "tags" : [ "Customers" ]
+        "summary" : "Registrar un sitio de entrega",
+        "tags" : [ "Clientes" ]
       }
     },
     "/api/v2/deliveries" : {
       "post" : {
-        "description" : "Consumes the order's replenishment acceptance, reserves supply and fleet, and creates the assigned delivery in one transaction; idempotent per commandId.",
+        "description" : "Consume la aceptación de reposición de la orden, reserva suministro y flota, y crea la entrega en una transacción; es idempotente por commandId.",
         "operationId" : "assign",
         "requestBody" : {
           "content" : {
@@ -5335,7 +5335,7 @@
                 }
               }
             },
-            "description" : "Delivery assigned (or the existing delivery for the commandId returned)."
+            "description" : "Entrega asignada o entrega existente devuelta para el commandId."
           },
           "400" : {
             "content" : {
@@ -5345,7 +5345,7 @@
                 }
               }
             },
-            "description" : "The command is missing its commandId/orderId or the window/volume is invalid."
+            "description" : "Falta commandId u orderId, o la ventana o el volumen no son válidos."
           },
           "403" : {
             "content" : {
@@ -5355,7 +5355,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated as a provider tenant."
+            "description" : "El usuario no está autenticado como tenant distribuidor."
           },
           "404" : {
             "content" : {
@@ -5365,7 +5365,7 @@
                 }
               }
             },
-            "description" : "No replenishment request accepted by the caller's provider backs the order."
+            "description" : "La orden no está respaldada por una solicitud aceptada por el distribuidor autenticado."
           },
           "409" : {
             "content" : {
@@ -5375,16 +5375,16 @@
                 }
               }
             },
-            "description" : "The request is not accepted, its acceptance was already consumed, or the supply/fleet resource is unavailable."
+            "description" : "La solicitud no está aceptada, la aceptación ya se consumió o no hay disponibilidad de suministro o flota."
           }
         },
-        "summary" : "Assign a delivery for an accepted order",
-        "tags" : [ "Delivery assignment" ]
+        "summary" : "Asignar entrega para una orden aceptada",
+        "tags" : [ "Asignación de entregas" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}" : {
       "get" : {
-        "description" : "Returns the delivery (with both legacy status and physical state) owned by the caller's provider tenant.",
+        "description" : "Devuelve una entrega propia con su estado heredado y su estado físico vigente.",
         "operationId" : "get_4",
         "parameters" : [ {
           "in" : "path",
@@ -5404,7 +5404,7 @@
                 }
               }
             },
-            "description" : "Delivery returned."
+            "description" : "Entrega devuelta."
           },
           "404" : {
             "content" : {
@@ -5414,16 +5414,16 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           }
         },
-        "summary" : "Get a delivery",
-        "tags" : [ "Delivery lifecycle" ]
+        "summary" : "Consultar entrega",
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/arrive" : {
       "post" : {
-        "description" : "Moves a delivery owned by the caller's provider tenant to the arrived state.",
+        "description" : "Avanza a llegada una entrega en ruta del distribuidor autenticado.",
         "operationId" : "arrive",
         "parameters" : [ {
           "in" : "path",
@@ -5443,7 +5443,7 @@
                 }
               }
             },
-            "description" : "Delivery marked as arrived."
+            "description" : "Llegada de la entrega registrada."
           },
           "404" : {
             "content" : {
@@ -5453,7 +5453,7 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           },
           "409" : {
             "content" : {
@@ -5463,16 +5463,16 @@
                 }
               }
             },
-            "description" : "The delivery cannot arrive from its current physical state."
+            "description" : "El estado físico actual no permite registrar la llegada."
           }
         },
-        "summary" : "Mark a delivery as arrived",
-        "tags" : [ "Delivery lifecycle" ]
+        "summary" : "Registrar llegada de entrega",
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/assign" : {
       "post" : {
-        "description" : "Materialises the assigned state of a delivery owned by the caller's provider tenant; idempotent when already assigned.",
+        "description" : "Avanza a asignada una entrega propia del distribuidor autenticado. Repetir la operación en ese estado no genera efectos duplicados.",
         "operationId" : "assign_1",
         "parameters" : [ {
           "in" : "path",
@@ -5492,7 +5492,7 @@
                 }
               }
             },
-            "description" : "Delivery assigned (or already assigned)."
+            "description" : "Entrega asignada o ya se encontraba asignada."
           },
           "404" : {
             "content" : {
@@ -5502,7 +5502,7 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           },
           "409" : {
             "content" : {
@@ -5512,16 +5512,16 @@
                 }
               }
             },
-            "description" : "The delivery cannot be assigned from its current physical state."
+            "description" : "El estado físico actual no permite asignar la entrega."
           }
         },
-        "summary" : "Assign a delivery",
-        "tags" : [ "Delivery lifecycle" ]
+        "summary" : "Asignar entrega",
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/cancel" : {
       "post" : {
-        "description" : "Moves a delivery owned by the caller's provider tenant to the cancelled terminal state, recording a reason.",
+        "description" : "Registra la cancelación terminal de una entrega propia y guarda el motivo indicado.",
         "operationId" : "cancel_1",
         "parameters" : [ {
           "in" : "path",
@@ -5551,7 +5551,7 @@
                 }
               }
             },
-            "description" : "Delivery cancelled."
+            "description" : "Entrega cancelada."
           },
           "404" : {
             "content" : {
@@ -5561,7 +5561,7 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           },
           "409" : {
             "content" : {
@@ -5571,16 +5571,16 @@
                 }
               }
             },
-            "description" : "The delivery cannot be cancelled from its current physical state, or it was advanced concurrently."
+            "description" : "El estado actual impide cancelarla o hubo una transición concurrente."
           }
         },
-        "summary" : "Cancel a delivery",
-        "tags" : [ "Delivery lifecycle" ]
+        "summary" : "Cancelar entrega",
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/complete" : {
       "post" : {
-        "description" : "Closes a delivery owned by the caller's provider tenant, recording the delivered volume as evidence.",
+        "description" : "Cierra una entrega propia y registra el volumen entregado. La orden debe aportar el volumen solicitado para cerrar el historial.",
         "operationId" : "complete",
         "parameters" : [ {
           "in" : "path",
@@ -5610,7 +5610,7 @@
                 }
               }
             },
-            "description" : "Delivery completed."
+            "description" : "Entrega completada."
           },
           "400" : {
             "content" : {
@@ -5620,7 +5620,7 @@
                 }
               }
             },
-            "description" : "The delivered volume is not a valid evidence quantity."
+            "description" : "El volumen entregado no es válido como evidencia."
           },
           "404" : {
             "content" : {
@@ -5630,7 +5630,7 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           },
           "409" : {
             "content" : {
@@ -5640,7 +5640,7 @@
                 }
               }
             },
-            "description" : "The delivery cannot be completed from its current physical state, or it was advanced concurrently."
+            "description" : "El estado actual impide completar la entrega o hubo una transición concurrente."
           },
           "422" : {
             "content" : {
@@ -5650,16 +5650,16 @@
                 }
               }
             },
-            "description" : "The requested volume of the order could not be resolved to serve as close evidence."
+            "description" : "No se pudo resolver el volumen solicitado para cerrar la entrega."
           }
         },
-        "summary" : "Complete a delivery",
-        "tags" : [ "Delivery lifecycle" ]
+        "summary" : "Completar entrega",
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/fail" : {
       "post" : {
-        "description" : "Moves a delivery owned by the caller's provider tenant to the failed terminal state, recording a reason.",
+        "description" : "Registra un fallo terminal para la entrega propia y guarda el motivo indicado.",
         "operationId" : "fail",
         "parameters" : [ {
           "in" : "path",
@@ -5689,7 +5689,7 @@
                 }
               }
             },
-            "description" : "Delivery failed."
+            "description" : "Entrega marcada como fallida."
           },
           "404" : {
             "content" : {
@@ -5699,7 +5699,7 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           },
           "409" : {
             "content" : {
@@ -5709,16 +5709,16 @@
                 }
               }
             },
-            "description" : "The delivery cannot be failed from its current physical state, or it was advanced concurrently."
+            "description" : "El estado actual impide marcarla como fallida o hubo una transición concurrente."
           }
         },
-        "summary" : "Fail a delivery",
-        "tags" : [ "Delivery lifecycle" ]
+        "summary" : "Marcar entrega fallida",
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/geofence-policies" : {
       "post" : {
-        "description" : "Creates a new version of the delivery's geofence circle, owned by the caller's provider tenant; the previous version is kept.",
+        "description" : "Crea una nueva versión del círculo de seguridad de una entrega para el distribuidor autenticado y conserva las versiones previas.",
         "operationId" : "create_1",
         "parameters" : [ {
           "in" : "path",
@@ -5748,7 +5748,7 @@
                 }
               }
             },
-            "description" : "Policy version created."
+            "description" : "Versión de política creada."
           },
           "400" : {
             "content" : {
@@ -5758,7 +5758,7 @@
                 }
               }
             },
-            "description" : "The geometry is invalid (missing/invalid centre or non-positive radius)."
+            "description" : "Geometría inválida: falta el centro, sus coordenadas no son válidas o el radio no es positivo."
           },
           "403" : {
             "content" : {
@@ -5768,7 +5768,7 @@
                 }
               }
             },
-            "description" : "The caller has no provider identity, or does not own the delivery."
+            "description" : "El usuario no tiene identidad de distribuidor o no es propietario de la entrega."
           },
           "404" : {
             "content" : {
@@ -5778,7 +5778,7 @@
                 }
               }
             },
-            "description" : "The delivery does not exist."
+            "description" : "La entrega no existe."
           },
           "409" : {
             "content" : {
@@ -5788,16 +5788,16 @@
                 }
               }
             },
-            "description" : "A concurrent policy version already exists for this delivery."
+            "description" : "Ya existe una versión concurrente de la política para esta entrega."
           }
         },
-        "summary" : "Create a geofence-policy version for a delivery",
-        "tags" : [ "Geofence policy" ]
+        "summary" : "Crear versión de geocerca para entrega",
+        "tags" : [ "Políticas de geocerca" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/start" : {
       "post" : {
-        "description" : "Moves a delivery owned by the caller's provider tenant to the started state.",
+        "description" : "Avanza a iniciada una entrega propia que actualmente está asignada.",
         "operationId" : "start",
         "parameters" : [ {
           "in" : "path",
@@ -5817,7 +5817,7 @@
                 }
               }
             },
-            "description" : "Delivery started."
+            "description" : "Entrega iniciada."
           },
           "404" : {
             "content" : {
@@ -5827,7 +5827,7 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           },
           "409" : {
             "content" : {
@@ -5837,16 +5837,16 @@
                 }
               }
             },
-            "description" : "The delivery cannot be started from its current physical state."
+            "description" : "El estado físico actual no permite iniciar la entrega."
           }
         },
-        "summary" : "Start a delivery",
-        "tags" : [ "Delivery lifecycle" ]
+        "summary" : "Iniciar entrega",
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/timeline" : {
       "get" : {
-        "description" : "Combines state transitions, safety decisions, valve facts, and retained load milestones; deleted GPS samples are absent.",
+        "description" : "Combina cambios de estado, decisiones de seguridad, eventos de válvula y registros de carga retenidos; las muestras GPS eliminadas no se incluyen.",
         "operationId" : "get_5",
         "parameters" : [ {
           "in" : "path",
@@ -5869,7 +5869,7 @@
                 }
               }
             },
-            "description" : "Timeline returned in occurredAt/type/id order."
+            "description" : "Cronología devuelta, ordenada por instante, tipo e identificador."
           },
           "403" : {
             "content" : {
@@ -5882,7 +5882,7 @@
                 }
               }
             },
-            "description" : "Caller is outside the provider tenant and is not its assigned driver."
+            "description" : "El usuario no pertenece al distribuidor ni es el conductor asignado."
           },
           "404" : {
             "content" : {
@@ -5895,16 +5895,16 @@
                 }
               }
             },
-            "description" : "Delivery does not exist."
+            "description" : "La entrega no existe."
           }
         },
-        "summary" : "Get a delivery timeline",
-        "tags" : [ "Delivery timeline" ]
+        "summary" : "Consultar cronología de entrega",
+        "tags" : [ "Cronología de entregas" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/tracking" : {
       "get" : {
-        "description" : "Returns the latest trusted position and load state of a delivery visible to the owning provider or the assigned driver.",
+        "description" : "Devuelve la última ubicación confiable y el estado de carga para el distribuidor propietario o el conductor asignado.",
         "operationId" : "latest",
         "parameters" : [ {
           "in" : "path",
@@ -5924,7 +5924,7 @@
                 }
               }
             },
-            "description" : "Latest tracking returned."
+            "description" : "Último seguimiento devuelto."
           },
           "403" : {
             "content" : {
@@ -5934,7 +5934,7 @@
                 }
               }
             },
-            "description" : "The caller is neither the owning provider nor the assigned driver."
+            "description" : "El usuario no pertenece al distribuidor propietario ni es el conductor asignado."
           },
           "404" : {
             "content" : {
@@ -5944,16 +5944,16 @@
                 }
               }
             },
-            "description" : "The delivery does not exist or has no tracking yet."
+            "description" : "La entrega no existe o todavía no tiene seguimiento."
           }
         },
-        "summary" : "Get the latest tracking of a delivery",
-        "tags" : [ "Transport tracking" ]
+        "summary" : "Consultar último seguimiento de entrega",
+        "tags" : [ "Seguimiento de transporte" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/tracking/samples" : {
       "get" : {
-        "description" : "Returns the delivery's transport-evidence samples ordered by device timestamp, with reception instant and latestAdvanced visible.",
+        "description" : "Devuelve las evidencias de transporte ordenadas por hora del dispositivo, incluyendo la recepción y si cada muestra actualizó el dato más reciente.",
         "operationId" : "samples",
         "parameters" : [ {
           "in" : "path",
@@ -5973,7 +5973,7 @@
                 }
               }
             },
-            "description" : "Timeline returned (possibly empty)."
+            "description" : "Historial devuelto; puede estar vacío."
           },
           "403" : {
             "content" : {
@@ -5983,7 +5983,7 @@
                 }
               }
             },
-            "description" : "The caller is neither the owning provider nor the assigned driver."
+            "description" : "El usuario no pertenece al distribuidor propietario ni es el conductor asignado."
           },
           "404" : {
             "content" : {
@@ -5993,16 +5993,16 @@
                 }
               }
             },
-            "description" : "The delivery does not exist."
+            "description" : "La entrega no existe."
           }
         },
-        "summary" : "List the tracking trail of a delivery",
-        "tags" : [ "Transport tracking" ]
+        "summary" : "Listar muestras de seguimiento de entrega",
+        "tags" : [ "Seguimiento de transporte" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/transitions" : {
       "get" : {
-        "description" : "Returns the append-only journal of physical state transitions of a delivery owned by the caller's provider tenant.",
+        "description" : "Devuelve el historial inmutable de transiciones físicas de una entrega propia, con sus versiones e instantes.",
         "operationId" : "transitions",
         "parameters" : [ {
           "in" : "path",
@@ -6025,7 +6025,7 @@
                 }
               }
             },
-            "description" : "Transitions returned."
+            "description" : "Transiciones de estado devueltas."
           },
           "404" : {
             "content" : {
@@ -6038,16 +6038,16 @@
                 }
               }
             },
-            "description" : "Delivery does not exist or is not owned by the caller's provider tenant."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           }
         },
-        "summary" : "List a delivery's state transitions",
-        "tags" : [ "Delivery lifecycle" ]
+        "summary" : "Listar transiciones de una entrega",
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/transport-evidence" : {
       "post" : {
-        "description" : "Accepts a driver-app position ping or load milestone for a delivery whose assigned driver is the caller; a late sample is preserved without moving the latest value.",
+        "description" : "Acepta una ubicación o hito de carga enviado por el conductor asignado; conserva las muestras tardías sin reemplazar el último valor.",
         "operationId" : "record",
         "parameters" : [ {
           "in" : "path",
@@ -6077,7 +6077,7 @@
                 }
               }
             },
-            "description" : "Replay: this eventId was already recorded for the delivery; the original ack is returned and nothing new is stored."
+            "description" : "El eventId ya se registró para la entrega; se devuelve la confirmación original sin guardar otra muestra."
           },
           "201" : {
             "content" : {
@@ -6087,7 +6087,7 @@
                 }
               }
             },
-            "description" : "Evidence recorded (latestAdvanced=false for a late sample)."
+            "description" : "Evidencia registrada; una muestra tardía puede no actualizar el último valor."
           },
           "400" : {
             "content" : {
@@ -6097,7 +6097,7 @@
                 }
               }
             },
-            "description" : "The body is malformed (unknown type/milestone, missing coordinates, non-positive volume)."
+            "description" : "El cuerpo no es válido: tipo o hito desconocido, coordenadas ausentes o volumen no positivo."
           },
           "403" : {
             "content" : {
@@ -6107,7 +6107,7 @@
                 }
               }
             },
-            "description" : "The caller is not the driver assigned to the delivery, or the assignment crosses tenants."
+            "description" : "El usuario no es el conductor asignado o la asignación cruza tenants."
           },
           "404" : {
             "content" : {
@@ -6117,7 +6117,7 @@
                 }
               }
             },
-            "description" : "The delivery (or its assigned driver) does not exist."
+            "description" : "La entrega o el conductor asignado no existe."
           },
           "422" : {
             "content" : {
@@ -6127,16 +6127,16 @@
                 }
               }
             },
-            "description" : "The load milestone is not possible from the current state (e.g. UNLOADED before LOADED)."
+            "description" : "El hito de carga no es válido para el estado actual, por ejemplo, descargar antes de cargar."
           }
         },
-        "summary" : "Record transport evidence for a delivery",
-        "tags" : [ "Transport evidence" ]
+        "summary" : "Registrar evidencia de transporte",
+        "tags" : [ "Evidencias de transporte" ]
       }
     },
     "/api/v2/deliveries/{deliveryId}/valve-observations" : {
       "post" : {
-        "description" : "The assigned driver reports OPEN or CLOSED; invalid OPEN acknowledgements are recorded as safety incidents.",
+        "description" : "El conductor asignado informa OPEN o CLOSED; una confirmación OPEN no autorizada se registra como incidente de seguridad.",
         "operationId" : "observe",
         "parameters" : [ {
           "in" : "path",
@@ -6166,7 +6166,7 @@
                 }
               }
             },
-            "description" : "Observation recorded or ACK replayed idempotently."
+            "description" : "Observación registrada o confirmación repetida sin duplicar efectos."
           },
           "202" : {
             "content" : {
@@ -6176,7 +6176,7 @@
                 }
               }
             },
-            "description" : "Unmatched OPEN recorded as a safety incident."
+            "description" : "La confirmación OPEN no coincide con una orden y se registró como incidente de seguridad."
           },
           "400" : {
             "content" : {
@@ -6186,7 +6186,7 @@
                 }
               }
             },
-            "description" : "Invalid observation body."
+            "description" : "El cuerpo de la observación no es válido."
           },
           "403" : {
             "content" : {
@@ -6196,7 +6196,7 @@
                 }
               }
             },
-            "description" : "Caller is not the assigned driver or assignment crosses tenants."
+            "description" : "El usuario no es el conductor asignado o la asignación cruza tenants."
           },
           "404" : {
             "content" : {
@@ -6206,16 +6206,16 @@
                 }
               }
             },
-            "description" : "Delivery or assigned driver does not exist."
+            "description" : "La entrega o el conductor asignado no existe."
           }
         },
-        "summary" : "Report a valve observation",
-        "tags" : [ "Valve observations" ]
+        "summary" : "Informar observación de válvula",
+        "tags" : [ "Observaciones de válvula" ]
       }
     },
     "/api/v2/drivers" : {
       "get" : {
-        "description" : "Returns all drivers of the caller's provider tenant.",
+        "description" : "Devuelve los conductores registrados para el tenant distribuidor autenticado.",
         "operationId" : "list_2",
         "responses" : {
           "200" : {
@@ -6229,7 +6229,7 @@
                 }
               }
             },
-            "description" : "Drivers returned."
+            "description" : "Se devuelve la lista de conductores."
           },
           "403" : {
             "content" : {
@@ -6242,14 +6242,14 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
           }
         },
-        "summary" : "List drivers",
-        "tags" : [ "Fleet drivers" ]
+        "summary" : "Listar conductores",
+        "tags" : [ "Conductores de flota" ]
       },
       "post" : {
-        "description" : "Creates a driver in the caller's provider tenant; the tenant is taken from the principal.",
+        "description" : "Crea un conductor para el tenant distribuidor autenticado, identificado a partir del principal.",
         "operationId" : "register_1",
         "requestBody" : {
           "content" : {
@@ -6270,7 +6270,7 @@
                 }
               }
             },
-            "description" : "Driver created."
+            "description" : "Conductor registrado."
           },
           "400" : {
             "content" : {
@@ -6280,7 +6280,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation or the driver data is invalid."
+            "description" : "El cuerpo no supera la validación o los datos del conductor no son válidos."
           },
           "403" : {
             "content" : {
@@ -6290,16 +6290,16 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
           }
         },
-        "summary" : "Register a driver",
-        "tags" : [ "Fleet drivers" ]
+        "summary" : "Registrar conductor",
+        "tags" : [ "Conductores de flota" ]
       }
     },
     "/api/v2/drivers/eligible" : {
       "get" : {
-        "description" : "Returns the drivers of the caller's provider tenant that are currently eligible to be suggested.",
+        "description" : "Devuelve conductores activos del tenant autenticado que pueden asignarse y no están ocupados.",
         "operationId" : "listEligible_1",
         "responses" : {
           "200" : {
@@ -6313,7 +6313,7 @@
                 }
               }
             },
-            "description" : "Eligible drivers returned."
+            "description" : "Se devuelve la lista de conductores elegibles."
           },
           "403" : {
             "content" : {
@@ -6326,16 +6326,16 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
           }
         },
-        "summary" : "List eligible drivers",
-        "tags" : [ "Fleet drivers" ]
+        "summary" : "Listar conductores elegibles",
+        "tags" : [ "Conductores de flota" ]
       }
     },
     "/api/v2/drivers/{driverId}" : {
       "get" : {
-        "description" : "Returns the driver identified by the path id when it belongs to the caller's provider tenant.",
+        "description" : "Devuelve el conductor indicado si pertenece al tenant distribuidor autenticado.",
         "operationId" : "get_2",
         "parameters" : [ {
           "in" : "path",
@@ -6355,7 +6355,7 @@
                 }
               }
             },
-            "description" : "Driver returned."
+            "description" : "Conductor devuelto."
           },
           "403" : {
             "content" : {
@@ -6365,7 +6365,7 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
           },
           "404" : {
             "content" : {
@@ -6375,14 +6375,14 @@
                 }
               }
             },
-            "description" : "Driver does not exist or belongs to another provider tenant."
+            "description" : "El conductor no existe o pertenece a otro tenant distribuidor."
           }
         },
-        "summary" : "Get a driver by id",
-        "tags" : [ "Fleet drivers" ]
+        "summary" : "Consultar conductor por identificador",
+        "tags" : [ "Conductores de flota" ]
       },
       "put" : {
-        "description" : "Applies field changes to a driver owned by the caller's provider tenant.",
+        "description" : "Aplica los cambios recibidos a un conductor del tenant distribuidor autenticado.",
         "operationId" : "update_1",
         "parameters" : [ {
           "in" : "path",
@@ -6412,7 +6412,7 @@
                 }
               }
             },
-            "description" : "Driver updated."
+            "description" : "Conductor actualizado."
           },
           "400" : {
             "content" : {
@@ -6422,7 +6422,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation or the driver data is invalid."
+            "description" : "El cuerpo no supera la validación o los datos del conductor no son válidos."
           },
           "404" : {
             "content" : {
@@ -6432,16 +6432,16 @@
                 }
               }
             },
-            "description" : "Driver does not exist or is not owned by the caller."
+            "description" : "El conductor no existe o no pertenece al tenant autenticado."
           }
         },
-        "summary" : "Update a driver",
-        "tags" : [ "Fleet drivers" ]
+        "summary" : "Actualizar conductor",
+        "tags" : [ "Conductores de flota" ]
       }
     },
     "/api/v2/drivers/{driverId}/activate" : {
       "post" : {
-        "description" : "Re-enables a disabled driver owned by the caller's provider tenant.",
+        "description" : "Reactiva un conductor desactivado que pertenece al tenant distribuidor autenticado.",
         "operationId" : "activate_1",
         "parameters" : [ {
           "in" : "path",
@@ -6461,7 +6461,7 @@
                 }
               }
             },
-            "description" : "Driver enabled."
+            "description" : "Conductor reactivado."
           },
           "404" : {
             "content" : {
@@ -6471,16 +6471,16 @@
                 }
               }
             },
-            "description" : "Driver does not exist or is not owned by the caller."
+            "description" : "El conductor no existe o no pertenece al tenant autenticado."
           }
         },
-        "summary" : "Enable a driver",
-        "tags" : [ "Fleet drivers" ]
+        "summary" : "Reactivar conductor",
+        "tags" : [ "Conductores de flota" ]
       }
     },
     "/api/v2/drivers/{driverId}/deactivate" : {
       "post" : {
-        "description" : "Soft-disables a driver owned by the caller's provider tenant, preserving the record.",
+        "description" : "Desactiva el conductor del tenant autenticado sin eliminar su registro.",
         "operationId" : "deactivate_1",
         "parameters" : [ {
           "in" : "path",
@@ -6500,7 +6500,7 @@
                 }
               }
             },
-            "description" : "Driver disabled."
+            "description" : "Conductor desactivado."
           },
           "404" : {
             "content" : {
@@ -6510,16 +6510,16 @@
                 }
               }
             },
-            "description" : "Driver does not exist or is not owned by the caller."
+            "description" : "El conductor no existe o no pertenece al tenant autenticado."
           }
         },
-        "summary" : "Disable a driver",
-        "tags" : [ "Fleet drivers" ]
+        "summary" : "Desactivar conductor",
+        "tags" : [ "Conductores de flota" ]
       }
     },
     "/api/v2/drivers/{driverId}/eligibility" : {
       "get" : {
-        "description" : "Returns the eligibility outcome and reason for a driver owned by the caller's provider tenant.",
+        "description" : "Devuelve el resultado y motivo de elegibilidad para un conductor del tenant autenticado.",
         "operationId" : "eligibility_1",
         "parameters" : [ {
           "in" : "path",
@@ -6539,7 +6539,7 @@
                 }
               }
             },
-            "description" : "Eligibility assessment returned."
+            "description" : "Evaluación de elegibilidad devuelta."
           },
           "403" : {
             "content" : {
@@ -6549,7 +6549,7 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
           },
           "404" : {
             "content" : {
@@ -6559,16 +6559,16 @@
                 }
               }
             },
-            "description" : "Driver does not exist or belongs to another provider tenant."
+            "description" : "El conductor no existe o pertenece a otro tenant distribuidor."
           }
         },
-        "summary" : "Assess driver eligibility",
-        "tags" : [ "Fleet drivers" ]
+        "summary" : "Evaluar elegibilidad del conductor",
+        "tags" : [ "Conductores de flota" ]
       }
     },
     "/api/v2/invitations/{invitationId}" : {
       "delete" : {
-        "description" : "Revokes a pending invitation owned by the caller's organization.",
+        "description" : "Revoca una invitación pendiente de una organización a la que pertenece el usuario autenticado.",
         "operationId" : "revoke",
         "parameters" : [ {
           "in" : "path",
@@ -6588,7 +6588,7 @@
                 }
               }
             },
-            "description" : "Invitation revoked."
+            "description" : "Invitación revocada."
           },
           "403" : {
             "content" : {
@@ -6598,7 +6598,7 @@
                 }
               }
             },
-            "description" : "Caller does not belong to the invitation's organization."
+            "description" : "El usuario no pertenece a la organización de la invitación."
           },
           "404" : {
             "content" : {
@@ -6608,7 +6608,7 @@
                 }
               }
             },
-            "description" : "Invitation does not exist."
+            "description" : "La invitación no existe."
           },
           "409" : {
             "content" : {
@@ -6618,16 +6618,16 @@
                 }
               }
             },
-            "description" : "The invitation is not pending and cannot be revoked."
+            "description" : "La invitación no está pendiente y no puede revocarse."
           }
         },
-        "summary" : "Revoke an invitation",
-        "tags" : [ "Invitations" ]
+        "summary" : "Revocar invitación",
+        "tags" : [ "Invitaciones" ]
       }
     },
     "/api/v2/invitations/{token}/accept" : {
       "post" : {
-        "description" : "Accepts the invitation identified by its token and grants the invited membership to the caller.",
+        "description" : "Acepta la invitación identificada por el token y concede la membresía al usuario autenticado.",
         "operationId" : "accept_1",
         "parameters" : [ {
           "in" : "path",
@@ -6646,7 +6646,7 @@
                 }
               }
             },
-            "description" : "Invitation accepted and membership granted."
+            "description" : "Invitación aceptada y membresía concedida."
           },
           "403" : {
             "content" : {
@@ -6656,7 +6656,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated."
+            "description" : "El usuario no está autenticado."
           },
           "404" : {
             "content" : {
@@ -6666,7 +6666,7 @@
                 }
               }
             },
-            "description" : "No invitation matches the given token."
+            "description" : "No existe una invitación asociada al token."
           },
           "409" : {
             "content" : {
@@ -6676,7 +6676,7 @@
                 }
               }
             },
-            "description" : "A membership conflict occurred while granting access."
+            "description" : "Se produjo un conflicto al conceder la membresía."
           },
           "422" : {
             "content" : {
@@ -6686,16 +6686,16 @@
                 }
               }
             },
-            "description" : "The invitation is expired, already accepted or revoked."
+            "description" : "La invitación venció, ya fue aceptada o fue revocada."
           }
         },
-        "summary" : "Accept an invitation",
-        "tags" : [ "Invitations" ]
+        "summary" : "Aceptar invitación",
+        "tags" : [ "Invitaciones" ]
       }
     },
     "/api/v2/me/notifications" : {
       "get" : {
-        "description" : "Returns the in-app notifications of the authenticated user.",
+        "description" : "Devuelve las notificaciones de la bandeja del usuario autenticado.",
         "operationId" : "list_3",
         "responses" : {
           "200" : {
@@ -6709,7 +6709,7 @@
                 }
               }
             },
-            "description" : "Notifications returned."
+            "description" : "Se devuelve la lista de notificaciones."
           },
           "403" : {
             "content" : {
@@ -6722,16 +6722,16 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated."
+            "description" : "El usuario no está autenticado."
           }
         },
-        "summary" : "List my notifications",
-        "tags" : [ "My notifications" ]
+        "summary" : "Listar mis notificaciones",
+        "tags" : [ "Mis notificaciones" ]
       }
     },
     "/api/v2/me/notifications/unread" : {
       "get" : {
-        "description" : "Returns the unread in-app notifications of the authenticated user.",
+        "description" : "Devuelve las notificaciones pendientes de lectura en la bandeja del usuario autenticado.",
         "operationId" : "listUnread",
         "responses" : {
           "200" : {
@@ -6745,7 +6745,7 @@
                 }
               }
             },
-            "description" : "Unread notifications returned."
+            "description" : "Se devuelve la lista de notificaciones no leídas."
           },
           "403" : {
             "content" : {
@@ -6758,16 +6758,16 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated."
+            "description" : "El usuario no está autenticado."
           }
         },
-        "summary" : "List my unread notifications",
-        "tags" : [ "My notifications" ]
+        "summary" : "Listar mis notificaciones no leídas",
+        "tags" : [ "Mis notificaciones" ]
       }
     },
     "/api/v2/me/notifications/{notificationId}/read" : {
       "post" : {
-        "description" : "Marks the notification as read when it belongs to the authenticated user; idempotent.",
+        "description" : "Marca la notificación cuando pertenece al usuario autenticado; repetir la operación no duplica efectos.",
         "operationId" : "markAsRead",
         "parameters" : [ {
           "in" : "path",
@@ -6787,7 +6787,7 @@
                 }
               }
             },
-            "description" : "Notification marked as read."
+            "description" : "Notificación marcada como leída."
           },
           "403" : {
             "content" : {
@@ -6797,7 +6797,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated."
+            "description" : "El usuario no está autenticado."
           },
           "404" : {
             "content" : {
@@ -6807,16 +6807,16 @@
                 }
               }
             },
-            "description" : "Notification does not exist or does not belong to the caller."
+            "description" : "La notificación no existe o no pertenece al usuario autenticado."
           }
         },
-        "summary" : "Mark one of my notifications as read",
-        "tags" : [ "My notifications" ]
+        "summary" : "Marcar una notificación propia como leída",
+        "tags" : [ "Mis notificaciones" ]
       }
     },
     "/api/v2/me/organizations" : {
       "get" : {
-        "description" : "Returns the organizations the authenticated caller is an active member of, with the caller's role in each.",
+        "description" : "Devuelve las organizaciones en las que el usuario autenticado tiene membresía activa, junto con su rol.",
         "operationId" : "getMyOrganizations",
         "responses" : {
           "200" : {
@@ -6830,7 +6830,7 @@
                 }
               }
             },
-            "description" : "Memberships returned."
+            "description" : "Se devuelve la lista de membresías activas."
           },
           "403" : {
             "content" : {
@@ -6843,16 +6843,16 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated."
+            "description" : "El usuario no está autenticado."
           }
         },
-        "summary" : "List my organizations",
-        "tags" : [ "Organizations" ]
+        "summary" : "Listar mis organizaciones",
+        "tags" : [ "Mis organizaciones" ]
       }
     },
     "/api/v2/onboarding" : {
       "post" : {
-        "description" : "Creates an organization owned by the authenticated caller and grants the caller the OWNER membership.",
+        "description" : "Crea una organización para el usuario autenticado y le asigna la membresía OWNER.",
         "operationId" : "onboard",
         "requestBody" : {
           "content" : {
@@ -6873,7 +6873,7 @@
                 }
               }
             },
-            "description" : "Organization created and ownership granted."
+            "description" : "Organización creada y propiedad asignada."
           },
           "400" : {
             "content" : {
@@ -6883,7 +6883,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation, the type is unknown, or no owner could be resolved."
+            "description" : "El cuerpo no supera la validación, el tipo no está admitido o no se pudo resolver al propietario."
           },
           "403" : {
             "content" : {
@@ -6893,7 +6893,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated."
+            "description" : "El usuario no está autenticado."
           },
           "409" : {
             "content" : {
@@ -6903,16 +6903,16 @@
                 }
               }
             },
-            "description" : "An organization with the same RUC already exists, or ownership could not be granted."
+            "description" : "Ya existe una organización con el mismo RUC o no se pudo asignar la propiedad."
           }
         },
-        "summary" : "Onboard an organization",
-        "tags" : [ "Onboarding" ]
+        "summary" : "Registrar organización",
+        "tags" : [ "Registro de organizaciones" ]
       }
     },
     "/api/v2/organizations/{organizationId}/invitations" : {
       "post" : {
-        "description" : "Creates a pending membership invitation for the given email and role in the target organization.",
+        "description" : "Crea una invitación pendiente para el correo y rol indicados en la organización de la ruta. Requiere una membresía en esa organización.",
         "operationId" : "invite",
         "parameters" : [ {
           "in" : "path",
@@ -6942,7 +6942,7 @@
                 }
               }
             },
-            "description" : "Invitation created."
+            "description" : "Invitación creada."
           },
           "400" : {
             "content" : {
@@ -6952,7 +6952,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation or the role is not a known membership role."
+            "description" : "El cuerpo no supera la validación o el rol no está admitido."
           },
           "403" : {
             "content" : {
@@ -6962,7 +6962,7 @@
                 }
               }
             },
-            "description" : "Caller does not belong to the target organization."
+            "description" : "El usuario no pertenece a la organización indicada."
           },
           "404" : {
             "content" : {
@@ -6972,7 +6972,7 @@
                 }
               }
             },
-            "description" : "Organization does not exist."
+            "description" : "La organización no existe."
           },
           "409" : {
             "content" : {
@@ -6982,16 +6982,16 @@
                 }
               }
             },
-            "description" : "A pending invitation already exists for this email."
+            "description" : "Ya existe una invitación pendiente para este correo."
           }
         },
-        "summary" : "Invite a member to an organization",
-        "tags" : [ "Invitations" ]
+        "summary" : "Invitar miembro a una organización",
+        "tags" : [ "Invitaciones" ]
       }
     },
     "/api/v2/products" : {
       "get" : {
-        "description" : "Returns the fuel products of the caller's provider tenant, optionally including inactive ones.",
+        "description" : "Devuelve el catálogo del distribuidor autenticado. `activeOnly` permite omitir productos inactivos; requiere identidad de distribuidor.",
         "operationId" : "listProducts",
         "parameters" : [ {
           "in" : "query",
@@ -7014,7 +7014,7 @@
                 }
               }
             },
-            "description" : "Products returned."
+            "description" : "Productos devueltos, posiblemente una lista vacía."
           },
           "403" : {
             "content" : {
@@ -7027,16 +7027,16 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario no tiene una identidad de distribuidor logístico."
           }
         },
-        "summary" : "List fuel products",
-        "tags" : [ "Supply" ]
+        "summary" : "Listar productos de combustible",
+        "tags" : [ "Oferta de combustible" ]
       }
     },
     "/api/v2/products/{fuelProductId}" : {
       "get" : {
-        "description" : "Returns the fuel product identified by the path id when it belongs to the caller's provider tenant.",
+        "description" : "Devuelve el producto indicado si pertenece al distribuidor autenticado.",
         "operationId" : "getProduct",
         "parameters" : [ {
           "in" : "path",
@@ -7056,7 +7056,7 @@
                 }
               }
             },
-            "description" : "Product returned."
+            "description" : "Producto de combustible devuelto."
           },
           "403" : {
             "content" : {
@@ -7066,7 +7066,7 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario no tiene una identidad de distribuidor logístico."
           },
           "404" : {
             "content" : {
@@ -7076,16 +7076,16 @@
                 }
               }
             },
-            "description" : "Product does not exist or belongs to another provider tenant."
+            "description" : "El producto no existe o pertenece a otro distribuidor."
           }
         },
-        "summary" : "Get a fuel product by id",
-        "tags" : [ "Supply" ]
+        "summary" : "Consultar producto de combustible",
+        "tags" : [ "Oferta de combustible" ]
       }
     },
     "/api/v2/replenishment-requests" : {
       "get" : {
-        "description" : "Returns the replenishment requests belonging to the caller's organization.",
+        "description" : "Devuelve las solicitudes que pertenecen a la organización activa del usuario.",
         "operationId" : "list_1",
         "responses" : {
           "200" : {
@@ -7099,7 +7099,7 @@
                 }
               }
             },
-            "description" : "Replenishment requests returned."
+            "description" : "Solicitudes de abastecimiento devueltas."
           },
           "403" : {
             "content" : {
@@ -7112,14 +7112,14 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated or has no active organization."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
           }
         },
-        "summary" : "List replenishment requests",
-        "tags" : [ "Replenishment" ]
+        "summary" : "Listar solicitudes de abastecimiento",
+        "tags" : [ "Solicitudes de abastecimiento" ]
       },
       "post" : {
-        "description" : "Creates a replenishment request owned by the caller's organization; creation is idempotent per episodeKey.",
+        "description" : "Registra una solicitud para la organización activa. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.",
         "operationId" : "create",
         "requestBody" : {
           "content" : {
@@ -7140,7 +7140,7 @@
                 }
               }
             },
-            "description" : "Replenishment request created (or the existing episode request returned)."
+            "description" : "Solicitud creada o solicitud existente del episodio devuelta."
           },
           "400" : {
             "content" : {
@@ -7150,7 +7150,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation, no organization was resolved, or a field value (e.g. source) is invalid."
+            "description" : "El cuerpo es inválido, no se resolvió una organización o el valor de un campo no está permitido."
           },
           "403" : {
             "content" : {
@@ -7160,7 +7160,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated or has no active organization."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
           },
           "404" : {
             "content" : {
@@ -7170,16 +7170,16 @@
                 }
               }
             },
-            "description" : "The referenced fuel product is not available for the given provider."
+            "description" : "El producto no está disponible para el distribuidor indicado."
           }
         },
-        "summary" : "Create a replenishment request",
-        "tags" : [ "Replenishment" ]
+        "summary" : "Crear solicitud de abastecimiento",
+        "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
     "/api/v2/replenishment-requests/{requestId}" : {
       "get" : {
-        "description" : "Returns the replenishment request identified by the path id when it belongs to the caller's organization.",
+        "description" : "Devuelve la solicitud indicada solo si pertenece a la organización activa del usuario.",
         "operationId" : "get_3",
         "parameters" : [ {
           "in" : "path",
@@ -7199,7 +7199,7 @@
                 }
               }
             },
-            "description" : "Replenishment request returned."
+            "description" : "Solicitud de abastecimiento devuelta."
           },
           "403" : {
             "content" : {
@@ -7209,7 +7209,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated or has no active organization."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
           },
           "404" : {
             "content" : {
@@ -7219,16 +7219,16 @@
                 }
               }
             },
-            "description" : "Replenishment request does not exist or belongs to another organization."
+            "description" : "La solicitud no existe o pertenece a otra organización."
           }
         },
-        "summary" : "Get a replenishment request by id",
-        "tags" : [ "Replenishment" ]
+        "summary" : "Consultar solicitud por identificador",
+        "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
     "/api/v2/replenishment-requests/{requestId}/accept" : {
       "post" : {
-        "description" : "Accepts a pending replenishment request on behalf of the addressed provider tenant.",
+        "description" : "Registra la aceptación para el distribuidor destinatario mientras la solicitud siga pendiente.",
         "operationId" : "accept",
         "parameters" : [ {
           "in" : "path",
@@ -7248,7 +7248,7 @@
                 }
               }
             },
-            "description" : "Replenishment request accepted."
+            "description" : "Solicitud de abastecimiento aceptada."
           },
           "400" : {
             "content" : {
@@ -7258,7 +7258,7 @@
                 }
               }
             },
-            "description" : "The request could not be accepted because its state or arguments are invalid."
+            "description" : "El estado o los argumentos no permiten aceptar la solicitud."
           },
           "403" : {
             "content" : {
@@ -7268,7 +7268,7 @@
                 }
               }
             },
-            "description" : "Caller is not the addressed provider tenant, or the request does not exist."
+            "description" : "El usuario no representa al distribuidor destinatario."
           },
           "404" : {
             "content" : {
@@ -7278,7 +7278,7 @@
                 }
               }
             },
-            "description" : "Replenishment request does not exist."
+            "description" : "No existe la solicitud indicada."
           },
           "409" : {
             "content" : {
@@ -7288,16 +7288,16 @@
                 }
               }
             },
-            "description" : "The request is not pending or was decided concurrently."
+            "description" : "La solicitud ya no está pendiente o se decidió en paralelo."
           }
         },
-        "summary" : "Accept a replenishment request",
-        "tags" : [ "Replenishment" ]
+        "summary" : "Aceptar solicitud de abastecimiento",
+        "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
     "/api/v2/replenishment-requests/{requestId}/cancel" : {
       "post" : {
-        "description" : "Cancels a pending replenishment request on behalf of the owning organization.",
+        "description" : "Registra la cancelación por la organización propietaria; la solicitud debe permanecer pendiente.",
         "operationId" : "cancel",
         "parameters" : [ {
           "in" : "path",
@@ -7317,7 +7317,7 @@
                 }
               }
             },
-            "description" : "Replenishment request cancelled."
+            "description" : "Solicitud de abastecimiento cancelada."
           },
           "403" : {
             "content" : {
@@ -7327,7 +7327,7 @@
                 }
               }
             },
-            "description" : "Caller has no active organization, does not own the request, or the request does not exist."
+            "description" : "El usuario no tiene organización activa o no es propietario de la solicitud."
           },
           "404" : {
             "content" : {
@@ -7337,7 +7337,7 @@
                 }
               }
             },
-            "description" : "Replenishment request does not exist."
+            "description" : "No existe la solicitud indicada."
           },
           "409" : {
             "content" : {
@@ -7347,16 +7347,16 @@
                 }
               }
             },
-            "description" : "The request is not pending or was decided concurrently."
+            "description" : "La solicitud ya no está pendiente o se decidió en paralelo."
           }
         },
-        "summary" : "Cancel a replenishment request",
-        "tags" : [ "Replenishment" ]
+        "summary" : "Cancelar solicitud de abastecimiento",
+        "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
     "/api/v2/replenishment-requests/{requestId}/reject" : {
       "post" : {
-        "description" : "Rejects a pending replenishment request on behalf of the addressed provider tenant, recording a reason.",
+        "description" : "Registra el rechazo y su motivo para el distribuidor destinatario, siempre que la solicitud siga pendiente.",
         "operationId" : "reject",
         "parameters" : [ {
           "in" : "path",
@@ -7386,7 +7386,7 @@
                 }
               }
             },
-            "description" : "Replenishment request rejected."
+            "description" : "Solicitud de abastecimiento rechazada."
           },
           "400" : {
             "content" : {
@@ -7396,7 +7396,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation or the request could not be rejected."
+            "description" : "El cuerpo es inválido o no se pudo rechazar la solicitud."
           },
           "403" : {
             "content" : {
@@ -7406,7 +7406,7 @@
                 }
               }
             },
-            "description" : "Caller is not the addressed provider tenant, or the request does not exist."
+            "description" : "El usuario no representa al distribuidor destinatario."
           },
           "404" : {
             "content" : {
@@ -7416,7 +7416,7 @@
                 }
               }
             },
-            "description" : "Replenishment request does not exist."
+            "description" : "No existe la solicitud indicada."
           },
           "409" : {
             "content" : {
@@ -7426,16 +7426,16 @@
                 }
               }
             },
-            "description" : "The request is not pending or was decided concurrently."
+            "description" : "La solicitud ya no está pendiente o se decidió en paralelo."
           }
         },
-        "summary" : "Reject a replenishment request",
-        "tags" : [ "Replenishment" ]
+        "summary" : "Rechazar solicitud de abastecimiento",
+        "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
     "/api/v2/tankers" : {
       "get" : {
-        "description" : "Returns all tankers of the caller's provider tenant.",
+        "description" : "Devuelve las cisternas registradas para el tenant distribuidor autenticado.",
         "operationId" : "list",
         "responses" : {
           "200" : {
@@ -7449,7 +7449,7 @@
                 }
               }
             },
-            "description" : "Tankers returned."
+            "description" : "Se devuelve la lista de cisternas."
           },
           "403" : {
             "content" : {
@@ -7462,14 +7462,14 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
           }
         },
-        "summary" : "List tankers",
-        "tags" : [ "Fleet tankers" ]
+        "summary" : "Listar cisternas",
+        "tags" : [ "Cisternas de flota" ]
       },
       "post" : {
-        "description" : "Creates a tanker in the caller's provider tenant; the tenant is taken from the principal.",
+        "description" : "Crea una cisterna para el tenant distribuidor autenticado, identificado a partir del principal.",
         "operationId" : "register",
         "requestBody" : {
           "content" : {
@@ -7490,7 +7490,7 @@
                 }
               }
             },
-            "description" : "Tanker created."
+            "description" : "Cisterna registrada."
           },
           "400" : {
             "content" : {
@@ -7500,7 +7500,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation or the tanker data is invalid."
+            "description" : "El cuerpo no supera la validación o los datos de la cisterna no son válidos."
           },
           "403" : {
             "content" : {
@@ -7510,16 +7510,16 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
           }
         },
-        "summary" : "Register a tanker",
-        "tags" : [ "Fleet tankers" ]
+        "summary" : "Registrar cisterna",
+        "tags" : [ "Cisternas de flota" ]
       }
     },
     "/api/v2/tankers/eligible" : {
       "get" : {
-        "description" : "Returns the tankers of the caller's provider tenant that are currently eligible to be suggested.",
+        "description" : "Devuelve cisternas activas del tenant autenticado que pueden asignarse y no están ocupadas.",
         "operationId" : "listEligible",
         "responses" : {
           "200" : {
@@ -7533,7 +7533,7 @@
                 }
               }
             },
-            "description" : "Eligible tankers returned."
+            "description" : "Se devuelve la lista de cisternas elegibles."
           },
           "403" : {
             "content" : {
@@ -7546,16 +7546,16 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
           }
         },
-        "summary" : "List eligible tankers",
-        "tags" : [ "Fleet tankers" ]
+        "summary" : "Listar cisternas elegibles",
+        "tags" : [ "Cisternas de flota" ]
       }
     },
     "/api/v2/tankers/{tankerId}" : {
       "get" : {
-        "description" : "Returns the tanker identified by the path id when it belongs to the caller's provider tenant.",
+        "description" : "Devuelve la cisterna indicada si pertenece al tenant distribuidor autenticado.",
         "operationId" : "get_1",
         "parameters" : [ {
           "in" : "path",
@@ -7575,7 +7575,7 @@
                 }
               }
             },
-            "description" : "Tanker returned."
+            "description" : "Cisterna devuelta."
           },
           "403" : {
             "content" : {
@@ -7585,7 +7585,7 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
           },
           "404" : {
             "content" : {
@@ -7595,14 +7595,14 @@
                 }
               }
             },
-            "description" : "Tanker does not exist or belongs to another provider tenant."
+            "description" : "La cisterna no existe o pertenece a otro tenant distribuidor."
           }
         },
-        "summary" : "Get a tanker by id",
-        "tags" : [ "Fleet tankers" ]
+        "summary" : "Consultar cisterna por identificador",
+        "tags" : [ "Cisternas de flota" ]
       },
       "put" : {
-        "description" : "Applies field changes to a tanker owned by the caller's provider tenant.",
+        "description" : "Aplica los cambios recibidos a una cisterna del tenant distribuidor autenticado.",
         "operationId" : "update",
         "parameters" : [ {
           "in" : "path",
@@ -7632,7 +7632,7 @@
                 }
               }
             },
-            "description" : "Tanker updated."
+            "description" : "Cisterna actualizada."
           },
           "400" : {
             "content" : {
@@ -7642,7 +7642,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation or the tanker data is invalid."
+            "description" : "El cuerpo no supera la validación o los datos de la cisterna no son válidos."
           },
           "404" : {
             "content" : {
@@ -7652,16 +7652,16 @@
                 }
               }
             },
-            "description" : "Tanker does not exist or is not owned by the caller."
+            "description" : "La cisterna no existe o no pertenece al tenant autenticado."
           }
         },
-        "summary" : "Update a tanker",
-        "tags" : [ "Fleet tankers" ]
+        "summary" : "Actualizar cisterna",
+        "tags" : [ "Cisternas de flota" ]
       }
     },
     "/api/v2/tankers/{tankerId}/activate" : {
       "post" : {
-        "description" : "Re-enables a disabled tanker owned by the caller's provider tenant.",
+        "description" : "Reactiva una cisterna desactivada que pertenece al tenant distribuidor autenticado.",
         "operationId" : "activate",
         "parameters" : [ {
           "in" : "path",
@@ -7681,7 +7681,7 @@
                 }
               }
             },
-            "description" : "Tanker enabled."
+            "description" : "Cisterna reactivada."
           },
           "404" : {
             "content" : {
@@ -7691,16 +7691,16 @@
                 }
               }
             },
-            "description" : "Tanker does not exist or is not owned by the caller."
+            "description" : "La cisterna no existe o no pertenece al tenant autenticado."
           }
         },
-        "summary" : "Enable a tanker",
-        "tags" : [ "Fleet tankers" ]
+        "summary" : "Reactivar cisterna",
+        "tags" : [ "Cisternas de flota" ]
       }
     },
     "/api/v2/tankers/{tankerId}/deactivate" : {
       "post" : {
-        "description" : "Soft-disables a tanker owned by the caller's provider tenant, preserving the record.",
+        "description" : "Desactiva una cisterna del tenant autenticado sin eliminar su registro.",
         "operationId" : "deactivate",
         "parameters" : [ {
           "in" : "path",
@@ -7720,7 +7720,7 @@
                 }
               }
             },
-            "description" : "Tanker disabled."
+            "description" : "Cisterna desactivada."
           },
           "404" : {
             "content" : {
@@ -7730,16 +7730,16 @@
                 }
               }
             },
-            "description" : "Tanker does not exist or is not owned by the caller."
+            "description" : "La cisterna no existe o no pertenece al tenant autenticado."
           }
         },
-        "summary" : "Disable a tanker",
-        "tags" : [ "Fleet tankers" ]
+        "summary" : "Desactivar cisterna",
+        "tags" : [ "Cisternas de flota" ]
       }
     },
     "/api/v2/tankers/{tankerId}/eligibility" : {
       "get" : {
-        "description" : "Returns the eligibility outcome and reason for a tanker owned by the caller's provider tenant.",
+        "description" : "Devuelve el resultado y motivo de elegibilidad para una cisterna del tenant autenticado.",
         "operationId" : "eligibility",
         "parameters" : [ {
           "in" : "path",
@@ -7759,7 +7759,7 @@
                 }
               }
             },
-            "description" : "Eligibility assessment returned."
+            "description" : "Evaluación de elegibilidad devuelta."
           },
           "403" : {
             "content" : {
@@ -7769,7 +7769,7 @@
                 }
               }
             },
-            "description" : "Caller has no provider identity."
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
           },
           "404" : {
             "content" : {
@@ -7779,16 +7779,16 @@
                 }
               }
             },
-            "description" : "Tanker does not exist or belongs to another provider tenant."
+            "description" : "La cisterna no existe o pertenece a otro tenant distribuidor."
           }
         },
-        "summary" : "Assess tanker eligibility",
-        "tags" : [ "Fleet tankers" ]
+        "summary" : "Evaluar elegibilidad de cisterna",
+        "tags" : [ "Cisternas de flota" ]
       }
     },
     "/api/v2/tanks" : {
       "get" : {
-        "description" : "Returns the tanks belonging to the caller's organization.",
+        "description" : "Devuelve las cisternas asociadas a la organización activa del usuario.",
         "operationId" : "listTanks",
         "responses" : {
           "200" : {
@@ -7802,7 +7802,7 @@
                 }
               }
             },
-            "description" : "Tanks returned."
+            "description" : "Cisternas devueltas."
           },
           "403" : {
             "content" : {
@@ -7815,14 +7815,14 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated or has no active organization."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
           }
         },
-        "summary" : "List tanks",
-        "tags" : [ "Tanks" ]
+        "summary" : "Listar cisternas",
+        "tags" : [ "Cisternas" ]
       },
       "post" : {
-        "description" : "Creates a tank under a customer of the caller's organization, validating customer, site and capacity invariants.",
+        "description" : "Crea una cisterna para una cuenta y un sitio de la organización activa, y valida capacidad, unidad y nivel inicial.",
         "operationId" : "registerTank",
         "requestBody" : {
           "content" : {
@@ -7843,7 +7843,7 @@
                 }
               }
             },
-            "description" : "Tank created."
+            "description" : "Cisterna creada."
           },
           "400" : {
             "content" : {
@@ -7853,7 +7853,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation, no organization was resolved, or the customer/site/capacity invariants are violated."
+            "description" : "El cuerpo es inválido o la cuenta, el sitio o la capacidad incumplen las reglas del dominio."
           },
           "403" : {
             "content" : {
@@ -7863,7 +7863,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated or has no active organization."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
           },
           "409" : {
             "content" : {
@@ -7873,16 +7873,16 @@
                 }
               }
             },
-            "description" : "The referenced legacy equipment is already mapped to a tank."
+            "description" : "El equipo heredado indicado ya está asociado a una cisterna."
           }
         },
-        "summary" : "Register a tank",
-        "tags" : [ "Tanks" ]
+        "summary" : "Registrar cisterna",
+        "tags" : [ "Cisternas" ]
       }
     },
     "/api/v2/tanks/{tankId}" : {
       "get" : {
-        "description" : "Returns the tank identified by the path id when it belongs to the caller's organization.",
+        "description" : "Devuelve la cisterna indicada únicamente cuando pertenece a la organización activa del usuario.",
         "operationId" : "getTank",
         "parameters" : [ {
           "in" : "path",
@@ -7902,7 +7902,7 @@
                 }
               }
             },
-            "description" : "Tank returned."
+            "description" : "Cisterna devuelta."
           },
           "403" : {
             "content" : {
@@ -7912,7 +7912,7 @@
                 }
               }
             },
-            "description" : "Caller is not authenticated or has no active organization."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
           },
           "404" : {
             "content" : {
@@ -7922,16 +7922,16 @@
                 }
               }
             },
-            "description" : "Tank does not exist or belongs to another organization."
+            "description" : "La cisterna no existe o pertenece a otra organización."
           }
         },
-        "summary" : "Get a tank by id",
-        "tags" : [ "Tanks" ]
+        "summary" : "Consultar cisterna por identificador",
+        "tags" : [ "Cisternas" ]
       }
     },
     "/api/v2/tanks/{tankId}/refill-episodes" : {
       "get" : {
-        "description" : "Returns the refill episodes recorded for a tank owned by the caller's organization.",
+        "description" : "Devuelve los episodios registrados para una cisterna propia de la organización activa.",
         "operationId" : "episodes",
         "parameters" : [ {
           "in" : "path",
@@ -7954,7 +7954,7 @@
                 }
               }
             },
-            "description" : "Refill episodes returned."
+            "description" : "Episodios de reposición devueltos."
           },
           "403" : {
             "content" : {
@@ -7967,16 +7967,16 @@
                 }
               }
             },
-            "description" : "Caller has no active organization or does not own the tank."
+            "description" : "El usuario no tiene organización activa o no es propietario de la cisterna."
           }
         },
-        "summary" : "List refill episodes of a tank",
-        "tags" : [ "Refill policy" ]
+        "summary" : "Listar episodios de reposición",
+        "tags" : [ "Políticas de reposición" ]
       }
     },
     "/api/v2/tanks/{tankId}/refill-policy" : {
       "get" : {
-        "description" : "Returns the current refill policy of a tank owned by the caller's organization.",
+        "description" : "Devuelve la política vigente de una cisterna que pertenece a la organización activa.",
         "operationId" : "get",
         "parameters" : [ {
           "in" : "path",
@@ -7996,7 +7996,7 @@
                 }
               }
             },
-            "description" : "Refill policy returned."
+            "description" : "Política de reposición devuelta."
           },
           "403" : {
             "content" : {
@@ -8006,7 +8006,7 @@
                 }
               }
             },
-            "description" : "Caller has no active organization or does not own the tank."
+            "description" : "El usuario no tiene organización activa o no es propietario de la cisterna."
           },
           "404" : {
             "content" : {
@@ -8016,14 +8016,14 @@
                 }
               }
             },
-            "description" : "The tank has no refill policy configured."
+            "description" : "La cisterna todavía no tiene una política configurada."
           }
         },
-        "summary" : "Get a tank refill policy",
-        "tags" : [ "Refill policy" ]
+        "summary" : "Consultar política de reposición",
+        "tags" : [ "Políticas de reposición" ]
       },
       "put" : {
-        "description" : "Creates or updates the refill policy of a tank owned by the caller's organization, with optional overrides over the global defaults.",
+        "description" : "Crea o actualiza la política de la cisterna propia. Los campos opcionales sobrescriben los valores globales aprobados.",
         "operationId" : "configure",
         "parameters" : [ {
           "in" : "path",
@@ -8053,7 +8053,7 @@
                 }
               }
             },
-            "description" : "Refill policy created or updated."
+            "description" : "Política de reposición creada o actualizada."
           },
           "400" : {
             "content" : {
@@ -8063,7 +8063,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation or a policy value is invalid."
+            "description" : "El cuerpo no cumple las validaciones o un valor de política no es válido."
           },
           "403" : {
             "content" : {
@@ -8073,16 +8073,16 @@
                 }
               }
             },
-            "description" : "Caller has no active organization, does not own the tank, or the policy belongs to another organization."
+            "description" : "El usuario no tiene organización activa o la cisterna pertenece a otro tenant."
           }
         },
-        "summary" : "Configure a tank refill policy",
-        "tags" : [ "Refill policy" ]
+        "summary" : "Configurar política de reposición",
+        "tags" : [ "Políticas de reposición" ]
       }
     },
     "/api/v2/telemetry/readings" : {
       "post" : {
-        "description" : "Accepts a versioned, machine-authenticated telemetry reading; quarantine or duplicate readings are acknowledged rather than rejected.",
+        "description" : "Acepta una medición de telemetría versionada y autenticada por dispositivo; confirma lecturas en cuarentena o duplicadas sin almacenarlas como nuevas.",
         "operationId" : "ingest",
         "parameters" : [ {
           "in" : "header",
@@ -8111,7 +8111,7 @@
                 }
               }
             },
-            "description" : "Reading accepted (or acknowledged as quarantine/duplicate)."
+            "description" : "Medición aceptada o confirmada como lectura en cuarentena o duplicada."
           },
           "400" : {
             "content" : {
@@ -8121,11 +8121,11 @@
                 }
               }
             },
-            "description" : "Request body failed validation, the schema version is unsupported, or a required field/value is invalid."
+            "description" : "El cuerpo no supera la validación, la versión de esquema no está admitida o falta un dato requerido."
           }
         },
-        "summary" : "Ingest a device reading",
-        "tags" : [ "Telemetry" ]
+        "summary" : "Recibir medición de dispositivo",
+        "tags" : [ "Telemetría" ]
       }
     }
   },
@@ -8137,103 +8137,106 @@
     "url" : "http://localhost:8080"
   } ],
   "tags" : [ {
-    "description" : "Organization onboarding endpoints (v2)",
-    "name" : "Onboarding"
+    "description" : "Activos de almacenamiento y configuración de cisternas",
+    "name" : "Cisternas"
   }, {
-    "description" : "Administrative route usage report",
-    "name" : "API route metrics"
+    "description" : "Cuentas de cliente y sus sitios de entrega en una organización",
+    "name" : "Clientes"
   }, {
-    "description" : "Reconstructed physical and safety history",
-    "name" : "Delivery timeline"
+    "description" : "Indicadores agregados para administración, distribuidores y empresas compradoras",
+    "name" : "Analítica"
   }, {
     "description" : "Registro, inicio de sesión y recuperación de contraseña",
     "name" : "Autenticación"
   }, {
-    "description" : "Tank assets and configuration (v2)",
-    "name" : "Tanks"
+    "description" : "Configuración versionada del área de seguridad de una entrega",
+    "name" : "Políticas de geocerca"
   }, {
-    "description" : "Organization membership invitations (v2)",
-    "name" : "Invitations"
+    "description" : "Gestión de equipos heredados asociados a empresas compradoras",
+    "name" : "Equipos"
   }, {
-    "description" : "Physical delivery state machine (v2)",
-    "name" : "Delivery lifecycle"
+    "description" : "Administración y ciclo de vida de conductores por distribuidor",
+    "name" : "Conductores de flota"
   }, {
-    "description" : "Tenant-scoped supply catalog (v2)",
-    "name" : "Supply"
+    "description" : "Registro, consulta y gestión del estado de pagos de órdenes",
+    "name" : "Pagos"
   }, {
-    "description" : "Inventory management endpoints",
-    "name" : "Fuel Products"
+    "description" : "Catálogo de productos del distribuidor logístico autenticado",
+    "name" : "Oferta de combustible"
   }, {
-    "description" : "Logical valve ACK and safety observations",
-    "name" : "Valve observations"
+    "description" : "Historial físico y de seguridad reconstruido",
+    "name" : "Cronología de entregas"
   }, {
-    "description" : "Administrative export and deletion of GPS evidence",
-    "name" : "Transport evidence retention"
+    "description" : "Alta de organizaciones y asignación de su propietario inicial",
+    "name" : "Registro de organizaciones"
   }, {
-    "description" : "Provider company management endpoints",
-    "name" : "Provider Companies"
+    "description" : "Transiciones del estado físico de una entrega",
+    "name" : "Ciclo de entrega"
   }, {
-    "description" : "Device telemetry ingestion (v2, machine authenticated)",
-    "name" : "Telemetry"
+    "description" : "Configuración por cisterna y consulta de episodios de abastecimiento",
+    "name" : "Políticas de reposición"
   }, {
-    "description" : "Payment management endpoints",
-    "name" : "Payments"
+    "description" : "Registro, consulta y actualización de perfiles de empresas compradoras",
+    "name" : "Empresas compradoras"
   }, {
-    "description" : "Ordering management endpoints",
-    "name" : "Fuel Orders"
+    "description" : "Consulta de notificaciones y gestión de su estado de lectura",
+    "name" : "Notificaciones"
   }, {
-    "description" : "Tanker catalog and lifecycle (v2)",
-    "name" : "Fleet tankers"
+    "description" : "Consulta administrativa del uso de rutas",
+    "name" : "Métricas de rutas API"
   }, {
-    "description" : "Driver catalog and lifecycle (v2)",
-    "name" : "Fleet drivers"
+    "description" : "Recepción de mediciones autenticadas de dispositivos",
+    "name" : "Telemetría"
   }, {
-    "description" : "Platform-wide administrative operations",
-    "name" : "Platform administration"
+    "description" : "Catálogo, existencias y disponibilidad por distribuidor",
+    "name" : "Productos de combustible"
   }, {
-    "description" : "Analytics and reporting endpoints",
-    "name" : "Analytics"
+    "description" : "Administración y ciclo de vida de cisternas por distribuidor",
+    "name" : "Cisternas de flota"
   }, {
-    "description" : "Replenishment request lifecycle (v2)",
-    "name" : "Replenishment"
+    "description" : "Asignación transaccional de solicitudes aceptadas en la API v2",
+    "name" : "Asignación de entregas"
   }, {
-    "description" : "Current user's in-app notification inbox (v2)",
-    "name" : "My notifications"
+    "description" : "Registro, consulta y actualización de perfiles de distribuidores",
+    "name" : "Distribuidores"
   }, {
-    "description" : "Buyer company management endpoints",
-    "name" : "Buyer Companies"
+    "description" : "Bandeja personal de notificaciones de la API v2",
+    "name" : "Mis notificaciones"
   }, {
-    "description" : "Fulfillment management endpoints",
-    "name" : "Deliveries"
+    "description" : "Ubicaciones y eventos de carga informados por el conductor",
+    "name" : "Evidencias de transporte"
   }, {
-    "description" : "Low-level policy and refill episodes (v2)",
-    "name" : "Refill policy"
+    "description" : "Creación, consulta y actualización de entregas de combustible",
+    "name" : "Entregas"
   }, {
-    "description" : "Equipment management endpoints",
-    "name" : "Equipment"
+    "description" : "Organizaciones con membresía activa del usuario autenticado",
+    "name" : "Mis organizaciones"
   }, {
-    "description" : "Geofence-policy administration (v2, decision input)",
-    "name" : "Geofence policy"
+    "description" : "Operaciones administrativas globales de cuentas",
+    "name" : "Administración de plataforma"
   }, {
-    "description" : "Customer accounts and sites (v2)",
-    "name" : "Customers"
-  }, {
-    "description" : "Transactional assignment after acceptance (v2)",
-    "name" : "Delivery assignment"
-  }, {
-    "description" : "Transport tracking query (v2)",
-    "name" : "Transport tracking"
+    "description" : "Creación y ciclo de decisión de solicitudes por organización",
+    "name" : "Solicitudes de abastecimiento"
   }, {
     "description" : "Consulta de cuentas de usuario",
     "name" : "Usuarios"
   }, {
-    "description" : "Organizations the authenticated user belongs to (v2)",
-    "name" : "Organizations"
+    "description" : "Confirmaciones lógicas y eventos de seguridad informados por el conductor",
+    "name" : "Observaciones de válvula"
   }, {
-    "description" : "Notification management endpoints",
-    "name" : "Notifications"
+    "description" : "Exportación y eliminación administrativa de evidencias GPS",
+    "name" : "Retención de evidencias de transporte"
   }, {
-    "description" : "Driver-app-reported transport evidence (v2)",
-    "name" : "Transport evidence"
+    "description" : "Consulta de ubicación y evidencias de transporte de entregas",
+    "name" : "Seguimiento de transporte"
+  }, {
+    "description" : "Compatibilidad temporal para solicitudes v1 vinculadas al flujo de reposición",
+    "name" : "Solicitudes de combustible heredadas"
+  }, {
+    "description" : "Invitación y administración de membresías de organización",
+    "name" : "Invitaciones"
+  }, {
+    "description" : "Creación, consulta y gestión de órdenes entre empresas compradoras y distribuidores",
+    "name" : "Órdenes de combustible"
   } ]
 }

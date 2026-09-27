@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v2/admin/api-metrics")
-@Tag(name = "API route metrics", description = "Administrative route usage report")
+@Tag(name = "Métricas de rutas API", description = "Consulta administrativa del uso de rutas")
 public class AdminApiMetricsController {
     private final JdbcTemplate jdbc;
 
@@ -26,15 +26,15 @@ public class AdminApiMetricsController {
         this.jdbc = jdbc;
     }
 
-    /** Returns route counts and distinct tenant callers, optionally limited to one API version. */
+    /** Devuelve conteos por ruta y usuarios tenant distintos; permite filtrar por versión de API. */
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "List API route usage",
-            description = "Returns per-pattern request counts, last-seen time and distinct caller count.")
+    @Operation(summary = "Listar uso de rutas API",
+            description = "Devuelve por patrón la cantidad de solicitudes, el último acceso y el número de usuarios distintos. Solo para administradores.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Route metrics returned."),
-            @ApiResponse(responseCode = "400", description = "Version must be v1 or v2."),
-            @ApiResponse(responseCode = "403", description = "Caller is not a platform administrator.")
+            @ApiResponse(responseCode = "200", description = "Métricas de rutas devueltas."),
+            @ApiResponse(responseCode = "400", description = "La versión debe ser v1 o v2."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene autoridad de administrador de plataforma.")
     })
     public ResponseEntity<?> list(@RequestParam(required = false) String version) {
         if (version != null && !version.equals("v1") && !version.equals("v2")) {

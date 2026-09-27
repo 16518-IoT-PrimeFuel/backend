@@ -29,7 +29,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v2/customers", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Customers", description = "Customer accounts and sites (v2)")
+@Tag(name = "Clientes", description = "Cuentas de cliente y sus sitios de entrega en una organización")
 public class CustomersController {
 
     private final CustomerCommandService customerCommandService;
@@ -45,19 +45,18 @@ public class CustomersController {
     }
 
     /**
-     * Registers a customer account in the caller's own organization.
+     * Registra una cuenta de cliente en la organización activa del usuario.
      *
-     * <p>The owning organization is resolved from the principal, never from the body, so a caller
-     * cannot register customers into a foreign tenant. The RUC, when supplied, must be unique within
-     * that organization.</p>
+     * <p>La organización se obtiene de la identidad autenticada, no del cuerpo; el RUC, si se indica,
+     * debe ser único dentro de esa organización.</p>
      */
-    @Operation(summary = "Register a customer account",
-            description = "Creates a customer account owned by the caller's organization.")
+    @Operation(summary = "Registrar una cuenta de cliente",
+            description = "Crea la cuenta dentro de la organización activa del usuario. La organización se deriva de la membresía autenticada.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Customer account created."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation or no organization was resolved."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated or has no active organization."),
-            @ApiResponse(responseCode = "409", description = "A customer with the same RUC already exists for this organization.")
+            @ApiResponse(responseCode = "201", description = "Cuenta de cliente creada."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no cumple las validaciones requeridas."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
+            @ApiResponse(responseCode = "409", description = "Ya existe una cuenta con el mismo RUC en esta organización.")
     })
     @PostMapping
     public ResponseEntity<?> registerCustomer(@Valid @RequestBody CreateCustomerResource resource) {
@@ -73,16 +72,15 @@ public class CustomersController {
     }
 
     /**
-     * Lists the customer accounts of the caller's organization.
+     * Lista las cuentas de cliente de la organización activa.
      *
-     * <p>Scoped to the organization derived from the principal; results never cross tenant
-     * boundaries.</p>
+     * <p>La consulta usa la organización de la membresía autenticada y no acepta un tenant enviado por el cliente.</p>
      */
-    @Operation(summary = "List customer accounts",
-            description = "Returns the customer accounts belonging to the caller's organization.")
+    @Operation(summary = "Listar cuentas de cliente",
+            description = "Devuelve las cuentas asociadas a la organización activa del usuario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Customer accounts returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated or has no active organization.")
+            @ApiResponse(responseCode = "200", description = "Cuentas de cliente devueltas."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa.")
     })
     @GetMapping
     public ResponseEntity<List<CustomerResource>> listCustomers() {
@@ -97,18 +95,17 @@ public class CustomersController {
     }
 
     /**
-     * Registers a delivery site under one of the caller's customer accounts.
+     * Registra un sitio de entrega en una cuenta de cliente de la organización activa.
      *
-     * <p>The target customer must exist and belong to the caller's organization; otherwise the
-     * service rejects the command (forbidden) rather than creating a cross-tenant site.</p>
+     * <p>La cuenta debe existir y pertenecer a la organización activa para impedir registros entre tenants.</p>
      */
-    @Operation(summary = "Register a site for a customer",
-            description = "Creates a site under the given customer account, which must belong to the caller's organization.")
+    @Operation(summary = "Registrar un sitio de entrega",
+            description = "Crea un sitio bajo la cuenta indicada, que debe pertenecer a la organización activa del usuario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Site created."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation or no organization was resolved."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated, has no active organization, or the customer belongs to another organization."),
-            @ApiResponse(responseCode = "404", description = "Customer account does not exist.")
+            @ApiResponse(responseCode = "201", description = "Sitio creado."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no cumple las validaciones requeridas."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado, no tiene organización activa o la cuenta pertenece a otro tenant."),
+            @ApiResponse(responseCode = "404", description = "No existe la cuenta de cliente indicada.")
     })
     @PostMapping("/{customerId}/sites")
     public ResponseEntity<?> registerSite(@PathVariable Long customerId,
@@ -124,17 +121,16 @@ public class CustomersController {
     }
 
     /**
-     * Lists the sites of a customer account.
+     * Lista los sitios de una cuenta de cliente.
      *
-     * <p>A customer that does not exist or belongs to another organization is reported as not found,
-     * so the endpoint never reveals foreign customer ids.</p>
+     * <p>Una cuenta ajena o inexistente responde como no encontrada para no revelar identificadores de otros tenants.</p>
      */
-    @Operation(summary = "List sites of a customer",
-            description = "Returns the sites registered under a customer account owned by the caller's organization.")
+    @Operation(summary = "Listar sitios de una cuenta",
+            description = "Devuelve los sitios registrados bajo una cuenta que pertenece a la organización activa.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Sites returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated or has no active organization."),
-            @ApiResponse(responseCode = "404", description = "Customer account does not exist or belongs to another organization.")
+            @ApiResponse(responseCode = "200", description = "Sitios de entrega devueltos."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
+            @ApiResponse(responseCode = "404", description = "La cuenta no existe o pertenece a otra organización.")
     })
     @GetMapping("/{customerId}/sites")
     public ResponseEntity<List<SiteResource>> listSites(@PathVariable Long customerId) {

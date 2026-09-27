@@ -9,6 +9,7 @@ import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.serv
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/fuel-requests")
+@Tag(name = "Solicitudes de combustible heredadas", description = "Compatibilidad temporal para solicitudes v1 vinculadas al flujo de reposición")
 public class FuelRequestsController {
     private final FuelRequestService service;
     private final CurrentUserAccess currentUserAccess;
@@ -33,18 +35,17 @@ public class FuelRequestsController {
     }
 
     /**
-     * Creates a fuel request for the caller's buyer company.
+     * Crea una solicitud de combustible para la empresa compradora del usuario autenticado.
      *
-     * <p>Creation is routed through the T10-B bridge: it also opens a correlated replenishment request
-     * so the review lifecycle is driven by the {@code replenishment} module while the legacy request id
-     * is preserved. The fuel product must belong to the requested provider.</p>
+     * <p>La operación crea también una solicitud de reposición vinculada, que conserva el ciclo de revisión
+     * en el módulo correspondiente y mantiene el identificador heredado. El producto debe pertenecer al distribuidor indicado.</p>
      */
-    @Operation(summary = "Create a fuel request",
-            description = "Creates a legacy fuel request (and its linked replenishment review) for the caller's buyer company.")
+    @Operation(summary = "Crear solicitud de combustible heredada",
+            description = "Crea una solicitud v1 y su solicitud de reposición vinculada para una empresa compradora del usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Fuel request created."),
-            @ApiResponse(responseCode = "400", description = "The referenced fuel product does not exist or does not belong to the requested provider."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the buyer company in the request body.")
+            @ApiResponse(responseCode = "201", description = "Solicitud de combustible creada."),
+            @ApiResponse(responseCode = "400", description = "El producto de combustible no existe o no pertenece al distribuidor indicado."),
+            @ApiResponse(responseCode = "403", description = "La empresa compradora del cuerpo no pertenece al usuario autenticado.")
     })
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsCompany(#resource.buyerCompanyId())")
@@ -53,17 +54,16 @@ public class FuelRequestsController {
     }
 
     /**
-     * Lists fuel requests filtered by buyer company or provider tenant.
+     * Lista solicitudes filtradas por empresa compradora o distribuidor.
      *
-     * <p>Exactly one of the two filters is required and must be owned by the caller; supplying both, or
-     * neither, is rejected.</p>
+     * <p>Se requiere exactamente uno de los filtros y debe pertenecer al usuario; se rechaza indicar ambos o ninguno.</p>
      */
-    @Operation(summary = "List fuel requests",
-            description = "Returns fuel requests for a single owned dimension: either the caller's buyer company or its provider tenant.")
+    @Operation(summary = "Listar solicitudes de combustible",
+            description = "Devuelve solicitudes de una sola dimensión propia: la empresa compradora o el tenant distribuidor del usuario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fuel requests returned."),
-            @ApiResponse(responseCode = "400", description = "Both buyerCompanyId and providerId were supplied."),
-            @ApiResponse(responseCode = "403", description = "Neither filter was supplied, or the supplied filter is not owned by the caller.")
+            @ApiResponse(responseCode = "200", description = "Se devuelve la lista de solicitudes."),
+            @ApiResponse(responseCode = "400", description = "Se indicaron a la vez buyerCompanyId y providerId."),
+            @ApiResponse(responseCode = "403", description = "No se indicó filtro o el filtro indicado no pertenece al usuario.")
     })
     @GetMapping
     public ResponseEntity<List<FuelRequestResource>> findAll(@RequestParam(required = false) Long buyerCompanyId,
@@ -82,16 +82,15 @@ public class FuelRequestsController {
     }
 
     /**
-     * Retrieves a single fuel request.
+     * Consulta una solicitud de combustible por identificador.
      *
-     * <p>Readable by the buyer company or the provider tenant of the request; anything else is reported
-     * as not found.</p>
+     * <p>Puede consultarla la empresa compradora o el distribuidor de la solicitud; los demás usuarios reciben una respuesta de no encontrada.</p>
      */
-    @Operation(summary = "Get a fuel request by id",
-            description = "Returns the fuel request identified by the path id when the caller is its buyer company or provider tenant.")
+    @Operation(summary = "Consultar solicitud de combustible por identificador",
+            description = "Devuelve la solicitud indicada cuando el usuario pertenece a la empresa compradora o al distribuidor correspondiente.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fuel request returned."),
-            @ApiResponse(responseCode = "404", description = "Fuel request does not exist or is not owned by the caller.")
+            @ApiResponse(responseCode = "200", description = "Solicitud de combustible devuelta."),
+            @ApiResponse(responseCode = "404", description = "La solicitud no existe o no pertenece al usuario autenticado.")
     })
     @GetMapping("/{requestId}")
     public ResponseEntity<FuelRequestResource> findById(@PathVariable Long requestId) {
@@ -103,18 +102,18 @@ public class FuelRequestsController {
     }
 
     /**
-     * Accepts a pending fuel request.
+     * Acepta una solicitud de combustible pendiente.
      *
-     * <p>Only the addressed provider tenant may accept it. Acceptance consumes the linked replenishment
-     * review exactly once and then materialises the fuel order; a repeat acceptance fails.</p>
+     * <p>Solo puede aceptarla el distribuidor destinatario. La aceptación consume una vez la revisión vinculada
+     * y crea la orden de combustible; una aceptación repetida falla.</p>
      */
-    @Operation(summary = "Accept a fuel request",
-            description = "Accepts a pending fuel request on behalf of the addressed provider tenant, creating the resulting fuel order.")
+    @Operation(summary = "Aceptar solicitud de combustible",
+            description = "Acepta una solicitud pendiente en nombre del distribuidor destinatario y crea la orden de combustible resultante.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fuel request accepted and fuel order created."),
-            @ApiResponse(responseCode = "400", description = "The request or its fuel product could not be found while materialising the order."),
-            @ApiResponse(responseCode = "404", description = "Fuel request does not exist or is not addressed to the caller's provider tenant."),
-            @ApiResponse(responseCode = "500", description = "The request was already accepted or the linked review could not be accepted.")
+            @ApiResponse(responseCode = "200", description = "Solicitud aceptada y orden de combustible creada."),
+            @ApiResponse(responseCode = "400", description = "No se encontró la solicitud o su producto al crear la orden."),
+            @ApiResponse(responseCode = "404", description = "La solicitud no existe o no está dirigida al tenant distribuidor autenticado."),
+            @ApiResponse(responseCode = "500", description = "La solicitud ya fue aceptada o no se pudo aceptar la revisión vinculada.")
     })
     @PostMapping("/{requestId}/accept")
     public ResponseEntity<?> accept(@PathVariable Long requestId) {
@@ -123,18 +122,17 @@ public class FuelRequestsController {
     }
 
     /**
-     * Rejects a pending fuel request.
+     * Rechaza una solicitud de combustible pendiente.
      *
-     * <p>Only the addressed provider tenant may reject it; the reason is required and is propagated to
-     * the linked replenishment review.</p>
+     * <p>Solo puede rechazarla el distribuidor destinatario. Se requiere un motivo, que se propaga a la revisión de reposición vinculada.</p>
      */
-    @Operation(summary = "Reject a fuel request",
-            description = "Rejects a pending fuel request on behalf of the addressed provider tenant, recording a reason.")
+    @Operation(summary = "Rechazar solicitud de combustible",
+            description = "Rechaza una solicitud pendiente para el distribuidor destinatario y registra el motivo indicado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fuel request rejected."),
-            @ApiResponse(responseCode = "400", description = "The rejection reason is missing or the request could not be found."),
-            @ApiResponse(responseCode = "404", description = "Fuel request does not exist or is not addressed to the caller's provider tenant."),
-            @ApiResponse(responseCode = "500", description = "The request is not pending and cannot be rejected.")
+            @ApiResponse(responseCode = "200", description = "Solicitud de combustible rechazada."),
+            @ApiResponse(responseCode = "400", description = "Falta el motivo de rechazo o no se encontró la solicitud."),
+            @ApiResponse(responseCode = "404", description = "La solicitud no existe o no está dirigida al tenant distribuidor autenticado."),
+            @ApiResponse(responseCode = "500", description = "La solicitud no está pendiente y no puede rechazarse.")
     })
     @PostMapping("/{requestId}/reject")
     public ResponseEntity<FuelRequestResource> reject(@PathVariable Long requestId,

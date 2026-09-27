@@ -28,7 +28,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/fuel-orders", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Fuel Orders", description = "Ordering management endpoints")
+@Tag(name = "Órdenes de combustible", description = "Creación, consulta y gestión de órdenes entre empresas compradoras y distribuidores")
 public class FuelOrdersController {
 
     private final FuelOrderCommandService fuelOrderCommandService;
@@ -44,18 +44,16 @@ public class FuelOrdersController {
     }
 
     /**
-     * Creates a fuel order for the caller's buyer company.
+     * Crea una orden de combustible para la empresa compradora autenticada.
      *
-     * <p>The company in the body must be the caller's own, the fuel product must belong to the
-     * requested provider, and any referenced equipment must belong to the same company; those
-     * cross-tenant checks are the ones added by the R01 hotfix.</p>
+     * <p>La empresa debe pertenecer al usuario; el producto al distribuidor y el equipo a la empresa indicada.</p>
      */
-    @Operation(summary = "Create a fuel order",
-            description = "Creates a fuel order for the caller's company, validating provider/product and company/equipment ownership.")
+    @Operation(summary = "Crear orden de combustible",
+            description = "Registra una orden para la empresa del usuario y valida la relación entre distribuidor, producto y equipo.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Fuel order created."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the company, or the product/equipment does not belong to the referenced provider/company."),
-            @ApiResponse(responseCode = "404", description = "The referenced fuel product or equipment does not exist.")
+            @ApiResponse(responseCode = "201", description = "Orden de combustible creada."),
+            @ApiResponse(responseCode = "403", description = "La empresa no pertenece al usuario o el producto/equipo no corresponde al tenant indicado."),
+            @ApiResponse(responseCode = "404", description = "No existe el producto de combustible o el equipo indicado.")
     })
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
@@ -69,16 +67,15 @@ public class FuelOrdersController {
     }
 
     /**
-     * Confirms a fuel order.
+     * Confirma una orden de combustible.
      *
-     * <p>Only the buyer company that owns the order may confirm it. The transition is not guarded by
-     * order state, so it is accepted from any current status.</p>
+     * <p>Solo la empresa compradora propietaria puede confirmarla. El estado actual no bloquea esta transición.</p>
      */
-    @Operation(summary = "Confirm a fuel order",
-            description = "Moves the given fuel order to the confirmed status on behalf of its owning buyer company.")
+    @Operation(summary = "Confirmar orden de combustible",
+            description = "Registra la confirmación solicitada por la empresa compradora propietaria de la orden.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fuel order confirmed."),
-            @ApiResponse(responseCode = "404", description = "Fuel order does not exist or belongs to another buyer company.")
+            @ApiResponse(responseCode = "200", description = "Orden de combustible confirmada."),
+            @ApiResponse(responseCode = "404", description = "La orden no existe o pertenece a otra empresa compradora.")
     })
     @PostMapping("/{orderId}/confirm")
     public ResponseEntity<?> confirmOrder(@PathVariable Long orderId) {
@@ -91,16 +88,15 @@ public class FuelOrdersController {
     }
 
     /**
-     * Cancels a fuel order.
+     * Cancela una orden de combustible.
      *
-     * <p>Either the buyer company or the provider tenant of the order may cancel it. The transition is
-     * not guarded by order state, so it is accepted from any current status.</p>
+     * <p>Puede cancelarla la empresa compradora o el distribuidor propietario. El estado actual no bloquea esta transición.</p>
      */
-    @Operation(summary = "Cancel a fuel order",
-            description = "Moves the given fuel order to the cancelled status on behalf of its buyer company or provider tenant.")
+    @Operation(summary = "Cancelar orden de combustible",
+            description = "Registra la cancelación solicitada por la empresa compradora o el distribuidor asociado a la orden.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fuel order cancelled."),
-            @ApiResponse(responseCode = "404", description = "Fuel order does not exist or is not owned by the caller.")
+            @ApiResponse(responseCode = "200", description = "Orden de combustible cancelada."),
+            @ApiResponse(responseCode = "404", description = "La orden no existe o no pertenece al usuario.")
     })
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
@@ -113,15 +109,15 @@ public class FuelOrdersController {
     }
 
     /**
-     * Lists every fuel order in the platform.
+     * Lista todas las órdenes de combustible de la plataforma.
      *
-     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     * <p>Requiere la autoridad ROLE_ADMIN.</p>
      */
-    @Operation(summary = "List all fuel orders",
-            description = "Returns every registered fuel order. Restricted to administrators.")
+    @Operation(summary = "Listar todas las órdenes de combustible",
+            description = "Devuelve todas las órdenes registradas; solo está disponible para administradores con autoridad ROLE_ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fuel orders returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+            @ApiResponse(responseCode = "200", description = "Órdenes de combustible devueltas."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene la autoridad ROLE_ADMIN.")
     })
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -132,16 +128,15 @@ public class FuelOrdersController {
     }
 
     /**
-     * Retrieves a single fuel order.
+     * Consulta una orden de combustible por identificador.
      *
-     * <p>Readable by the buyer company or the provider tenant of the order; anything else is reported
-     * as not found.</p>
+     * <p>Puede verla la empresa compradora o el distribuidor asociado; las órdenes ajenas o inexistentes responden como no encontradas.</p>
      */
-    @Operation(summary = "Get a fuel order by id",
-            description = "Returns the fuel order identified by the path id when the caller is its buyer company or provider tenant.")
+    @Operation(summary = "Consultar orden por identificador",
+            description = "Devuelve la orden indicada a su empresa compradora o al distribuidor asociado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fuel order returned."),
-            @ApiResponse(responseCode = "404", description = "Fuel order does not exist or is not owned by the caller.")
+            @ApiResponse(responseCode = "200", description = "Orden de combustible devuelta."),
+            @ApiResponse(responseCode = "404", description = "La orden no existe o no pertenece al usuario.")
     })
     @GetMapping("/{orderId}")
     public ResponseEntity<FuelOrderResource> getOrderById(@PathVariable Long orderId) {
@@ -153,15 +148,15 @@ public class FuelOrdersController {
     }
 
     /**
-     * Lists the fuel orders of a buyer company.
+     * Lista las órdenes de una empresa compradora.
      *
-     * <p>Only the owning company may list them.</p>
+     * <p>Solo la empresa propietaria puede consultar esta colección.</p>
      */
-    @Operation(summary = "List fuel orders by company",
-            description = "Returns all fuel orders of the given buyer company when it matches the caller's own company.")
+    @Operation(summary = "Listar órdenes por empresa compradora",
+            description = "Devuelve las órdenes de la empresa indicada cuando pertenece al usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fuel orders returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the requested company.")
+            @ApiResponse(responseCode = "200", description = "Órdenes de combustible devueltas."),
+            @ApiResponse(responseCode = "403", description = "La empresa solicitada no pertenece al usuario.")
     })
     @GetMapping("/company/{companyId}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
@@ -172,15 +167,15 @@ public class FuelOrdersController {
     }
 
     /**
-     * Lists the fuel orders of a provider tenant.
+     * Lista las órdenes de un distribuidor.
      *
-     * <p>Only the owning provider tenant may list them.</p>
+     * <p>Solo el distribuidor propietario puede consultar esta colección.</p>
      */
-    @Operation(summary = "List fuel orders by provider",
-            description = "Returns all fuel orders of the given provider when it matches the caller's own provider tenant.")
+    @Operation(summary = "Listar órdenes por distribuidor",
+            description = "Devuelve las órdenes del distribuidor indicado cuando el usuario es propietario de ese tenant.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fuel orders returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the requested provider tenant.")
+            @ApiResponse(responseCode = "200", description = "Órdenes de combustible devueltas."),
+            @ApiResponse(responseCode = "403", description = "El distribuidor solicitado no pertenece al usuario.")
     })
     @GetMapping("/provider/{providerId}")
     @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")

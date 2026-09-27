@@ -23,7 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v2/tanks", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Tanks", description = "Tank assets and configuration (v2)")
+@Tag(name = "Cisternas", description = "Activos de almacenamiento y configuración de cisternas")
 public class TanksController {
 
     private final TankCommandService tankCommandService;
@@ -39,19 +39,17 @@ public class TanksController {
     }
 
     /**
-     * Registers a tank for a customer of the caller's organization.
+     * Registra una cisterna para una cuenta de cliente de la organización activa.
      *
-     * <p>The organization comes from the principal. The customer must belong to that organization and,
-     * when a site is given, the site must belong to the same customer and organization. A tank whose
-     * capacity/level invariants are violated is rejected as a validation error.</p>
+     * <p>La organización se obtiene de la identidad autenticada. La cuenta y el sitio deben pertenecer a ella; la capacidad y el nivel inicial deben respetar sus invariantes.</p>
      */
-    @Operation(summary = "Register a tank",
-            description = "Creates a tank under a customer of the caller's organization, validating customer, site and capacity invariants.")
+    @Operation(summary = "Registrar cisterna",
+            description = "Crea una cisterna para una cuenta y un sitio de la organización activa, y valida capacidad, unidad y nivel inicial.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Tank created."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation, no organization was resolved, or the customer/site/capacity invariants are violated."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated or has no active organization."),
-            @ApiResponse(responseCode = "409", description = "The referenced legacy equipment is already mapped to a tank.")
+            @ApiResponse(responseCode = "201", description = "Cisterna creada."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo es inválido o la cuenta, el sitio o la capacidad incumplen las reglas del dominio."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
+            @ApiResponse(responseCode = "409", description = "El equipo heredado indicado ya está asociado a una cisterna.")
     })
     @PostMapping
     public ResponseEntity<?> registerTank(@Valid @RequestBody RegisterTankResource resource) {
@@ -67,15 +65,15 @@ public class TanksController {
     }
 
     /**
-     * Lists the tanks of the caller's organization.
+     * Lista las cisternas de la organización activa.
      *
-     * <p>Scoped to the organization derived from the principal.</p>
+     * <p>El tenant se deriva de la membresía autenticada y no de parámetros enviados por el cliente.</p>
      */
-    @Operation(summary = "List tanks",
-            description = "Returns the tanks belonging to the caller's organization.")
+    @Operation(summary = "Listar cisternas",
+            description = "Devuelve las cisternas asociadas a la organización activa del usuario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tanks returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated or has no active organization.")
+            @ApiResponse(responseCode = "200", description = "Cisternas devueltas."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa.")
     })
     @GetMapping
     public ResponseEntity<List<TankResource>> listTanks() {
@@ -90,17 +88,16 @@ public class TanksController {
     }
 
     /**
-     * Retrieves a single tank.
+     * Consulta una cisterna por identificador.
      *
-     * <p>The tank must belong to the caller's organization; a tank of another tenant is reported as
-     * not found.</p>
+     * <p>La cisterna debe pertenecer a la organización activa; las de otro tenant responden como no encontradas.</p>
      */
-    @Operation(summary = "Get a tank by id",
-            description = "Returns the tank identified by the path id when it belongs to the caller's organization.")
+    @Operation(summary = "Consultar cisterna por identificador",
+            description = "Devuelve la cisterna indicada únicamente cuando pertenece a la organización activa del usuario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tank returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated or has no active organization."),
-            @ApiResponse(responseCode = "404", description = "Tank does not exist or belongs to another organization.")
+            @ApiResponse(responseCode = "200", description = "Cisterna devuelta."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
+            @ApiResponse(responseCode = "404", description = "La cisterna no existe o pertenece a otra organización.")
     })
     @GetMapping("/{tankId}")
     public ResponseEntity<TankResource> getTank(@PathVariable Long tankId) {

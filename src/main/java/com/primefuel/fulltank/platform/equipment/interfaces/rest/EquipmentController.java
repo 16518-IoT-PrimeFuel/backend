@@ -29,7 +29,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/equipment", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Equipment", description = "Equipment management endpoints")
+@Tag(name = "Equipos", description = "Gestión de equipos heredados asociados a empresas compradoras")
 public class EquipmentController {
 
     private final EquipmentCommandService equipmentCommandService;
@@ -48,17 +48,16 @@ public class EquipmentController {
     }
 
     /**
-     * Sets the favorite provider of a piece of equipment.
+     * Asigna el distribuidor logístico de combustible preferido para un equipo.
      *
-     * <p>Only a buyer may call this, and only for equipment that belongs to its own company; a piece
-     * of equipment owned by another company is reported as not found.</p>
+     * <p>Solo puede llamarlo un comprador sobre equipos de su propia empresa. Un equipo de otro tenant se informa como no encontrado.</p>
      */
-    @Operation(summary = "Assign a favorite provider to equipment",
-            description = "Sets the preferred provider for the given equipment owned by the caller's company.")
+    @Operation(summary = "Asignar distribuidor preferido a un equipo",
+            description = "Registra el distribuidor preferido del equipo. Requiere rol comprador y propiedad del equipo por la empresa del usuario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Favorite provider assigned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not hold the buyer role."),
-            @ApiResponse(responseCode = "404", description = "Equipment does not exist or belongs to another company.")
+            @ApiResponse(responseCode = "200", description = "Distribuidor preferido asignado."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene el rol comprador."),
+            @ApiResponse(responseCode = "404", description = "El equipo no existe o pertenece a otra empresa.")
     })
     @PostMapping("/{equipmentId}/favorite-provider")
     @PreAuthorize("@currentUserAccess.isBuyerRole()")
@@ -75,15 +74,15 @@ public class EquipmentController {
     }
 
     /**
-     * Creates a piece of equipment for the caller's company.
+     * Crea un equipo para la empresa del usuario.
      *
-     * <p>The company id in the body must match the caller's own company.</p>
+     * <p>El identificador de empresa del cuerpo debe corresponder al tenant del usuario.</p>
      */
-    @Operation(summary = "Create equipment",
-            description = "Creates equipment for the caller's company; the supplied companyId must be the caller's own.")
+    @Operation(summary = "Crear equipo",
+            description = "Registra un equipo heredado para la empresa indicada, que debe pertenecer al usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Equipment created."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the company in the request body.")
+            @ApiResponse(responseCode = "201", description = "Equipo creado."),
+            @ApiResponse(responseCode = "403", description = "La empresa indicada no pertenece al usuario autenticado.")
     })
     @PostMapping
     @PreAuthorize("@currentUserAccess.ownsCompany(#resource.companyId())")
@@ -97,17 +96,15 @@ public class EquipmentController {
     }
 
     /**
-     * Updates a piece of equipment.
+     * Actualiza los campos de un equipo.
      *
-     * <p>The caller must own the equipment; other companies (including existing equipment of another
-     * tenant) are answered as not found. A level supplied here is mirrored to a mapped tank as a
-     * manual reading.</p>
+     * <p>Solo se actualizan equipos del tenant autenticado; los ajenos responden como no encontrados. El nivel recibido también actualiza la cisterna vinculada como lectura manual.</p>
      */
-    @Operation(summary = "Update equipment",
-            description = "Applies field changes to the given equipment when it belongs to the caller's company.")
+    @Operation(summary = "Actualizar equipo",
+            description = "Aplica los campos editables al equipo de la empresa del usuario y sincroniza el nivel con la cisterna vinculada cuando corresponde.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Equipment updated."),
-            @ApiResponse(responseCode = "404", description = "Equipment does not exist or belongs to another company.")
+            @ApiResponse(responseCode = "200", description = "Equipo actualizado."),
+            @ApiResponse(responseCode = "404", description = "El equipo no existe o pertenece a otra empresa.")
     })
     @PostMapping("/{equipmentId}/update")
     public ResponseEntity<?> updateEquipment(@PathVariable Long equipmentId,
@@ -125,15 +122,15 @@ public class EquipmentController {
     }
 
     /**
-     * Lists every piece of equipment in the platform.
+     * Lista todos los equipos registrados en la plataforma.
      *
-     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     * <p>Requiere la autoridad administrativa ROLE_ADMIN.</p>
      */
-    @Operation(summary = "List all equipment",
-            description = "Returns every registered piece of equipment. Restricted to administrators.")
+    @Operation(summary = "Listar todos los equipos",
+            description = "Devuelve los equipos de todas las empresas; requiere la autoridad ROLE_ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Equipment returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+            @ApiResponse(responseCode = "200", description = "Equipos devueltos."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene la autoridad ROLE_ADMIN.")
     })
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -144,15 +141,15 @@ public class EquipmentController {
     }
 
     /**
-     * Retrieves a single piece of equipment.
+     * Consulta un equipo por identificador.
      *
-     * <p>Only the owning company may read the record; anything else is reported as not found.</p>
+     * <p>Solo la empresa propietaria puede consultarlo; los equipos ajenos se informan como no encontrados.</p>
      */
-    @Operation(summary = "Get equipment by id",
-            description = "Returns the equipment identified by the path id when it belongs to the caller's company.")
+    @Operation(summary = "Consultar equipo por identificador",
+            description = "Devuelve el equipo indicado si pertenece a la empresa del usuario autenticado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Equipment returned."),
-            @ApiResponse(responseCode = "404", description = "Equipment does not exist or belongs to another company.")
+            @ApiResponse(responseCode = "200", description = "Equipo devuelto."),
+            @ApiResponse(responseCode = "404", description = "El equipo no existe o pertenece a otra empresa.")
     })
     @GetMapping("/{equipmentId}")
     public ResponseEntity<EquipmentResource> getEquipmentById(@PathVariable Long equipmentId) {
@@ -164,15 +161,15 @@ public class EquipmentController {
     }
 
     /**
-     * Lists the equipment of a specific company.
+     * Lista los equipos de una empresa.
      *
-     * <p>Only the owning company may list its own equipment.</p>
+     * <p>Solo la empresa propietaria puede consultar esta colección.</p>
      */
-    @Operation(summary = "List equipment by company",
-            description = "Returns all equipment of the given company when it matches the caller's own company.")
+    @Operation(summary = "Listar equipos por empresa",
+            description = "Devuelve los equipos de la empresa indicada si coincide con el tenant del usuario.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Equipment returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not own the requested company.")
+            @ApiResponse(responseCode = "200", description = "Equipos devueltos."),
+            @ApiResponse(responseCode = "403", description = "La empresa solicitada no pertenece al usuario.")
     })
     @GetMapping("/company/{companyId}")
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")

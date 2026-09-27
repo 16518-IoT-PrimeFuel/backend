@@ -26,12 +26,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Per-tank refill policy (S09) and the read side of the shadow decisions. Automation is opt-in through
- * {@code autoGenerateEnabled}; until a tank opts in, everything here is observability only.
+ * Política de reposición de cada cisterna (S09) y consulta de decisiones simuladas. La automatización se activa de forma explícita mediante {@code autoGenerateEnabled}.
  */
 @RestController
 @RequestMapping(value = "/api/v2/tanks/{tankId}", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Refill policy", description = "Low-level policy and refill episodes (v2)")
+@Tag(name = "Políticas de reposición", description = "Configuración por cisterna y consulta de episodios de abastecimiento")
 public class RefillPoliciesController {
 
     private final RefillPolicyCommandService commandService;
@@ -50,19 +49,16 @@ public class RefillPoliciesController {
     }
 
     /**
-     * Creates or reconfigures the refill policy of a tank.
+     * Crea o reconfigura la política de reposición de una cisterna.
      *
-     * <p>The tank must belong to the caller's organization. All policy fields are optional and fall
-     * back to the approved global defaults; an existing policy is reconfigured in place. The tank is
-     * first checked through {@link TankAssets}, so a tank that is missing or foreign is refused as
-     * forbidden rather than reported as not found.</p>
+     * <p>La cisterna debe pertenecer a la organización activa. Los campos omitidos usan valores globales aprobados. La propiedad se comprueba antes de configurar la política.</p>
      */
-    @Operation(summary = "Configure a tank refill policy",
-            description = "Creates or updates the refill policy of a tank owned by the caller's organization, with optional overrides over the global defaults.")
+    @Operation(summary = "Configurar política de reposición",
+            description = "Crea o actualiza la política de la cisterna propia. Los campos opcionales sobrescriben los valores globales aprobados.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Refill policy created or updated."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation or a policy value is invalid."),
-            @ApiResponse(responseCode = "403", description = "Caller has no active organization, does not own the tank, or the policy belongs to another organization.")
+            @ApiResponse(responseCode = "200", description = "Política de reposición creada o actualizada."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no cumple las validaciones o un valor de política no es válido."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene organización activa o la cisterna pertenece a otro tenant.")
     })
     @PutMapping("/refill-policy")
     public ResponseEntity<?> configure(@PathVariable Long tankId,
@@ -80,17 +76,16 @@ public class RefillPoliciesController {
     }
 
     /**
-     * Retrieves the refill policy of a tank.
+     * Consulta la política de reposición de una cisterna.
      *
-     * <p>The tank must belong to the caller's organization (otherwise forbidden); a tank without a
-     * configured policy yet is reported as not found.</p>
+     * <p>La cisterna debe pertenecer a la organización activa; si todavía no tiene política, responde como no encontrada.</p>
      */
-    @Operation(summary = "Get a tank refill policy",
-            description = "Returns the current refill policy of a tank owned by the caller's organization.")
+    @Operation(summary = "Consultar política de reposición",
+            description = "Devuelve la política vigente de una cisterna que pertenece a la organización activa.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Refill policy returned."),
-            @ApiResponse(responseCode = "403", description = "Caller has no active organization or does not own the tank."),
-            @ApiResponse(responseCode = "404", description = "The tank has no refill policy configured.")
+            @ApiResponse(responseCode = "200", description = "Política de reposición devuelta."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene organización activa o no es propietario de la cisterna."),
+            @ApiResponse(responseCode = "404", description = "La cisterna todavía no tiene una política configurada.")
     })
     @GetMapping("/refill-policy")
     public ResponseEntity<RefillPolicyResource> get(@PathVariable Long tankId) {
@@ -105,16 +100,15 @@ public class RefillPoliciesController {
     }
 
     /**
-     * Lists the refill episodes recorded for a tank.
+     * Lista los episodios de reposición de una cisterna.
      *
-     * <p>The tank must belong to the caller's organization; episodes are the shadow decisions taken by
-     * the evaluator on that tank.</p>
+     * <p>La cisterna debe pertenecer a la organización activa; los episodios corresponden a las decisiones registradas por el evaluador.</p>
      */
-    @Operation(summary = "List refill episodes of a tank",
-            description = "Returns the refill episodes recorded for a tank owned by the caller's organization.")
+    @Operation(summary = "Listar episodios de reposición",
+            description = "Devuelve los episodios registrados para una cisterna propia de la organización activa.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Refill episodes returned."),
-            @ApiResponse(responseCode = "403", description = "Caller has no active organization or does not own the tank.")
+            @ApiResponse(responseCode = "200", description = "Episodios de reposición devueltos."),
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene organización activa o no es propietario de la cisterna.")
     })
     @GetMapping("/refill-episodes")
     public ResponseEntity<List<RefillEpisodeResource>> episodes(@PathVariable Long tankId) {

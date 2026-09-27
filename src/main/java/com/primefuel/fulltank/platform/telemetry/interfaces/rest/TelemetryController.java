@@ -16,12 +16,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Technical ingestion adapter. It is not a customer API: the caller authenticates as a device with its
- * rotating token (see T07-B), which is why this path is exempt from the user JWT filter chain.
+ * Adaptador técnico de ingesta, no destinado a clientes. El dispositivo se autentica con un token rotativo,
+ * separado de la cadena de autenticación JWT de usuarios.
  */
 @RestController
 @RequestMapping(value = "/api/v2/telemetry", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Telemetry", description = "Device telemetry ingestion (v2, machine authenticated)")
+@Tag(name = "Telemetría", description = "Recepción de mediciones autenticadas de dispositivos")
 public class TelemetryController {
 
     private final TelemetryIngestServiceImpl ingestService;
@@ -31,18 +31,17 @@ public class TelemetryController {
     }
 
     /**
-     * Ingests a single device reading.
+     * Recibe una medición de un dispositivo.
      *
-     * <p>Machine-authenticated with the {@code X-Device-Token} header (not the user JWT). The payload is
-     * version-checked (currently only schema v1) and normalised. A reading whose credential is unknown,
-     * revoked or has no active binding is still acknowledged (202) but stored as quarantined; a repeated
-     * device/channel/sequence is acknowledged without writing. The endpoint applies no commercial policy.</p>
+     * <p>Se autentica con {@code X-Device-Token}, no con JWT de usuario. El esquema se valida y normaliza.
+     * Las credenciales desconocidas, revocadas o sin vínculo activo se confirman con 202 y quedan en cuarentena;
+     * una secuencia repetida se confirma sin duplicar el registro.</p>
      */
-    @Operation(summary = "Ingest a device reading",
-            description = "Accepts a versioned, machine-authenticated telemetry reading; quarantine or duplicate readings are acknowledged rather than rejected.")
+    @Operation(summary = "Recibir medición de dispositivo",
+            description = "Acepta una medición de telemetría versionada y autenticada por dispositivo; confirma lecturas en cuarentena o duplicadas sin almacenarlas como nuevas.")
     @ApiResponses({
-            @ApiResponse(responseCode = "202", description = "Reading accepted (or acknowledged as quarantine/duplicate)."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation, the schema version is unsupported, or a required field/value is invalid.")
+            @ApiResponse(responseCode = "202", description = "Medición aceptada o confirmada como lectura en cuarentena o duplicada."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no supera la validación, la versión de esquema no está admitida o falta un dato requerido.")
     })
     @PostMapping("/readings")
     public ResponseEntity<?> ingest(@RequestHeader(name = "X-Device-Token", required = false) String deviceToken,

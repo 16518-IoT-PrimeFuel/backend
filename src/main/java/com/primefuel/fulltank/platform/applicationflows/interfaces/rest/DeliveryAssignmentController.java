@@ -20,22 +20,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * v2 assignment (S15/T15-A): {@code POST /api/v2/deliveries}. Unlike the legacy create (which decremented
- * stock, assigned and dispatched in one go, straight against foreign repositories), this endpoint delegates
- * to {@link AssignDeliveryFlow}, which orchestrates acceptance consumption plus the supply and fleet
- * reservations in a single transaction.
+ * Asigna en v2 una entrega mediante {@code POST /api/v2/deliveries}. Delega en {@link AssignDeliveryFlow},
+ * que consume la aceptación y reserva suministro y flota en una transacción.
  *
- * <p>Tenant-safe: the provider is resolved from the caller's principal, never from the body. The order must
- * be backed by an <em>accepted</em> replenishment request owned by that provider, otherwise the assignment
- * cannot start (this is what stops a legacy order without acceptance from entering here). A retry with the
- * same {@code commandId} returns the same delivery.
+ * <p>El distribuidor se obtiene del principal autenticado, nunca del cuerpo. La orden debe estar respaldada
+ * por una solicitud de reposición aceptada por ese distribuidor. Repetir el mismo {@code commandId} devuelve
+ * la misma entrega.
  *
- * <p>This controller lives in {@code applicationflows} (the composition root) so the {@code fulfillment}
- * module does not have to depend on the orchestrator; it stays a thin HTTP adapter over the flow.
+ * <p>Este adaptador HTTP forma parte de la raíz de composición para mantener los módulos de dominio desacoplados.</p>
  */
 @RestController
 @RequestMapping(value = "/api/v2/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Delivery assignment", description = "Transactional assignment after acceptance (v2)")
+@Tag(name = "Asignación de entregas", description = "Asignación transaccional de solicitudes aceptadas en la API v2")
 public class DeliveryAssignmentController {
 
     private final AssignDeliveryFlow assignDeliveryFlow;
@@ -46,14 +42,15 @@ public class DeliveryAssignmentController {
         this.tenantAccess = tenantAccess;
     }
 
-    @Operation(summary = "Assign a delivery for an accepted order",
-            description = "Consumes the order's replenishment acceptance, reserves supply and fleet, and creates the assigned delivery in one transaction; idempotent per commandId.")
+    /** Consume la aceptación de reposición y asigna una entrega al tenant distribuidor autenticado. */
+    @Operation(summary = "Asignar entrega para una orden aceptada",
+            description = "Consume la aceptación de reposición de la orden, reserva suministro y flota, y crea la entrega en una transacción; es idempotente por commandId.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Delivery assigned (or the existing delivery for the commandId returned)."),
-            @ApiResponse(responseCode = "400", description = "The command is missing its commandId/orderId or the window/volume is invalid."),
-            @ApiResponse(responseCode = "403", description = "Caller is not authenticated as a provider tenant."),
-            @ApiResponse(responseCode = "404", description = "No replenishment request accepted by the caller's provider backs the order."),
-            @ApiResponse(responseCode = "409", description = "The request is not accepted, its acceptance was already consumed, or the supply/fleet resource is unavailable.")
+            @ApiResponse(responseCode = "201", description = "Entrega asignada o entrega existente devuelta para el commandId."),
+            @ApiResponse(responseCode = "400", description = "Falta commandId u orderId, o la ventana o el volumen no son válidos."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado como tenant distribuidor."),
+            @ApiResponse(responseCode = "404", description = "La orden no está respaldada por una solicitud aceptada por el distribuidor autenticado."),
+            @ApiResponse(responseCode = "409", description = "La solicitud no está aceptada, la aceptación ya se consumió o no hay disponibilidad de suministro o flota.")
     })
     @PostMapping
     public ResponseEntity<?> assign(@RequestBody AssignDeliveryResource resource) {
