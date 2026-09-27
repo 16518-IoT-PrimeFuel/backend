@@ -3,7 +3,7 @@ package com.primefuel.fulltank.platform.fleet.interfaces.rest.resources;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/** v2 driver input. The provider (tenant) always comes from the principal, never from the body. */
+/** Driver input. The provider (tenant) always comes from the principal, never from the body. */
 public record DriverInputResource(
         Long userId,
         @NotBlank @Size(max = 80) String firstName,

@@ -1,6 +1,6 @@
 package com.primefuel.fulltank.platform.fleet.interfaces.rest.resources;
 
-public record DriverV2Resource(
+public record DriverResource(
         Long id,
         Long providerId,
         Long userId,

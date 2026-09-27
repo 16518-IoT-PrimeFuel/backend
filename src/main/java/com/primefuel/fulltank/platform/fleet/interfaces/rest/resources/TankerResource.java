@@ -1,6 +1,6 @@
 package com.primefuel.fulltank.platform.fleet.interfaces.rest.resources;
 
-public record TankerV2Resource(
+public record TankerResource(
         Long id,
         Long providerId,
         String licensePlate,

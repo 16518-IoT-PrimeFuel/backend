@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "authorization.jwt.secret=0123456789abcdef0123456789abcdef"
 })
 @AutoConfigureMockMvc
-class AdminUsersV2ControllerTest {
+class AdminUsersControllerTest {
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
     @Autowired UserRepository users;
@@ -46,18 +46,18 @@ class AdminUsersV2ControllerTest {
     void promotionIsAdminOnlyIdempotentAndEnablesExistingAdminEndpoint() throws Exception {
         long target = signUp("promote-target");
         var nonAdmin = auth(800L, "ROLE_BUYER");
-        mockMvc.perform(post("/api/v2/admin/users/{id}/promote", target).with(nonAdmin))
+        mockMvc.perform(post("/api/admin/users/{id}/promote", target).with(nonAdmin))
                 .andExpect(status().isForbidden());
 
         var adminAuth = auth(801L, "ROLE_ADMIN");
-        mockMvc.perform(post("/api/v2/admin/users/{id}/promote", target).with(adminAuth))
+        mockMvc.perform(post("/api/admin/users/{id}/promote", target).with(adminAuth))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(target))
                 .andExpect(jsonPath("$.roles").isArray());
-        mockMvc.perform(post("/api/v2/admin/users/{id}/promote", target).with(adminAuth))
+        mockMvc.perform(post("/api/admin/users/{id}/promote", target).with(adminAuth))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/api/v1/users").with(adminAuth)).andExpect(status().isOk());
-        mockMvc.perform(post("/api/v2/admin/users/{id}/promote", -1L).with(adminAuth))
+        mockMvc.perform(get("/api/users").with(adminAuth)).andExpect(status().isOk());
+        mockMvc.perform(post("/api/admin/users/{id}/promote", -1L).with(adminAuth))
                 .andExpect(status().isNotFound());
 
         var promoted = users.findById(target).orElseThrow();
@@ -70,7 +70,7 @@ class AdminUsersV2ControllerTest {
     private long signUp(String prefix) throws Exception {
         int id = SEQUENCE.incrementAndGet();
         String username = prefix + id + "@example.test";
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_BUYER"],

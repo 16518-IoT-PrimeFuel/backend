@@ -6,7 +6,7 @@ import com.primefuel.fulltank.platform.fleet.api.FleetRegistry;
 import com.primefuel.fulltank.platform.fleet.domain.model.commands.RegisterDriverCommand;
 import com.primefuel.fulltank.platform.fleet.domain.model.commands.UpdateDriverCommand;
 import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.DriverInputResource;
-import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.DriverV2Resource;
+import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.DriverResource;
 import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.EligibilityResource;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
@@ -23,20 +23,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Catálogo v2 de conductores. El distribuidor se obtiene del principal; los recursos de otro tenant se
+ * Catálogo de conductores. El distribuidor se obtiene del principal; los recursos de otro tenant se
  * informan como no encontrados. La activación y desactivación preservan el registro.
  */
 @RestController
-@RequestMapping(value = "/api/v2/drivers", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/drivers", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Conductores de flota", description = "Administración y ciclo de vida de conductores por distribuidor")
-public class DriversV2Controller {
+public class DriversController {
 
     private final FleetCatalog fleetCatalog;
     private final FleetRegistry fleetRegistry;
     private final EligibilityQuery eligibilityQuery;
     private final TenantAccess tenantAccess;
 
-    public DriversV2Controller(FleetCatalog fleetCatalog,
+    public DriversController(FleetCatalog fleetCatalog,
                                FleetRegistry fleetRegistry,
                                EligibilityQuery eligibilityQuery,
                                TenantAccess tenantAccess) {
@@ -68,7 +68,7 @@ public class DriversV2Controller {
                 providerId.get(), resource.userId(), resource.firstName(), resource.lastName(),
                 resource.licenseNumber(), resource.phoneNumber(), resource.email(), resource.status()));
         return ResponseEntityAssembler.toResponseEntityFromResult(
-                result, DriversV2Controller::toResource, HttpStatus.CREATED);
+                result, DriversController::toResource, HttpStatus.CREATED);
     }
 
     /**
@@ -83,13 +83,13 @@ public class DriversV2Controller {
             @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor.")
     })
     @GetMapping
-    public ResponseEntity<List<DriverV2Resource>> list() {
+    public ResponseEntity<List<DriverResource>> list() {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(fleetCatalog.listDrivers(providerId.get()).stream()
-                .map(DriversV2Controller::toResource).toList(), HttpStatus.OK);
+                .map(DriversController::toResource).toList(), HttpStatus.OK);
     }
 
     /**
@@ -105,7 +105,7 @@ public class DriversV2Controller {
             @ApiResponse(responseCode = "404", description = "El conductor no existe o pertenece a otro tenant distribuidor.")
     })
     @GetMapping("/{driverId}")
-    public ResponseEntity<DriverV2Resource> get(@PathVariable Long driverId) {
+    public ResponseEntity<DriverResource> get(@PathVariable Long driverId) {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -138,7 +138,7 @@ public class DriversV2Controller {
                 driverId, resource.firstName(), resource.lastName(), resource.licenseNumber(),
                 resource.phoneNumber(), resource.email(), resource.status()));
         return ResponseEntityAssembler.toResponseEntityFromResult(
-                result, DriversV2Controller::toResource, HttpStatus.OK);
+                result, DriversController::toResource, HttpStatus.OK);
     }
 
     /**
@@ -158,7 +158,7 @@ public class DriversV2Controller {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return ResponseEntityAssembler.toResponseEntityFromResult(
-                fleetRegistry.deactivateDriver(driverId), DriversV2Controller::toResource, HttpStatus.OK);
+                fleetRegistry.deactivateDriver(driverId), DriversController::toResource, HttpStatus.OK);
     }
 
     /**
@@ -178,7 +178,7 @@ public class DriversV2Controller {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return ResponseEntityAssembler.toResponseEntityFromResult(
-                fleetRegistry.activateDriver(driverId), DriversV2Controller::toResource, HttpStatus.OK);
+                fleetRegistry.activateDriver(driverId), DriversController::toResource, HttpStatus.OK);
     }
 
     /**
@@ -193,13 +193,13 @@ public class DriversV2Controller {
             @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor.")
     })
     @GetMapping("/eligible")
-    public ResponseEntity<List<DriverV2Resource>> listEligible() {
+    public ResponseEntity<List<DriverResource>> listEligible() {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(eligibilityQuery.eligibleDrivers(providerId.get()).stream()
-                .map(DriversV2Controller::toResource).toList(), HttpStatus.OK);
+                .map(DriversController::toResource).toList(), HttpStatus.OK);
     }
 
     /**
@@ -234,8 +234,8 @@ public class DriversV2Controller {
                 .orElse(false);
     }
 
-    private static DriverV2Resource toResource(FleetCatalog.DriverSnapshot driver) {
-        return new DriverV2Resource(driver.id(), driver.providerId(), driver.userId(), driver.firstName(),
+    private static DriverResource toResource(FleetCatalog.DriverSnapshot driver) {
+        return new DriverResource(driver.id(), driver.providerId(), driver.userId(), driver.firstName(),
                 driver.lastName(), driver.licenseNumber(), driver.phoneNumber(), driver.email(),
                 driver.status(), driver.active());
     }

@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "authorization.jwt.secret=0123456789abcdef0123456789abcdef"
 })
 @AutoConfigureMockMvc
-class FleetV2ControllerTest {
+class FleetControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -58,17 +58,17 @@ class FleetV2ControllerTest {
         var provider = authFor(providerId);
         long driverId = createDriver(provider, "REST-1", "AVAILABLE");
 
-        mockMvc.perform(post("/api/v2/drivers/{id}/deactivate", driverId).with(provider))
+        mockMvc.perform(post("/api/drivers/{id}/deactivate", driverId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
 
         // Soft-disable: the resource is still readable, it is just not active.
-        mockMvc.perform(get("/api/v2/drivers/{id}", driverId).with(provider))
+        mockMvc.perform(get("/api/drivers/{id}", driverId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(driverId))
                 .andExpect(jsonPath("$.active").value(false));
 
-        mockMvc.perform(post("/api/v2/drivers/{id}/activate", driverId).with(provider))
+        mockMvc.perform(post("/api/drivers/{id}/activate", driverId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(true));
     }
@@ -81,16 +81,16 @@ class FleetV2ControllerTest {
         var other = authFor(otherProviderId);
         long driverId = createDriver(owner, "REST-2", "AVAILABLE");
 
-        mockMvc.perform(get("/api/v2/drivers/{id}", driverId).with(other))
+        mockMvc.perform(get("/api/drivers/{id}", driverId).with(other))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(post("/api/v2/drivers/{id}/deactivate", driverId).with(other))
+        mockMvc.perform(post("/api/drivers/{id}/deactivate", driverId).with(other))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(post("/api/v2/drivers/{id}/activate", driverId).with(other))
+        mockMvc.perform(post("/api/drivers/{id}/activate", driverId).with(other))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v2/drivers/{id}/eligibility", driverId).with(other))
+        mockMvc.perform(get("/api/drivers/{id}/eligibility", driverId).with(other))
                 .andExpect(status().isNotFound());
         // The other tenant's own listing never leaks the driver.
-        mockMvc.perform(get("/api/v2/drivers").with(other))
+        mockMvc.perform(get("/api/drivers").with(other))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.id == %d)]".formatted(driverId)).isEmpty());
     }
@@ -101,10 +101,10 @@ class FleetV2ControllerTest {
         var provider = authFor(providerId);
         long tankerId = createTanker(provider, "REST-T1", "AVAILABLE");
 
-        mockMvc.perform(post("/api/v2/tankers/{id}/deactivate", tankerId).with(provider))
+        mockMvc.perform(post("/api/tankers/{id}/deactivate", tankerId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
-        mockMvc.perform(post("/api/v2/tankers/{id}/activate", tankerId).with(provider))
+        mockMvc.perform(post("/api/tankers/{id}/activate", tankerId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(true));
     }
@@ -119,22 +119,22 @@ class FleetV2ControllerTest {
         long busyId = createDriver(provider, "REST-4", "ASSIGNED");
         long suspendedId = createDriver(provider, "REST-5", "SUSPENDED");
 
-        mockMvc.perform(get("/api/v2/drivers/{id}/eligibility", availableId).with(provider))
+        mockMvc.perform(get("/api/drivers/{id}/eligibility", availableId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.outcome").value("ELIGIBLE"));
-        mockMvc.perform(get("/api/v2/drivers/{id}/eligibility", busyId).with(provider))
+        mockMvc.perform(get("/api/drivers/{id}/eligibility", busyId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.outcome").value("BUSY"));
-        mockMvc.perform(get("/api/v2/drivers/{id}/eligibility", suspendedId).with(provider))
+        mockMvc.perform(get("/api/drivers/{id}/eligibility", suspendedId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.outcome").value("INELIGIBLE"));
-        mockMvc.perform(get("/api/v2/drivers/eligible").with(provider))
+        mockMvc.perform(get("/api/drivers/eligible").with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.id == %d)]".formatted(availableId)).isNotEmpty())
                 .andExpect(jsonPath("$[?(@.id == %d)]".formatted(busyId)).isEmpty())
                 .andExpect(jsonPath("$[?(@.id == %d)]".formatted(suspendedId)).isEmpty());
         // A foreign tenant gets a 404 rather than a cross-tenant answer.
-        mockMvc.perform(get("/api/v2/drivers/{id}/eligibility", availableId).with(other))
+        mockMvc.perform(get("/api/drivers/{id}/eligibility", availableId).with(other))
                 .andExpect(status().isNotFound());
     }
 
@@ -142,7 +142,7 @@ class FleetV2ControllerTest {
 
     private long signUpProvider() throws Exception {
         int sequence = SEQUENCE.incrementAndGet();
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"username":"fleet-rest-%d@example.test","password":"StrongPass1!",
@@ -157,7 +157,7 @@ class FleetV2ControllerTest {
 
     private long createDriver(RequestPostProcessor provider, String licenseNumber, String status)
             throws Exception {
-        var response = mockMvc.perform(post("/api/v2/drivers")
+        var response = mockMvc.perform(post("/api/drivers")
                         .with(provider)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -172,7 +172,7 @@ class FleetV2ControllerTest {
 
     private long createTanker(RequestPostProcessor provider, String licensePlate, String status)
             throws Exception {
-        var response = mockMvc.perform(post("/api/v2/tankers")
+        var response = mockMvc.perform(post("/api/tankers")
                         .with(provider)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

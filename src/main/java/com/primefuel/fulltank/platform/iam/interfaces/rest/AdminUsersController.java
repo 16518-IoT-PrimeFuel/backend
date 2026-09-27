@@ -18,13 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v2/admin/users")
+@RequestMapping("/api/admin/users")
 @Tag(name = "Administración de plataforma", description = "Operaciones administrativas globales de cuentas")
-public class AdminUsersV2Controller {
+public class AdminUsersController {
     private final UserRepository users;
     private final RoleRepository roles;
 
-    public AdminUsersV2Controller(UserRepository users, RoleRepository roles) {
+    public AdminUsersController(UserRepository users, RoleRepository roles) {
         this.users = users;
         this.roles = roles;
     }

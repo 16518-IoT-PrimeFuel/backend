@@ -7,7 +7,7 @@ import com.primefuel.fulltank.platform.fleet.domain.model.commands.RegisterTanke
 import com.primefuel.fulltank.platform.fleet.domain.model.commands.UpdateTankerCommand;
 import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.EligibilityResource;
 import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.TankerInputResource;
-import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.TankerV2Resource;
+import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.TankerResource;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,19 +23,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Catálogo v2 de cisternas. El distribuidor se obtiene del principal y la desactivación conserva el registro.
+ * Catálogo de cisternas. El distribuidor se obtiene del principal y la desactivación conserva el registro.
  */
 @RestController
-@RequestMapping(value = "/api/v2/tankers", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/tankers", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Cisternas de flota", description = "Administración y ciclo de vida de cisternas por distribuidor")
-public class TankersV2Controller {
+public class TankersController {
 
     private final FleetCatalog fleetCatalog;
     private final FleetRegistry fleetRegistry;
     private final EligibilityQuery eligibilityQuery;
     private final TenantAccess tenantAccess;
 
-    public TankersV2Controller(FleetCatalog fleetCatalog,
+    public TankersController(FleetCatalog fleetCatalog,
                                FleetRegistry fleetRegistry,
                                EligibilityQuery eligibilityQuery,
                                TenantAccess tenantAccess) {
@@ -67,7 +67,7 @@ public class TankersV2Controller {
                 providerId.get(), resource.licensePlate(), resource.brand(), resource.model(),
                 resource.capacity(), resource.unit(), resource.status()));
         return ResponseEntityAssembler.toResponseEntityFromResult(
-                result, TankersV2Controller::toResource, HttpStatus.CREATED);
+                result, TankersController::toResource, HttpStatus.CREATED);
     }
 
     /**
@@ -82,13 +82,13 @@ public class TankersV2Controller {
             @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor.")
     })
     @GetMapping
-    public ResponseEntity<List<TankerV2Resource>> list() {
+    public ResponseEntity<List<TankerResource>> list() {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(fleetCatalog.listTankers(providerId.get()).stream()
-                .map(TankersV2Controller::toResource).toList(), HttpStatus.OK);
+                .map(TankersController::toResource).toList(), HttpStatus.OK);
     }
 
     /**
@@ -104,7 +104,7 @@ public class TankersV2Controller {
             @ApiResponse(responseCode = "404", description = "La cisterna no existe o pertenece a otro tenant distribuidor.")
     })
     @GetMapping("/{tankerId}")
-    public ResponseEntity<TankerV2Resource> get(@PathVariable Long tankerId) {
+    public ResponseEntity<TankerResource> get(@PathVariable Long tankerId) {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -137,7 +137,7 @@ public class TankersV2Controller {
                 tankerId, resource.licensePlate(), resource.brand(), resource.model(),
                 resource.capacity(), resource.unit(), resource.status()));
         return ResponseEntityAssembler.toResponseEntityFromResult(
-                result, TankersV2Controller::toResource, HttpStatus.OK);
+                result, TankersController::toResource, HttpStatus.OK);
     }
 
     /**
@@ -157,7 +157,7 @@ public class TankersV2Controller {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return ResponseEntityAssembler.toResponseEntityFromResult(
-                fleetRegistry.deactivateTanker(tankerId), TankersV2Controller::toResource, HttpStatus.OK);
+                fleetRegistry.deactivateTanker(tankerId), TankersController::toResource, HttpStatus.OK);
     }
 
     /**
@@ -177,7 +177,7 @@ public class TankersV2Controller {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return ResponseEntityAssembler.toResponseEntityFromResult(
-                fleetRegistry.activateTanker(tankerId), TankersV2Controller::toResource, HttpStatus.OK);
+                fleetRegistry.activateTanker(tankerId), TankersController::toResource, HttpStatus.OK);
     }
 
     /**
@@ -192,13 +192,13 @@ public class TankersV2Controller {
             @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor.")
     })
     @GetMapping("/eligible")
-    public ResponseEntity<List<TankerV2Resource>> listEligible() {
+    public ResponseEntity<List<TankerResource>> listEligible() {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(eligibilityQuery.eligibleTankers(providerId.get()).stream()
-                .map(TankersV2Controller::toResource).toList(), HttpStatus.OK);
+                .map(TankersController::toResource).toList(), HttpStatus.OK);
     }
 
     /**
@@ -233,8 +233,8 @@ public class TankersV2Controller {
                 .orElse(false);
     }
 
-    private static TankerV2Resource toResource(FleetCatalog.TankerSnapshot tanker) {
-        return new TankerV2Resource(tanker.id(), tanker.providerId(), tanker.licensePlate(), tanker.brand(),
+    private static TankerResource toResource(FleetCatalog.TankerSnapshot tanker) {
+        return new TankerResource(tanker.id(), tanker.providerId(), tanker.licensePlate(), tanker.brand(),
                 tanker.model(), tanker.capacity(), tanker.unit(), tanker.status(), tanker.active());
     }
 }
