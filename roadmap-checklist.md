@@ -364,7 +364,7 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 - [x] T24-PRE-METRICS — Métricas de tráfico por patrón y versión con V27 y `GET /api/v2/admin/api-metrics`.
       El sunset sigue bloqueado por ventana real de medición y ledger externo de consumidores `UNKNOWN`.
       → `docs/api-ledger/T24-PRE-METRICS-route-usage.md`
-- [x] T24-B — Retiro inmediato de `drivers` (5 rutas), `vehicles` (5) y `provider-ratings` (3) por decisión de producto (2026-09-26), sin esperar métricas. OpenAPI, ledger y V32 actualizados. `fuel-requests` también fue retirada tras implementar dirección/fecha en v2 y aceptación transaccional con orden vinculada (V33/V34). Siguen abiertos `fuel-orders` create/confirm, `favorite-provider`, notificaciones POST y las demás familias. → `docs/api-ledger/T24-B-endpoint-retirement.md`
+- [x] T24-B — Retiro inmediato de `drivers` (5 rutas), `vehicles` (5), `provider-ratings` (3) y `fuel-requests` (5) por decisión de producto, sin esperar métricas. La aceptación v2 crea y vincula la orden; las validaciones de pertenencia y fecha Lima viven en el servicio de creación. V34 rescata dirección/fecha de solicitudes enlazadas antes de eliminar `fuel_requests`; las filas v1 no enlazadas se pierden. V35 agrega unicidad de `deliveries.order_id` y conflicto 409 ante una segunda entrega. Siguen abiertos `fuel-orders` create/confirm, `favorite-provider`, notificaciones POST y las demás familias. → `docs/api-ledger/T24-B-endpoint-retirement.md`
 
 ## Documentación Swagger (OpenAPI + javadoc de REST)
 

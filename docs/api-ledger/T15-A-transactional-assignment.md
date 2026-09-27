@@ -25,9 +25,8 @@ Parent spec: S15. Dependencias hechas: T10-B, T11-B, T13-B, T14-B.
 ## Invariantes y cómo se cumplen
 
 - **Aceptación vigente y once-only.** El flujo resuelve la `ReplenishmentRequest` correlacionada al order
-  (`findByOrderId`), exige `ACCEPTED` y llama `consume` **una sola vez`. Un segundo intento recibe
-  `REPLENISHMENTREQUEST_CONFLICT` (aceptación ya consumida). Un order **sin** request aceptada → **404**
-  (`REPLENISHMENTREQUEST_NOT_FOUND`): así un pedido legacy sin aceptación no entra por v2.
+  (`findByOrderId`) y exige `ACCEPTED`. La aceptación v2 ya crea y vincula esa orden y consume la decisión
+  en su transacción; las órdenes sin solicitud aceptada responden **404**.
 - **Reservas exclusivas / fallo revierte todo (compensación).** Los cuatro pasos corren en una sola TX. Un
   fallo **no** se devuelve como `Result` (eso commitearía la TX) sino que se **lanza** y la TX hace rollback:
   se revierten la aceptación consumida y las dos reservas. Es decir, *compensar = rollback*; no hay estado a
@@ -43,10 +42,9 @@ Parent spec: S15. Dependencias hechas: T10-B, T11-B, T13-B, T14-B.
   windowStart, windowEnd, scheduledDate, notes }`. **No** recibe `providerId`: se resuelve de
   `iam.api.TenantAccess.currentProviderId()` (nunca del body). Si el principal no es un provider → **403**; si
   el request aceptado detrás del order no pertenece a ese provider → **404** (no se filtra la existencia).
-- **A2 — el order debe tener una request aceptada correlacionada.** `deliveries.order_id` es `NOT NULL` y las
-  requests `v2` nativas no crean order (T10-B: "sin orden directa v2"). Por eso el flujo exige que la
-  aceptación esté correlacionada con un order (la ruta legacy de aceptación sí lo hace). Asignar requests
-  v2-nativas sin order queda explícitamente fuera de alcance hasta que exista ese correlato.
+- **A2 — la solicitud v2 aceptada crea la orden correlacionada.** `POST /api/v2/replenishment-requests/{id}/accept`
+  crea `FuelOrder`, la vincula a la solicitud y consume la aceptación en una sola transacción. La asignación
+  exige que esa solicitud siga `ACCEPTED` y pertenezca al distribuidor autenticado.
 - **A3 — `READ_COMMITTED`.** El executor fija `READ_COMMITTED` para que la reserva de flota anidada (T13-B)
   corra con la misma isolation que espera al releer su clave de idempotencia tras el lock (en `REPEATABLE_READ`
   el perdedor no vería la fila y chocaría con el único).
@@ -60,6 +58,10 @@ Parent spec: S15. Dependencias hechas: T10-B, T11-B, T13-B, T14-B.
 - **`V19__delivery_assignment_command.sql`**: `deliveries.assignment_command_id varchar(120)` + único
   `uk_deliveries_assignment_command_id` (nullable: los deliveries legacy no tienen commandId; MySQL permite
   múltiples NULL en un único). Validada en MySQL 8.0.46 con `scripts/validate-schema-mysql.ps1`.
+- **V35 — `uk_deliveries_order_id`**: `deliveries.order_id` es único. Una segunda asignación con distinto
+  `commandId` para esa orden responde 409 y deja una sola entrega. El script muestra la consulta para detectar
+  duplicados antes del ALTER; no elimina registros. MySQL admite múltiples NULL, aunque el esquema actual define
+  `order_id` como obligatorio.
 
 ## Tests
 
@@ -67,7 +69,8 @@ Parent spec: S15. Dependencias hechas: T10-B, T11-B, T13-B, T14-B.
   el mismo `commandId` (no-op, una sola reserva), order sin request aceptada → 404 sin consumo; **failure
   injection por paso** — supply falla (stock insuficiente) → aceptación sin consumir, sin reserva de flota, sin
   delivery; flota falla (tanker chico) → aceptación sin consumir y reserva de supply revertida; y una **carrera**
-  H2 que produce exactamente una asignación.
+  H2 de recursos que produce exactamente una asignación. La integración de aceptación también compite con dos
+  `commandId` distintos por una misma orden: una respuesta 201, una 409 y una sola entrega.
 - `AssignDeliveryFlowConcurrencyMySqlTest` (**MySQL 8.0.46, gated** `ASSIGN_MYSQL_IT=1`): dos asignaciones
   compiten por el mismo driver+tanker+ventana → **una gana**, la otra revierte (aceptación del perdedor sin
   consumir, sin reserva huérfana), sin deadlock. Levantar el contexto aplica `V19` + `validate`.

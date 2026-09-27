@@ -183,7 +183,7 @@ class RefillPolicyTest {
     void aPendingRequestSuppressesOpeningANewEpisode() {
         var productId = aProduct();
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
-                1L, null, 305L, 7L, productId, 30.0, "GAL", ReplenishmentSource.AUTOMATIC, "manual-305"));
+                1L, null, 305L, 7L, productId, 30.0, "GAL", ReplenishmentSource.AUTOMATIC, "manual-305", "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
 
         var decision = evaluate(305L, 50.0).getOrElse(null);
@@ -199,7 +199,8 @@ class RefillPolicyTest {
         assertThat(opened.type()).isEqualTo(RefillDecisionType.OPEN_EPISODE);
 
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
-                1L, null, 306L, 7L, productId, 50.0, "GAL", ReplenishmentSource.AUTOMATIC, opened.episodeKey()));
+                1L, null, 306L, 7L, productId, 50.0, "GAL", ReplenishmentSource.AUTOMATIC,
+                opened.episodeKey(), "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
         assertThat(replenishmentCommandService.handle(new RejectReplenishmentRequestCommand(
                 created.getOrElse(null).getId(), "no stock")).isSuccess()).isTrue();

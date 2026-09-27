@@ -2,7 +2,7 @@
 
 Parent spec: S10. Preconditions: T05-B, T06-B, T11-B, T19-B.
 
-## What was added (new module `replenishment`)
+## Cambios del módulo `replenishment`
 
 - Aggregate `ReplenishmentRequest` with a single lifecycle: `PENDING → ACCEPTED | REJECTED |
   CANCELLED`. All transitions are terminal and only legal from `PENDING`; `reject` requires a reason.
@@ -20,6 +20,12 @@ Parent spec: S10. Preconditions: T05-B, T06-B, T11-B, T19-B.
   `/api/v2/replenishment-requests` (`POST`, `GET`, `GET /{id}`, `POST /{id}/accept|reject|cancel`).
   Client-scoped reads/writes use the organization from the principal; accept/reject require the
   request's provider.
+- El servicio de creación valida mediante `CustomerDirectory` que el cliente pertenezca a la organización del
+  comando. Si se indica una cisterna, valida mediante `TankAssets` que exista y pertenezca a ese cliente y
+  organización. Los recursos inexistentes o ajenos responden 404 para no revelar información de otro tenant.
+- La dirección predeterminada del sitio se resuelve solo después de comprobar la pertenencia del cliente y la
+  cisterna. El mismo servicio valida `deliveryDate` contra el día de negocio de `America/Lima` usando el `Clock`
+  inyectado; los flujos automáticos omiten la fecha para que el servicio aplique la fecha de negocio vigente.
 - Persistence `replenishment_requests` (`V11__replenishment_requests.sql`, validated on MySQL 8.0.46).
 
 ## Tests
@@ -28,10 +34,10 @@ Parent spec: S10. Preconditions: T05-B, T06-B, T11-B, T19-B.
 acceptance consumes once then reports `false`; reject and cancel paths; unknown product rejected;
 `episodeKey` creation is idempotent; and a **two-thread accept-vs-reject race has exactly one winner**.
 
-## Asunciones abiertas
+## Decisiones vigentes
 
-- **A1 — `orderId` is attached by the caller** (T10-B bridge) via a dedicated command, because the
-  order is created downstream of the acceptance.
+- **A1 — la aceptación v2 crea y vincula la orden.** El composition root invoca el port de ordering dentro de
+  la misma transacción que acepta y consume la solicitud; el controlador de replenishment no depende de ordering.
 - **A2 — cancel is allowed only while `PENDING`** (the roadmap's state matrix; cancelling an accepted
   request is not modelled).
 - **A3 — the module is not yet in the ArchUnit `BUSINESS_MODULES` list**; its cross-module reads go

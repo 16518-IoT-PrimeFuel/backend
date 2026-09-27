@@ -16,10 +16,4 @@ public record CreateReplenishmentRequestCommand(
         String deliveryAddress,
         LocalDate deliveryDate) {
 
-    public CreateReplenishmentRequestCommand(Long organizationId, Long customerAccountId, Long tankId,
-                                             Long providerId, Long fuelProductId, Double quantity,
-                                             String unit, ReplenishmentSource source, String episodeKey) {
-        this(organizationId, customerAccountId, tankId, providerId, fuelProductId, quantity,
-                unit, source, episodeKey, null, null);
-    }
 }

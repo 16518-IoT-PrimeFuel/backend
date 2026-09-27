@@ -13,8 +13,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "deliveries",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_deliveries_assignment_command_id", columnNames = "assignment_command_id"))
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_deliveries_assignment_command_id", columnNames = "assignment_command_id"),
+                @UniqueConstraint(name = "uk_deliveries_order_id", columnNames = "order_id")
+        })
 @Getter
 @Setter
 @NoArgsConstructor

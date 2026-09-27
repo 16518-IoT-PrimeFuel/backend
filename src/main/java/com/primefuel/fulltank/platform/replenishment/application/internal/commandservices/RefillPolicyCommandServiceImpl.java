@@ -24,8 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Optional;
 
 /**
@@ -44,7 +42,6 @@ public class RefillPolicyCommandServiceImpl implements RefillPolicyCommandServic
     private final ReplenishmentCommandService replenishmentCommandService;
     private final Clock clock;
     private final TankAssets tankAssets;
-    private static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Lima");
 
     public RefillPolicyCommandServiceImpl(RefillPolicyRepository policyRepository,
                                           RefillEpisodeRepository episodeRepository,
@@ -155,13 +152,17 @@ public class RefillPolicyCommandServiceImpl implements RefillPolicyCommandServic
                     episode.getEpisodeKey(), episode.getRequestedVolume());
             return;
         }
+        var address = tankAssets.deliveryAddressForTank(command.tankId()).orElse(null);
+        if (address == null || address.isBlank()) {
+            LOG.warn("refill request skipped tankId={} episodeKey={} reason=missing_delivery_address",
+                    command.tankId(), episode.getEpisodeKey());
+            return;
+        }
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
                 command.organizationId(), command.customerAccountId(), command.tankId(),
                 policy.getProviderId(), policy.getFuelProductId(), episode.getRequestedVolume(),
                 episode.getUnit(), ReplenishmentSource.AUTOMATIC, episode.getEpisodeKey(),
-                tankAssets.deliveryAddressForTank(command.tankId()).orElseThrow(() ->
-                        new IllegalStateException("The tank site has no delivery address")),
-                LocalDate.now(clock.withZone(BUSINESS_ZONE))));
+                address, null));
         if (created.isFailure()) {
             throw new IllegalStateException(
                     "The automatic replenishment request could not be created for episode "

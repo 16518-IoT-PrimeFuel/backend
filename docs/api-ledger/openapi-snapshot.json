@@ -6745,7 +6745,7 @@
         "tags" : [ "Solicitudes de abastecimiento" ]
       },
       "post" : {
-        "description" : "Registra una solicitud para la organización activa con fecha de entrega desde hoy en Lima. La dirección vacía se completa desde el sitio de la cisterna. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.",
+        "description" : "Registra una solicitud para la organización activa con fecha de entrega desde hoy en Lima. El servicio comprueba que el cliente pertenezca a esa organización y que la cisterna pertenezca al cliente antes de completar una dirección vacía desde su sitio. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.",
         "operationId" : "create",
         "requestBody" : {
           "content" : {
@@ -6776,7 +6776,7 @@
                 }
               }
             },
-            "description" : "El cuerpo es inválido, la fecha de entrega es anterior a hoy en Lima o no hay dirección disponible para la cisterna."
+            "description" : "El cuerpo es inválido, la fecha de entrega es anterior al día de negocio de Lima o no se puede obtener una dirección de entrega."
           },
           "403" : {
             "content" : {
@@ -6796,7 +6796,7 @@
                 }
               }
             },
-            "description" : "El producto no está disponible para el distribuidor indicado."
+            "description" : "El cliente no existe o pertenece a otra organización, la cisterna no existe o pertenece a otro cliente, o el producto no está disponible para el distribuidor indicado."
           }
         },
         "summary" : "Crear solicitud de abastecimiento",
@@ -6854,7 +6854,7 @@
     },
     "/api/v2/replenishment-requests/{requestId}/accept" : {
       "post" : {
-        "description" : "Acepta la solicitud del distribuidor destinatario y crea una orden vinculada en una única transacción. La respuesta incluye el orderId que requiere POST /api/v2/deliveries.",
+        "description" : "El distribuidor destinatario acepta una solicitud pendiente. La transacción consume la decisión, crea y vincula una orden para permitir su asignación posterior.",
         "operationId" : "accept",
         "parameters" : [ {
           "in" : "path",
@@ -6904,7 +6904,7 @@
                 }
               }
             },
-            "description" : "La solicitud ya no está pendiente, se decidió en paralelo o carece de dirección y fecha de entrega."
+            "description" : "La solicitud no puede aceptarse, falta un mapeo heredado o no tiene dirección y fecha de entrega; no se conservan cambios parciales."
           }
         },
         "summary" : "Aceptar solicitud de abastecimiento",

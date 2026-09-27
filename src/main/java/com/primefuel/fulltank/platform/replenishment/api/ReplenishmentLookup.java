@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.replenishment.api;
 
 import java.util.Optional;
+import java.time.LocalDate;
 
 public interface ReplenishmentLookup {
 
@@ -24,14 +25,7 @@ public interface ReplenishmentLookup {
             Long orderId,
             Long customerAccountId,
             String deliveryAddress,
-            java.time.LocalDate deliveryDate,
+            LocalDate deliveryDate,
             boolean acceptanceConsumed) {
-
-        public ReplenishmentView(Long id, Long organizationId, Long providerId, Long fuelProductId,
-                                 Long tankId, double quantity, String unit, double unitPrice,
-                                 String status, Long orderId) {
-            this(id, organizationId, providerId, fuelProductId, tankId, quantity, unit,
-                    unitPrice, status, orderId, null, null, null, false);
-        }
     }
 }

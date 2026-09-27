@@ -17,7 +17,7 @@ public class ReplenishmentAcceptanceFlow {
     public Result<ReplenishmentRequest, ApplicationError> accept(Long requestId) {
         try {
             return Result.success(executor.execute(requestId));
-        } catch (ReplenishmentAcceptanceFailedException failure) {
+        } catch (AssignmentFailedException failure) {
             return Result.failure(failure.error());
         }
     }

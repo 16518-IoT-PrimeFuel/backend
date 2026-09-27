@@ -91,11 +91,15 @@ class RefillGenerationIntegrationTest {
     private FuelProductCommandService fuelProductCommandService;
 
     private Long aTank(String ruc) {
+        return aTank(ruc, "Av. Combustibles 123");
+    }
+
+    private Long aTank(String ruc, String address) {
         var customer = customerCommandService.handle(
                 new RegisterCustomerCommand(ORGANIZATION, "Cliente refill " + ruc, ruc, null, null, null, null));
         assertThat(customer.isSuccess()).isTrue();
         var site = customerCommandService.handle(new RegisterSiteCommand(
-                ORGANIZATION, customer.getOrElse(null).getId(), "Sitio refill", "Av. Combustibles 123"));
+                ORGANIZATION, customer.getOrElse(null).getId(), "Sitio refill", address));
         assertThat(site.isSuccess()).isTrue();
         var tank = tankCommandService.handle(new RegisterTankCommand(
                 ORGANIZATION, customer.getOrElse(null).getId(), site.getOrElse(null).getId(), "Tanque refill " + ruc,
@@ -178,6 +182,19 @@ class RefillGenerationIntegrationTest {
         var episodes = episodesFor(tankId);
         assertThat(episodes).hasSize(1);
         assertThat(episodes.get(0).isRequestEmitted()).isFalse();
+    }
+
+    @Test
+    void automaticGenerationSkipsTanksWithoutSiteAddressAndKeepsEpisode() {
+        var tankId = aTank("20900000008", null);
+        configure(tankId, aProduct(), true);
+
+        setLevel(tankId, 50.0, T1);
+        read(tankId, 1, T1);
+
+        assertThat(requestsFor(tankId)).isEmpty();
+        assertThat(episodesFor(tankId)).hasSize(1);
+        assertThat(episodesFor(tankId).getFirst().isRequestEmitted()).isFalse();
     }
 
     @Test

@@ -94,8 +94,7 @@ public class LegacyDeliveryExecutor {
     /** Accepted order: the reservation orchestrator assigns (races serialise under the fleet lock). */
     private Long assignThroughReservations(DeliveryIntegration.CreateLegacyDeliveryCommand command, String commandId) {
         var start = clock.instant();
-        // Acceptance already consumed by the T10-B legacy accept bridge (it created the order), so do not
-        // consume it here again.
+        // The v2 acceptance already consumed the request; the legacy delivery route retains its own idempotency.
         var result = assignDeliveryExecutor.execute(new AssignDeliveryFlowCommand(commandId, command.orderId(),
                 command.providerId(), command.driverId(), command.vehicleId(), start, start.plus(DEFAULT_WINDOW),
                 command.scheduledDate(), command.notes()), false);

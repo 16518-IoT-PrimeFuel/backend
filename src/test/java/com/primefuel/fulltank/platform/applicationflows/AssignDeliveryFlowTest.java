@@ -116,7 +116,7 @@ class AssignDeliveryFlowTest {
     private long acceptedRequest(long providerId, long productId, double quantity, String unit, long orderId) {
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
                 900L + SEQUENCE.incrementAndGet(), null, null, providerId, productId, quantity, unit,
-                ReplenishmentSource.MANUAL, "assign-flow-" + SEQUENCE.incrementAndGet()));
+                ReplenishmentSource.MANUAL, "assign-flow-" + SEQUENCE.incrementAndGet(), "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
         var requestId = created.getOrElse(null).getId();
         assertThat(replenishmentCommandService.handle(new AcceptReplenishmentRequestCommand(requestId)).isSuccess())
@@ -199,7 +199,7 @@ class AssignDeliveryFlowTest {
         // no accepted request behind it and cannot enter the assignment flow.
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
                 900L + SEQUENCE.incrementAndGet(), null, null, providerId, productId, 100.0, "LITRE",
-                ReplenishmentSource.MANUAL, "assign-flow-" + SEQUENCE.incrementAndGet()));
+                ReplenishmentSource.MANUAL, "assign-flow-" + SEQUENCE.incrementAndGet(), "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
         var requestId = created.getOrElse(null).getId();
 

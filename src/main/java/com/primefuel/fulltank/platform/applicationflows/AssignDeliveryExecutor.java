@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.hibernate.exception.ConstraintViolationException;
 
 /**
  * The transactional half of the S15/T15-A orchestrator. It runs all four steps in a <strong>single local
@@ -54,11 +55,7 @@ public class AssignDeliveryExecutor {
         return execute(command, true);
     }
 
-    /**
-     * @param consumeAcceptance whether to consume the acceptance here. The v2 path passes {@code true}; the
-     *     v1 legacy path passes {@code false} because the T10-B legacy accept bridge already consumed it when
-     *     it created the order.
-     */
+    /** @param consumeAcceptance whether this assignment consumes the request acceptance. */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public AssignDeliveryResult execute(AssignDeliveryFlowCommand command, boolean consumeAcceptance) {
         if (command.commandId() == null || command.commandId().isBlank()) {
@@ -95,7 +92,7 @@ public class AssignDeliveryExecutor {
         }
 
         // Step 1 — consume the acceptance once-only: the gate that prevents assigning the same need twice.
-        // Skipped for the v1 legacy path, whose acceptance the T10-B accept bridge already consumed.
+        // An acceptance consumed by the v2 acceptance flow is not consumed a second time here.
         if (consumeAcceptance && !request.acceptanceConsumed()) {
             var consumed = replenishmentAcceptance.consume(request.id());
             if (consumed.isFailure()) {
@@ -123,9 +120,17 @@ public class AssignDeliveryExecutor {
         }
 
         // Step 4 — materialise the assigned delivery (assigned, not started).
-        var delivery = deliveryAssignments.createAssigned(new DeliveryAssignments.CreateAssignedDeliveryCommand(
-                command.commandId(), command.orderId(), request.providerId(), command.driverId(),
-                command.tankerId(), command.scheduledDate(), command.notes()));
+        Result<DeliveryAssignments.DeliveryAssignmentSnapshot, ApplicationError> delivery;
+        try {
+            delivery = deliveryAssignments.createAssigned(new DeliveryAssignments.CreateAssignedDeliveryCommand(
+                    command.commandId(), command.orderId(), request.providerId(), command.driverId(),
+                    command.tankerId(), command.scheduledDate(), command.notes()));
+        } catch (RuntimeException exception) {
+            if (violatesOrderUnique(exception)) {
+                throw fail(ApplicationError.conflict("Delivery", "The order already has an assigned delivery"));
+            }
+            throw exception;
+        }
         if (delivery.isFailure()) {
             throw fail(errorOf(delivery));
         }
@@ -145,16 +150,28 @@ public class AssignDeliveryExecutor {
                 delivery.physicalState(), commandId);
     }
 
-    private static AssignmentFailedException fail(ApplicationError error) {
+    static AssignmentFailedException fail(ApplicationError error) {
         return new AssignmentFailedException(error);
     }
 
     /** Bridges a failed step's error (all seams share {@link ApplicationError}) into the thrown signal. */
-    private static <T> ApplicationError errorOf(Result<T, ApplicationError> failure) {
+    static <T> ApplicationError errorOf(Result<T, ApplicationError> failure) {
         return switch (failure) {
             case Result.Failure<T, ApplicationError> f -> f.error();
             case Result.Success<T, ApplicationError> ignored ->
                     throw new IllegalArgumentException("Expected a failed result");
         };
+    }
+
+    private static boolean violatesOrderUnique(Throwable failure) {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConstraintViolationException constraint
+                    && "uk_deliveries_order_id".equalsIgnoreCase(constraint.getConstraintName())
+                    || cause.getMessage() != null
+                    && cause.getMessage().toLowerCase(java.util.Locale.ROOT).contains("uk_deliveries_order_id")) {
+                return true;
+            }
+        }
+        return false;
     }
 }

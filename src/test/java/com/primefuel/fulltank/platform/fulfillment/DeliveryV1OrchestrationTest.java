@@ -127,7 +127,7 @@ class DeliveryV1OrchestrationTest {
     private long acceptedRequest(long providerId, long productId, double quantity, String unit, long orderId) {
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
                 900L + SEQUENCE.incrementAndGet(), null, null, providerId, productId, quantity, unit,
-                ReplenishmentSource.MANUAL, "v1-orch-" + SEQUENCE.incrementAndGet()));
+                ReplenishmentSource.MANUAL, "v1-orch-" + SEQUENCE.incrementAndGet(), "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
         var requestId = created.getOrElse(null).getId();
         assertThat(replenishmentCommandService.handle(new AcceptReplenishmentRequestCommand(requestId)).isSuccess())

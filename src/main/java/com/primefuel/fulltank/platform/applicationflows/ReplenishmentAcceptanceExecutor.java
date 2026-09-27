@@ -41,12 +41,13 @@ public class ReplenishmentAcceptanceExecutor {
         if (request.deliveryAddress() == null || request.deliveryAddress().isBlank()
                 || request.deliveryDate() == null) {
             throw fail(ApplicationError.conflict("ReplenishmentRequest",
-                    "La solicitud no tiene dirección y fecha de entrega; cree una nueva solicitud con esos datos"));
+                    "The request has no delivery address or date"));
         }
         var accepted = replenishmentCommands.handle(new AcceptReplenishmentRequestCommand(requestId));
-        if (accepted.isFailure()) throw fail(errorOf(accepted));
+        if (accepted.isFailure()) throw fail(AssignDeliveryExecutor.errorOf(accepted));
         var consumed = replenishmentCommands.handle(new ConsumeReplenishmentAcceptanceCommand(requestId));
-        if (consumed.isFailure() || !consumed.getOrElse(false)) {
+        if (consumed.isFailure()) throw fail(AssignDeliveryExecutor.errorOf(consumed));
+        if (!consumed.getOrElse(false)) {
             throw fail(ApplicationError.conflict("ReplenishmentRequest", "The request was already accepted"));
         }
 
@@ -59,23 +60,15 @@ public class ReplenishmentAcceptanceExecutor {
         var orderId = orders.create(new FuelOrderCreation.Command(companyId, request.providerId(),
                 request.fuelProductId(), equipmentId, request.quantity(), request.deliveryAddress(),
                 request.deliveryDate()));
-        if (orderId.isFailure()) throw fail(errorOf(orderId));
+        if (orderId.isFailure()) throw fail(AssignDeliveryExecutor.errorOf(orderId));
 
         var attached = replenishmentCommands.handle(new AttachReplenishmentOrderCommand(requestId,
                 orderId.getOrElse(null)));
-        if (attached.isFailure()) throw fail(errorOf(attached));
+        if (attached.isFailure()) throw fail(AssignDeliveryExecutor.errorOf(attached));
         return attached.getOrElse(null);
     }
 
-    private static ReplenishmentAcceptanceFailedException fail(ApplicationError error) {
-        return new ReplenishmentAcceptanceFailedException(error);
-    }
-
-    private static <T> ApplicationError errorOf(Result<T, ApplicationError> result) {
-        return switch (result) {
-            case Result.Failure<T, ApplicationError> failure -> failure.error();
-            case Result.Success<T, ApplicationError> ignored ->
-                    ApplicationError.unexpected("replenishment acceptance", "A failed result was expected");
-        };
+    private static AssignmentFailedException fail(ApplicationError error) {
+        return AssignDeliveryExecutor.fail(error);
     }
 }

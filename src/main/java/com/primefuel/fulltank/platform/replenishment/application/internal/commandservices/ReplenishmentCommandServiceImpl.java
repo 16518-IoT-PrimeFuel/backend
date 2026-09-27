@@ -1,5 +1,7 @@
 package com.primefuel.fulltank.platform.replenishment.application.internal.commandservices;
 
+import com.primefuel.fulltank.platform.equipment.api.CustomerDirectory;
+import com.primefuel.fulltank.platform.equipment.api.TankAssets;
 import com.primefuel.fulltank.platform.replenishment.application.commandservices.ReplenishmentCommandService;
 import com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.ReplenishmentRequest;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.AcceptReplenishmentRequestCommand;
@@ -17,21 +19,35 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+
 @Service
 public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandService {
 
     private static final String AGGREGATE_TYPE = "ReplenishmentRequest";
+    private static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Lima");
 
     private final ReplenishmentRequestRepository repository;
     private final SupplyCatalog supplyCatalog;
     private final EventPublicationRegistry publicationRegistry;
+    private final CustomerDirectory customers;
+    private final TankAssets tanks;
+    private final Clock clock;
 
     public ReplenishmentCommandServiceImpl(ReplenishmentRequestRepository repository,
                                            SupplyCatalog supplyCatalog,
-                                           EventPublicationRegistry publicationRegistry) {
+                                           EventPublicationRegistry publicationRegistry,
+                                           CustomerDirectory customers,
+                                           TankAssets tanks,
+                                           Clock clock) {
         this.repository = repository;
         this.supplyCatalog = supplyCatalog;
         this.publicationRegistry = publicationRegistry;
+        this.customers = customers;
+        this.tanks = tanks;
+        this.clock = clock;
     }
 
     @Override
@@ -39,6 +55,31 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
     public Result<ReplenishmentRequest, ApplicationError> handle(CreateReplenishmentRequestCommand command) {
         if (command.organizationId() == null) {
             return Result.failure(ApplicationError.validationError("organization", "An organization is required"));
+        }
+        if (command.customerAccountId() != null
+                && !customers.ownsCustomer(command.organizationId(), command.customerAccountId())) {
+            return Result.failure(ApplicationError.notFound("CustomerAccount", "not found"));
+        }
+        if (command.customerAccountId() != null && command.tankId() != null && tanks.findById(command.tankId())
+                .filter(tank -> command.organizationId().equals(tank.organizationId())
+                        && command.customerAccountId().equals(tank.customerAccountId()))
+                .isEmpty()) {
+            return Result.failure(ApplicationError.notFound("Tank", "not found"));
+        }
+        var today = LocalDate.now(clock.withZone(BUSINESS_ZONE));
+        var deliveryDate = command.deliveryDate() == null ? today : command.deliveryDate();
+        if (deliveryDate.isBefore(today)) {
+            return Result.failure(ApplicationError.validationError(
+                    "deliveryDate", "Delivery date cannot be in the past"));
+        }
+        var deliveryAddress = command.deliveryAddress();
+        if (deliveryAddress == null || deliveryAddress.isBlank()) {
+            deliveryAddress = command.tankId() == null ? null
+                    : tanks.deliveryAddressForTank(command.tankId()).orElse(null);
+        }
+        if (deliveryAddress == null || deliveryAddress.isBlank()) {
+            return Result.failure(ApplicationError.validationError(
+                    "deliveryAddress", "A delivery address is required"));
         }
         if (command.episodeKey() != null) {
             var existing = repository.findByEpisodeKey(command.episodeKey());
@@ -55,7 +96,10 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
             return Result.failure(ApplicationError.validationError("fuelProduct", "Fuel product is inactive"));
         }
         try {
-            var request = new ReplenishmentRequest(command, snapshot.get().pricePerUnit());
+            var request = new ReplenishmentRequest(new CreateReplenishmentRequestCommand(
+                    command.organizationId(), command.customerAccountId(), command.tankId(), command.providerId(),
+                    command.fuelProductId(), command.quantity(), command.unit(), command.source(), command.episodeKey(),
+                    deliveryAddress.trim(), deliveryDate), snapshot.get().pricePerUnit());
             return Result.success(repository.save(request));
         } catch (IllegalArgumentException exception) {
             return Result.failure(ApplicationError.validationError("replenishment", exception.getMessage()));
