@@ -10,6 +10,5 @@ import java.util.Optional;
 @Repository
 public interface CustomerAccountPersistenceRepository extends JpaRepository<CustomerAccountPersistenceEntity, Long> {
     List<CustomerAccountPersistenceEntity> findByOrganizationId(Long organizationId);
-    Optional<CustomerAccountPersistenceEntity> findByLegacyCompanyId(Long legacyCompanyId);
     Optional<CustomerAccountPersistenceEntity> findByOrganizationIdAndRuc(Long organizationId, String ruc);
 }

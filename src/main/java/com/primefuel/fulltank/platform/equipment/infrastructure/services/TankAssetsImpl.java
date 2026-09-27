@@ -30,14 +30,6 @@ public class TankAssetsImpl implements TankAssets {
     }
 
     @Override
-    public Optional<Long> tankIdForLegacyEquipment(Long equipmentId) {
-        if (equipmentId == null) {
-            return Optional.empty();
-        }
-        return tankRepository.findByLegacyEquipmentId(equipmentId).map(Tank::getId);
-    }
-
-    @Override
     public Optional<Long> legacyEquipmentIdForTank(Long tankId) {
         return tankId == null ? Optional.empty()
                 : tankRepository.findById(tankId).map(Tank::getLegacyEquipmentId);

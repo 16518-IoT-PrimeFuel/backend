@@ -7,8 +7,6 @@ public interface TankAssets {
 
     Optional<TankSnapshot> findById(Long tankId);
 
-    Optional<Long> tankIdForLegacyEquipment(Long equipmentId);
-
     Optional<Long> legacyEquipmentIdForTank(Long tankId);
 
     Optional<String> deliveryAddressForTank(Long tankId);

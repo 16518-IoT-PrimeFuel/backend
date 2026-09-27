@@ -30,12 +30,6 @@ public class CustomerAccountRepositoryImpl implements CustomerAccountRepository 
     }
 
     @Override
-    public Optional<CustomerAccount> findByLegacyCompanyId(Long legacyCompanyId) {
-        return persistenceRepository.findByLegacyCompanyId(legacyCompanyId)
-                .map(CustomerAccountPersistenceAssembler::toDomainFromPersistence);
-    }
-
-    @Override
     public Optional<CustomerAccount> findByOrganizationIdAndRuc(Long organizationId, String ruc) {
         return persistenceRepository.findByOrganizationIdAndRuc(organizationId, ruc)
                 .map(CustomerAccountPersistenceAssembler::toDomainFromPersistence);

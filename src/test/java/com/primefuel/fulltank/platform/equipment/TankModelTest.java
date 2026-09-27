@@ -6,7 +6,6 @@ import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterC
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterTankCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.UpdateTankConfigurationCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.valueobjects.TankClassification;
-import com.primefuel.fulltank.platform.equipment.domain.services.TankEligibility;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,13 +60,5 @@ class TankModelTest {
         assertThat(reconfigured.isSuccess()).isTrue();
         assertThat(reconfigured.getOrElse(null).getConfigurationVersion()).isEqualTo(2);
         assertThat(reconfigured.getOrElse(null).getCapacity().unit().name()).isEqualTo("LITRE");
-    }
-
-    @Test
-    void classifiesOnlyEquipmentWithCapacityAndFuel() {
-        assertThat(TankEligibility.isMappable(100.0, true)).isTrue();
-        assertThat(TankEligibility.isMappable(0.0, true)).isFalse();
-        assertThat(TankEligibility.isMappable(null, true)).isFalse();
-        assertThat(TankEligibility.isMappable(100.0, false)).isFalse();
     }
 }
