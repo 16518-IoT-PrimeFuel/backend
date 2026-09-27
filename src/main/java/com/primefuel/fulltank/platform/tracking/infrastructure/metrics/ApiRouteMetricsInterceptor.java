@@ -30,13 +30,13 @@ public class ApiRouteMetricsInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
                                Exception exception) {
         String path = request.getRequestURI();
-        if (!(path.startsWith("/api/v1/") || path.startsWith("/api/v2/"))
+        if (!path.startsWith("/api/")
                 || !(handler instanceof HandlerMethod method)) return;
         Object matchedPattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
         if (matchedPattern == null) return;
 
         String pattern = matchedPattern.toString();
-        String version = pattern.startsWith("/api/v1/") ? "v1" : "v2";
+        String version = "v1"; // routes are unversioned; the column keeps the single live version
         String routeKey = request.getMethod() + " " + pattern;
         String handlerName = method.getBeanType().getSimpleName() + "#" + method.getMethod().getName();
         try {

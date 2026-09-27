@@ -14,6 +14,6 @@ public class ApiRouteMetricsConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(interceptor).addPathPatterns("/api/v1/**", "/api/v2/**");
+        registry.addInterceptor(interceptor).addPathPatterns("/api/**");
     }
 }

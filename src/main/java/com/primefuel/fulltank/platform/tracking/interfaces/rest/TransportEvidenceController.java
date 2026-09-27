@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Evidencia de transporte informada desde la aplicación del conductor mediante una solicitud v2 autenticada.
+ * Evidencia de transporte informada desde la aplicación del conductor mediante una solicitud autenticada.
  *
  * <p>Solo puede informar el conductor asignado, resuelto desde la asignación y el catálogo de flota, nunca desde
  * el cuerpo. Una entrega inexistente devuelve 404; una asignación inconsistente o conductor distinto, 403;
@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Una ubicación tardía se conserva como evidencia, pero no reemplaza el último valor de la proyección; la respuesta lo indica en {@code latestAdvanced}.</p>
  */
 @RestController
-@RequestMapping(value = "/api/v2/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Evidencias de transporte", description = "Ubicaciones y eventos de carga informados por el conductor")
 public class TransportEvidenceController {
 

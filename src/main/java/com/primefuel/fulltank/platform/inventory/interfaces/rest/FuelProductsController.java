@@ -30,7 +30,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v1/fuel-products", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/fuel-products", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Productos de combustible", description = "Catálogo, existencias y disponibilidad por distribuidor")
 public class FuelProductsController {
 

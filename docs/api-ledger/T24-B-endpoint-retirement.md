@@ -32,3 +32,29 @@ En los consumidores externos inspeccionados, `frontend` no contiene llamadas a l
 ## Riesgos y verificación
 
 El despliegue aplica V33 antes de V34 y V35. V34 rescata los datos de entrega de las solicitudes v1 enlazadas; las filas v1 no enlazadas se eliminan con la tabla. Una solicitud v2 histórica que conserve dirección o fecha nula responde 409 al aceptarse, sin cambiar estado ni crear orden, y debe recibir esos datos antes del intento. V35 requiere que `deliveries.order_id` no tenga duplicados; la migración no borra registros. El cambio no valida MySQL desde este repositorio. La verificación local ejecuta la suite Maven con H2.
+
+## T24-C — Unificación sin prefijo de versión
+
+Todas las rutas pasan de `/api/v1/**` y `/api/v2/**` a `/api/**` (103 operaciones; ledger T01-A actualizado). No hay colisiones tras los retiros siguientes:
+
+| Retirado | Reemplazo |
+|---|---|
+| `/api/v1/deliveries` (8 ops) y su orquestación de creación (`LegacyDeliveryExecutor`, `DeliveryCommandService`) | Ciclo único en `/api/deliveries` (assign, start, arrive, complete, fail, cancel, timeline, tracking). |
+| `/api/v1/notifications` (7 ops, incluido el POST deprecado) | `/api/me/notifications`. |
+| `/api/v2/products` (2 ops) | `/api/fuel-products`. |
+| `POST /api/v1/equipment/{id}/favorite-provider` | `favoriteProviderId` en crear/actualizar equipo; ninguna lógica lo leía. |
+
+Efectos comerciales que solo tenía v1, ahora en el ciclo único: asignar (`POST /api/deliveries`) despacha la orden (409 si no está `PENDING`), y completar libera conductor/cisterna y la reserva de flota, abastece el equipo legacy y deja la orden en `PENDING_PAYMENT` en la misma transacción.
+
+La aceptación de `/api/replenishment-requests/{id}/accept` ya no exige mapeos heredados: la empresa compradora se resuelve por el RUC de la organización del cliente cuando la cuenta no trae `legacyCompanyId`, y el equipo de la orden es opcional (tanques creados por API no tienen equipo legacy). Se eliminaron los backfills nunca invocados (`CustomerBackfillServiceImpl`, `TankLegacyBackfillServiceImpl`) y V36 elimina `customer_mapping_quarantines`, cuyo único escritor era el backfill. `api_route_metrics.version` registra `v1` para todas las rutas.
+
+Consumidores: la app móvil y el diagrama de arquitectura deben actualizar sus rutas.
+
+### Endurecimiento posterior (revisión por módulos)
+
+- La empresa compradora de una cuenta sin `legacyCompanyId` solo se resuelve si la organización es `CUSTOMER` y el usuario dueño de esa empresa (mismo RUC) tiene membresía activa en ella; un RUC por sí solo no basta. `POST /api/customers` rechaza (403) un `legacyCompanyId` que no sea del usuario.
+- Completar concilia la reserva de suministro y descuenta el stock entregado (solo si había reserva activa), libera la reserva de flota y liquida la orden sin 500 aunque venga de `PENDING`/`CONFIRMED`. Fallar o cancelar una entrega libera sus reservas de flota y suministro; la orden queda `DISPATCHED`.
+- `FuelOrder`: `confirm` y `cancel` solo desde `PENDING`/`CONFIRMED` (repetirlos no cambia nada; otro estado → 409); `dispatch` acepta `PENDING` o `CONFIRMED`.
+- Telemetría: se autentica antes de deduplicar; una lectura autenticada reemplaza a la copia en cuarentena que ocupaba su secuencia, y un reenvío sin token no recibe datos de la lectura guardada. `permitAll` se limita a `POST /api/telemetry/readings`.
+- JSON ilegible → 400; los 500 ya no devuelven el mensaje interno.
+- La migración de pluralización del journal pasa de V31 a **V37**: V32–V35 ya estaban publicadas y una V31 posterior rompería la validación de Flyway en bases ya migradas.

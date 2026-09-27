@@ -111,7 +111,7 @@ class TransportEvidenceControllerTest {
         long driverId = driver(providerId, userId);
         long deliveryId = delivery(providerId, driverId);
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId)
                         .with(authFor(userId, providerId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -140,12 +140,12 @@ class TransportEvidenceControllerTest {
                 {"type":"POSITION","latitude":10.5,"longitude":-66.9,
                  "recordedAt":"2026-09-01T10:00:00Z","eventId":"offline-retry-1"}""";
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId).with(auth)
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated());
         long evidenceId = sampleRepository.findByDeliveryId(deliveryId).getFirst().getId();
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId).with(auth)
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.evidenceId").value(evidenceId));
@@ -188,7 +188,7 @@ class TransportEvidenceControllerTest {
         long deliveryId = delivery(providerId, driver(providerId, assignedUserId));
 
         // Same tenant, but the caller is a different driver: forbidden, and no evidence is stored.
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId)
                         .with(authFor(otherUserId, providerId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -209,7 +209,7 @@ class TransportEvidenceControllerTest {
         long deliveryId = delivery(deliveryProviderId, driver(otherProviderId, driverUserId));
 
         // Even the assigned driver's user cannot report evidence across the tenant boundary.
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId)
                         .with(authFor(driverUserId, otherProviderId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -227,7 +227,7 @@ class TransportEvidenceControllerTest {
         long deliveryId = delivery(providerId, driver(providerId, userId));
         var auth = authFor(userId, providerId);
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId).with(auth)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"POSITION","latitude":20.0,"longitude":30.0,
@@ -236,7 +236,7 @@ class TransportEvidenceControllerTest {
                 .andExpect(jsonPath("$.latestAdvanced").value(true));
 
         // A later-arriving but older observation: accepted, stored raw, but the latest stays put.
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId).with(auth)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"POSITION","latitude":21.0,"longitude":31.0,
@@ -258,7 +258,7 @@ class TransportEvidenceControllerTest {
         long deliveryId = delivery(providerId, driver(providerId, userId));
         var auth = authFor(userId, providerId);
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId).with(auth)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"LOAD","milestone":"LOADED","volume":120.0,"unit":"LITRE",
@@ -267,7 +267,7 @@ class TransportEvidenceControllerTest {
                 .andExpect(jsonPath("$.kind").value("LOAD"))
                 .andExpect(jsonPath("$.milestone").value("LOADED"));
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId).with(auth)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"LOAD","milestone":"UNLOADED","recordedAt":"2026-09-01T12:00:00Z"}"""))
@@ -275,14 +275,14 @@ class TransportEvidenceControllerTest {
                 .andExpect(jsonPath("$.milestone").value("UNLOADED"));
 
         // Unknown milestone: malformed body (400).
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId).with(auth)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"LOAD","milestone":"BANANA"}"""))
                 .andExpect(status().isBadRequest());
 
         // Non-positive volume: malformed body (400).
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", deliveryId).with(auth)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", deliveryId).with(auth)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"LOAD","milestone":"LOADED","volume":-1.0,"unit":"LITRE"}"""))
@@ -290,7 +290,7 @@ class TransportEvidenceControllerTest {
 
         // UNLOADED before any LOADED on a fresh delivery: impossible sequence (422).
         long freshDeliveryId = delivery(807L, driver(807L, 907L));
-        mockMvc.perform(post("/api/v2/deliveries/{id}/transport-evidence", freshDeliveryId)
+        mockMvc.perform(post("/api/deliveries/{id}/transport-evidence", freshDeliveryId)
                         .with(authFor(907L, 807L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

@@ -53,6 +53,11 @@ class OrderFulfillmentGoldenPathTest {
     @Autowired private CustomerCommandService customerCommandService;
     @Autowired private EquipmentCommandService equipmentCommandService;
     @Autowired private TankCommandService tankCommandService;
+    @Autowired private com.primefuel.fulltank.platform.iam.domain.repositories.BuyerCompanyRepository buyerCompanyRepository;
+    @Autowired private com.primefuel.fulltank.platform.iam.domain.repositories.OrganizationRepository organizationRepository;
+    @Autowired private com.primefuel.fulltank.platform.iam.domain.repositories.UserRepository userRepository;
+    @Autowired private com.primefuel.fulltank.platform.iam.application.commandservices.OnboardingCommandService onboardingCommandService;
+    @Autowired private com.primefuel.fulltank.platform.iam.api.LegacyCompanyDirectory legacyCompanyDirectory;
 
     @MockitoBean private MembershipAccess membershipAccess;
 
@@ -76,11 +81,11 @@ class OrderFulfillmentGoldenPathTest {
         // fuel-requests family --------------------------------------------------------------
         long requestId = createFuelRequest(buyer, buyerCompanyId, providerId, fuelProductId);
         when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(buyerCompanyId));
-        mockMvc.perform(get("/api/v2/replenishment-requests/{id}", requestId).with(buyer))
+        mockMvc.perform(get("/api/replenishment-requests/{id}", requestId).with(buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PENDING"));
 
-        var acceptResponse = mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(provider))
+        var acceptResponse = mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACCEPTED"))
                 .andExpect(jsonPath("$.orderId").isNumber())
@@ -91,39 +96,42 @@ class OrderFulfillmentGoldenPathTest {
         assertEquals("ACCEPTED", accepted.get("status").asText());
 
         // fuel-orders family ------------------------------------------------------------------
-        mockMvc.perform(get("/api/v1/fuel-orders/{id}", orderId).with(buyer))
+        mockMvc.perform(get("/api/fuel-orders/{id}", orderId).with(buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.companyId").value(buyerCompanyId));
 
         // deliveries family ---------------------------------------------------------------------
-        // known-gap: creating a delivery already flips it (and the order) straight to
-        // DISPATCHED — the explicit POST /dispatch afterwards is a same-state no-op, not a
-        // guarded transition, because Delivery#dispatch() has no state guard.
-        var createDeliveryResponse = mockMvc.perform(post("/api/v1/deliveries")
+        var createDeliveryResponse = mockMvc.perform(post("/api/deliveries")
                         .with(provider)
                         .contentType("application/json")
                         .content("""
-                                {"orderId":%d,"providerId":%d,"driverId":%d,"vehicleId":%d,"scheduledDate":"2026-10-01","notes":"golden path"}
-                                """.formatted(orderId, providerId, driverId, vehicleId)))
+                                {"commandId":"golden-%d","orderId":%d,"driverId":%d,"tankerId":%d,"windowStart":"2099-10-15T08:00:00Z","windowEnd":"2099-10-15T16:00:00Z","scheduledDate":"2026-10-01","notes":"golden path"}
+                                """.formatted(orderId, orderId, driverId, vehicleId)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("DISPATCHED"))
+                .andExpect(jsonPath("$.physicalState").value("ASSIGNED"))
                 .andReturn().getResponse().getContentAsString();
-        long deliveryId = objectMapper.readTree(createDeliveryResponse).get("id").asLong();
-
-        mockMvc.perform(post("/api/v1/deliveries/{id}/dispatch", deliveryId).with(provider))
-                .andExpect(status().isOk())
+        long deliveryId = objectMapper.readTree(createDeliveryResponse).get("deliveryId").asLong();
+        mockMvc.perform(get("/api/fuel-orders/{id}", orderId).with(provider))
                 .andExpect(jsonPath("$.status").value("DISPATCHED"));
 
-        mockMvc.perform(post("/api/v1/deliveries/{id}/complete", deliveryId).with(provider))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("DELIVERED"));
+        mockMvc.perform(post("/api/deliveries/{id}/start", deliveryId).with(provider)).andExpect(status().isOk());
+        mockMvc.perform(post("/api/deliveries/{id}/arrive", deliveryId).with(provider)).andExpect(status().isOk());
+        // The physical close applies the completion effects: the order moves to PENDING_PAYMENT.
+        mockMvc.perform(post("/api/deliveries/{id}/complete", deliveryId)
+                        .with(provider)
+                        .contentType("application/json")
+                        .content("{\"deliveredVolume\":%s}".formatted(accepted.get("quantity").asDouble())))
+                .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/v1/fuel-orders/{id}", orderId).with(provider))
+        mockMvc.perform(get("/api/fuel-orders/{id}", orderId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PENDING_PAYMENT"));
+        // The reserved stock is consumed by the delivered volume (500 - 100).
+        mockMvc.perform(get("/api/fuel-products/{id}", fuelProductId).with(provider))
+                .andExpect(jsonPath("$.availableStock").value(400.0));
 
         // payments family -----------------------------------------------------------------------
-        var createPaymentResponse = mockMvc.perform(post("/api/v1/payments")
+        var createPaymentResponse = mockMvc.perform(post("/api/payments")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""
@@ -134,18 +142,18 @@ class OrderFulfillmentGoldenPathTest {
                 .andReturn().getResponse().getContentAsString();
         long paymentId = objectMapper.readTree(createPaymentResponse).get("id").asLong();
 
-        mockMvc.perform(post("/api/v1/payments/{id}/complete", paymentId)
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId)
                         .with(buyer)
                         .contentType("application/json")
                         .content("{\"transactionReference\":\"golden-ref-1\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
 
-        mockMvc.perform(get("/api/v1/fuel-orders/{id}", orderId).with(buyer))
+        mockMvc.perform(get("/api/fuel-orders/{id}", orderId).with(buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PAID"));
 
-        mockMvc.perform(get("/api/v1/payments/order/{orderId}", orderId).with(provider))
+        mockMvc.perform(get("/api/payments/order/{orderId}", orderId).with(provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
@@ -162,17 +170,17 @@ class OrderFulfillmentGoldenPathTest {
         var provider = authFor(202L, null, providerId, "ROLE_PROVIDER");
         long fuelProductId = createFuelProduct(provider, providerId);
         long requestId = createFuelRequest(buyer, buyerCompanyId, providerId, fuelProductId);
-        var acceptResponse = mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(provider))
+        var acceptResponse = mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(provider))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         long orderId = objectMapper.readTree(acceptResponse).get("orderId").asLong();
 
-        mockMvc.perform(post("/api/v1/fuel-orders/{id}/confirm", orderId).with(buyer))
+        mockMvc.perform(post("/api/fuel-orders/{id}/confirm", orderId).with(buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CONFIRMED"));
 
         // Confirming again from CONFIRMED still succeeds: no guard at all.
-        mockMvc.perform(post("/api/v1/fuel-orders/{id}/confirm", orderId).with(buyer))
+        mockMvc.perform(post("/api/fuel-orders/{id}/confirm", orderId).with(buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CONFIRMED"));
     }
@@ -189,18 +197,18 @@ class OrderFulfillmentGoldenPathTest {
         var provider = authFor(203L, null, providerId, "ROLE_PROVIDER");
         long fuelProductId = createFuelProduct(provider, providerId);
         long requestId = createFuelRequest(buyer, buyerCompanyId, providerId, fuelProductId);
-        var acceptResponse = mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(provider))
+        var acceptResponse = mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(provider))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         JsonNode accepted = objectMapper.readTree(acceptResponse);
         long orderId = accepted.get("orderId").asLong();
         double totalPrice = accepted.get("unitPrice").asDouble() * accepted.get("quantity").asDouble();
 
-        mockMvc.perform(post("/api/v1/fuel-orders/{id}/cancel", orderId).with(buyer))
+        mockMvc.perform(post("/api/fuel-orders/{id}/cancel", orderId).with(buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
 
-        mockMvc.perform(post("/api/v1/payments")
+        mockMvc.perform(post("/api/payments")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""
@@ -210,7 +218,7 @@ class OrderFulfillmentGoldenPathTest {
                 .andExpect(jsonPath("$.status").value("PENDING"));
 
         // A mismatched amount is still rejected regardless of order status.
-        mockMvc.perform(post("/api/v1/payments")
+        mockMvc.perform(post("/api/payments")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""
@@ -219,7 +227,66 @@ class OrderFulfillmentGoldenPathTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void aRequestOnAccountsAndTanksCreatedThroughTheApiCanBeAccepted() throws Exception {
+        // No legacy fixture: the account has no legacyCompanyId and the tank no legacy equipment.
+        long buyerCompanyId = signUpBuyer("rest-buyer@example.test");
+        long providerId = signUpProvider("rest-provider@example.test");
+        var buyer = authFor(104L, buyerCompanyId, null, "ROLE_BUYER");
+        var provider = authFor(204L, null, providerId, "ROLE_PROVIDER");
+        long fuelProductId = createFuelProduct(provider, providerId);
+        var ruc = buyerCompanyRepository.findById(buyerCompanyId).orElseThrow().getRuc();
+        long organizationId = organizationRepository.findByRuc(ruc).orElseThrow().getId();
+        when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(organizationId));
+
+        long customerId = idOf(mockMvc.perform(post("/api/customers").with(buyer)
+                .contentType("application/json").content("{\"name\":\"Rest Buyer\"}")));
+        long siteId = idOf(mockMvc.perform(post("/api/customers/{id}/sites", customerId).with(buyer)
+                .contentType("application/json").content("{\"name\":\"Planta\",\"address\":\"Av. Rest 1\"}")));
+        long tankId = idOf(mockMvc.perform(post("/api/tanks").with(buyer).contentType("application/json")
+                .content("""
+                        {"customerAccountId":%d,"siteId":%d,"name":"T1","fuelType":"DIESEL","capacity":5000,"unit":"GALLONS"}
+                        """.formatted(customerId, siteId))));
+        long requestId = idOf(mockMvc.perform(post("/api/replenishment-requests").with(buyer)
+                .contentType("application/json").content("""
+                        {"customerAccountId":%d,"tankId":%d,"providerId":%d,"fuelProductId":%d,"quantity":100,
+                         "unit":"GALLONS","deliveryAddress":"Av. Rest 1","deliveryDate":"2099-10-15"}
+                        """.formatted(customerId, tankId, providerId, fuelProductId))));
+
+        var accepted = mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(provider))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderId").isNumber())
+                .andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/fuel-orders/{id}", objectMapper.readTree(accepted).get("orderId").asLong())
+                        .with(buyer))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.companyId").value(buyerCompanyId));
+    }
+
+    @Test
+    void aBuyerCompanyIsNotResolvedByRucAloneForAnOrganizationItsUserDoesNotBelongTo() throws Exception {
+        // A company registered publicly (no user) and an organization onboarded by someone else with its RUC.
+        var ruc = nextRuc();
+        mockMvc.perform(post("/api/buyer-companies").contentType("application/json").content("""
+                        {"name":"Victim SAC","ruc":"%s","sector":"Fuel","address":"Lima",
+                         "contactEmail":"victim@example.test","phone":"999111222"}
+                        """.formatted(ruc)))
+                .andExpect(status().isCreated());
+        signUpBuyer("squatter@example.test");
+        long squatterUserId = userRepository.findByUsername("squatter@example.test").orElseThrow().getId();
+        long organizationId = onboardingCommandService.handle(new com.primefuel.fulltank.platform.iam.domain.model.commands
+                .OnboardOrganizationCommand("Squatter Org", ruc, com.primefuel.fulltank.platform.iam.domain.model
+                .valueobjects.OrganizationType.CUSTOMER, squatterUserId)).getOrElse(null).getId();
+
+        assertEquals(java.util.Optional.empty(), legacyCompanyDirectory.buyerCompanyIdForOrganization(organizationId));
+    }
+
     // ---- fixtures -----------------------------------------------------------------------------
+
+    private long idOf(org.springframework.test.web.servlet.ResultActions created) throws Exception {
+        var body = created.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(body).get("id").asLong();
+    }
 
     private static final AtomicInteger RUC_SEQUENCE = new AtomicInteger();
 
@@ -228,7 +295,7 @@ class OrderFulfillmentGoldenPathTest {
     }
 
     private long signUpBuyer(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_BUYER"],
@@ -241,7 +308,7 @@ class OrderFulfillmentGoldenPathTest {
     }
 
     private long signUpProvider(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_PROVIDER"],
@@ -254,7 +321,7 @@ class OrderFulfillmentGoldenPathTest {
     }
 
     private long createFuelProduct(RequestPostProcessor provider, long providerId) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/fuel-products")
+        var response = mockMvc.perform(post("/api/fuel-products")
                         .with(provider)
                         .contentType("application/json")
                         .content("""
@@ -267,7 +334,7 @@ class OrderFulfillmentGoldenPathTest {
     }
 
     private long createDriver(RequestPostProcessor provider, long providerId) throws Exception {
-        var response = mockMvc.perform(post("/api/v2/drivers")
+        var response = mockMvc.perform(post("/api/drivers")
                         .with(provider)
                         .contentType("application/json")
                         .content("""
@@ -281,7 +348,7 @@ class OrderFulfillmentGoldenPathTest {
     }
 
     private long createVehicle(RequestPostProcessor provider, long providerId) throws Exception {
-        var response = mockMvc.perform(post("/api/v2/tankers")
+        var response = mockMvc.perform(post("/api/tankers")
                         .with(provider)
                         .contentType("application/json")
                         .content("""
@@ -298,7 +365,7 @@ class OrderFulfillmentGoldenPathTest {
         var fixture = ReplenishmentTestFixtures.create(customerCommandService, equipmentCommandService,
                 tankCommandService, buyerCompanyId, "Av. Golden 123");
         when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(fixture.organizationId()));
-        var response = mockMvc.perform(post("/api/v2/replenishment-requests")
+        var response = mockMvc.perform(post("/api/replenishment-requests")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""

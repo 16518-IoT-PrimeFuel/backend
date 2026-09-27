@@ -68,13 +68,13 @@ class ReplenishmentLimaBusinessDateTest {
         var product = products.handle(new CreateFuelProductCommand("Diesel T5", FuelType.DIESEL,
                 10.0, "LITRE", 1000.0, 1000.0, PROVIDER_ID, true)).getOrElse(null);
 
-        mockMvc.perform(post("/api/v2/replenishment-requests")
+        mockMvc.perform(post("/api/replenishment-requests")
                         .with(auth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body(assets.customerId(), assets.tankId(), product.getId(), "2026-09-24")))
                 .andExpect(status().isBadRequest());
 
-        mockMvc.perform(post("/api/v2/replenishment-requests")
+        mockMvc.perform(post("/api/replenishment-requests")
                         .with(auth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body(assets.customerId(), assets.tankId(), product.getId(), "2026-09-25")))

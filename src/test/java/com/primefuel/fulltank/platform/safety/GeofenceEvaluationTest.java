@@ -130,7 +130,7 @@ class GeofenceEvaluationTest {
         long deliveryId = delivery(providerId, driverId);
         position(deliveryId, providerId, driverId, 10.0, 20.0, 10.0, T0);
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/geofence-policies", deliveryId)
+        mockMvc.perform(post("/api/deliveries/{id}/geofence-policies", deliveryId)
                         .with(authForProvider(providerId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"centerLatitude\":10.0,\"centerLongitude\":20.0,\"radiusMeters\":1000.0}"))
@@ -155,7 +155,7 @@ class GeofenceEvaluationTest {
         long providerId = 42L;
         long deliveryId = delivery(providerId, driver(providerId, 142L));
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/geofence-policies", deliveryId)
+        mockMvc.perform(post("/api/deliveries/{id}/geofence-policies", deliveryId)
                         .with(authForProvider(999L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"centerLatitude\":10.0,\"centerLongitude\":20.0,\"radiusMeters\":1000.0}"))
@@ -264,17 +264,17 @@ class GeofenceEvaluationTest {
         long providerId = 48L;
         long deliveryId = delivery(providerId, driver(providerId, 148L));
 
-        mockMvc.perform(post("/api/v2/deliveries/{id}/geofence-policies", deliveryId)
+        mockMvc.perform(post("/api/deliveries/{id}/geofence-policies", deliveryId)
                         .with(authForProvider(providerId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"centerLatitude\":91.0,\"centerLongitude\":20.0,\"radiusMeters\":1000.0}"))
                 .andExpect(status().isBadRequest());
-        mockMvc.perform(post("/api/v2/deliveries/{id}/geofence-policies", deliveryId)
+        mockMvc.perform(post("/api/deliveries/{id}/geofence-policies", deliveryId)
                         .with(authForProvider(providerId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"centerLatitude\":10.0,\"centerLongitude\":181.0,\"radiusMeters\":1000.0}"))
                 .andExpect(status().isBadRequest());
-        mockMvc.perform(post("/api/v2/deliveries/{id}/geofence-policies", deliveryId)
+        mockMvc.perform(post("/api/deliveries/{id}/geofence-policies", deliveryId)
                         .with(authForProvider(providerId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"centerLatitude\":10.0,\"centerLongitude\":20.0,\"radiusMeters\":0}"))
@@ -283,7 +283,7 @@ class GeofenceEvaluationTest {
 
     @Test
     void aPolicyForAMissingDeliveryIsNotFound() throws Exception {
-        mockMvc.perform(post("/api/v2/deliveries/{id}/geofence-policies", 987654321L)
+        mockMvc.perform(post("/api/deliveries/{id}/geofence-policies", 987654321L)
                         .with(authForProvider(49L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"centerLatitude\":10.0,\"centerLongitude\":20.0,\"radiusMeters\":1000.0}"))

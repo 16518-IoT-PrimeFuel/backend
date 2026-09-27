@@ -20,14 +20,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Consulta v2 del seguimiento de transporte. Expone la última proyección confiable de la entrega y su
+ * Consulta del seguimiento de transporte. Expone la última proyección confiable de la entrega y su
  * historial cronológico mediante {@link DeliveryTrackingQuery}.
  *
  * <p>El acceso se resuelve en el servidor con la asignación y el principal: pueden consultar el distribuidor
  * propietario y el conductor asignado. Otro tenant recibe 403; una entrega inexistente recibe 404.
  */
 @RestController
-@RequestMapping(value = "/api/v2/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Seguimiento de transporte", description = "Consulta de ubicación y evidencias de transporte de entregas")
 public class DeliveryTrackingQueryController {
 

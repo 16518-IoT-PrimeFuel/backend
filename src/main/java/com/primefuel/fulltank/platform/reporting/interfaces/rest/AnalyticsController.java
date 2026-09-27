@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
-@RequestMapping(value = "/api/v1/analytics", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/analytics", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Analítica", description = "Indicadores agregados para administración, distribuidores y empresas compradoras")
 public class AnalyticsController {
 

@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v2/admin/deliveries/{deliveryId}/transport-evidence",
+@RequestMapping(value = "/api/admin/deliveries/{deliveryId}/transport-evidence",
         produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Retención de evidencias de transporte", description = "Exportación y eliminación administrativa de evidencias GPS")
 public class TransportEvidenceAdminController {

@@ -14,7 +14,7 @@ public record CreateReplenishmentRequestResource(
         @Size(max = 20) String unit,
         String source,
         @Size(max = 120) String episodeKey,
-        @Schema(description = "Dirección de descarga; si se omite o está vacía, se toma del sitio de la cisterna.")
+        @Schema(description = "Dirección de descarga; si se omite o está vacía, se toma del sitio de el tanque.")
         @Size(max = 255) String deliveryAddress,
         @Schema(description = "Fecha programada de entrega; no puede ser anterior al día actual en Lima.", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull LocalDate deliveryDate) {

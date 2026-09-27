@@ -23,7 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v1/provider-companies", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/provider-companies", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Distribuidores", description = "Registro, consulta y actualización de perfiles de distribuidores")
 public class ProviderCompaniesController {
 

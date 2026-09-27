@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v2/replenishment-requests", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/replenishment-requests", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Solicitudes de abastecimiento", description = "Creación y ciclo de decisión de solicitudes por organización")
 public class ReplenishmentRequestsController {
 
@@ -51,17 +51,17 @@ public class ReplenishmentRequestsController {
      * Crea una solicitud de abastecimiento para la organización activa.
      *
      * <p>La organización se deriva de la membresía autenticada. La fecha de entrega no puede ser anterior
-     * al día de negocio de Lima. El servicio valida primero la pertenencia del cliente y la cisterna; solo
+     * al día de negocio de Lima. El servicio valida primero la pertenencia del cliente y el tanque; solo
      * entonces resuelve la dirección predeterminada del sitio. El producto debe estar disponible para el
      * distribuidor y {@code episodeKey} evita duplicados automáticos.</p>
      */
     @Operation(summary = "Crear solicitud de abastecimiento",
-            description = "Registra una solicitud para la organización activa con fecha de entrega desde hoy en Lima. El servicio comprueba que el cliente pertenezca a esa organización y que la cisterna pertenezca al cliente antes de completar una dirección vacía desde su sitio. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.")
+            description = "Registra una solicitud para la organización activa con fecha de entrega desde hoy en Lima. El servicio comprueba que el cliente pertenezca a esa organización y que el tanque pertenezca al cliente antes de completar una dirección vacía desde su sitio. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Solicitud creada o solicitud existente del episodio devuelta."),
             @ApiResponse(responseCode = "400", description = "El cuerpo es inválido, la fecha de entrega es anterior al día de negocio de Lima o no se puede obtener una dirección de entrega."),
             @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
-            @ApiResponse(responseCode = "404", description = "El cliente no existe o pertenece a otra organización, la cisterna no existe o pertenece a otro cliente, o el producto no está disponible para el distribuidor indicado.")
+            @ApiResponse(responseCode = "404", description = "El cliente no existe o pertenece a otra organización, el tanque no existe o pertenece a otro cliente, o el producto no está disponible para el distribuidor indicado.")
     })
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody CreateReplenishmentRequestResource resource) {

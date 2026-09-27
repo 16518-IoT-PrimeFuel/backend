@@ -42,7 +42,7 @@ class ApiRouteMetricsFailureTest {
                 List.of(new SimpleGrantedAuthority("ROLE_BUYER")));
         var token = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
 
-        mockMvc.perform(get("/api/v1/users/7301").with(authentication(token)))
+        mockMvc.perform(get("/api/users/7301").with(authentication(token)))
                 .andExpect(status().isNotFound());
     }
 }

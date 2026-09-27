@@ -14,7 +14,7 @@ import java.util.Optional;
  * evidence row.
  *
  * <p>The redesign (W6) makes the <em>driver app</em> the source of evidence: the caller authenticates as a
- * normal v2 principal and the REST adapter resolves the tenant and the assigned driver from the delivery
+ * normal user principal and the REST adapter resolves the tenant and the assigned driver from the delivery
  * assignment — a {@code driverId} is never taken from the request body. Callers must therefore supply the
  * {@code providerId}/{@code driverId} they already resolved server-side, exactly like
  * {@code fleet.api.FleetReservations}.

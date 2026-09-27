@@ -60,9 +60,9 @@ class AuthorizationContractTest {
 
     @Test
     void protectedEndpointsRejectUnauthenticatedRequests() throws Exception {
-        mockMvc.perform(get("/api/v1/users")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/v1/fuel-orders")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/v1/payments")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/users")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/fuel-orders")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/payments")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -70,7 +70,7 @@ class AuthorizationContractTest {
         // known-gap: wrong password returns 400 (VALIDATION_ERROR) instead of 401, and an
         // unknown username returns 404 instead of a uniform "invalid credentials" response —
         // unlike /password-reset/request, sign-in leaks whether a username is registered.
-        mockMvc.perform(post("/api/v1/authentication/sign-up")
+        mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"auth-neg@example.test","password":"StrongPass1!","roles":["ROLE_BUYER"],
@@ -79,12 +79,12 @@ class AuthorizationContractTest {
                                 """.formatted(nextRuc())))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/authentication/sign-in")
+        mockMvc.perform(post("/api/authentication/sign-in")
                         .contentType("application/json")
                         .content("{\"username\":\"auth-neg@example.test\",\"password\":\"WrongPass1!\"}"))
                 .andExpect(status().isBadRequest());
 
-        mockMvc.perform(post("/api/v1/authentication/sign-in")
+        mockMvc.perform(post("/api/authentication/sign-in")
                         .contentType("application/json")
                         .content("{\"username\":\"never-registered@example.test\",\"password\":\"WrongPass1!\"}"))
                 .andExpect(status().isNotFound());
@@ -99,7 +99,7 @@ class AuthorizationContractTest {
         var owner = authFor(302L, null, ownerProviderId, "ROLE_PROVIDER");
         var stranger = authFor(303L, null, strangerProviderId, "ROLE_PROVIDER");
 
-        var productResponse = mockMvc.perform(post("/api/v1/fuel-products")
+        var productResponse = mockMvc.perform(post("/api/fuel-products")
                         .with(owner)
                         .contentType("application/json")
                         .content("""
@@ -113,7 +113,7 @@ class AuthorizationContractTest {
         var assets = ReplenishmentTestFixtures.create(customerCommandService, equipmentCommandService,
                 tankCommandService, buyerCompanyId, "Av. Neg 1");
         when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(assets.organizationId()));
-        var requestResponse = mockMvc.perform(post("/api/v2/replenishment-requests")
+        var requestResponse = mockMvc.perform(post("/api/replenishment-requests")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""
@@ -125,9 +125,9 @@ class AuthorizationContractTest {
                 .andReturn().getResponse().getContentAsString();
         long requestId = objectMapper.readTree(requestResponse).get("id").asLong();
 
-        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(stranger))
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(stranger))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(owner))
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(owner))
                 .andExpect(status().isOk());
     }
 
@@ -137,7 +137,7 @@ class AuthorizationContractTest {
         long providerId = signUpProvider("neg-delivery-provider@example.test");
         var buyer = authFor(304L, buyerCompanyId, null, "ROLE_BUYER");
 
-        mockMvc.perform(post("/api/v1/deliveries")
+        mockMvc.perform(post("/api/deliveries")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""
@@ -154,7 +154,7 @@ class AuthorizationContractTest {
         var buyer = authFor(305L, buyerCompanyId, null, "ROLE_BUYER");
         var provider = authFor(306L, null, providerId, "ROLE_PROVIDER");
 
-        var productResponse = mockMvc.perform(post("/api/v1/fuel-products")
+        var productResponse = mockMvc.perform(post("/api/fuel-products")
                         .with(provider)
                         .contentType("application/json")
                         .content("""
@@ -168,7 +168,7 @@ class AuthorizationContractTest {
         var assets = ReplenishmentTestFixtures.create(customerCommandService, equipmentCommandService,
                 tankCommandService, buyerCompanyId, "Av. Neg 2");
         when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(assets.organizationId()));
-        var requestResponse = mockMvc.perform(post("/api/v2/replenishment-requests")
+        var requestResponse = mockMvc.perform(post("/api/replenishment-requests")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""
@@ -180,12 +180,12 @@ class AuthorizationContractTest {
                 .andReturn().getResponse().getContentAsString();
         long requestId = objectMapper.readTree(requestResponse).get("id").asLong();
 
-        var acceptResponse = mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(provider))
+        var acceptResponse = mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(provider))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         long orderId = objectMapper.readTree(acceptResponse).get("orderId").asLong();
 
-        mockMvc.perform(post("/api/v1/payments")
+        mockMvc.perform(post("/api/payments")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""
@@ -199,7 +199,7 @@ class AuthorizationContractTest {
         // known-gap (documented in S04 of the roadmap): these two creation endpoints are the
         // only public (permitAll) POST routes outside /authentication/**. Anyone, unauthenticated,
         // can register a buyer or provider company shell without an associated user account.
-        mockMvc.perform(post("/api/v1/buyer-companies")
+        mockMvc.perform(post("/api/buyer-companies")
                         .contentType("application/json")
                         .content("""
                                 {"name":"Anonymous LLC","ruc":"%s","sector":"Fuel","address":"Lima",
@@ -207,7 +207,7 @@ class AuthorizationContractTest {
                                 """.formatted(nextRuc())))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/provider-companies")
+        mockMvc.perform(post("/api/provider-companies")
                         .contentType("application/json")
                         .content("""
                                 {"name":"Anonymous Provider SAC","ruc":"%s","address":"Lima",
@@ -225,7 +225,7 @@ class AuthorizationContractTest {
     }
 
     private long signUpBuyer(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_BUYER"],
@@ -238,7 +238,7 @@ class AuthorizationContractTest {
     }
 
     private long signUpProvider(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_PROVIDER"],

@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 /** Recibe observaciones lógicas de la aplicación del conductor; no se comunica con hardware físico. */
 @RestController
-@RequestMapping("/api/v2/deliveries")
+@RequestMapping("/api/deliveries")
 @Tag(name = "Observaciones de válvula", description = "Confirmaciones lógicas y eventos de seguridad informados por el conductor")
 public class ValveObservationsController {
     private final ValveObservationService observations;

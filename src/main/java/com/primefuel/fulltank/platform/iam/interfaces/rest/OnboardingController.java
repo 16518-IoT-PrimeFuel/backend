@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(value = "/api/v2/onboarding", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/onboarding", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Registro de organizaciones", description = "Alta de organizaciones y asignación de su propietario inicial")
 public class OnboardingController {
 

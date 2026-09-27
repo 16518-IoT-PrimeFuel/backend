@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Asigna en v2 una entrega mediante {@code POST /api/v2/deliveries}. Delega en {@link AssignDeliveryFlow},
+ * Asigna una entrega mediante {@code POST /api/deliveries}. Delega en {@link AssignDeliveryFlow},
  * que consume la aceptación y reserva suministro y flota en una transacción.
  *
  * <p>El distribuidor se obtiene del principal autenticado, nunca del cuerpo. La orden debe estar respaldada
@@ -30,8 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Este adaptador HTTP forma parte de la raíz de composición para mantener los módulos de dominio desacoplados.</p>
  */
 @RestController
-@RequestMapping(value = "/api/v2/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Asignación de entregas", description = "Asignación transaccional de solicitudes aceptadas en la API v2")
+@RequestMapping(value = "/api/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Asignación de entregas", description = "Asignación transaccional de solicitudes aceptadas")
 public class DeliveryAssignmentController {
 
     private final AssignDeliveryFlow assignDeliveryFlow;

@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * T01-A OpenAPI snapshot: captures the live springdoc contract for /api/v1/**, normalizes it
+ * T01-A OpenAPI snapshot: captures the live springdoc contract for /api/**, normalizes it
  * (sorted keys, no timestamps/generated IDs are ever part of an OpenAPI document) and writes a
  * deterministic copy to docs/api-ledger/openapi-snapshot.json so future tickets can diff against
  * the AS-IS contract instead of guessing.
@@ -62,11 +62,11 @@ class OpenApiSnapshotTest {
 
         long operationCount = 0;
         for (String pathName : paths.propertyNames()) {
-            if (!pathName.startsWith("/api/v1/")) continue;
+            if (!pathName.startsWith("/api/")) continue;
             operationCount += paths.get(pathName).size();
         }
-        assertEquals(59, operationCount,
-                "springdoc's /api-docs no longer describes 59 operations under /api/v1/**. "
+        assertEquals(103, operationCount,
+                "springdoc's /api-docs no longer describes 103 operations under /api/**. "
                         + "Update docs/api-ledger/T01-A-rest-ledger.md if this is intentional.");
 
         String deterministicJson = objectMapper.writerWithDefaultPrettyPrinter()

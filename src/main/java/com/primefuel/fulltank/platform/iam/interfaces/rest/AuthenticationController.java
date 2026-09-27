@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping(value = "/api/v1/authentication", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/authentication", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Autenticación", description = "Registro, inicio de sesión y recuperación de contraseña")
 public class AuthenticationController {
 

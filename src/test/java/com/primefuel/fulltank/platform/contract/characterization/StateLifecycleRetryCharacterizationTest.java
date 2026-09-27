@@ -66,10 +66,10 @@ class StateLifecycleRetryCharacterizationTest {
         var f = new Fixture("retry-accept");
         long requestId = f.createReplenishmentRequest();
 
-        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(f.provider))
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(f.provider))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(f.provider))
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(f.provider))
                 .andExpect(status().isConflict());
     }
 
@@ -78,10 +78,10 @@ class StateLifecycleRetryCharacterizationTest {
         var f = new Fixture("retry-reject");
         long requestId = f.createReplenishmentRequest();
 
-        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(f.provider))
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(f.provider))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/reject", requestId)
+        mockMvc.perform(post("/api/replenishment-requests/{id}/reject", requestId)
                         .with(f.provider)
                         .contentType("application/json")
                         .content("{\"reason\":\"too late\"}"))
@@ -90,20 +90,23 @@ class StateLifecycleRetryCharacterizationTest {
 
     @Test
     void completingAnAlreadyDeliveredDeliveryNowReturns409() throws Exception {
-        // was known-gap (T01-B): the retry used to re-run FuelOrder#receive(), which guards on
-        // OrderStatus.DISPATCHED, so the second attempt threw a raw IllegalStateException that fell
-        // through to the generic 500 handler. T14-B routes the v1 close through the physical machine,
-        // so the second attempt is rejected by the terminal COMPLETED state as a 409 *before* any
+        // The second close is rejected by the terminal COMPLETED state as a 409 *before* any
         // order/equipment side effect runs — no double volume, no duplicate journal rows.
         var f = new Fixture("retry-complete");
-        long orderId = f.createDirectOrder();
-        long deliveryId = f.createDelivery(orderId);
-
-        mockMvc.perform(post("/api/v1/deliveries/{id}/complete", deliveryId).with(f.provider))
+        var accepted = mockMvc.perform(post("/api/replenishment-requests/{id}/accept",
+                        f.createReplenishmentRequest()).with(f.provider))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("DELIVERED"));
+                .andReturn().getResponse().getContentAsString();
+        long deliveryId = f.createDelivery(objectMapper.readTree(accepted).get("orderId").asLong());
+        mockMvc.perform(post("/api/deliveries/{id}/start", deliveryId).with(f.provider)).andExpect(status().isOk());
+        mockMvc.perform(post("/api/deliveries/{id}/arrive", deliveryId).with(f.provider)).andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/deliveries/{id}/complete", deliveryId).with(f.provider))
+        mockMvc.perform(post("/api/deliveries/{id}/complete", deliveryId).with(f.provider)
+                        .contentType("application/json").content("{\"deliveredVolume\":10}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/deliveries/{id}/complete", deliveryId).with(f.provider)
+                        .contentType("application/json").content("{\"deliveredVolume\":10}"))
                 .andExpect(status().isConflict());
     }
 
@@ -115,14 +118,14 @@ class StateLifecycleRetryCharacterizationTest {
         long orderId = f.createDirectOrder();
         long paymentId = f.createPayment(orderId);
 
-        mockMvc.perform(post("/api/v1/payments/{id}/refund", paymentId).with(f.buyer))
+        mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REFUNDED"));
     }
 
     @Test
     void directOrderCreationBypassesTheReplenishmentRequestNegotiationFlowEntirely() throws Exception {
-        // known-gap: POST /api/v1/fuel-orders (the "direct order" route, row 56) lets a buyer
+        // known-gap: POST /api/fuel-orders (the "direct order" route, row 56) lets a buyer
         // create a FuelOrder without ever going through a ReplenishmentRequest's PENDING->accept
         // negotiation. Both creation paths coexist and produce indistinguishable FuelOrder rows
         // (requestId is null for the direct path) — the roadmap (S10) calls this out as
@@ -130,7 +133,7 @@ class StateLifecycleRetryCharacterizationTest {
         var f = new Fixture("retry-direct-order");
         long orderId = f.createDirectOrder();
 
-        mockMvc.perform(post("/api/v1/fuel-orders/{id}/confirm", orderId).with(f.buyer))
+        mockMvc.perform(post("/api/fuel-orders/{id}/confirm", orderId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CONFIRMED"));
     }
@@ -173,7 +176,7 @@ class StateLifecycleRetryCharacterizationTest {
             var assets = ReplenishmentTestFixtures.create(customerCommandService, equipmentCommandService,
                     tankCommandService, buyerCompanyId, "Av. Retry 1");
             when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(assets.organizationId()));
-            var response = mockMvc.perform(post("/api/v2/replenishment-requests")
+            var response = mockMvc.perform(post("/api/replenishment-requests")
                             .with(buyer)
                             .contentType("application/json")
                             .content("""
@@ -187,7 +190,7 @@ class StateLifecycleRetryCharacterizationTest {
         }
 
         long createDirectOrder() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/fuel-orders")
+            var response = mockMvc.perform(post("/api/fuel-orders")
                             .with(buyer)
                             .contentType("application/json")
                             .content("""
@@ -203,24 +206,24 @@ class StateLifecycleRetryCharacterizationTest {
         long createDelivery(long orderId) throws Exception {
             long driverId = createDriver();
             long vehicleId = createVehicle();
-            var response = mockMvc.perform(post("/api/v1/deliveries")
+            var response = mockMvc.perform(post("/api/deliveries")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"orderId":%d,"providerId":%d,"driverId":%d,"vehicleId":%d,
-                                     "scheduledDate":"2026-10-01","notes":"retry fixture"}
+                                    {"commandId":"cmd-%1$d","orderId":%1$d,"driverId":%3$d,"tankerId":%4$d,
+                                     "windowStart":"2099-10-15T08:00:00Z","windowEnd":"2099-10-15T16:00:00Z","scheduledDate":"2026-10-01","notes":"retry fixture"}
                                     """.formatted(orderId, providerId, driverId, vehicleId)))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
-            return objectMapper.readTree(response).get("id").asLong();
+            return objectMapper.readTree(response).get("deliveryId").asLong();
         }
 
         long createPayment(long orderId) throws Exception {
-            JsonNode order = objectMapper.readTree(mockMvc.perform(post("/api/v1/fuel-orders/{id}/confirm", orderId)
+            JsonNode order = objectMapper.readTree(mockMvc.perform(post("/api/fuel-orders/{id}/confirm", orderId)
                             .with(buyer))
                     .andReturn().getResponse().getContentAsString());
             double totalPrice = order.get("totalPrice").asDouble();
-            var response = mockMvc.perform(post("/api/v1/payments")
+            var response = mockMvc.perform(post("/api/payments")
                             .with(buyer)
                             .contentType("application/json")
                             .content("""
@@ -232,7 +235,7 @@ class StateLifecycleRetryCharacterizationTest {
         }
 
         private long createFuelProduct() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/fuel-products")
+            var response = mockMvc.perform(post("/api/fuel-products")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
@@ -245,7 +248,7 @@ class StateLifecycleRetryCharacterizationTest {
         }
 
         private long createDriver() throws Exception {
-            var response = mockMvc.perform(post("/api/v2/drivers")
+            var response = mockMvc.perform(post("/api/drivers")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
@@ -259,7 +262,7 @@ class StateLifecycleRetryCharacterizationTest {
         }
 
         private long createVehicle() throws Exception {
-            var response = mockMvc.perform(post("/api/v2/tankers")
+            var response = mockMvc.perform(post("/api/tankers")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
@@ -273,7 +276,7 @@ class StateLifecycleRetryCharacterizationTest {
     }
 
     private long signUpBuyer(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_BUYER"],
@@ -286,7 +289,7 @@ class StateLifecycleRetryCharacterizationTest {
     }
 
     private long signUpProvider(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_PROVIDER"],

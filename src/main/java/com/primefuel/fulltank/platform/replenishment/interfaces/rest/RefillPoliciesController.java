@@ -26,11 +26,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Política de reposición de cada cisterna (S09) y consulta de decisiones simuladas. La automatización se activa de forma explícita mediante {@code autoGenerateEnabled}.
+ * Política de reposición de cada tanque (S09) y consulta de decisiones simuladas. La automatización se activa de forma explícita mediante {@code autoGenerateEnabled}.
  */
 @RestController
-@RequestMapping(value = "/api/v2/tanks/{tankId}", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Políticas de reposición", description = "Configuración por cisterna y consulta de episodios de abastecimiento")
+@RequestMapping(value = "/api/tanks/{tankId}", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Políticas de reposición", description = "Configuración por tanque y consulta de episodios de abastecimiento")
 public class RefillPoliciesController {
 
     private final RefillPolicyCommandService commandService;
@@ -49,16 +49,16 @@ public class RefillPoliciesController {
     }
 
     /**
-     * Crea o reconfigura la política de reposición de una cisterna.
+     * Crea o reconfigura la política de reposición de un tanque.
      *
-     * <p>La cisterna debe pertenecer a la organización activa. Los campos omitidos usan valores globales aprobados. La propiedad se comprueba antes de configurar la política.</p>
+     * <p>El tanque debe pertenecer a la organización activa. Los campos omitidos usan valores globales aprobados. La propiedad se comprueba antes de configurar la política.</p>
      */
     @Operation(summary = "Configurar política de reposición",
-            description = "Crea o actualiza la política de la cisterna propia. Los campos opcionales sobrescriben los valores globales aprobados.")
+            description = "Crea o actualiza la política de el tanque propia. Los campos opcionales sobrescriben los valores globales aprobados.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Política de reposición creada o actualizada."),
             @ApiResponse(responseCode = "400", description = "El cuerpo no cumple las validaciones o un valor de política no es válido."),
-            @ApiResponse(responseCode = "403", description = "El usuario no tiene organización activa o la cisterna pertenece a otro tenant.")
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene organización activa o el tanque pertenece a otro tenant.")
     })
     @PutMapping("/refill-policy")
     public ResponseEntity<?> configure(@PathVariable Long tankId,
@@ -76,16 +76,16 @@ public class RefillPoliciesController {
     }
 
     /**
-     * Consulta la política de reposición de una cisterna.
+     * Consulta la política de reposición de un tanque.
      *
-     * <p>La cisterna debe pertenecer a la organización activa; si todavía no tiene política, responde como no encontrada.</p>
+     * <p>El tanque debe pertenecer a la organización activa; si todavía no tiene política, responde como no encontrada.</p>
      */
     @Operation(summary = "Consultar política de reposición",
-            description = "Devuelve la política vigente de una cisterna que pertenece a la organización activa.")
+            description = "Devuelve la política vigente de un tanque que pertenece a la organización activa.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Política de reposición devuelta."),
-            @ApiResponse(responseCode = "403", description = "El usuario no tiene organización activa o no es propietario de la cisterna."),
-            @ApiResponse(responseCode = "404", description = "La cisterna todavía no tiene una política configurada.")
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene organización activa o no es propietario de el tanque."),
+            @ApiResponse(responseCode = "404", description = "El tanque todavía no tiene una política configurada.")
     })
     @GetMapping("/refill-policy")
     public ResponseEntity<RefillPolicyResource> get(@PathVariable Long tankId) {
@@ -100,15 +100,15 @@ public class RefillPoliciesController {
     }
 
     /**
-     * Lista los episodios de reposición de una cisterna.
+     * Lista los episodios de reposición de un tanque.
      *
-     * <p>La cisterna debe pertenecer a la organización activa; los episodios corresponden a las decisiones registradas por el evaluador.</p>
+     * <p>El tanque debe pertenecer a la organización activa; los episodios corresponden a las decisiones registradas por el evaluador.</p>
      */
     @Operation(summary = "Listar episodios de reposición",
-            description = "Devuelve los episodios registrados para una cisterna propia de la organización activa.")
+            description = "Devuelve los episodios registrados para un tanque propia de la organización activa.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Episodios de reposición devueltos."),
-            @ApiResponse(responseCode = "403", description = "El usuario no tiene organización activa o no es propietario de la cisterna.")
+            @ApiResponse(responseCode = "403", description = "El usuario no tiene organización activa o no es propietario de el tanque.")
     })
     @GetMapping("/refill-episodes")
     public ResponseEntity<List<RefillEpisodeResource>> episodes(@PathVariable Long tankId) {

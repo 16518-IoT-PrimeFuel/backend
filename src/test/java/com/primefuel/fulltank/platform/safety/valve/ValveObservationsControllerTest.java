@@ -68,7 +68,7 @@ class ValveObservationsControllerTest {
 
     private org.springframework.test.web.servlet.ResultActions postObservation(long id, long user, long provider, String state, String command) throws Exception {
         String commandJson = command == null ? "" : ",\"commandId\":\"" + command + "\"";
-        return mvc.perform(post("/api/v2/deliveries/{id}/valve-observations", id).with(auth(user, provider))
+        return mvc.perform(post("/api/deliveries/{id}/valve-observations", id).with(auth(user, provider))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"state\":\"" + state
                         + "\",\"observedAt\":\"2026-09-26T12:00:00Z\"" + commandJson + "}"));
     }

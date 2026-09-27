@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Administración v2 de políticas de geocerca. Crea una nueva versión del círculo usado para evaluar
+ * Administración de políticas de geocerca. Crea una nueva versión del círculo usado para evaluar
  * decisiones de seguridad de una entrega, sin modificar versiones anteriores.
  *
  * <p>La geocerca es un dato para la decisión de seguridad, no un mecanismo de prevención física. La autorización
@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * del cuerpo; una entrega ajena devuelve 403 y una inexistente, 404.
  */
 @RestController
-@RequestMapping(value = "/api/v2/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/deliveries", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Políticas de geocerca", description = "Configuración versionada del área de seguridad de una entrega")
 public class GeofencePoliciesController {
 

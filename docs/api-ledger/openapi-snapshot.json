@@ -200,33 +200,6 @@
         "required" : [ "name" ],
         "type" : "object"
       },
-      "CreateDeliveryResource" : {
-        "properties" : {
-          "driverId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "notes" : {
-            "type" : "string"
-          },
-          "orderId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "providerId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "scheduledDate" : {
-            "type" : "string"
-          },
-          "vehicleId" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        },
-        "type" : "object"
-      },
       "CreateEquipmentResource" : {
         "properties" : {
           "autoRefill" : {
@@ -362,37 +335,6 @@
         "required" : [ "centerLatitude", "centerLongitude", "radiusMeters" ],
         "type" : "object"
       },
-      "CreateNotificationResource" : {
-        "properties" : {
-          "companyId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "message" : {
-            "type" : "string"
-          },
-          "providerId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "referenceId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "title" : {
-            "type" : "string"
-          },
-          "type" : {
-            "enum" : [ "NEW_REQUEST", "REQUEST_PENDING", "ORDER_ACCEPTED", "ORDER_REJECTED", "ORDER_DISPATCHED", "ORDER_DELIVERED", "ORDER_CONFIRMED", "ORDER_CANCELLED", "DELIVERY_DISPATCHED", "DELIVERY_COMPLETED", "DELIVERY_FAILED", "PAYMENT_RECEIVED", "PAYMENT_COMPLETED", "PAYMENT_REFUNDED", "GENERAL" ],
-            "type" : "string"
-          },
-          "userId" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        },
-        "type" : "object"
-      },
       "CreatePaymentResource" : {
         "properties" : {
           "amount" : {
@@ -458,7 +400,7 @@
             "type" : "integer"
           },
           "deliveryAddress" : {
-            "description" : "Dirección de descarga; si se omite o está vacía, se toma del sitio de la cisterna.",
+            "description" : "Dirección de descarga; si se omite o está vacía, se toma del sitio de el tanque.",
             "maxLength" : 255,
             "minLength" : 0,
             "type" : "string"
@@ -552,92 +494,6 @@
       },
       "DeliveryResource" : {
         "properties" : {
-          "deliveredAt" : {
-            "format" : "date-time",
-            "type" : "string"
-          },
-          "dispatchedAt" : {
-            "format" : "date-time",
-            "type" : "string"
-          },
-          "driverId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "id" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "notes" : {
-            "type" : "string"
-          },
-          "orderId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "providerId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "scheduledDate" : {
-            "type" : "string"
-          },
-          "status" : {
-            "enum" : [ "SCHEDULED", "DISPATCHED", "DELIVERED", "FAILED" ],
-            "type" : "string"
-          },
-          "vehicleId" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        },
-        "type" : "object"
-      },
-      "DeliveryTimelineItemResource" : {
-        "properties" : {
-          "occurredAt" : {
-            "format" : "date-time",
-            "type" : "string"
-          },
-          "refId" : {
-            "type" : "string"
-          },
-          "summary" : {
-            "type" : "string"
-          },
-          "type" : {
-            "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
-      "DeliveryTransitionResource" : {
-        "properties" : {
-          "aggregateVersion" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "fromState" : {
-            "enum" : [ "ASSIGNED", "STARTED", "ARRIVED", "DELIVERING", "COMPLETED", "FAILED", "CANCELLED" ],
-            "type" : "string"
-          },
-          "id" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "occurredAt" : {
-            "format" : "date-time",
-            "type" : "string"
-          },
-          "toState" : {
-            "enum" : [ "ASSIGNED", "STARTED", "ARRIVED", "DELIVERING", "COMPLETED", "FAILED", "CANCELLED" ],
-            "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
-      "DeliveryV2Resource" : {
-        "properties" : {
           "arrivedAt" : {
             "format" : "date-time",
             "type" : "string"
@@ -704,6 +560,49 @@
         },
         "type" : "object"
       },
+      "DeliveryTimelineItemResource" : {
+        "properties" : {
+          "occurredAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "refId" : {
+            "type" : "string"
+          },
+          "summary" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "DeliveryTransitionResource" : {
+        "properties" : {
+          "aggregateVersion" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fromState" : {
+            "enum" : [ "ASSIGNED", "STARTED", "ARRIVED", "DELIVERING", "COMPLETED", "FAILED", "CANCELLED" ],
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "occurredAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "toState" : {
+            "enum" : [ "ASSIGNED", "STARTED", "ARRIVED", "DELIVERING", "COMPLETED", "FAILED", "CANCELLED" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "DriverInputResource" : {
         "properties" : {
           "email" : {
@@ -744,7 +643,7 @@
         "required" : [ "email", "firstName", "lastName", "licenseNumber", "phoneNumber" ],
         "type" : "object"
       },
-      "DriverV2Resource" : {
+      "DriverResource" : {
         "properties" : {
           "active" : {
             "type" : "boolean"
@@ -852,15 +751,6 @@
         "properties" : {
           "reason" : {
             "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
-      "FavoriteProviderResource" : {
-        "properties" : {
-          "providerId" : {
-            "format" : "int64",
-            "type" : "integer"
           }
         },
         "type" : "object"
@@ -1178,35 +1068,6 @@
           "totalRevenue" : {
             "format" : "double",
             "type" : "number"
-          }
-        },
-        "type" : "object"
-      },
-      "ProductResource" : {
-        "properties" : {
-          "active" : {
-            "type" : "boolean"
-          },
-          "fuelProductId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "fuelType" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "pricePerUnit" : {
-            "format" : "double",
-            "type" : "number"
-          },
-          "stock" : {
-            "format" : "double",
-            "type" : "number"
-          },
-          "unit" : {
-            "type" : "string"
           }
         },
         "type" : "object"
@@ -1674,7 +1535,7 @@
         "required" : [ "brand", "licensePlate", "model" ],
         "type" : "object"
       },
-      "TankerV2Resource" : {
+      "TankerResource" : {
         "properties" : {
           "active" : {
             "type" : "boolean"
@@ -1896,7 +1757,7 @@
       "name" : "Soporte de FullTank",
       "url" : "https://primefuel.com/support"
     },
-    "description" : "API de FullTank para gestionar abastecimiento, flota, entregas, inventario y pagos por organizaciÃ³n.",
+    "description" : "API de FullTank para gestionar abastecimiento, flota, entregas, inventario y pagos por organización.",
     "license" : {
       "name" : "Apache 2.0 (licencia)",
       "url" : "https://www.apache.org/licenses/LICENSE-2.0.html"
@@ -1906,7 +1767,181 @@
   },
   "openapi" : "3.1.0",
   "paths" : {
-    "/api/v1/analytics/buyers/{companyId}" : {
+    "/api/admin/api-metrics" : {
+      "get" : {
+        "description" : "Devuelve por patrón la cantidad de solicitudes, el último acceso y el número de usuarios distintos. Solo para administradores.",
+        "operationId" : "list_4",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "version",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Métricas de rutas devueltas."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La versión debe ser v1 o v2."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no tiene autoridad de administrador de plataforma."
+          }
+        },
+        "summary" : "Listar uso de rutas API",
+        "tags" : [ "Métricas de rutas API" ]
+      }
+    },
+    "/api/admin/deliveries/{deliveryId}/transport-evidence" : {
+      "delete" : {
+        "description" : "Elimina únicamente muestras GPS y la proyección de seguimiento de la entrega. Requiere ROLE_ADMIN.",
+        "operationId" : "delete",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Evidencias eliminadas; repetir la operación no produce cambios adicionales."
+          },
+          "403" : {
+            "description" : "El usuario no tiene autoridad de administrador de plataforma."
+          },
+          "404" : {
+            "description" : "La entrega no existe."
+          }
+        },
+        "summary" : "Eliminar evidencias de transporte",
+        "tags" : [ "Retención de evidencias de transporte" ]
+      }
+    },
+    "/api/admin/deliveries/{deliveryId}/transport-evidence/export" : {
+      "get" : {
+        "description" : "Devuelve evidencias GPS y de carga ordenadas por instante de registro. Requiere ROLE_ADMIN.",
+        "operationId" : "export",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Evidencias exportadas; la lista puede estar vacía."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no tiene autoridad de administrador de plataforma."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La entrega no existe."
+          }
+        },
+        "summary" : "Exportar evidencias de transporte",
+        "tags" : [ "Retención de evidencias de transporte" ]
+      }
+    },
+    "/api/admin/users/{userId}/promote" : {
+      "post" : {
+        "description" : "Añade ROLE_ADMIN a la cuenta sin retirar los roles existentes. Solo puede hacerlo un administrador de plataforma.",
+        "operationId" : "promote",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "userId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PromotedUser"
+                }
+              }
+            },
+            "description" : "La cuenta tiene el rol ROLE_ADMIN."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PromotedUser"
+                }
+              }
+            },
+            "description" : "El usuario no tiene autoridad de administrador de plataforma."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PromotedUser"
+                }
+              }
+            },
+            "description" : "La cuenta no existe."
+          }
+        },
+        "summary" : "Otorgar rol de administrador de plataforma",
+        "tags" : [ "Administración de plataforma" ]
+      }
+    },
+    "/api/analytics/buyers/{companyId}" : {
       "get" : {
         "description" : "Devuelve métricas agregadas de la empresa indicada cuando el usuario pertenece a ella.",
         "operationId" : "getBuyerAnalytics",
@@ -1945,7 +1980,7 @@
         "tags" : [ "Analítica" ]
       }
     },
-    "/api/v1/analytics/platform" : {
+    "/api/analytics/platform" : {
       "get" : {
         "description" : "Devuelve métricas agregadas de toda la plataforma; requiere autoridad ROLE_ADMIN.",
         "operationId" : "getPlatformSummary",
@@ -1975,7 +2010,7 @@
         "tags" : [ "Analítica" ]
       }
     },
-    "/api/v1/analytics/providers/{providerId}" : {
+    "/api/analytics/providers/{providerId}" : {
       "get" : {
         "description" : "Devuelve métricas agregadas del tenant distribuidor cuando el usuario pertenece a esa empresa.",
         "operationId" : "getProviderAnalytics",
@@ -2014,7 +2049,7 @@
         "tags" : [ "Analítica" ]
       }
     },
-    "/api/v1/authentication/password-reset/confirm" : {
+    "/api/authentication/password-reset/confirm" : {
       "post" : {
         "description" : "Actualiza la contraseña cuando el token es válido, no ha vencido y no se ha utilizado; el token se consume una sola vez.",
         "operationId" : "confirmPasswordReset",
@@ -2054,7 +2089,7 @@
         "tags" : [ "Autenticación" ]
       }
     },
-    "/api/v1/authentication/password-reset/request" : {
+    "/api/authentication/password-reset/request" : {
       "post" : {
         "description" : "Inicia la recuperación de contraseña y no revela si el correo está registrado.",
         "operationId" : "requestPasswordReset",
@@ -2094,7 +2129,7 @@
         "tags" : [ "Autenticación" ]
       }
     },
-    "/api/v1/authentication/sign-in" : {
+    "/api/authentication/sign-in" : {
       "post" : {
         "description" : "Verifica las credenciales y devuelve el perfil autenticado, sus membresías y un token JWT.",
         "operationId" : "signIn",
@@ -2144,7 +2179,7 @@
         "tags" : [ "Autenticación" ]
       }
     },
-    "/api/v1/authentication/sign-up" : {
+    "/api/authentication/sign-up" : {
       "post" : {
         "description" : "Crea la cuenta y su organización, y asigna al usuario la membresía OWNER. El rol debe coincidir con el perfil comercial enviado.",
         "operationId" : "signUp",
@@ -2214,7 +2249,7 @@
         "tags" : [ "Autenticación" ]
       }
     },
-    "/api/v1/buyer-companies" : {
+    "/api/buyer-companies" : {
       "get" : {
         "description" : "Devuelve todos los perfiles registrados. Solo está disponible para administradores de plataforma.",
         "operationId" : "getAllBuyerCompanies",
@@ -2288,7 +2323,7 @@
         "tags" : [ "Empresas compradoras" ]
       }
     },
-    "/api/v1/buyer-companies/{companyId}" : {
+    "/api/buyer-companies/{companyId}" : {
       "get" : {
         "description" : "Devuelve el perfil indicado cuando pertenece al tenant comprador autenticado.",
         "operationId" : "getBuyerCompanyById",
@@ -2394,49 +2429,49 @@
         "tags" : [ "Empresas compradoras" ]
       }
     },
-    "/api/v1/deliveries" : {
+    "/api/customers" : {
       "get" : {
-        "description" : "Devuelve todas las entregas registradas; requiere autoridad administrativa ROLE_ADMIN.",
-        "operationId" : "getAllDeliveries",
+        "description" : "Devuelve las cuentas asociadas a la organización activa del usuario.",
+        "operationId" : "listCustomers",
         "responses" : {
           "200" : {
             "content" : {
               "application/json" : {
                 "schema" : {
                   "items" : {
-                    "$ref" : "#/components/schemas/DeliveryResource"
+                    "$ref" : "#/components/schemas/CustomerResource"
                   },
                   "type" : "array"
                 }
               }
             },
-            "description" : "Se devuelve la lista de entregas."
+            "description" : "Cuentas de cliente devueltas."
           },
           "403" : {
             "content" : {
               "application/json" : {
                 "schema" : {
                   "items" : {
-                    "$ref" : "#/components/schemas/DeliveryResource"
+                    "$ref" : "#/components/schemas/CustomerResource"
                   },
                   "type" : "array"
                 }
               }
             },
-            "description" : "El usuario no cuenta con autoridad ROLE_ADMIN."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
           }
         },
-        "summary" : "Listar todas las entregas",
-        "tags" : [ "Entregas" ]
+        "summary" : "Listar cuentas de cliente",
+        "tags" : [ "Clientes" ]
       },
       "post" : {
-        "description" : "Crea y despacha una entrega del distribuidor tras validar la propiedad, disponibilidad de flota, capacidad de la cisterna y existencias.",
-        "operationId" : "createDelivery",
+        "description" : "Crea la cuenta dentro de la organización activa del usuario. La organización se deriva de la membresía autenticada.",
+        "operationId" : "registerCustomer",
         "requestBody" : {
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CreateDeliveryResource"
+                "$ref" : "#/components/schemas/CreateCustomerResource"
               }
             }
           },
@@ -2451,7 +2486,17 @@
                 }
               }
             },
-            "description" : "Entrega creada y orden despachada."
+            "description" : "Cuenta de cliente creada."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El cuerpo no cumple las validaciones requeridas."
           },
           "403" : {
             "content" : {
@@ -2461,17 +2506,7 @@
                 }
               }
             },
-            "description" : "El tenant autenticado no es propietario del distribuidor indicado."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "No se encontró para el distribuidor el conductor, la cisterna o la orden."
+            "description" : "El usuario no tiene una organización activa o la empresa heredada indicada no es suya."
           },
           "409" : {
             "content" : {
@@ -2481,59 +2516,20 @@
                 }
               }
             },
-            "description" : "La flota no está disponible, la capacidad o las existencias son insuficientes, o la orden ya tiene una entrega."
+            "description" : "Ya existe una cuenta con el mismo RUC en esta organización."
           }
         },
-        "summary" : "Crear entrega",
-        "tags" : [ "Entregas" ]
+        "summary" : "Registrar una cuenta de cliente",
+        "tags" : [ "Clientes" ]
       }
     },
-    "/api/v1/deliveries/order/{orderId}" : {
+    "/api/customers/{customerId}/sites" : {
       "get" : {
-        "description" : "Devuelve la entrega asociada cuando el usuario pertenece al distribuidor o a la empresa compradora de la orden.",
-        "operationId" : "getDeliveryByOrder",
+        "description" : "Devuelve los sitios registrados bajo una cuenta que pertenece a la organización activa.",
+        "operationId" : "listSites",
         "parameters" : [ {
           "in" : "path",
-          "name" : "orderId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DeliveryResource"
-                }
-              }
-            },
-            "description" : "Entrega devuelta."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DeliveryResource"
-                }
-              }
-            },
-            "description" : "La orden no tiene entrega o esta no es visible para el usuario."
-          }
-        },
-        "summary" : "Consultar entrega de una orden",
-        "tags" : [ "Entregas" ]
-      }
-    },
-    "/api/v1/deliveries/provider/{providerId}" : {
-      "get" : {
-        "description" : "Devuelve las entregas del distribuidor indicado cuando coincide con el tenant autenticado.",
-        "operationId" : "getDeliveriesByProvider",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "providerId",
+          "name" : "customerId",
           "required" : true,
           "schema" : {
             "format" : "int64",
@@ -2546,36 +2542,186 @@
               "application/json" : {
                 "schema" : {
                   "items" : {
-                    "$ref" : "#/components/schemas/DeliveryResource"
+                    "$ref" : "#/components/schemas/SiteResource"
                   },
                   "type" : "array"
                 }
               }
             },
-            "description" : "Se devuelve la lista de entregas del distribuidor."
+            "description" : "Sitios de entrega devueltos."
           },
           "403" : {
             "content" : {
               "application/json" : {
                 "schema" : {
                   "items" : {
-                    "$ref" : "#/components/schemas/DeliveryResource"
+                    "$ref" : "#/components/schemas/SiteResource"
                   },
                   "type" : "array"
                 }
               }
             },
-            "description" : "El tenant autenticado no es propietario del distribuidor solicitado."
+            "description" : "El usuario no está autenticado o no tiene una organización activa."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/SiteResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "La cuenta no existe o pertenece a otra organización."
           }
         },
-        "summary" : "Listar entregas por distribuidor",
-        "tags" : [ "Entregas" ]
+        "summary" : "Listar sitios de una cuenta",
+        "tags" : [ "Clientes" ]
+      },
+      "post" : {
+        "description" : "Crea un sitio bajo la cuenta indicada, que debe pertenecer a la organización activa del usuario.",
+        "operationId" : "registerSite",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "customerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateSiteResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sitio creado."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El cuerpo no cumple las validaciones requeridas."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no está autenticado, no tiene organización activa o la cuenta pertenece a otro tenant."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "No existe la cuenta de cliente indicada."
+          }
+        },
+        "summary" : "Registrar un sitio de entrega",
+        "tags" : [ "Clientes" ]
       }
     },
-    "/api/v1/deliveries/{deliveryId}" : {
+    "/api/deliveries" : {
+      "post" : {
+        "description" : "Consume la aceptación de reposición de la orden, reserva suministro y flota, y crea la entrega en una transacción; es idempotente por commandId.",
+        "operationId" : "assign",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AssignDeliveryResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Entrega asignada o entrega existente devuelta para el commandId."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Falta commandId u orderId, o la ventana o el volumen no son válidos."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no está autenticado como tenant distribuidor."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La orden no está respaldada por una solicitud aceptada por el distribuidor autenticado."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La solicitud no está aceptada, la aceptación ya se consumió o no hay disponibilidad de suministro o flota."
+          }
+        },
+        "summary" : "Asignar entrega para una orden aceptada",
+        "tags" : [ "Asignación de entregas" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}" : {
       "get" : {
-        "description" : "Devuelve la entrega cuando el usuario pertenece al distribuidor o a la empresa compradora de la orden.",
-        "operationId" : "getDeliveryById",
+        "description" : "Devuelve una entrega propia con su estado heredado y su estado físico vigente.",
+        "operationId" : "get_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "deliveryId",
@@ -2604,17 +2750,17 @@
                 }
               }
             },
-            "description" : "La entrega no existe o no es visible para el usuario."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           }
         },
-        "summary" : "Consultar entrega por identificador",
-        "tags" : [ "Entregas" ]
+        "summary" : "Consultar entrega",
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
-    "/api/v1/deliveries/{deliveryId}/complete" : {
+    "/api/deliveries/{deliveryId}/arrive" : {
       "post" : {
-        "description" : "Cierra la entrega del distribuidor autenticado usando como evidencia el volumen solicitado en la orden.",
-        "operationId" : "completeDelivery",
+        "description" : "Avanza a llegada una entrega en ruta del distribuidor autenticado.",
+        "operationId" : "arrive",
         "parameters" : [ {
           "in" : "path",
           "name" : "deliveryId",
@@ -2624,6 +2770,173 @@
             "type" : "integer"
           }
         } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Llegada de la entrega registrada."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El estado físico actual no permite registrar la llegada."
+          }
+        },
+        "summary" : "Registrar llegada de entrega",
+        "tags" : [ "Ciclo de entrega" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}/assign" : {
+      "post" : {
+        "description" : "Avanza a asignada una entrega propia del distribuidor autenticado. Repetir la operación en ese estado no genera efectos duplicados.",
+        "operationId" : "assign_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Entrega asignada o ya se encontraba asignada."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El estado físico actual no permite asignar la entrega."
+          }
+        },
+        "summary" : "Asignar entrega",
+        "tags" : [ "Ciclo de entrega" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}/cancel" : {
+      "post" : {
+        "description" : "Registra la cancelación terminal de una entrega propia y guarda el motivo indicado.",
+        "operationId" : "cancel_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FailDeliveryResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Entrega cancelada."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El estado actual impide cancelarla o hubo una transición concurrente."
+          }
+        },
+        "summary" : "Cancelar entrega",
+        "tags" : [ "Ciclo de entrega" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}/complete" : {
+      "post" : {
+        "description" : "Cierra una entrega propia y registra el volumen entregado. La orden debe aportar el volumen solicitado para cerrar el historial.",
+        "operationId" : "complete",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompleteDeliveryResource"
+              }
+            }
+          },
+          "required" : true
+        },
         "responses" : {
           "200" : {
             "content" : {
@@ -2635,6 +2948,16 @@
             },
             "description" : "Entrega completada."
           },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El volumen entregado no es válido como evidencia."
+          },
           "404" : {
             "content" : {
               "application/json" : {
@@ -2643,7 +2966,7 @@
                 }
               }
             },
-            "description" : "La entrega no existe o no pertenece al distribuidor autenticado."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           },
           "409" : {
             "content" : {
@@ -2653,7 +2976,7 @@
                 }
               }
             },
-            "description" : "El estado físico actual no permite completar la entrega."
+            "description" : "El estado actual impide completar la entrega o hubo una transición concurrente."
           },
           "422" : {
             "content" : {
@@ -2663,66 +2986,17 @@
                 }
               }
             },
-            "description" : "No se pudo obtener de la orden el volumen requerido como evidencia de cierre."
+            "description" : "No se pudo resolver el volumen solicitado para cerrar la entrega."
           }
         },
         "summary" : "Completar entrega",
-        "tags" : [ "Entregas" ]
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
-    "/api/v1/deliveries/{deliveryId}/dispatch" : {
+    "/api/deliveries/{deliveryId}/fail" : {
       "post" : {
-        "description" : "Avanza la entrega del distribuidor autenticado al estado de despacho cuando la transición física es válida.",
-        "operationId" : "dispatchDelivery",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Entrega despachada."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe o no pertenece al distribuidor autenticado."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El estado físico actual no permite despachar la entrega."
-          }
-        },
-        "summary" : "Despachar entrega",
-        "tags" : [ "Entregas" ]
-      }
-    },
-    "/api/v1/deliveries/{deliveryId}/fail" : {
-      "post" : {
-        "description" : "Registra el motivo y cambia al estado fallido una entrega del distribuidor autenticado si la transición es válida.",
-        "operationId" : "failDelivery",
+        "description" : "Registra un fallo terminal para la entrega propia y guarda el motivo indicado.",
+        "operationId" : "fail",
         "parameters" : [ {
           "in" : "path",
           "name" : "deliveryId",
@@ -2761,7 +3035,7 @@
                 }
               }
             },
-            "description" : "La entrega no existe o no pertenece al distribuidor autenticado."
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
           },
           "409" : {
             "content" : {
@@ -2771,14 +3045,864 @@
                 }
               }
             },
-            "description" : "El estado físico actual no permite marcar la entrega como fallida."
+            "description" : "El estado actual impide marcarla como fallida o hubo una transición concurrente."
           }
         },
-        "summary" : "Marcar entrega como fallida",
-        "tags" : [ "Entregas" ]
+        "summary" : "Marcar entrega fallida",
+        "tags" : [ "Ciclo de entrega" ]
       }
     },
-    "/api/v1/equipment" : {
+    "/api/deliveries/{deliveryId}/geofence-policies" : {
+      "post" : {
+        "description" : "Crea una nueva versión del círculo de seguridad de una entrega para el distribuidor autenticado y conserva las versiones previas.",
+        "operationId" : "create_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateGeofencePolicyResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Versión de política creada."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Geometría inválida: falta el centro, sus coordenadas no son válidas o el radio no es positivo."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no tiene identidad de distribuidor o no es propietario de la entrega."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La entrega no existe."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Ya existe una versión concurrente de la política para esta entrega."
+          }
+        },
+        "summary" : "Crear versión de geocerca para entrega",
+        "tags" : [ "Políticas de geocerca" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}/start" : {
+      "post" : {
+        "description" : "Avanza a iniciada una entrega propia que actualmente está asignada.",
+        "operationId" : "start",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Entrega iniciada."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El estado físico actual no permite iniciar la entrega."
+          }
+        },
+        "summary" : "Iniciar entrega",
+        "tags" : [ "Ciclo de entrega" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}/timeline" : {
+      "get" : {
+        "description" : "Combina cambios de estado, decisiones de seguridad, eventos de válvula y registros de carga retenidos; las muestras GPS eliminadas no se incluyen.",
+        "operationId" : "get_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryTimelineItemResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Cronología devuelta, ordenada por instante, tipo e identificador."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryTimelineItemResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "El usuario no pertenece al distribuidor ni es el conductor asignado."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryTimelineItemResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "La entrega no existe."
+          }
+        },
+        "summary" : "Consultar cronología de entrega",
+        "tags" : [ "Cronología de entregas" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}/tracking" : {
+      "get" : {
+        "description" : "Devuelve la última ubicación confiable y el estado de carga para el distribuidor propietario o el conductor asignado.",
+        "operationId" : "latest",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Último seguimiento devuelto."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no pertenece al distribuidor propietario ni es el conductor asignado."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La entrega no existe o todavía no tiene seguimiento."
+          }
+        },
+        "summary" : "Consultar último seguimiento de entrega",
+        "tags" : [ "Seguimiento de transporte" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}/tracking/samples" : {
+      "get" : {
+        "description" : "Devuelve las evidencias de transporte ordenadas por hora del dispositivo, incluyendo la recepción y si cada muestra actualizó el dato más reciente.",
+        "operationId" : "samples",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Historial devuelto; puede estar vacío."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no pertenece al distribuidor propietario ni es el conductor asignado."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La entrega no existe."
+          }
+        },
+        "summary" : "Listar muestras de seguimiento de entrega",
+        "tags" : [ "Seguimiento de transporte" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}/transitions" : {
+      "get" : {
+        "description" : "Devuelve el historial inmutable de transiciones físicas de una entrega propia, con sus versiones e instantes.",
+        "operationId" : "transitions",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryTransitionResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Transiciones de estado devueltas."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryTransitionResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "La entrega no existe o pertenece a otro distribuidor."
+          }
+        },
+        "summary" : "Listar transiciones de una entrega",
+        "tags" : [ "Ciclo de entrega" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}/transport-evidence" : {
+      "post" : {
+        "description" : "Acepta una ubicación o hito de carga enviado por el conductor asignado; conserva las muestras tardías sin reemplazar el último valor.",
+        "operationId" : "record",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransportEvidenceResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El eventId ya se registró para la entrega; se devuelve la confirmación original sin guardar otra muestra."
+          },
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Evidencia registrada; una muestra tardía puede no actualizar el último valor."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El cuerpo no es válido: tipo o hito desconocido, coordenadas ausentes o volumen no positivo."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no es el conductor asignado o la asignación cruza tenants."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La entrega o el conductor asignado no existe."
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El hito de carga no es válido para el estado actual, por ejemplo, descargar antes de cargar."
+          }
+        },
+        "summary" : "Registrar evidencia de transporte",
+        "tags" : [ "Evidencias de transporte" ]
+      }
+    },
+    "/api/deliveries/{deliveryId}/valve-observations" : {
+      "post" : {
+        "description" : "El conductor asignado informa OPEN o CLOSED; una confirmación OPEN no autorizada se registra como incidente de seguridad.",
+        "operationId" : "observe",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ValveObservationResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Observación registrada o confirmación repetida sin duplicar efectos."
+          },
+          "202" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La confirmación OPEN no coincide con una orden y se registró como incidente de seguridad."
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El cuerpo de la observación no es válido."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no es el conductor asignado o la asignación cruza tenants."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La entrega o el conductor asignado no existe."
+          }
+        },
+        "summary" : "Informar observación de válvula",
+        "tags" : [ "Observaciones de válvula" ]
+      }
+    },
+    "/api/drivers" : {
+      "get" : {
+        "description" : "Devuelve los conductores registrados para el tenant distribuidor autenticado.",
+        "operationId" : "list_2",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Se devuelve la lista de conductores."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
+          }
+        },
+        "summary" : "Listar conductores",
+        "tags" : [ "Conductores de flota" ]
+      },
+      "post" : {
+        "description" : "Crea un conductor para el tenant distribuidor autenticado, identificado a partir del principal.",
+        "operationId" : "register_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DriverInputResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Conductor registrado."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El cuerpo no supera la validación o los datos del conductor no son válidos."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
+          }
+        },
+        "summary" : "Registrar conductor",
+        "tags" : [ "Conductores de flota" ]
+      }
+    },
+    "/api/drivers/eligible" : {
+      "get" : {
+        "description" : "Devuelve conductores activos del tenant autenticado que pueden asignarse y no están ocupados.",
+        "operationId" : "listEligible_1",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Se devuelve la lista de conductores elegibles."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
+          }
+        },
+        "summary" : "Listar conductores elegibles",
+        "tags" : [ "Conductores de flota" ]
+      }
+    },
+    "/api/drivers/{driverId}" : {
+      "get" : {
+        "description" : "Devuelve el conductor indicado si pertenece al tenant distribuidor autenticado.",
+        "operationId" : "get_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "driverId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "Conductor devuelto."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DriverResource"
+                }
+              }
+            },
+            "description" : "El conductor no existe o pertenece a otro tenant distribuidor."
+          }
+        },
+        "summary" : "Consultar conductor por identificador",
+        "tags" : [ "Conductores de flota" ]
+      },
+      "put" : {
+        "description" : "Aplica los cambios recibidos a un conductor del tenant distribuidor autenticado.",
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "driverId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DriverInputResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Conductor actualizado."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El cuerpo no supera la validación o los datos del conductor no son válidos."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El conductor no existe o no pertenece al tenant autenticado."
+          }
+        },
+        "summary" : "Actualizar conductor",
+        "tags" : [ "Conductores de flota" ]
+      }
+    },
+    "/api/drivers/{driverId}/activate" : {
+      "post" : {
+        "description" : "Reactiva un conductor desactivado que pertenece al tenant distribuidor autenticado.",
+        "operationId" : "activate_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "driverId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Conductor reactivado."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El conductor no existe o no pertenece al tenant autenticado."
+          }
+        },
+        "summary" : "Reactivar conductor",
+        "tags" : [ "Conductores de flota" ]
+      }
+    },
+    "/api/drivers/{driverId}/deactivate" : {
+      "post" : {
+        "description" : "Desactiva el conductor del tenant autenticado sin eliminar su registro.",
+        "operationId" : "deactivate_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "driverId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Conductor desactivado."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El conductor no existe o no pertenece al tenant autenticado."
+          }
+        },
+        "summary" : "Desactivar conductor",
+        "tags" : [ "Conductores de flota" ]
+      }
+    },
+    "/api/drivers/{driverId}/eligibility" : {
+      "get" : {
+        "description" : "Devuelve el resultado y motivo de elegibilidad para un conductor del tenant autenticado.",
+        "operationId" : "eligibility_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "driverId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EligibilityResource"
+                }
+              }
+            },
+            "description" : "Evaluación de elegibilidad devuelta."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EligibilityResource"
+                }
+              }
+            },
+            "description" : "El usuario autenticado no tiene identidad de distribuidor."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EligibilityResource"
+                }
+              }
+            },
+            "description" : "El conductor no existe o pertenece a otro tenant distribuidor."
+          }
+        },
+        "summary" : "Evaluar elegibilidad del conductor",
+        "tags" : [ "Conductores de flota" ]
+      }
+    },
+    "/api/equipment" : {
       "get" : {
         "description" : "Devuelve los equipos de todas las empresas; requiere la autoridad ROLE_ADMIN.",
         "operationId" : "getAllEquipment",
@@ -2852,7 +3976,7 @@
         "tags" : [ "Equipos" ]
       }
     },
-    "/api/v1/equipment/company/{companyId}" : {
+    "/api/equipment/company/{companyId}" : {
       "get" : {
         "description" : "Devuelve los equipos de la empresa indicada si coincide con el tenant del usuario.",
         "operationId" : "getEquipmentByCompany",
@@ -2897,7 +4021,7 @@
         "tags" : [ "Equipos" ]
       }
     },
-    "/api/v1/equipment/{equipmentId}" : {
+    "/api/equipment/{equipmentId}" : {
       "get" : {
         "description" : "Devuelve el equipo indicado si pertenece a la empresa del usuario autenticado.",
         "operationId" : "getEquipmentById",
@@ -2936,68 +4060,9 @@
         "tags" : [ "Equipos" ]
       }
     },
-    "/api/v1/equipment/{equipmentId}/favorite-provider" : {
+    "/api/equipment/{equipmentId}/update" : {
       "post" : {
-        "description" : "Registra el distribuidor preferido del equipo. Requiere rol comprador y propiedad del equipo por la empresa del usuario.",
-        "operationId" : "assignFavoriteProvider",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "equipmentId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/FavoriteProviderResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/EquipmentResource"
-                }
-              }
-            },
-            "description" : "Distribuidor preferido asignado."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/EquipmentResource"
-                }
-              }
-            },
-            "description" : "El usuario no tiene el rol comprador."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/EquipmentResource"
-                }
-              }
-            },
-            "description" : "El equipo no existe o pertenece a otra empresa."
-          }
-        },
-        "summary" : "Asignar distribuidor preferido a un equipo",
-        "tags" : [ "Equipos" ]
-      }
-    },
-    "/api/v1/equipment/{equipmentId}/update" : {
-      "post" : {
-        "description" : "Aplica los campos editables al equipo de la empresa del usuario y sincroniza el nivel con la cisterna vinculada cuando corresponde.",
+        "description" : "Aplica los campos editables al equipo de la empresa del usuario y sincroniza el nivel con el tanque vinculada cuando corresponde.",
         "operationId" : "updateEquipment",
         "parameters" : [ {
           "in" : "path",
@@ -3044,7 +4109,7 @@
         "tags" : [ "Equipos" ]
       }
     },
-    "/api/v1/fuel-orders" : {
+    "/api/fuel-orders" : {
       "get" : {
         "description" : "Devuelve todas las órdenes registradas; solo está disponible para administradores con autoridad ROLE_ADMIN.",
         "operationId" : "getAllOrders",
@@ -3128,7 +4193,7 @@
         "tags" : [ "Órdenes de combustible" ]
       }
     },
-    "/api/v1/fuel-orders/company/{companyId}" : {
+    "/api/fuel-orders/company/{companyId}" : {
       "get" : {
         "description" : "Devuelve las órdenes de la empresa indicada cuando pertenece al usuario autenticado.",
         "operationId" : "getOrdersByCompany",
@@ -3173,7 +4238,7 @@
         "tags" : [ "Órdenes de combustible" ]
       }
     },
-    "/api/v1/fuel-orders/provider/{providerId}" : {
+    "/api/fuel-orders/provider/{providerId}" : {
       "get" : {
         "description" : "Devuelve las órdenes del distribuidor indicado cuando el usuario es propietario de ese tenant.",
         "operationId" : "getOrdersByProvider",
@@ -3218,7 +4283,7 @@
         "tags" : [ "Órdenes de combustible" ]
       }
     },
-    "/api/v1/fuel-orders/{orderId}" : {
+    "/api/fuel-orders/{orderId}" : {
       "get" : {
         "description" : "Devuelve la orden indicada a su empresa compradora o al distribuidor asociado.",
         "operationId" : "getOrderById",
@@ -3257,7 +4322,7 @@
         "tags" : [ "Órdenes de combustible" ]
       }
     },
-    "/api/v1/fuel-orders/{orderId}/cancel" : {
+    "/api/fuel-orders/{orderId}/cancel" : {
       "post" : {
         "description" : "Registra la cancelación solicitada por la empresa compradora o el distribuidor asociado a la orden.",
         "operationId" : "cancelOrder",
@@ -3290,13 +4355,23 @@
               }
             },
             "description" : "La orden no existe o no pertenece al usuario."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La orden ya fue despachada, entregada o pagada."
           }
         },
         "summary" : "Cancelar orden de combustible",
         "tags" : [ "Órdenes de combustible" ]
       }
     },
-    "/api/v1/fuel-orders/{orderId}/confirm" : {
+    "/api/fuel-orders/{orderId}/confirm" : {
       "post" : {
         "description" : "Registra la confirmación solicitada por la empresa compradora propietaria de la orden.",
         "operationId" : "confirmOrder",
@@ -3335,7 +4410,7 @@
         "tags" : [ "Órdenes de combustible" ]
       }
     },
-    "/api/v1/fuel-products" : {
+    "/api/fuel-products" : {
       "get" : {
         "description" : "Devuelve los productos registrados en la plataforma para consulta de compradores.",
         "operationId" : "getAllFuelProducts",
@@ -3409,7 +4484,7 @@
         "tags" : [ "Productos de combustible" ]
       }
     },
-    "/api/v1/fuel-products/provider/{providerId}" : {
+    "/api/fuel-products/provider/{providerId}" : {
       "get" : {
         "description" : "Devuelve los productos del distribuidor indicado a compradores o al mismo distribuidor.",
         "operationId" : "getFuelProductsByProvider",
@@ -3454,7 +4529,7 @@
         "tags" : [ "Productos de combustible" ]
       }
     },
-    "/api/v1/fuel-products/{fuelProductId}" : {
+    "/api/fuel-products/{fuelProductId}" : {
       "delete" : {
         "description" : "Elimina el producto del catálogo propio solo cuando ninguna solicitud ni orden existente lo utiliza.",
         "operationId" : "deleteFuelProduct",
@@ -3587,7 +4662,7 @@
         "tags" : [ "Productos de combustible" ]
       }
     },
-    "/api/v1/fuel-products/{fuelProductId}/update-stock" : {
+    "/api/fuel-products/{fuelProductId}/update-stock" : {
       "post" : {
         "description" : "Establece la cantidad disponible para un producto propio del distribuidor autenticado.",
         "operationId" : "updateStock",
@@ -3636,23 +4711,21 @@
         "tags" : [ "Productos de combustible" ]
       }
     },
-    "/api/v1/notifications" : {
-      "post" : {
-        "deprecated" : true,
-        "description" : "Operación obsoleta; se recomienda la bandeja generada por eventos en /api/v2/me/notifications. Crea una notificación para un usuario, empresa compradora o distribuidor del usuario autenticado.",
-        "operationId" : "createNotification",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateNotificationResource"
-              }
-            }
-          },
-          "required" : true
-        },
+    "/api/invitations/{invitationId}" : {
+      "delete" : {
+        "description" : "Revoca una invitación pendiente de una organización a la que pertenece el usuario autenticado.",
+        "operationId" : "revoke",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "invitationId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
         "responses" : {
-          "201" : {
+          "200" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3660,17 +4733,7 @@
                 }
               }
             },
-            "description" : "Notificación creada."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "No se indicó exactamente un destinatario o el usuario asociado no existe."
+            "description" : "Invitación revocada."
           },
           "403" : {
             "content" : {
@@ -3680,7 +4743,7 @@
                 }
               }
             },
-            "description" : "El usuario no pertenece a ninguno de los destinatarios indicados."
+            "description" : "El usuario no pertenece a la organización de la invitación."
           },
           "404" : {
             "content" : {
@@ -3690,24 +4753,33 @@
                 }
               }
             },
-            "description" : "El destinatario indicado no pertenece al usuario autenticado."
+            "description" : "La invitación no existe."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La invitación no está pendiente y no puede revocarse."
           }
         },
-        "summary" : "Crear notificación",
-        "tags" : [ "Notificaciones" ]
+        "summary" : "Revocar invitación",
+        "tags" : [ "Invitaciones" ]
       }
     },
-    "/api/v1/notifications/buyer/{companyId}" : {
-      "get" : {
-        "description" : "Devuelve las notificaciones del usuario asociado a la empresa compradora cuando el tenant autenticado es propietario.",
-        "operationId" : "getNotificationsByBuyer",
+    "/api/invitations/{token}/accept" : {
+      "post" : {
+        "description" : "Acepta la invitación identificada por el token y concede la membresía al usuario autenticado.",
+        "operationId" : "accept_1",
         "parameters" : [ {
           "in" : "path",
-          "name" : "companyId",
+          "name" : "token",
           "required" : true,
           "schema" : {
-            "format" : "int64",
-            "type" : "integer"
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -3715,91 +4787,61 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/NotificationResource"
-                  },
-                  "type" : "array"
+                  "type" : "object"
                 }
               }
             },
-            "description" : "Se devuelve la lista, que puede estar vacía si la empresa no tiene usuario asociado."
+            "description" : "Invitación aceptada y membresía concedida."
           },
           "403" : {
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/NotificationResource"
-                  },
-                  "type" : "array"
+                  "type" : "object"
                 }
               }
             },
-            "description" : "La empresa solicitada no pertenece al tenant autenticado."
-          }
-        },
-        "summary" : "Listar notificaciones por empresa compradora",
-        "tags" : [ "Notificaciones" ]
-      }
-    },
-    "/api/v1/notifications/provider/{providerId}" : {
-      "get" : {
-        "description" : "Devuelve las notificaciones del usuario asociado al distribuidor cuando el tenant autenticado es propietario.",
-        "operationId" : "getNotificationsByProvider",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "providerId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/NotificationResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Se devuelve la lista, que puede estar vacía si el distribuidor no tiene usuario asociado."
+            "description" : "El usuario no está autenticado."
           },
-          "403" : {
+          "404" : {
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/NotificationResource"
-                  },
-                  "type" : "array"
+                  "type" : "object"
                 }
               }
             },
-            "description" : "El distribuidor solicitado no pertenece al tenant autenticado."
+            "description" : "No existe una invitación asociada al token."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Se produjo un conflicto al conceder la membresía."
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La invitación venció, ya fue aceptada o fue revocada."
           }
         },
-        "summary" : "Listar notificaciones por distribuidor",
-        "tags" : [ "Notificaciones" ]
+        "summary" : "Aceptar invitación",
+        "tags" : [ "Invitaciones" ]
       }
     },
-    "/api/v1/notifications/user/{userId}" : {
+    "/api/me/notifications" : {
       "get" : {
-        "description" : "Devuelve las notificaciones del usuario indicado cuando coincide con el usuario autenticado.",
-        "operationId" : "getNotificationsByUser",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "userId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
+        "description" : "Devuelve las notificaciones de la bandeja del usuario autenticado.",
+        "operationId" : "list_3",
         "responses" : {
           "200" : {
             "content" : {
@@ -3825,26 +4867,17 @@
                 }
               }
             },
-            "description" : "El usuario autenticado no coincide con el usuario solicitado."
+            "description" : "El usuario no está autenticado."
           }
         },
-        "summary" : "Listar notificaciones por usuario",
-        "tags" : [ "Notificaciones" ]
+        "summary" : "Listar mis notificaciones",
+        "tags" : [ "Mis notificaciones" ]
       }
     },
-    "/api/v1/notifications/user/{userId}/unread" : {
+    "/api/me/notifications/unread" : {
       "get" : {
-        "description" : "Devuelve las notificaciones no leídas cuando el identificador corresponde al usuario autenticado.",
-        "operationId" : "getUnreadByUser",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "userId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
+        "description" : "Devuelve las notificaciones pendientes de lectura en la bandeja del usuario autenticado.",
+        "operationId" : "listUnread",
         "responses" : {
           "200" : {
             "content" : {
@@ -3870,56 +4903,17 @@
                 }
               }
             },
-            "description" : "El usuario autenticado no coincide con el usuario solicitado."
+            "description" : "El usuario no está autenticado."
           }
         },
-        "summary" : "Listar notificaciones no leídas por usuario",
-        "tags" : [ "Notificaciones" ]
+        "summary" : "Listar mis notificaciones no leídas",
+        "tags" : [ "Mis notificaciones" ]
       }
     },
-    "/api/v1/notifications/{notificationId}" : {
-      "get" : {
-        "description" : "Devuelve la notificación indicada cuando pertenece al usuario autenticado.",
-        "operationId" : "getNotificationById",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "notificationId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/NotificationResource"
-                }
-              }
-            },
-            "description" : "Notificación devuelta."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/NotificationResource"
-                }
-              }
-            },
-            "description" : "La notificación no existe o no pertenece al usuario autenticado."
-          }
-        },
-        "summary" : "Consultar notificación por identificador",
-        "tags" : [ "Notificaciones" ]
-      }
-    },
-    "/api/v1/notifications/{notificationId}/mark-as-read" : {
+    "/api/me/notifications/{notificationId}/read" : {
       "post" : {
-        "description" : "Actualiza el estado de lectura de una notificación perteneciente al usuario autenticado.",
-        "operationId" : "markAsRead_1",
+        "description" : "Marca la notificación cuando pertenece al usuario autenticado; repetir la operación no duplica efectos.",
+        "operationId" : "markAsRead",
         "parameters" : [ {
           "in" : "path",
           "name" : "notificationId",
@@ -3940,6 +4934,16 @@
             },
             "description" : "Notificación marcada como leída."
           },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no está autenticado."
+          },
           "404" : {
             "content" : {
               "application/json" : {
@@ -3951,11 +4955,186 @@
             "description" : "La notificación no existe o no pertenece al usuario autenticado."
           }
         },
-        "summary" : "Marcar notificación como leída",
-        "tags" : [ "Notificaciones" ]
+        "summary" : "Marcar una notificación propia como leída",
+        "tags" : [ "Mis notificaciones" ]
       }
     },
-    "/api/v1/payments" : {
+    "/api/me/organizations" : {
+      "get" : {
+        "description" : "Devuelve las organizaciones en las que el usuario autenticado tiene membresía activa, junto con su rol.",
+        "operationId" : "getMyOrganizations",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Se devuelve la lista de membresías activas."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "El usuario no está autenticado."
+          }
+        },
+        "summary" : "Listar mis organizaciones",
+        "tags" : [ "Mis organizaciones" ]
+      }
+    },
+    "/api/onboarding" : {
+      "post" : {
+        "description" : "Crea una organización para el usuario autenticado y le asigna la membresía OWNER.",
+        "operationId" : "onboard",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardOrganizationResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Organización creada y propiedad asignada."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El cuerpo no supera la validación, el tipo no está admitido o no se pudo resolver al propietario."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no está autenticado."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Ya existe una organización con el mismo RUC o no se pudo asignar la propiedad."
+          }
+        },
+        "summary" : "Registrar organización",
+        "tags" : [ "Registro de organizaciones" ]
+      }
+    },
+    "/api/organizations/{organizationId}/invitations" : {
+      "post" : {
+        "description" : "Crea una invitación pendiente para el correo y rol indicados en la organización de la ruta. Requiere una membresía en esa organización.",
+        "operationId" : "invite",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "organizationId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InviteMemberResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Invitación creada."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El cuerpo no supera la validación o el rol no está admitido."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El usuario no pertenece a la organización indicada."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La organización no existe."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Ya existe una invitación pendiente para este correo."
+          }
+        },
+        "summary" : "Invitar miembro a una organización",
+        "tags" : [ "Invitaciones" ]
+      }
+    },
+    "/api/payments" : {
       "get" : {
         "description" : "Devuelve todos los pagos registrados; requiere autoridad administrativa ROLE_ADMIN.",
         "operationId" : "getAllPayments",
@@ -4059,7 +5238,7 @@
         "tags" : [ "Pagos" ]
       }
     },
-    "/api/v1/payments/company/{companyId}" : {
+    "/api/payments/company/{companyId}" : {
       "get" : {
         "description" : "Devuelve los pagos de la empresa indicada si coincide con la empresa del usuario autenticado.",
         "operationId" : "getPaymentsByCompany",
@@ -4104,7 +5283,7 @@
         "tags" : [ "Pagos" ]
       }
     },
-    "/api/v1/payments/order/{orderId}" : {
+    "/api/payments/order/{orderId}" : {
       "get" : {
         "description" : "Devuelve el pago asociado a la orden si el usuario pertenece a la empresa compradora o al distribuidor.",
         "operationId" : "getPaymentByOrder",
@@ -4143,7 +5322,7 @@
         "tags" : [ "Pagos" ]
       }
     },
-    "/api/v1/payments/{paymentId}" : {
+    "/api/payments/{paymentId}" : {
       "get" : {
         "description" : "Devuelve el pago si el usuario pertenece a la empresa compradora o al distribuidor de la orden.",
         "operationId" : "getPaymentById",
@@ -4182,7 +5361,7 @@
         "tags" : [ "Pagos" ]
       }
     },
-    "/api/v1/payments/{paymentId}/complete" : {
+    "/api/payments/{paymentId}/complete" : {
       "post" : {
         "description" : "Marca el pago como completado con la referencia de transacción y actualiza la orden a pagada.",
         "operationId" : "completePayment",
@@ -4241,7 +5420,7 @@
         "tags" : [ "Pagos" ]
       }
     },
-    "/api/v1/payments/{paymentId}/refund" : {
+    "/api/payments/{paymentId}/refund" : {
       "post" : {
         "description" : "Marca el pago como reembolsado; repetir la operación conserva ese estado.",
         "operationId" : "refundPayment",
@@ -4280,7 +5459,7 @@
         "tags" : [ "Pagos" ]
       }
     },
-    "/api/v1/provider-companies" : {
+    "/api/provider-companies" : {
       "get" : {
         "description" : "Devuelve todos los perfiles de distribuidor. Requiere el rol comprador.",
         "operationId" : "getAllProviderCompanies",
@@ -4354,7 +5533,7 @@
         "tags" : [ "Distribuidores" ]
       }
     },
-    "/api/v1/provider-companies/{providerId}" : {
+    "/api/provider-companies/{providerId}" : {
       "get" : {
         "description" : "Devuelve el perfil indicado a un usuario con rol comprador o al tenant distribuidor propietario.",
         "operationId" : "getProviderCompanyById",
@@ -4460,2256 +5639,7 @@
         "tags" : [ "Distribuidores" ]
       }
     },
-    "/api/v1/users" : {
-      "get" : {
-        "description" : "Devuelve todas las cuentas registradas; requiere la autoridad ROLE_ADMIN.",
-        "operationId" : "getAllUsers",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/UserResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Lista de usuarios devuelta."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/UserResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "El usuario autenticado no tiene la autoridad ROLE_ADMIN."
-          }
-        },
-        "summary" : "Listar usuarios",
-        "tags" : [ "Usuarios" ]
-      }
-    },
-    "/api/v1/users/{userId}" : {
-      "get" : {
-        "description" : "Devuelve el perfil indicado cuando pertenece al usuario autenticado; la identidad no se acepta desde el cuerpo de la solicitud.",
-        "operationId" : "getUserById",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "userId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/UserResource"
-                }
-              }
-            },
-            "description" : "Perfil de usuario devuelto."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/UserResource"
-                }
-              }
-            },
-            "description" : "El perfil solicitado no pertenece al usuario autenticado."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/UserResource"
-                }
-              }
-            },
-            "description" : "No existe la cuenta solicitada."
-          }
-        },
-        "summary" : "Consultar usuario por identificador",
-        "tags" : [ "Usuarios" ]
-      }
-    },
-    "/api/v2/admin/api-metrics" : {
-      "get" : {
-        "description" : "Devuelve por patrón la cantidad de solicitudes, el último acceso y el número de usuarios distintos. Solo para administradores.",
-        "operationId" : "list_4",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "version",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Métricas de rutas devueltas."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La versión debe ser v1 o v2."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no tiene autoridad de administrador de plataforma."
-          }
-        },
-        "summary" : "Listar uso de rutas API",
-        "tags" : [ "Métricas de rutas API" ]
-      }
-    },
-    "/api/v2/admin/deliveries/{deliveryId}/transport-evidence" : {
-      "delete" : {
-        "description" : "Elimina únicamente muestras GPS y la proyección de seguimiento de la entrega. Requiere ROLE_ADMIN.",
-        "operationId" : "delete",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Evidencias eliminadas; repetir la operación no produce cambios adicionales."
-          },
-          "403" : {
-            "description" : "El usuario no tiene autoridad de administrador de plataforma."
-          },
-          "404" : {
-            "description" : "La entrega no existe."
-          }
-        },
-        "summary" : "Eliminar evidencias de transporte",
-        "tags" : [ "Retención de evidencias de transporte" ]
-      }
-    },
-    "/api/v2/admin/deliveries/{deliveryId}/transport-evidence/export" : {
-      "get" : {
-        "description" : "Devuelve evidencias GPS y de carga ordenadas por instante de registro. Requiere ROLE_ADMIN.",
-        "operationId" : "export",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Evidencias exportadas; la lista puede estar vacía."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no tiene autoridad de administrador de plataforma."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe."
-          }
-        },
-        "summary" : "Exportar evidencias de transporte",
-        "tags" : [ "Retención de evidencias de transporte" ]
-      }
-    },
-    "/api/v2/admin/users/{userId}/promote" : {
-      "post" : {
-        "description" : "Añade ROLE_ADMIN a la cuenta sin retirar los roles existentes. Solo puede hacerlo un administrador de plataforma.",
-        "operationId" : "promote",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "userId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PromotedUser"
-                }
-              }
-            },
-            "description" : "La cuenta tiene el rol ROLE_ADMIN."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PromotedUser"
-                }
-              }
-            },
-            "description" : "El usuario no tiene autoridad de administrador de plataforma."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PromotedUser"
-                }
-              }
-            },
-            "description" : "La cuenta no existe."
-          }
-        },
-        "summary" : "Otorgar rol de administrador de plataforma",
-        "tags" : [ "Administración de plataforma" ]
-      }
-    },
-    "/api/v2/customers" : {
-      "get" : {
-        "description" : "Devuelve las cuentas asociadas a la organización activa del usuario.",
-        "operationId" : "listCustomers",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/CustomerResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Cuentas de cliente devueltas."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/CustomerResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado o no tiene una organización activa."
-          }
-        },
-        "summary" : "Listar cuentas de cliente",
-        "tags" : [ "Clientes" ]
-      },
-      "post" : {
-        "description" : "Crea la cuenta dentro de la organización activa del usuario. La organización se deriva de la membresía autenticada.",
-        "operationId" : "registerCustomer",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateCustomerResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Cuenta de cliente creada."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El cuerpo no cumple las validaciones requeridas."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado o no tiene una organización activa."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Ya existe una cuenta con el mismo RUC en esta organización."
-          }
-        },
-        "summary" : "Registrar una cuenta de cliente",
-        "tags" : [ "Clientes" ]
-      }
-    },
-    "/api/v2/customers/{customerId}/sites" : {
-      "get" : {
-        "description" : "Devuelve los sitios registrados bajo una cuenta que pertenece a la organización activa.",
-        "operationId" : "listSites",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "customerId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/SiteResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Sitios de entrega devueltos."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/SiteResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado o no tiene una organización activa."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/SiteResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "La cuenta no existe o pertenece a otra organización."
-          }
-        },
-        "summary" : "Listar sitios de una cuenta",
-        "tags" : [ "Clientes" ]
-      },
-      "post" : {
-        "description" : "Crea un sitio bajo la cuenta indicada, que debe pertenecer a la organización activa del usuario.",
-        "operationId" : "registerSite",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "customerId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateSiteResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Sitio creado."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El cuerpo no cumple las validaciones requeridas."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado, no tiene organización activa o la cuenta pertenece a otro tenant."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "No existe la cuenta de cliente indicada."
-          }
-        },
-        "summary" : "Registrar un sitio de entrega",
-        "tags" : [ "Clientes" ]
-      }
-    },
-    "/api/v2/deliveries" : {
-      "post" : {
-        "description" : "Consume la aceptación de reposición de la orden, reserva suministro y flota, y crea la entrega en una transacción; es idempotente por commandId.",
-        "operationId" : "assign",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/AssignDeliveryResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Entrega asignada o entrega existente devuelta para el commandId."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Falta commandId u orderId, o la ventana o el volumen no son válidos."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado como tenant distribuidor."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La orden no está respaldada por una solicitud aceptada por el distribuidor autenticado."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La solicitud no está aceptada, la aceptación ya se consumió o no hay disponibilidad de suministro o flota."
-          }
-        },
-        "summary" : "Asignar entrega para una orden aceptada",
-        "tags" : [ "Asignación de entregas" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}" : {
-      "get" : {
-        "description" : "Devuelve una entrega propia con su estado heredado y su estado físico vigente.",
-        "operationId" : "get_4",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DeliveryV2Resource"
-                }
-              }
-            },
-            "description" : "Entrega devuelta."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DeliveryV2Resource"
-                }
-              }
-            },
-            "description" : "La entrega no existe o pertenece a otro distribuidor."
-          }
-        },
-        "summary" : "Consultar entrega",
-        "tags" : [ "Ciclo de entrega" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/arrive" : {
-      "post" : {
-        "description" : "Avanza a llegada una entrega en ruta del distribuidor autenticado.",
-        "operationId" : "arrive",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Llegada de la entrega registrada."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe o pertenece a otro distribuidor."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El estado físico actual no permite registrar la llegada."
-          }
-        },
-        "summary" : "Registrar llegada de entrega",
-        "tags" : [ "Ciclo de entrega" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/assign" : {
-      "post" : {
-        "description" : "Avanza a asignada una entrega propia del distribuidor autenticado. Repetir la operación en ese estado no genera efectos duplicados.",
-        "operationId" : "assign_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Entrega asignada o ya se encontraba asignada."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe o pertenece a otro distribuidor."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El estado físico actual no permite asignar la entrega."
-          }
-        },
-        "summary" : "Asignar entrega",
-        "tags" : [ "Ciclo de entrega" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/cancel" : {
-      "post" : {
-        "description" : "Registra la cancelación terminal de una entrega propia y guarda el motivo indicado.",
-        "operationId" : "cancel_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/FailDeliveryResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Entrega cancelada."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe o pertenece a otro distribuidor."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El estado actual impide cancelarla o hubo una transición concurrente."
-          }
-        },
-        "summary" : "Cancelar entrega",
-        "tags" : [ "Ciclo de entrega" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/complete" : {
-      "post" : {
-        "description" : "Cierra una entrega propia y registra el volumen entregado. La orden debe aportar el volumen solicitado para cerrar el historial.",
-        "operationId" : "complete",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CompleteDeliveryResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Entrega completada."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El volumen entregado no es válido como evidencia."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe o pertenece a otro distribuidor."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El estado actual impide completar la entrega o hubo una transición concurrente."
-          },
-          "422" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "No se pudo resolver el volumen solicitado para cerrar la entrega."
-          }
-        },
-        "summary" : "Completar entrega",
-        "tags" : [ "Ciclo de entrega" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/fail" : {
-      "post" : {
-        "description" : "Registra un fallo terminal para la entrega propia y guarda el motivo indicado.",
-        "operationId" : "fail",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/FailDeliveryResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Entrega marcada como fallida."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe o pertenece a otro distribuidor."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El estado actual impide marcarla como fallida o hubo una transición concurrente."
-          }
-        },
-        "summary" : "Marcar entrega fallida",
-        "tags" : [ "Ciclo de entrega" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/geofence-policies" : {
-      "post" : {
-        "description" : "Crea una nueva versión del círculo de seguridad de una entrega para el distribuidor autenticado y conserva las versiones previas.",
-        "operationId" : "create_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateGeofencePolicyResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Versión de política creada."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Geometría inválida: falta el centro, sus coordenadas no son válidas o el radio no es positivo."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no tiene identidad de distribuidor o no es propietario de la entrega."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Ya existe una versión concurrente de la política para esta entrega."
-          }
-        },
-        "summary" : "Crear versión de geocerca para entrega",
-        "tags" : [ "Políticas de geocerca" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/start" : {
-      "post" : {
-        "description" : "Avanza a iniciada una entrega propia que actualmente está asignada.",
-        "operationId" : "start",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Entrega iniciada."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe o pertenece a otro distribuidor."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El estado físico actual no permite iniciar la entrega."
-          }
-        },
-        "summary" : "Iniciar entrega",
-        "tags" : [ "Ciclo de entrega" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/timeline" : {
-      "get" : {
-        "description" : "Combina cambios de estado, decisiones de seguridad, eventos de válvula y registros de carga retenidos; las muestras GPS eliminadas no se incluyen.",
-        "operationId" : "get_5",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DeliveryTimelineItemResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Cronología devuelta, ordenada por instante, tipo e identificador."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DeliveryTimelineItemResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "El usuario no pertenece al distribuidor ni es el conductor asignado."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DeliveryTimelineItemResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "La entrega no existe."
-          }
-        },
-        "summary" : "Consultar cronología de entrega",
-        "tags" : [ "Cronología de entregas" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/tracking" : {
-      "get" : {
-        "description" : "Devuelve la última ubicación confiable y el estado de carga para el distribuidor propietario o el conductor asignado.",
-        "operationId" : "latest",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Último seguimiento devuelto."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no pertenece al distribuidor propietario ni es el conductor asignado."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe o todavía no tiene seguimiento."
-          }
-        },
-        "summary" : "Consultar último seguimiento de entrega",
-        "tags" : [ "Seguimiento de transporte" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/tracking/samples" : {
-      "get" : {
-        "description" : "Devuelve las evidencias de transporte ordenadas por hora del dispositivo, incluyendo la recepción y si cada muestra actualizó el dato más reciente.",
-        "operationId" : "samples",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Historial devuelto; puede estar vacío."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no pertenece al distribuidor propietario ni es el conductor asignado."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe."
-          }
-        },
-        "summary" : "Listar muestras de seguimiento de entrega",
-        "tags" : [ "Seguimiento de transporte" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/transitions" : {
-      "get" : {
-        "description" : "Devuelve el historial inmutable de transiciones físicas de una entrega propia, con sus versiones e instantes.",
-        "operationId" : "transitions",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DeliveryTransitionResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Transiciones de estado devueltas."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DeliveryTransitionResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "La entrega no existe o pertenece a otro distribuidor."
-          }
-        },
-        "summary" : "Listar transiciones de una entrega",
-        "tags" : [ "Ciclo de entrega" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/transport-evidence" : {
-      "post" : {
-        "description" : "Acepta una ubicación o hito de carga enviado por el conductor asignado; conserva las muestras tardías sin reemplazar el último valor.",
-        "operationId" : "record",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/TransportEvidenceResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El eventId ya se registró para la entrega; se devuelve la confirmación original sin guardar otra muestra."
-          },
-          "201" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Evidencia registrada; una muestra tardía puede no actualizar el último valor."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El cuerpo no es válido: tipo o hito desconocido, coordenadas ausentes o volumen no positivo."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no es el conductor asignado o la asignación cruza tenants."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega o el conductor asignado no existe."
-          },
-          "422" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El hito de carga no es válido para el estado actual, por ejemplo, descargar antes de cargar."
-          }
-        },
-        "summary" : "Registrar evidencia de transporte",
-        "tags" : [ "Evidencias de transporte" ]
-      }
-    },
-    "/api/v2/deliveries/{deliveryId}/valve-observations" : {
-      "post" : {
-        "description" : "El conductor asignado informa OPEN o CLOSED; una confirmación OPEN no autorizada se registra como incidente de seguridad.",
-        "operationId" : "observe",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ValveObservationResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Observación registrada o confirmación repetida sin duplicar efectos."
-          },
-          "202" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La confirmación OPEN no coincide con una orden y se registró como incidente de seguridad."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El cuerpo de la observación no es válido."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no es el conductor asignado o la asignación cruza tenants."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega o el conductor asignado no existe."
-          }
-        },
-        "summary" : "Informar observación de válvula",
-        "tags" : [ "Observaciones de válvula" ]
-      }
-    },
-    "/api/v2/drivers" : {
-      "get" : {
-        "description" : "Devuelve los conductores registrados para el tenant distribuidor autenticado.",
-        "operationId" : "list_2",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DriverV2Resource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Se devuelve la lista de conductores."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DriverV2Resource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "El usuario autenticado no tiene identidad de distribuidor."
-          }
-        },
-        "summary" : "Listar conductores",
-        "tags" : [ "Conductores de flota" ]
-      },
-      "post" : {
-        "description" : "Crea un conductor para el tenant distribuidor autenticado, identificado a partir del principal.",
-        "operationId" : "register_1",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/DriverInputResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Conductor registrado."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El cuerpo no supera la validación o los datos del conductor no son válidos."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario autenticado no tiene identidad de distribuidor."
-          }
-        },
-        "summary" : "Registrar conductor",
-        "tags" : [ "Conductores de flota" ]
-      }
-    },
-    "/api/v2/drivers/eligible" : {
-      "get" : {
-        "description" : "Devuelve conductores activos del tenant autenticado que pueden asignarse y no están ocupados.",
-        "operationId" : "listEligible_1",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DriverV2Resource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Se devuelve la lista de conductores elegibles."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DriverV2Resource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "El usuario autenticado no tiene identidad de distribuidor."
-          }
-        },
-        "summary" : "Listar conductores elegibles",
-        "tags" : [ "Conductores de flota" ]
-      }
-    },
-    "/api/v2/drivers/{driverId}" : {
-      "get" : {
-        "description" : "Devuelve el conductor indicado si pertenece al tenant distribuidor autenticado.",
-        "operationId" : "get_2",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "driverId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverV2Resource"
-                }
-              }
-            },
-            "description" : "Conductor devuelto."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverV2Resource"
-                }
-              }
-            },
-            "description" : "El usuario autenticado no tiene identidad de distribuidor."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverV2Resource"
-                }
-              }
-            },
-            "description" : "El conductor no existe o pertenece a otro tenant distribuidor."
-          }
-        },
-        "summary" : "Consultar conductor por identificador",
-        "tags" : [ "Conductores de flota" ]
-      },
-      "put" : {
-        "description" : "Aplica los cambios recibidos a un conductor del tenant distribuidor autenticado.",
-        "operationId" : "update_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "driverId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/DriverInputResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Conductor actualizado."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El cuerpo no supera la validación o los datos del conductor no son válidos."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El conductor no existe o no pertenece al tenant autenticado."
-          }
-        },
-        "summary" : "Actualizar conductor",
-        "tags" : [ "Conductores de flota" ]
-      }
-    },
-    "/api/v2/drivers/{driverId}/activate" : {
-      "post" : {
-        "description" : "Reactiva un conductor desactivado que pertenece al tenant distribuidor autenticado.",
-        "operationId" : "activate_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "driverId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Conductor reactivado."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El conductor no existe o no pertenece al tenant autenticado."
-          }
-        },
-        "summary" : "Reactivar conductor",
-        "tags" : [ "Conductores de flota" ]
-      }
-    },
-    "/api/v2/drivers/{driverId}/deactivate" : {
-      "post" : {
-        "description" : "Desactiva el conductor del tenant autenticado sin eliminar su registro.",
-        "operationId" : "deactivate_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "driverId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Conductor desactivado."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El conductor no existe o no pertenece al tenant autenticado."
-          }
-        },
-        "summary" : "Desactivar conductor",
-        "tags" : [ "Conductores de flota" ]
-      }
-    },
-    "/api/v2/drivers/{driverId}/eligibility" : {
-      "get" : {
-        "description" : "Devuelve el resultado y motivo de elegibilidad para un conductor del tenant autenticado.",
-        "operationId" : "eligibility_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "driverId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/EligibilityResource"
-                }
-              }
-            },
-            "description" : "Evaluación de elegibilidad devuelta."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/EligibilityResource"
-                }
-              }
-            },
-            "description" : "El usuario autenticado no tiene identidad de distribuidor."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/EligibilityResource"
-                }
-              }
-            },
-            "description" : "El conductor no existe o pertenece a otro tenant distribuidor."
-          }
-        },
-        "summary" : "Evaluar elegibilidad del conductor",
-        "tags" : [ "Conductores de flota" ]
-      }
-    },
-    "/api/v2/invitations/{invitationId}" : {
-      "delete" : {
-        "description" : "Revoca una invitación pendiente de una organización a la que pertenece el usuario autenticado.",
-        "operationId" : "revoke",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "invitationId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Invitación revocada."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no pertenece a la organización de la invitación."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La invitación no existe."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La invitación no está pendiente y no puede revocarse."
-          }
-        },
-        "summary" : "Revocar invitación",
-        "tags" : [ "Invitaciones" ]
-      }
-    },
-    "/api/v2/invitations/{token}/accept" : {
-      "post" : {
-        "description" : "Acepta la invitación identificada por el token y concede la membresía al usuario autenticado.",
-        "operationId" : "accept_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "token",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Invitación aceptada y membresía concedida."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "No existe una invitación asociada al token."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Se produjo un conflicto al conceder la membresía."
-          },
-          "422" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La invitación venció, ya fue aceptada o fue revocada."
-          }
-        },
-        "summary" : "Aceptar invitación",
-        "tags" : [ "Invitaciones" ]
-      }
-    },
-    "/api/v2/me/notifications" : {
-      "get" : {
-        "description" : "Devuelve las notificaciones de la bandeja del usuario autenticado.",
-        "operationId" : "list_3",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/NotificationResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Se devuelve la lista de notificaciones."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/NotificationResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado."
-          }
-        },
-        "summary" : "Listar mis notificaciones",
-        "tags" : [ "Mis notificaciones" ]
-      }
-    },
-    "/api/v2/me/notifications/unread" : {
-      "get" : {
-        "description" : "Devuelve las notificaciones pendientes de lectura en la bandeja del usuario autenticado.",
-        "operationId" : "listUnread",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/NotificationResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Se devuelve la lista de notificaciones no leídas."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/NotificationResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado."
-          }
-        },
-        "summary" : "Listar mis notificaciones no leídas",
-        "tags" : [ "Mis notificaciones" ]
-      }
-    },
-    "/api/v2/me/notifications/{notificationId}/read" : {
-      "post" : {
-        "description" : "Marca la notificación cuando pertenece al usuario autenticado; repetir la operación no duplica efectos.",
-        "operationId" : "markAsRead",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "notificationId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Notificación marcada como leída."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La notificación no existe o no pertenece al usuario autenticado."
-          }
-        },
-        "summary" : "Marcar una notificación propia como leída",
-        "tags" : [ "Mis notificaciones" ]
-      }
-    },
-    "/api/v2/me/organizations" : {
-      "get" : {
-        "description" : "Devuelve las organizaciones en las que el usuario autenticado tiene membresía activa, junto con su rol.",
-        "operationId" : "getMyOrganizations",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/OrganizationResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Se devuelve la lista de membresías activas."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/OrganizationResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado."
-          }
-        },
-        "summary" : "Listar mis organizaciones",
-        "tags" : [ "Mis organizaciones" ]
-      }
-    },
-    "/api/v2/onboarding" : {
-      "post" : {
-        "description" : "Crea una organización para el usuario autenticado y le asigna la membresía OWNER.",
-        "operationId" : "onboard",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/OnboardOrganizationResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Organización creada y propiedad asignada."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El cuerpo no supera la validación, el tipo no está admitido o no se pudo resolver al propietario."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no está autenticado."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Ya existe una organización con el mismo RUC o no se pudo asignar la propiedad."
-          }
-        },
-        "summary" : "Registrar organización",
-        "tags" : [ "Registro de organizaciones" ]
-      }
-    },
-    "/api/v2/organizations/{organizationId}/invitations" : {
-      "post" : {
-        "description" : "Crea una invitación pendiente para el correo y rol indicados en la organización de la ruta. Requiere una membresía en esa organización.",
-        "operationId" : "invite",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "organizationId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/InviteMemberResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Invitación creada."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El cuerpo no supera la validación o el rol no está admitido."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El usuario no pertenece a la organización indicada."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La organización no existe."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Ya existe una invitación pendiente para este correo."
-          }
-        },
-        "summary" : "Invitar miembro a una organización",
-        "tags" : [ "Invitaciones" ]
-      }
-    },
-    "/api/v2/products" : {
-      "get" : {
-        "description" : "Devuelve el catálogo del distribuidor autenticado. `activeOnly` permite omitir productos inactivos; requiere identidad de distribuidor.",
-        "operationId" : "listProducts",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "activeOnly",
-          "required" : false,
-          "schema" : {
-            "default" : true,
-            "type" : "boolean"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/ProductResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Productos devueltos, posiblemente una lista vacía."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/ProductResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "El usuario no tiene una identidad de distribuidor logístico."
-          }
-        },
-        "summary" : "Listar productos de combustible",
-        "tags" : [ "Oferta de combustible" ]
-      }
-    },
-    "/api/v2/products/{fuelProductId}" : {
-      "get" : {
-        "description" : "Devuelve el producto indicado si pertenece al distribuidor autenticado.",
-        "operationId" : "getProduct",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "fuelProductId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProductResource"
-                }
-              }
-            },
-            "description" : "Producto de combustible devuelto."
-          },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProductResource"
-                }
-              }
-            },
-            "description" : "El usuario no tiene una identidad de distribuidor logístico."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProductResource"
-                }
-              }
-            },
-            "description" : "El producto no existe o pertenece a otro distribuidor."
-          }
-        },
-        "summary" : "Consultar producto de combustible",
-        "tags" : [ "Oferta de combustible" ]
-      }
-    },
-    "/api/v2/replenishment-requests" : {
+    "/api/replenishment-requests" : {
       "get" : {
         "description" : "Devuelve las solicitudes que pertenecen a la organización activa del usuario.",
         "operationId" : "list_1",
@@ -6745,7 +5675,7 @@
         "tags" : [ "Solicitudes de abastecimiento" ]
       },
       "post" : {
-        "description" : "Registra una solicitud para la organización activa con fecha de entrega desde hoy en Lima. El servicio comprueba que el cliente pertenezca a esa organización y que la cisterna pertenezca al cliente antes de completar una dirección vacía desde su sitio. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.",
+        "description" : "Registra una solicitud para la organización activa con fecha de entrega desde hoy en Lima. El servicio comprueba que el cliente pertenezca a esa organización y que el tanque pertenezca al cliente antes de completar una dirección vacía desde su sitio. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.",
         "operationId" : "create",
         "requestBody" : {
           "content" : {
@@ -6796,14 +5726,14 @@
                 }
               }
             },
-            "description" : "El cliente no existe o pertenece a otra organización, la cisterna no existe o pertenece a otro cliente, o el producto no está disponible para el distribuidor indicado."
+            "description" : "El cliente no existe o pertenece a otra organización, el tanque no existe o pertenece a otro cliente, o el producto no está disponible para el distribuidor indicado."
           }
         },
         "summary" : "Crear solicitud de abastecimiento",
         "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
-    "/api/v2/replenishment-requests/{requestId}" : {
+    "/api/replenishment-requests/{requestId}" : {
       "get" : {
         "description" : "Devuelve la solicitud indicada solo si pertenece a la organización activa del usuario.",
         "operationId" : "get_3",
@@ -6852,7 +5782,7 @@
         "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
-    "/api/v2/replenishment-requests/{requestId}/accept" : {
+    "/api/replenishment-requests/{requestId}/accept" : {
       "post" : {
         "description" : "El distribuidor destinatario acepta una solicitud pendiente. La transacción consume la decisión, crea y vincula una orden para permitir su asignación posterior.",
         "operationId" : "accept",
@@ -6911,7 +5841,7 @@
         "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
-    "/api/v2/replenishment-requests/{requestId}/cancel" : {
+    "/api/replenishment-requests/{requestId}/cancel" : {
       "post" : {
         "description" : "Registra la cancelación por la organización propietaria; la solicitud debe permanecer pendiente.",
         "operationId" : "cancel",
@@ -6970,7 +5900,7 @@
         "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
-    "/api/v2/replenishment-requests/{requestId}/reject" : {
+    "/api/replenishment-requests/{requestId}/reject" : {
       "post" : {
         "description" : "Registra el rechazo y su motivo para el distribuidor destinatario, siempre que la solicitud siga pendiente.",
         "operationId" : "reject",
@@ -7049,7 +5979,7 @@
         "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
-    "/api/v2/tankers" : {
+    "/api/tankers" : {
       "get" : {
         "description" : "Devuelve las cisternas registradas para el tenant distribuidor autenticado.",
         "operationId" : "list",
@@ -7059,7 +5989,7 @@
               "application/json" : {
                 "schema" : {
                   "items" : {
-                    "$ref" : "#/components/schemas/TankerV2Resource"
+                    "$ref" : "#/components/schemas/TankerResource"
                   },
                   "type" : "array"
                 }
@@ -7072,7 +6002,7 @@
               "application/json" : {
                 "schema" : {
                   "items" : {
-                    "$ref" : "#/components/schemas/TankerV2Resource"
+                    "$ref" : "#/components/schemas/TankerResource"
                   },
                   "type" : "array"
                 }
@@ -7133,7 +6063,7 @@
         "tags" : [ "Cisternas de flota" ]
       }
     },
-    "/api/v2/tankers/eligible" : {
+    "/api/tankers/eligible" : {
       "get" : {
         "description" : "Devuelve cisternas activas del tenant autenticado que pueden asignarse y no están ocupadas.",
         "operationId" : "listEligible",
@@ -7143,7 +6073,7 @@
               "application/json" : {
                 "schema" : {
                   "items" : {
-                    "$ref" : "#/components/schemas/TankerV2Resource"
+                    "$ref" : "#/components/schemas/TankerResource"
                   },
                   "type" : "array"
                 }
@@ -7156,7 +6086,7 @@
               "application/json" : {
                 "schema" : {
                   "items" : {
-                    "$ref" : "#/components/schemas/TankerV2Resource"
+                    "$ref" : "#/components/schemas/TankerResource"
                   },
                   "type" : "array"
                 }
@@ -7169,7 +6099,7 @@
         "tags" : [ "Cisternas de flota" ]
       }
     },
-    "/api/v2/tankers/{tankerId}" : {
+    "/api/tankers/{tankerId}" : {
       "get" : {
         "description" : "Devuelve la cisterna indicada si pertenece al tenant distribuidor autenticado.",
         "operationId" : "get_1",
@@ -7187,7 +6117,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/TankerV2Resource"
+                  "$ref" : "#/components/schemas/TankerResource"
                 }
               }
             },
@@ -7197,7 +6127,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/TankerV2Resource"
+                  "$ref" : "#/components/schemas/TankerResource"
                 }
               }
             },
@@ -7207,7 +6137,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/TankerV2Resource"
+                  "$ref" : "#/components/schemas/TankerResource"
                 }
               }
             },
@@ -7275,7 +6205,7 @@
         "tags" : [ "Cisternas de flota" ]
       }
     },
-    "/api/v2/tankers/{tankerId}/activate" : {
+    "/api/tankers/{tankerId}/activate" : {
       "post" : {
         "description" : "Reactiva una cisterna desactivada que pertenece al tenant distribuidor autenticado.",
         "operationId" : "activate",
@@ -7314,7 +6244,7 @@
         "tags" : [ "Cisternas de flota" ]
       }
     },
-    "/api/v2/tankers/{tankerId}/deactivate" : {
+    "/api/tankers/{tankerId}/deactivate" : {
       "post" : {
         "description" : "Desactiva una cisterna del tenant autenticado sin eliminar su registro.",
         "operationId" : "deactivate",
@@ -7353,7 +6283,7 @@
         "tags" : [ "Cisternas de flota" ]
       }
     },
-    "/api/v2/tankers/{tankerId}/eligibility" : {
+    "/api/tankers/{tankerId}/eligibility" : {
       "get" : {
         "description" : "Devuelve el resultado y motivo de elegibilidad para una cisterna del tenant autenticado.",
         "operationId" : "eligibility",
@@ -7402,9 +6332,9 @@
         "tags" : [ "Cisternas de flota" ]
       }
     },
-    "/api/v2/tanks" : {
+    "/api/tanks" : {
       "get" : {
-        "description" : "Devuelve las cisternas asociadas a la organización activa del usuario.",
+        "description" : "Devuelve los tanques asociados a la organización activa del usuario.",
         "operationId" : "listTanks",
         "responses" : {
           "200" : {
@@ -7418,7 +6348,7 @@
                 }
               }
             },
-            "description" : "Cisternas devueltas."
+            "description" : "Tanques devueltos."
           },
           "403" : {
             "content" : {
@@ -7434,11 +6364,11 @@
             "description" : "El usuario no está autenticado o no tiene una organización activa."
           }
         },
-        "summary" : "Listar cisternas",
-        "tags" : [ "Cisternas" ]
+        "summary" : "Listar tanques",
+        "tags" : [ "Tanques" ]
       },
       "post" : {
-        "description" : "Crea una cisterna para una cuenta y un sitio de la organización activa, y valida capacidad, unidad y nivel inicial.",
+        "description" : "Crea un tanque para una cuenta y un sitio de la organización activa, y valida capacidad, unidad y nivel inicial.",
         "operationId" : "registerTank",
         "requestBody" : {
           "content" : {
@@ -7459,7 +6389,7 @@
                 }
               }
             },
-            "description" : "Cisterna creada."
+            "description" : "Tanque creado."
           },
           "400" : {
             "content" : {
@@ -7489,16 +6419,16 @@
                 }
               }
             },
-            "description" : "El equipo heredado indicado ya está asociado a una cisterna."
+            "description" : "El equipo heredado indicado ya está asociado a un tanque."
           }
         },
-        "summary" : "Registrar cisterna",
-        "tags" : [ "Cisternas" ]
+        "summary" : "Registrar tanque",
+        "tags" : [ "Tanques" ]
       }
     },
-    "/api/v2/tanks/{tankId}" : {
+    "/api/tanks/{tankId}" : {
       "get" : {
-        "description" : "Devuelve la cisterna indicada únicamente cuando pertenece a la organización activa del usuario.",
+        "description" : "Devuelve el tanque indicado únicamente cuando pertenece a la organización activa del usuario.",
         "operationId" : "getTank",
         "parameters" : [ {
           "in" : "path",
@@ -7518,7 +6448,7 @@
                 }
               }
             },
-            "description" : "Cisterna devuelta."
+            "description" : "Tanque devuelto."
           },
           "403" : {
             "content" : {
@@ -7538,16 +6468,16 @@
                 }
               }
             },
-            "description" : "La cisterna no existe o pertenece a otra organización."
+            "description" : "El tanque no existe o pertenece a otra organización."
           }
         },
-        "summary" : "Consultar cisterna por identificador",
-        "tags" : [ "Cisternas" ]
+        "summary" : "Consultar tanque por identificador",
+        "tags" : [ "Tanques" ]
       }
     },
-    "/api/v2/tanks/{tankId}/refill-episodes" : {
+    "/api/tanks/{tankId}/refill-episodes" : {
       "get" : {
-        "description" : "Devuelve los episodios registrados para una cisterna propia de la organización activa.",
+        "description" : "Devuelve los episodios registrados para un tanque propia de la organización activa.",
         "operationId" : "episodes",
         "parameters" : [ {
           "in" : "path",
@@ -7583,16 +6513,16 @@
                 }
               }
             },
-            "description" : "El usuario no tiene organización activa o no es propietario de la cisterna."
+            "description" : "El usuario no tiene organización activa o no es propietario de el tanque."
           }
         },
         "summary" : "Listar episodios de reposición",
         "tags" : [ "Políticas de reposición" ]
       }
     },
-    "/api/v2/tanks/{tankId}/refill-policy" : {
+    "/api/tanks/{tankId}/refill-policy" : {
       "get" : {
-        "description" : "Devuelve la política vigente de una cisterna que pertenece a la organización activa.",
+        "description" : "Devuelve la política vigente de un tanque que pertenece a la organización activa.",
         "operationId" : "get",
         "parameters" : [ {
           "in" : "path",
@@ -7622,7 +6552,7 @@
                 }
               }
             },
-            "description" : "El usuario no tiene organización activa o no es propietario de la cisterna."
+            "description" : "El usuario no tiene organización activa o no es propietario de el tanque."
           },
           "404" : {
             "content" : {
@@ -7632,14 +6562,14 @@
                 }
               }
             },
-            "description" : "La cisterna todavía no tiene una política configurada."
+            "description" : "El tanque todavía no tiene una política configurada."
           }
         },
         "summary" : "Consultar política de reposición",
         "tags" : [ "Políticas de reposición" ]
       },
       "put" : {
-        "description" : "Crea o actualiza la política de la cisterna propia. Los campos opcionales sobrescriben los valores globales aprobados.",
+        "description" : "Crea o actualiza la política de el tanque propia. Los campos opcionales sobrescriben los valores globales aprobados.",
         "operationId" : "configure",
         "parameters" : [ {
           "in" : "path",
@@ -7689,14 +6619,14 @@
                 }
               }
             },
-            "description" : "El usuario no tiene organización activa o la cisterna pertenece a otro tenant."
+            "description" : "El usuario no tiene organización activa o el tanque pertenece a otro tenant."
           }
         },
         "summary" : "Configurar política de reposición",
         "tags" : [ "Políticas de reposición" ]
       }
     },
-    "/api/v2/telemetry/readings" : {
+    "/api/telemetry/readings" : {
       "post" : {
         "description" : "Acepta una medición de telemetría versionada y autenticada por dispositivo; confirma lecturas en cuarentena o duplicadas sin almacenarlas como nuevas.",
         "operationId" : "ingest",
@@ -7743,6 +6673,91 @@
         "summary" : "Recibir medición de dispositivo",
         "tags" : [ "Telemetría" ]
       }
+    },
+    "/api/users" : {
+      "get" : {
+        "description" : "Devuelve todas las cuentas registradas; requiere la autoridad ROLE_ADMIN.",
+        "operationId" : "getAllUsers",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Lista de usuarios devuelta."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "El usuario autenticado no tiene la autoridad ROLE_ADMIN."
+          }
+        },
+        "summary" : "Listar usuarios",
+        "tags" : [ "Usuarios" ]
+      }
+    },
+    "/api/users/{userId}" : {
+      "get" : {
+        "description" : "Devuelve el perfil indicado cuando pertenece al usuario autenticado; la identidad no se acepta desde el cuerpo de la solicitud.",
+        "operationId" : "getUserById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "userId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResource"
+                }
+              }
+            },
+            "description" : "Perfil de usuario devuelto."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResource"
+                }
+              }
+            },
+            "description" : "El perfil solicitado no pertenece al usuario autenticado."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResource"
+                }
+              }
+            },
+            "description" : "No existe la cuenta solicitada."
+          }
+        },
+        "summary" : "Consultar usuario por identificador",
+        "tags" : [ "Usuarios" ]
+      }
     }
   },
   "security" : [ {
@@ -7753,9 +6768,6 @@
     "url" : "http://localhost:8080"
   } ],
   "tags" : [ {
-    "description" : "Activos de almacenamiento y configuración de cisternas",
-    "name" : "Cisternas"
-  }, {
     "description" : "Cuentas de cliente y sus sitios de entrega en una organización",
     "name" : "Clientes"
   }, {
@@ -7777,8 +6789,11 @@
     "description" : "Registro, consulta y gestión del estado de pagos de órdenes",
     "name" : "Pagos"
   }, {
-    "description" : "Catálogo de productos del distribuidor logístico autenticado",
-    "name" : "Oferta de combustible"
+    "description" : "Activos de almacenamiento y configuración de tanques",
+    "name" : "Tanques"
+  }, {
+    "description" : "Asignación transaccional de solicitudes aceptadas",
+    "name" : "Asignación de entregas"
   }, {
     "description" : "Historial físico y de seguridad reconstruido",
     "name" : "Cronología de entregas"
@@ -7789,14 +6804,8 @@
     "description" : "Transiciones del estado físico de una entrega",
     "name" : "Ciclo de entrega"
   }, {
-    "description" : "Configuración por cisterna y consulta de episodios de abastecimiento",
-    "name" : "Políticas de reposición"
-  }, {
     "description" : "Registro, consulta y actualización de perfiles de empresas compradoras",
     "name" : "Empresas compradoras"
-  }, {
-    "description" : "Consulta de notificaciones y gestión de su estado de lectura",
-    "name" : "Notificaciones"
   }, {
     "description" : "Consulta administrativa del uso de rutas",
     "name" : "Métricas de rutas API"
@@ -7810,20 +6819,11 @@
     "description" : "Administración y ciclo de vida de cisternas por distribuidor",
     "name" : "Cisternas de flota"
   }, {
-    "description" : "Asignación transaccional de solicitudes aceptadas en la API v2",
-    "name" : "Asignación de entregas"
-  }, {
     "description" : "Registro, consulta y actualización de perfiles de distribuidores",
     "name" : "Distribuidores"
   }, {
-    "description" : "Bandeja personal de notificaciones de la API v2",
-    "name" : "Mis notificaciones"
-  }, {
     "description" : "Ubicaciones y eventos de carga informados por el conductor",
     "name" : "Evidencias de transporte"
-  }, {
-    "description" : "Creación, consulta y actualización de entregas de combustible",
-    "name" : "Entregas"
   }, {
     "description" : "Organizaciones con membresía activa del usuario autenticado",
     "name" : "Mis organizaciones"
@@ -7845,6 +6845,12 @@
   }, {
     "description" : "Consulta de ubicación y evidencias de transporte de entregas",
     "name" : "Seguimiento de transporte"
+  }, {
+    "description" : "Bandeja personal de notificaciones del usuario autenticado",
+    "name" : "Mis notificaciones"
+  }, {
+    "description" : "Configuración por tanque y consulta de episodios de abastecimiento",
+    "name" : "Políticas de reposición"
   }, {
     "description" : "Invitación y administración de membresías de organización",
     "name" : "Invitaciones"

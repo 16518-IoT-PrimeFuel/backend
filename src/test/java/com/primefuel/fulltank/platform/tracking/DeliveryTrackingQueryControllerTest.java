@@ -107,20 +107,20 @@ class DeliveryTrackingQueryControllerTest {
         position(deliveryId, providerId, driverId, 10.5, "2026-09-01T10:00:00Z");
 
         // Assigned driver.
-        mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
+        mockMvc.perform(get("/api/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(driverUserId, providerId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.lastLatitude").value(10.5))
                 .andExpect(jsonPath("$.lastPositionAt").value("2026-09-01T10:00:00Z"));
 
         // The assigned driver is allowed through identity alone, even without a provider identity.
-        mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
+        mockMvc.perform(get("/api/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(driverUserId, null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.lastLatitude").value(10.5));
 
         // Owning provider (a different principal of the same tenant).
-        mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
+        mockMvc.perform(get("/api/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(999L, providerId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.lastLatitude").value(10.5));
@@ -138,7 +138,7 @@ class DeliveryTrackingQueryControllerTest {
         position(deliveryId, providerId, driverId, 10.0, "2026-09-01T10:00:00Z");
         position(deliveryId, providerId, driverId, 20.0, "2026-09-01T10:05:00Z");
 
-        mockMvc.perform(get("/api/v2/deliveries/{id}/tracking/samples", deliveryId)
+        mockMvc.perform(get("/api/deliveries/{id}/tracking/samples", deliveryId)
                         .with(authFor(driverUserId, providerId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3))
@@ -154,7 +154,7 @@ class DeliveryTrackingQueryControllerTest {
                 .andExpect(jsonPath("$[2].latestAdvanced").value(true));
 
         // The latest is the newest recordedAt, regardless of arrival order.
-        mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
+        mockMvc.perform(get("/api/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(driverUserId, providerId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.lastLatitude").value(30.0))
@@ -168,10 +168,10 @@ class DeliveryTrackingQueryControllerTest {
         long deliveryId = delivery(providerId, driverId);
         position(deliveryId, providerId, driverId, 1.0, "2026-09-01T10:00:00Z");
 
-        mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
+        mockMvc.perform(get("/api/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(777L, 999L)))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(get("/api/v2/deliveries/{id}/tracking/samples", deliveryId)
+        mockMvc.perform(get("/api/deliveries/{id}/tracking/samples", deliveryId)
                         .with(authFor(777L, 999L)))
                 .andExpect(status().isForbidden());
     }
@@ -182,7 +182,7 @@ class DeliveryTrackingQueryControllerTest {
         long driverUserId = 114L;
         long deliveryId = delivery(providerId, driver(providerId, driverUserId));
 
-        mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
+        mockMvc.perform(get("/api/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(driverUserId, providerId)))
                 .andExpect(status().isNotFound());
     }
@@ -195,12 +195,12 @@ class DeliveryTrackingQueryControllerTest {
         position(deliveryId, providerId, driverId, 42.0, "2026-09-01T10:00:00Z");
 
         var admin = authForRole(900L, null, "ROLE_ADMIN");
-        mockMvc.perform(get("/api/v2/admin/deliveries/{id}/transport-evidence/export", -1L).with(admin))
+        mockMvc.perform(get("/api/admin/deliveries/{id}/transport-evidence/export", -1L).with(admin))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v2/admin/deliveries/{id}/transport-evidence/export", deliveryId)
+        mockMvc.perform(get("/api/admin/deliveries/{id}/transport-evidence/export", deliveryId)
                         .with(authFor(115L, providerId)))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(get("/api/v2/admin/deliveries/{id}/transport-evidence/export", deliveryId)
+        mockMvc.perform(get("/api/admin/deliveries/{id}/transport-evidence/export", deliveryId)
                         .with(admin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.deliveryId").value(deliveryId))
@@ -209,9 +209,9 @@ class DeliveryTrackingQueryControllerTest {
 
         long transitionCount = jdbcTemplate.queryForObject(
                 "select count(*) from delivery_state_transitions where delivery_id = ?", Long.class, deliveryId);
-        mockMvc.perform(delete("/api/v2/admin/deliveries/{id}/transport-evidence", deliveryId).with(admin))
+        mockMvc.perform(delete("/api/admin/deliveries/{id}/transport-evidence", deliveryId).with(admin))
                 .andExpect(status().isNoContent());
-        mockMvc.perform(delete("/api/v2/admin/deliveries/{id}/transport-evidence", deliveryId).with(admin))
+        mockMvc.perform(delete("/api/admin/deliveries/{id}/transport-evidence", deliveryId).with(admin))
                 .andExpect(status().isNoContent());
         assertThat(jdbcTemplate.queryForObject(
                 "select count(*) from transport_evidence_samples where delivery_id = ?", Long.class, deliveryId))
@@ -234,7 +234,7 @@ class DeliveryTrackingQueryControllerTest {
         assertThat(recorder.recordLoad(new RecordLoadEvidenceCommand(deliveryId, providerId, driverId,
                 LoadMilestone.LOADED, 120.0, "LITRE", Instant.parse("2026-09-01T09:00:00Z"), null)).isSuccess()).isTrue();
 
-        mockMvc.perform(get("/api/v2/deliveries/{id}/tracking", deliveryId)
+        mockMvc.perform(get("/api/deliveries/{id}/tracking", deliveryId)
                         .with(authFor(driverUserId, providerId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.loaded").value(true))

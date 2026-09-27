@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v2/admin/api-metrics")
+@RequestMapping("/api/admin/api-metrics")
 @Tag(name = "Métricas de rutas API", description = "Consulta administrativa del uso de rutas")
 public class AdminApiMetricsController {
     private final JdbcTemplate jdbc;

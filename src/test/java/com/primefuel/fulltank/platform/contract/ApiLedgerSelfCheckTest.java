@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * T01-A self-check: the ledger at docs/api-ledger/T01-A-rest-ledger.md must always describe
- * exactly the REST surface Spring registers at runtime under /api/v1/**. If a controller gains,
+ * exactly the REST surface Spring registers at runtime under /api/**. If a controller gains,
  * loses or renames a mapping without the ledger being updated, this test fails.
  */
 @SpringBootTest(properties = {
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 })
 class ApiLedgerSelfCheckTest {
 
-    private static final int EXPECTED_OPERATION_COUNT = 59;
+    private static final int EXPECTED_OPERATION_COUNT = 103;
     private static final Pattern LEDGER_ROW = Pattern.compile(
             "^\\|\\s*\\d+\\s*\\|\\s*(GET|POST|PUT|PATCH|DELETE)\\s*\\|\\s*(`[^`]+`)\\s*\\|");
 
@@ -50,28 +50,28 @@ class ApiLedgerSelfCheckTest {
     private JavaMailSender mailSender;
 
     @Test
-    void ledgerHas59RowsMatchingTheLiveApiV1RequestMappings() throws IOException {
-        Set<String> runtimeOperations = collectRuntimeApiV1Operations();
+    void ledgerHas103RowsMatchingTheLiveApiRequestMappings() throws IOException {
+        Set<String> runtimeOperations = collectRuntimeApiOperations();
         assertEquals(EXPECTED_OPERATION_COUNT, runtimeOperations.size(),
-                "Runtime /api/v1/** mapping count drifted from the T01-A baseline of 59. "
+                "Runtime /api/** mapping count drifted from the T01-A baseline of 103. "
                         + "Update docs/api-ledger/T01-A-rest-ledger.md if this is an intentional change.");
 
         Set<String> ledgerOperations = collectLedgerOperations();
         assertEquals(EXPECTED_OPERATION_COUNT, ledgerOperations.size(),
-                "docs/api-ledger/T01-A-rest-ledger.md must list exactly 59 operations.");
+                "docs/api-ledger/T01-A-rest-ledger.md must list exactly 103 operations.");
 
         assertEquals(runtimeOperations, ledgerOperations,
-                "Ledger rows and live /api/v1/** mappings diverged. Every method+path pair must match exactly.");
+                "Ledger rows and live /api/** mappings diverged. Every method+path pair must match exactly.");
     }
 
-    private Set<String> collectRuntimeApiV1Operations() {
+    private Set<String> collectRuntimeApiOperations() {
         Set<String> operations = new TreeSet<>();
         Map<RequestMappingInfo, HandlerMethod> mappings = handlerMapping.getHandlerMethods();
         for (RequestMappingInfo info : mappings.keySet()) {
             Set<String> patterns = info.getPatternValues();
             Set<RequestMethod> methods = info.getMethodsCondition().getMethods();
             for (String pattern : patterns) {
-                if (!pattern.startsWith("/api/v1/")) continue;
+                if (!pattern.startsWith("/api/")) continue;
                 for (RequestMethod method : methods) {
                     operations.add(method.name() + " " + pattern);
                 }

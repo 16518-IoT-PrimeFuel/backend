@@ -20,7 +20,7 @@ import java.time.Instant;
  *
  * <ul>
  *   <li>a validated telemetry reading ({@link ValidatedTankReadingEvent});</li>
- *   <li>a manual level edit ({@link TankLevelManuallyUpdatedEvent}), the legacy v1 path — so automatic
+ *   <li>a manual level edit ({@link TankLevelManuallyUpdatedEvent}), the legacy equipment path — so automatic
  *       replenishment still works without IoT sensors or the frozen {@code devicebinding} infrastructure.</li>
  * </ul>
  *

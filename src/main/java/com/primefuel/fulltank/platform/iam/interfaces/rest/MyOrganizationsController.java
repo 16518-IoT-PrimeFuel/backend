@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v2/me/organizations", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/me/organizations", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Mis organizaciones", description = "Organizaciones con membresía activa del usuario autenticado")
 public class MyOrganizationsController {
 

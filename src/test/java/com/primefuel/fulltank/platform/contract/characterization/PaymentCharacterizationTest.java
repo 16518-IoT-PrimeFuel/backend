@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * T23-A: characterizes the <em>current</em> runtime behavior of the 7 v1 {@code /api/v1/payments} routes —
+ * T23-A: characterizes the <em>current</em> runtime behavior of the 7 v1 {@code /api/payments} routes —
  * transitions, permissions and the missing guards. Evey assertion records what the system does today, not
  * what it should do; surprises are marked {@code current-behavior} and are deliberately NOT fixed here (the
  * follow-up lives in T23-B). See {@code docs/api-ledger/T23-A-payment-characterization.md}.
@@ -57,14 +57,14 @@ class PaymentCharacterizationTest {
         var f = new Fixture("pay-create");
         long paymentId = f.createPayment(f.orderId, 50.0);
 
-        mockMvc.perform(get("/api/v1/payments/{id}", paymentId).with(f.buyer))
+        mockMvc.perform(get("/api/payments/{id}", paymentId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.amount").value(50.0));
 
         // current-behavior: one payment per order is enforced only in the application layer (findByOrderId),
         // not by a DB constraint; a duplicate request is a 409.
-        mockMvc.perform(post("/api/v1/payments").with(f.buyer).contentType("application/json")
+        mockMvc.perform(post("/api/payments").with(f.buyer).contentType("application/json")
                         .content(f.paymentBody(50.0, "CASH")))
                 .andExpect(status().isConflict());
     }
@@ -72,7 +72,7 @@ class PaymentCharacterizationTest {
     @Test
     void createRejectsAnAmountThatDoesNotMatchTheOrderTotal() throws Exception {
         var f = new Fixture("pay-amount");
-        mockMvc.perform(post("/api/v1/payments").with(f.buyer).contentType("application/json")
+        mockMvc.perform(post("/api/payments").with(f.buyer).contentType("application/json")
                         .content(f.paymentBody(49.99, "CASH")))
                 .andExpect(status().isBadRequest());
     }
@@ -81,14 +81,14 @@ class PaymentCharacterizationTest {
     void createRejectsAnOrderThatDoesNotExistOrBelongsToAnotherCompany() throws Exception {
         var f = new Fixture("pay-order");
         // Unknown order id.
-        mockMvc.perform(post("/api/v1/payments").with(f.buyer).contentType("application/json")
+        mockMvc.perform(post("/api/payments").with(f.buyer).contentType("application/json")
                         .content("""
                                 {"orderId":999999999,"companyId":%d,"amount":50.0,"paymentMethod":"CASH"}
                                 """.formatted(f.buyerCompanyId)))
                 .andExpect(status().isNotFound());
         // Known order, but the caller declares the order belongs to another company -> 404 (scoping by pair).
         var other = new Fixture("pay-order-other");
-        mockMvc.perform(post("/api/v1/payments").with(f.buyer).contentType("application/json")
+        mockMvc.perform(post("/api/payments").with(f.buyer).contentType("application/json")
                         .content("""
                                 {"orderId":%d,"companyId":%d,"amount":50.0,"paymentMethod":"CASH"}
                                 """.formatted(other.orderId, f.buyerCompanyId)))
@@ -99,7 +99,7 @@ class PaymentCharacterizationTest {
     void createRequiresTheBuyerCompanyAndCannotBeCalledByTheProvider() throws Exception {
         var f = new Fixture("pay-perm");
         // The provider does not own the buyer company in the body -> 403.
-        mockMvc.perform(post("/api/v1/payments").with(f.provider).contentType("application/json")
+        mockMvc.perform(post("/api/payments").with(f.provider).contentType("application/json")
                         .content(f.paymentBody(50.0, "CASH")))
                 .andExpect(status().isForbidden());
     }
@@ -110,7 +110,7 @@ class PaymentCharacterizationTest {
         // manual null-check). T23-B fixed it: the presence checks now run before authorization, so a null
         // companyId answers the documented 400.
         var f = new Fixture("pay-null-company");
-        mockMvc.perform(post("/api/v1/payments").with(f.buyer).contentType("application/json")
+        mockMvc.perform(post("/api/payments").with(f.buyer).contentType("application/json")
                         .content("""
                                 {"orderId":%d,"amount":50.0,"paymentMethod":"CASH"}
                                 """.formatted(f.orderId)))
@@ -122,12 +122,12 @@ class PaymentCharacterizationTest {
         // current-behavior (finding F2 / T01-A row 68): createPayment never checks order.status, so a payment
         // can be registered for a cancelled order.
         var f = new Fixture("pay-cancelled");
-        mockMvc.perform(post("/api/v1/fuel-orders/{id}/cancel", f.orderId).with(f.buyer))
+        mockMvc.perform(post("/api/fuel-orders/{id}/cancel", f.orderId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
 
         long paymentId = f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(get("/api/v1/payments/{id}", paymentId).with(f.buyer))
+        mockMvc.perform(get("/api/payments/{id}", paymentId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PENDING"));
     }
@@ -139,13 +139,13 @@ class PaymentCharacterizationTest {
         var f = new Fixture("pay-complete");
         long paymentId = f.createPayment(f.orderId, 50.0);
 
-        mockMvc.perform(post("/api/v1/payments/{id}/complete", paymentId).with(f.buyer)
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
                         .contentType("application/json").content("{\"transactionReference\":\"ref-1\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.transactionReference").value("ref-1"));
 
-        mockMvc.perform(get("/api/v1/fuel-orders/{id}", f.orderId).with(f.provider))
+        mockMvc.perform(get("/api/fuel-orders/{id}", f.orderId).with(f.provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PAID"));
     }
@@ -157,10 +157,10 @@ class PaymentCharacterizationTest {
         // strict no-op, and the order#markPaid() guard is the only thing that can reject a retry.
         var f = new Fixture("pay-complete-retry");
         long paymentId = f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(post("/api/v1/payments/{id}/complete", paymentId).with(f.buyer)
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
                         .contentType("application/json").content("{\"transactionReference\":\"first\"}"))
                 .andExpect(status().isOk());
-        mockMvc.perform(post("/api/v1/payments/{id}/complete", paymentId).with(f.buyer)
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
                         .contentType("application/json").content("{\"transactionReference\":\"second\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
@@ -173,10 +173,10 @@ class PaymentCharacterizationTest {
         // payment can be completed again (order#markPaid only refuses a CANCELLED order).
         var f = new Fixture("pay-complete-after-refund");
         long paymentId = f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(post("/api/v1/payments/{id}/refund", paymentId).with(f.buyer))
+        mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REFUNDED"));
-        mockMvc.perform(post("/api/v1/payments/{id}/complete", paymentId).with(f.buyer)
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
                         .contentType("application/json").content("{\"transactionReference\":\"late\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
@@ -188,7 +188,7 @@ class PaymentCharacterizationTest {
         // vocabulary treats it as the evidence of the manual confirmation.
         var f = new Fixture("pay-complete-empty");
         long paymentId = f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(post("/api/v1/payments/{id}/complete", paymentId).with(f.buyer)
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
                         .contentType("application/json").content("{}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
@@ -201,9 +201,9 @@ class PaymentCharacterizationTest {
         // falls to the generic RuntimeException handler -> 500 (not a 409).
         var f = new Fixture("pay-complete-cancelled");
         long paymentId = f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(post("/api/v1/fuel-orders/{id}/cancel", f.orderId).with(f.buyer))
+        mockMvc.perform(post("/api/fuel-orders/{id}/cancel", f.orderId).with(f.buyer))
                 .andExpect(status().isOk());
-        mockMvc.perform(post("/api/v1/payments/{id}/complete", paymentId).with(f.buyer)
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
                         .contentType("application/json").content("{\"transactionReference\":\"ref\"}"))
                 .andExpect(status().isInternalServerError());
     }
@@ -216,7 +216,7 @@ class PaymentCharacterizationTest {
         // can be "refunded".
         var f = new Fixture("pay-refund-pending");
         long paymentId = f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(post("/api/v1/payments/{id}/refund", paymentId).with(f.buyer))
+        mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REFUNDED"));
     }
@@ -226,19 +226,19 @@ class PaymentCharacterizationTest {
         // current-behavior (finding F4): refund has no reason/date and does not revert the order.
         var f = new Fixture("pay-refund-idem");
         long paymentId = f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(post("/api/v1/payments/{id}/complete", paymentId).with(f.buyer)
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
                         .contentType("application/json").content("{\"transactionReference\":\"ref\"}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/payments/{id}/refund", paymentId).with(f.buyer))
+        mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REFUNDED"));
-        mockMvc.perform(post("/api/v1/payments/{id}/refund", paymentId).with(f.buyer))
+        mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REFUNDED"));
 
         // The order is NOT moved back from PAID even though the payment is REFUNDED.
-        mockMvc.perform(get("/api/v1/fuel-orders/{id}", f.orderId).with(f.provider))
+        mockMvc.perform(get("/api/fuel-orders/{id}", f.orderId).with(f.provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PAID"));
     }
@@ -249,11 +249,11 @@ class PaymentCharacterizationTest {
     void theProviderOfTheOrderMayCompleteAndRefund() throws Exception {
         var f = new Fixture("pay-provider-ops");
         long paymentId = f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(post("/api/v1/payments/{id}/complete", paymentId).with(f.provider)
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.provider)
                         .contentType("application/json").content("{\"transactionReference\":\"prov\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
-        mockMvc.perform(post("/api/v1/payments/{id}/refund", paymentId).with(f.provider))
+        mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(f.provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REFUNDED"));
     }
@@ -264,14 +264,14 @@ class PaymentCharacterizationTest {
         var stranger = new Fixture("pay-stranger-b");
         long paymentId = f.createPayment(f.orderId, 50.0);
 
-        mockMvc.perform(post("/api/v1/payments/{id}/complete", paymentId).with(stranger.buyer)
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(stranger.buyer)
                         .contentType("application/json").content("{\"transactionReference\":\"x\"}"))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(post("/api/v1/payments/{id}/refund", paymentId).with(stranger.buyer))
+        mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(stranger.buyer))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v1/payments/{id}", paymentId).with(stranger.buyer))
+        mockMvc.perform(get("/api/payments/{id}", paymentId).with(stranger.buyer))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v1/payments/order/{orderId}", f.orderId).with(stranger.provider))
+        mockMvc.perform(get("/api/payments/order/{orderId}", f.orderId).with(stranger.provider))
                 .andExpect(status().isNotFound());
     }
 
@@ -280,12 +280,12 @@ class PaymentCharacterizationTest {
         var f = new Fixture("pay-reads");
         long paymentId = f.createPayment(f.orderId, 50.0);
 
-        mockMvc.perform(get("/api/v1/payments/{id}", paymentId).with(f.buyer)).andExpect(status().isOk());
-        mockMvc.perform(get("/api/v1/payments/{id}", paymentId).with(f.provider)).andExpect(status().isOk());
-        mockMvc.perform(get("/api/v1/payments/order/{orderId}", f.orderId).with(f.provider))
+        mockMvc.perform(get("/api/payments/{id}", paymentId).with(f.buyer)).andExpect(status().isOk());
+        mockMvc.perform(get("/api/payments/{id}", paymentId).with(f.provider)).andExpect(status().isOk());
+        mockMvc.perform(get("/api/payments/order/{orderId}", f.orderId).with(f.provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(paymentId));
-        mockMvc.perform(get("/api/v1/payments/company/{companyId}", f.buyerCompanyId).with(f.buyer))
+        mockMvc.perform(get("/api/payments/company/{companyId}", f.buyerCompanyId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(paymentId));
     }
@@ -296,48 +296,16 @@ class PaymentCharacterizationTest {
         // ROLE_BUYER/ROLE_PROVIDER (iam Roles enum), so no principal can ever hold it -> always 403.
         var f = new Fixture("pay-admin");
         f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(get("/api/v1/payments").with(f.buyer)).andExpect(status().isForbidden());
-        mockMvc.perform(get("/api/v1/payments").with(f.provider)).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/payments").with(f.buyer)).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/payments").with(f.provider)).andExpect(status().isForbidden());
     }
 
     // ---- independence from delivery ----------------------------------------------------------
-
-    @Test
-    void aDeliveryCanBeCompletedWhileItsPaymentIsStillPending() throws Exception {
-        // Invariant "a delivery can be completed although the payment is pending": the delivery machine never
-        // reads payment (T14-B), so closing the physical delivery succeeds with the payment left PENDING.
-        var f = new Fixture("pay-independent");
-        long paymentId = f.createPayment(f.orderId, 50.0);
-
-        var deliveryResponse = mockMvc.perform(post("/api/v1/deliveries").with(f.provider)
-                        .contentType("application/json")
-                        .content("""
-                                {"orderId":%d,"providerId":%d,"driverId":%d,"vehicleId":%d,
-                                 "scheduledDate":"2026-10-01","notes":"payment independence"}
-                                """.formatted(f.orderId, f.providerId, f.driverId, f.vehicleId)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        long deliveryId = objectMapper.readTree(deliveryResponse).get("id").asLong();
-
-        mockMvc.perform(post("/api/v1/deliveries/{id}/complete", deliveryId).with(f.provider))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("DELIVERED"));
-
-        // The payment is untouched by the physical close.
-        mockMvc.perform(get("/api/v1/payments/{id}", paymentId).with(f.buyer))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PENDING"));
-    }
 
     // ---- fixture -----------------------------------------------------------------------------
 
     private static final AtomicInteger RUC_SEQUENCE = new AtomicInteger();
     private static final AtomicInteger USER_ID_SEQUENCE = new AtomicInteger(70_000);
-    private static final AtomicInteger FIXTURE_SEQUENCE = new AtomicInteger();
-
-    private static int fixtureSeq() {
-        return FIXTURE_SEQUENCE.incrementAndGet();
-    }
 
     private static String nextRuc() {
         return "239%08d".formatted(RUC_SEQUENCE.incrementAndGet());
@@ -350,8 +318,6 @@ class PaymentCharacterizationTest {
         final long buyerCompanyId;
         final long providerId;
         final long fuelProductId;
-        final long driverId;
-        final long vehicleId;
         final long orderId;
 
         Fixture(String label) throws Exception {
@@ -360,8 +326,6 @@ class PaymentCharacterizationTest {
             this.buyer = authFor(buyerCompanyId, null, "ROLE_BUYER");
             this.provider = authFor(null, providerId, "ROLE_PROVIDER");
             this.fuelProductId = createFuelProduct();
-            this.driverId = createDriver();
-            this.vehicleId = createVehicle();
             this.orderId = createOrder();
         }
 
@@ -372,7 +336,7 @@ class PaymentCharacterizationTest {
         }
 
         long createPayment(long order, double amount) throws Exception {
-            var response = mockMvc.perform(post("/api/v1/payments").with(buyer).contentType("application/json")
+            var response = mockMvc.perform(post("/api/payments").with(buyer).contentType("application/json")
                             .content("""
                                     {"orderId":%d,"companyId":%d,"amount":%s,"paymentMethod":"CASH"}
                                     """.formatted(order, buyerCompanyId, amount)))
@@ -382,7 +346,7 @@ class PaymentCharacterizationTest {
         }
 
         private long createOrder() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/fuel-orders").with(buyer)
+            var response = mockMvc.perform(post("/api/fuel-orders").with(buyer)
                             .contentType("application/json")
                             .content("""
                                     {"companyId":%d,"providerId":%d,"fuelProductId":%d,
@@ -395,7 +359,7 @@ class PaymentCharacterizationTest {
         }
 
         private long createFuelProduct() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/fuel-products").with(provider)
+            var response = mockMvc.perform(post("/api/fuel-products").with(provider)
                             .contentType("application/json")
                             .content("""
                                     {"name":"Payment Diesel","fuelType":"DIESEL","pricePerUnit":10.0,"unit":"GALLONS",
@@ -405,35 +369,10 @@ class PaymentCharacterizationTest {
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();
         }
-
-        private long createDriver() throws Exception {
-            var response = mockMvc.perform(post("/api/v2/drivers").with(provider)
-                            .contentType("application/json")
-                            .content("""
-                                    {"firstName":"Payment","lastName":"Driver",
-                                     "licenseNumber":"L-PAY-%d","phoneNumber":"999000555","email":"pay-driver-%d@example.test",
-                                     "status":"AVAILABLE"}
-                                    """.formatted(fixtureSeq(), fixtureSeq())))
-                    .andExpect(status().isCreated())
-                    .andReturn().getResponse().getContentAsString();
-            return objectMapper.readTree(response).get("id").asLong();
-        }
-
-        private long createVehicle() throws Exception {
-            var response = mockMvc.perform(post("/api/v2/tankers").with(provider)
-                            .contentType("application/json")
-                            .content("""
-                                    {"licensePlate":"PAY-V%d","brand":"Volvo","model":"FH",
-                                     "capacity":2000,"unit":"GALLONS","status":"AVAILABLE"}
-                                    """.formatted(fixtureSeq())))
-                    .andExpect(status().isCreated())
-                    .andReturn().getResponse().getContentAsString();
-            return objectMapper.readTree(response).get("id").asLong();
-        }
     }
 
     private long signUpBuyer(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_BUYER"],
@@ -446,7 +385,7 @@ class PaymentCharacterizationTest {
     }
 
     private long signUpProvider(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_PROVIDER"],
