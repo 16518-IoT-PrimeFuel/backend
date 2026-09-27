@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.replenishment.application.internal.commandservices;
 
+import com.primefuel.fulltank.platform.equipment.api.TankAssets;
 import com.primefuel.fulltank.platform.replenishment.application.commandservices.RefillPolicyCommandService;
 import com.primefuel.fulltank.platform.replenishment.application.commandservices.ReplenishmentCommandService;
 import com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.RefillEpisode;
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 
 /**
@@ -40,17 +43,21 @@ public class RefillPolicyCommandServiceImpl implements RefillPolicyCommandServic
     private final ReplenishmentRequestRepository requestRepository;
     private final ReplenishmentCommandService replenishmentCommandService;
     private final Clock clock;
+    private final TankAssets tankAssets;
+    private static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Lima");
 
     public RefillPolicyCommandServiceImpl(RefillPolicyRepository policyRepository,
                                           RefillEpisodeRepository episodeRepository,
                                           ReplenishmentRequestRepository requestRepository,
                                           ReplenishmentCommandService replenishmentCommandService,
-                                          Clock clock) {
+                                          Clock clock,
+                                          TankAssets tankAssets) {
         this.policyRepository = policyRepository;
         this.episodeRepository = episodeRepository;
         this.requestRepository = requestRepository;
         this.replenishmentCommandService = replenishmentCommandService;
         this.clock = clock;
+        this.tankAssets = tankAssets;
     }
 
     @Override
@@ -151,7 +158,10 @@ public class RefillPolicyCommandServiceImpl implements RefillPolicyCommandServic
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
                 command.organizationId(), command.customerAccountId(), command.tankId(),
                 policy.getProviderId(), policy.getFuelProductId(), episode.getRequestedVolume(),
-                episode.getUnit(), ReplenishmentSource.AUTOMATIC, episode.getEpisodeKey()));
+                episode.getUnit(), ReplenishmentSource.AUTOMATIC, episode.getEpisodeKey(),
+                tankAssets.deliveryAddressForTank(command.tankId()).orElseThrow(() ->
+                        new IllegalStateException("The tank site has no delivery address")),
+                LocalDate.now(clock.withZone(BUSINESS_ZONE))));
         if (created.isFailure()) {
             throw new IllegalStateException(
                     "The automatic replenishment request could not be created for episode "

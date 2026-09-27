@@ -37,6 +37,11 @@ public class DeliveryAssignmentsImpl implements DeliveryAssignments {
     }
 
     @Override
+    public Optional<DeliveryAssignmentSnapshot> findByOrderId(Long orderId) {
+        return deliveryRepository.findByOrderId(orderId).map(DeliveryAssignmentsImpl::toSnapshot);
+    }
+
+    @Override
     public Result<DeliveryAssignmentSnapshot, ApplicationError> createLegacy(CreateLegacyDeliveryCommand command) {
         var delivery = new Delivery(new CreateDeliveryCommand(command.orderId(), command.providerId(),
                 command.driverId(), command.vehicleId(), command.scheduledDate(), command.notes()));

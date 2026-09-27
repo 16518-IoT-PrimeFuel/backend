@@ -90,9 +90,13 @@ public class AssignDeliveryExecutor {
                     "The order's replenishment request is not accepted"));
         }
 
+        if (deliveryAssignments.findByOrderId(command.orderId()).isPresent()) {
+            throw fail(ApplicationError.conflict("Delivery", "The order already has an assigned delivery"));
+        }
+
         // Step 1 — consume the acceptance once-only: the gate that prevents assigning the same need twice.
         // Skipped for the v1 legacy path, whose acceptance the T10-B accept bridge already consumed.
-        if (consumeAcceptance) {
+        if (consumeAcceptance && !request.acceptanceConsumed()) {
             var consumed = replenishmentAcceptance.consume(request.id());
             if (consumed.isFailure()) {
                 throw fail(errorOf(consumed));

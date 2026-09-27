@@ -344,44 +344,6 @@
         },
         "type" : "object"
       },
-      "CreateFuelRequestResource" : {
-        "properties" : {
-          "buyerCompanyId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "deliveryAddress" : {
-            "type" : "string"
-          },
-          "deliveryDate" : {
-            "format" : "date",
-            "type" : "string"
-          },
-          "equipmentId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "fuelProductId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "providerId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "quantity" : {
-            "format" : "double",
-            "type" : "number"
-          },
-          "source" : {
-            "type" : "string"
-          },
-          "unit" : {
-            "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
       "CreateGeofencePolicyResource" : {
         "properties" : {
           "centerLatitude" : {
@@ -495,6 +457,17 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "deliveryAddress" : {
+            "description" : "Dirección de descarga; si se omite o está vacía, se toma del sitio de la cisterna.",
+            "maxLength" : 255,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "deliveryDate" : {
+            "description" : "Fecha programada de entrega; no puede ser anterior al día actual en Lima.",
+            "format" : "date",
+            "type" : "string"
+          },
           "episodeKey" : {
             "maxLength" : 120,
             "minLength" : 0,
@@ -525,7 +498,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "customerAccountId", "fuelProductId", "providerId", "quantity" ],
+        "required" : [ "customerAccountId", "deliveryDate", "fuelProductId", "providerId", "quantity" ],
         "type" : "object"
       },
       "CreateSiteResource" : {
@@ -973,73 +946,6 @@
             "type" : "integer"
           },
           "unit" : {
-            "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
-      "FuelRequestResource" : {
-        "properties" : {
-          "buyerCompanyId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "createdAt" : {
-            "format" : "date-time",
-            "type" : "string"
-          },
-          "deliveryAddress" : {
-            "type" : "string"
-          },
-          "deliveryDate" : {
-            "format" : "date",
-            "type" : "string"
-          },
-          "equipmentId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "fuelProductId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "fuelType" : {
-            "type" : "string"
-          },
-          "id" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "productName" : {
-            "type" : "string"
-          },
-          "providerId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "quantity" : {
-            "format" : "double",
-            "type" : "number"
-          },
-          "rejectionReason" : {
-            "type" : "string"
-          },
-          "source" : {
-            "type" : "string"
-          },
-          "status" : {
-            "enum" : [ "PENDING", "APPROVED", "REJECTED" ],
-            "type" : "string"
-          },
-          "unit" : {
-            "type" : "string"
-          },
-          "unitPrice" : {
-            "format" : "double",
-            "type" : "number"
-          },
-          "updatedAt" : {
-            "format" : "date-time",
             "type" : "string"
           }
         },
@@ -1542,14 +1448,6 @@
         "required" : [ "capacity", "customerAccountId", "name" ],
         "type" : "object"
       },
-      "RejectFuelRequestResource" : {
-        "properties" : {
-          "reason" : {
-            "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
       "RejectReplenishmentRequestResource" : {
         "properties" : {
           "reason" : {
@@ -1565,6 +1463,15 @@
           "customerAccountId" : {
             "format" : "int64",
             "type" : "integer"
+          },
+          "deliveryAddress" : {
+            "description" : "Dirección de entrega guardada en la solicitud.",
+            "type" : "string"
+          },
+          "deliveryDate" : {
+            "description" : "Fecha programada de entrega en la fecha de negocio de Lima.",
+            "format" : "date",
+            "type" : "string"
           },
           "fuelProductId" : {
             "format" : "int64",
@@ -3727,287 +3634,6 @@
         },
         "summary" : "Actualizar existencias del producto",
         "tags" : [ "Productos de combustible" ]
-      }
-    },
-    "/api/v1/fuel-requests" : {
-      "get" : {
-        "description" : "Devuelve solicitudes de una sola dimensión propia: la empresa compradora o el tenant distribuidor del usuario.",
-        "operationId" : "findAll",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "buyerCompanyId",
-          "required" : false,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        }, {
-          "in" : "query",
-          "name" : "providerId",
-          "required" : false,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/FuelRequestResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Se devuelve la lista de solicitudes."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/FuelRequestResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Se indicaron a la vez buyerCompanyId y providerId."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/FuelRequestResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "No se indicó filtro o el filtro indicado no pertenece al usuario."
-          }
-        },
-        "summary" : "Listar solicitudes de combustible",
-        "tags" : [ "Solicitudes de combustible heredadas" ]
-      },
-      "post" : {
-        "description" : "Crea una solicitud v1 y su solicitud de reposición vinculada para una empresa compradora del usuario autenticado.",
-        "operationId" : "create_2",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateFuelRequestResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/FuelRequestResource"
-                }
-              }
-            },
-            "description" : "Solicitud de combustible creada."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/FuelRequestResource"
-                }
-              }
-            },
-            "description" : "El producto de combustible no existe o no pertenece al distribuidor indicado."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/FuelRequestResource"
-                }
-              }
-            },
-            "description" : "La empresa compradora del cuerpo no pertenece al usuario autenticado."
-          }
-        },
-        "summary" : "Crear solicitud de combustible heredada",
-        "tags" : [ "Solicitudes de combustible heredadas" ]
-      }
-    },
-    "/api/v1/fuel-requests/{requestId}" : {
-      "get" : {
-        "description" : "Devuelve la solicitud indicada cuando el usuario pertenece a la empresa compradora o al distribuidor correspondiente.",
-        "operationId" : "findById",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "requestId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/FuelRequestResource"
-                }
-              }
-            },
-            "description" : "Solicitud de combustible devuelta."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/FuelRequestResource"
-                }
-              }
-            },
-            "description" : "La solicitud no existe o no pertenece al usuario autenticado."
-          }
-        },
-        "summary" : "Consultar solicitud de combustible por identificador",
-        "tags" : [ "Solicitudes de combustible heredadas" ]
-      }
-    },
-    "/api/v1/fuel-requests/{requestId}/accept" : {
-      "post" : {
-        "description" : "Acepta una solicitud pendiente en nombre del distribuidor destinatario y crea la orden de combustible resultante.",
-        "operationId" : "accept_2",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "requestId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Solicitud aceptada y orden de combustible creada."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "No se encontró la solicitud o su producto al crear la orden."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La solicitud no existe o no está dirigida al tenant distribuidor autenticado."
-          },
-          "500" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La solicitud ya fue aceptada o no se pudo aceptar la revisión vinculada."
-          }
-        },
-        "summary" : "Aceptar solicitud de combustible",
-        "tags" : [ "Solicitudes de combustible heredadas" ]
-      }
-    },
-    "/api/v1/fuel-requests/{requestId}/reject" : {
-      "post" : {
-        "description" : "Rechaza una solicitud pendiente para el distribuidor destinatario y registra el motivo indicado.",
-        "operationId" : "reject_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "requestId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/RejectFuelRequestResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/FuelRequestResource"
-                }
-              }
-            },
-            "description" : "Solicitud de combustible rechazada."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/FuelRequestResource"
-                }
-              }
-            },
-            "description" : "Falta el motivo de rechazo o no se encontró la solicitud."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/FuelRequestResource"
-                }
-              }
-            },
-            "description" : "La solicitud no existe o no está dirigida al tenant distribuidor autenticado."
-          },
-          "500" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/FuelRequestResource"
-                }
-              }
-            },
-            "description" : "La solicitud no está pendiente y no puede rechazarse."
-          }
-        },
-        "summary" : "Rechazar solicitud de combustible",
-        "tags" : [ "Solicitudes de combustible heredadas" ]
       }
     },
     "/api/v1/notifications" : {
@@ -7119,7 +6745,7 @@
         "tags" : [ "Solicitudes de abastecimiento" ]
       },
       "post" : {
-        "description" : "Registra una solicitud para la organización activa. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.",
+        "description" : "Registra una solicitud para la organización activa con fecha de entrega desde hoy en Lima. La dirección vacía se completa desde el sitio de la cisterna. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.",
         "operationId" : "create",
         "requestBody" : {
           "content" : {
@@ -7150,7 +6776,7 @@
                 }
               }
             },
-            "description" : "El cuerpo es inválido, no se resolvió una organización o el valor de un campo no está permitido."
+            "description" : "El cuerpo es inválido, la fecha de entrega es anterior a hoy en Lima o no hay dirección disponible para la cisterna."
           },
           "403" : {
             "content" : {
@@ -7228,7 +6854,7 @@
     },
     "/api/v2/replenishment-requests/{requestId}/accept" : {
       "post" : {
-        "description" : "Registra la aceptación para el distribuidor destinatario mientras la solicitud siga pendiente.",
+        "description" : "Acepta la solicitud del distribuidor destinatario y crea una orden vinculada en una única transacción. La respuesta incluye el orderId que requiere POST /api/v2/deliveries.",
         "operationId" : "accept",
         "parameters" : [ {
           "in" : "path",
@@ -7248,17 +6874,7 @@
                 }
               }
             },
-            "description" : "Solicitud de abastecimiento aceptada."
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El estado o los argumentos no permiten aceptar la solicitud."
+            "description" : "Solicitud aceptada y orden creada y vinculada; la respuesta incluye orderId."
           },
           "403" : {
             "content" : {
@@ -8229,9 +7845,6 @@
   }, {
     "description" : "Consulta de ubicación y evidencias de transporte de entregas",
     "name" : "Seguimiento de transporte"
-  }, {
-    "description" : "Compatibilidad temporal para solicitudes v1 vinculadas al flujo de reposición",
-    "name" : "Solicitudes de combustible heredadas"
   }, {
     "description" : "Invitación y administración de membresías de organización",
     "name" : "Invitaciones"

@@ -31,6 +31,8 @@ public class ReplenishmentRequest extends AbstractDomainAggregateRoot<Replenishm
     private ReplenishmentStatus status;
     private ReplenishmentSource source;
     private String episodeKey;
+    private String deliveryAddress;
+    private java.time.LocalDate deliveryDate;
     private String rejectionReason;
     private Long orderId;
     private boolean acceptanceConsumed;
@@ -50,6 +52,8 @@ public class ReplenishmentRequest extends AbstractDomainAggregateRoot<Replenishm
         this.unitPrice = unitPrice;
         this.source = command.source() == null ? ReplenishmentSource.MANUAL : command.source();
         this.episodeKey = command.episodeKey();
+        this.deliveryAddress = command.deliveryAddress();
+        this.deliveryDate = command.deliveryDate();
         this.status = ReplenishmentStatus.PENDING;
         this.acceptanceConsumed = false;
         this.version = 0;

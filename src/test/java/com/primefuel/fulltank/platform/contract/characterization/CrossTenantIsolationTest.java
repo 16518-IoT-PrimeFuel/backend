@@ -1,6 +1,11 @@
 package com.primefuel.fulltank.platform.contract.characterization;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
+import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerCommandService;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.EquipmentCommandService;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.TankCommandService;
+import com.primefuel.fulltank.platform.contract.ReplenishmentTestFixtures;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -17,6 +22,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import static org.mockito.Mockito.when;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -48,8 +54,14 @@ class CrossTenantIsolationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired private CustomerCommandService customerCommandService;
+    @Autowired private EquipmentCommandService equipmentCommandService;
+    @Autowired private TankCommandService tankCommandService;
+
     @MockitoBean
     private JavaMailSender mailSender;
+
+    @MockitoBean private MembershipAccess membershipAccess;
 
     @Test
     void tenantBCannotReadTenantAsFuelRequestOrFuelOrderOrDeliveryOrPayment() throws Exception {
@@ -57,17 +69,18 @@ class CrossTenantIsolationTest {
         var b = new Tenant("xtenant-b");
 
         long requestId = a.createFuelRequest();
-        var acceptResponse = mockMvc.perform(post("/api/v1/fuel-requests/{id}/accept", requestId).with(a.provider))
+        var acceptResponse = mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(a.provider))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         JsonNode order = objectMapper.readTree(acceptResponse);
-        long orderId = order.get("id").asLong();
+        long orderId = order.get("orderId").asLong();
         long deliveryId = a.createDelivery(orderId);
-        long paymentId = a.createPayment(orderId, order.get("totalPrice").asDouble());
+        long paymentId = a.createPayment(orderId, order.get("unitPrice").asDouble() * order.get("quantity").asDouble());
 
         // Correctly scoped today: tenant B's buyer/provider principals get 404, not the data.
-        mockMvc.perform(get("/api/v1/fuel-requests/{id}", requestId).with(b.buyer)).andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v1/fuel-requests/{id}", requestId).with(b.provider)).andExpect(status().isNotFound());
+        when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(b.buyerCompanyId));
+        mockMvc.perform(get("/api/v2/replenishment-requests/{id}", requestId).with(b.buyer)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/v2/replenishment-requests/{id}", requestId).with(b.provider)).andExpect(status().isNotFound());
         mockMvc.perform(get("/api/v1/fuel-orders/{id}", orderId).with(b.buyer)).andExpect(status().isNotFound());
         mockMvc.perform(get("/api/v1/deliveries/{id}", deliveryId).with(b.buyer)).andExpect(status().isNotFound());
         mockMvc.perform(get("/api/v1/deliveries/{id}", deliveryId).with(b.provider)).andExpect(status().isNotFound());
@@ -99,7 +112,7 @@ class CrossTenantIsolationTest {
         // Regression test for the R01 hotfix in FuelOrderCommandServiceImpl#handle(CreateFuelOrderCommand):
         // POST /api/v1/fuel-orders used to only check @currentUserAccess.ownsCompany(resource.companyId())
         // and that fuelProductId exists, never that resource.providerId() actually owns the product
-        // (unlike FuelRequestService#create, which always did that check). Now it must be rejected
+        // The v2 acceptance flow must also reject a provider that does not own the selected product.
         // with 403 instead of pairing tenant A's fuel product with tenant B's providerId.
         var productOwner = new Tenant("xorder-product-owner");
         var strangerProvider = new Tenant("xorder-stranger-provider");
@@ -185,14 +198,17 @@ class CrossTenantIsolationTest {
         }
 
         long createFuelRequest() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/fuel-requests")
+            var assets = ReplenishmentTestFixtures.create(customerCommandService, equipmentCommandService,
+                    tankCommandService, buyerCompanyId, "Av. Xtenant 1");
+            when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(assets.organizationId()));
+            var response = mockMvc.perform(post("/api/v2/replenishment-requests")
                             .with(buyer)
                             .contentType("application/json")
                             .content("""
-                                    {"buyerCompanyId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
+                                    {"customerAccountId":%d,"tankId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
                                      "unit":"GALLONS","deliveryAddress":"Av. Xtenant 1","deliveryDate":"2099-10-15",
                                      "source":"MANUAL"}
-                                    """.formatted(buyerCompanyId, providerId, fuelProductId)))
+                                    """.formatted(assets.customerId(), assets.tankId(), providerId, fuelProductId)))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();

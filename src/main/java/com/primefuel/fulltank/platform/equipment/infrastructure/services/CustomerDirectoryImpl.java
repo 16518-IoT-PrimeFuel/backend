@@ -41,4 +41,11 @@ public class CustomerDirectoryImpl implements CustomerDirectory {
         return customerAccountRepository.findById(customerAccountId)
                 .map(customer -> customer.getOrganizationId());
     }
+
+    @Override
+    public Optional<Long> legacyCompanyIdForCustomer(Long customerAccountId) {
+        return customerAccountId == null ? Optional.empty()
+                : customerAccountRepository.findById(customerAccountId)
+                .map(customer -> customer.getLegacyCompanyId());
+    }
 }

@@ -47,6 +47,10 @@ public class ReplenishmentLookupImpl implements ReplenishmentLookup {
                 request.getUnit(),
                 request.getUnitPrice(),
                 request.getStatus() == null ? null : request.getStatus().name(),
-                request.getOrderId());
+                request.getOrderId(),
+                request.getCustomerAccountId(),
+                request.getDeliveryAddress(),
+                request.getDeliveryDate(),
+                request.isAcceptanceConsumed());
     }
 }

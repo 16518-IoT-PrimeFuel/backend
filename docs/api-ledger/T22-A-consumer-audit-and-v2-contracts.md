@@ -10,7 +10,7 @@ Deps: T20-B + T04-B, T05-B, T06-B, T10-B, T14-B, T15-B. **Resuelve U14 ruta por 
 
 ## Método
 
-- Base histórica: las 77 filas previas al retiro; el ledger actual tiene 64 de `docs/api-ledger/T01-A-rest-ledger.md` (verificadas por `ApiLedgerSelfCheckTest` y el
+- Base histórica: las 77 filas previas al retiro; el ledger actual tiene 59 de `docs/api-ledger/T01-A-rest-ledger.md` (verificadas por `ApiLedgerSelfCheckTest` y el
   snapshot OpenAPI).
 - Decisiones de familia: roadmap §10 (tabla "Autoridad de rutas"). Estado real de v2 en este repo: `deliveries`
   v2 (T14-A/T15), `drivers`/`tankers` v2 (T12-A), `replenishment-requests` v2 (T10-A), `notifications` `/me` v2
@@ -21,7 +21,7 @@ Deps: T20-B + T04-B, T05-B, T06-B, T10-B, T14-B, T15-B. **Resuelve U14 ruta por 
 ## Decisión por ruta (auditoría histórica de 77 rutas)
 
 Leyenda de acción: **KEEP** = mantener v1 tal cual; **V2** = v2 disponible, v1 queda como adapter;
-**DEPRECATE** = mantener deprecado; **RETIRED** = retirado por decisión de producto el 2026-09-26; **BLOCKER** = no se puede aprobar acción sin
+**DEPRECATE** = mantener deprecado; **RETIRED** = retirado por decisión de producto el 2026-09-26/27; **BLOCKER** = no se puede aprobar acción sin
 evidencia/rol (U14 no cerrada para esa ruta).
 
 ### Autenticación / IAM
@@ -73,11 +73,11 @@ evidencia/rol (U14 no cerrada para esa ruta).
 
 | # | Ruta | Consumer | Acción | Rationale |
 |---|---|---|---|---|
-| 63 | POST /fuel-requests | UNKNOWN | V2 | replenishment-requests v2; IDs v1 correlacionados |
-| 64 | GET /fuel-requests | UNKNOWN | V2 | — |
-| 65 | GET /fuel-requests/{id} | UNKNOWN | V2 | — |
-| 66 | POST /fuel-requests/{id}/accept | UNKNOWN | V2 | v2 exige aceptación; gap 500 documentado |
-| 67 | POST /fuel-requests/{id}/reject | UNKNOWN | V2 | — |
+| 63 | POST /fuel-requests | UNKNOWN | RETIRED | Retirada por T24-B; usar POST /api/v2/replenishment-requests |
+| 64 | GET /fuel-requests | UNKNOWN | RETIRED | Retirada por T24-B; consultar /api/v2/replenishment-requests |
+| 65 | GET /fuel-requests/{id} | UNKNOWN | RETIRED | Retirada por T24-B; consultar /api/v2/replenishment-requests/{id} |
+| 66 | POST /fuel-requests/{id}/accept | UNKNOWN | RETIRED | Retirada por T24-B; la aceptación v2 ahora crea y vincula la orden |
+| 67 | POST /fuel-requests/{id}/reject | UNKNOWN | RETIRED | Retirada por T24-B; usar la operación de decisión v2 |
 | 56 | POST /fuel-orders (directa) | UNKNOWN | DEPRECATE | crear orden directa v2 prohibida; adapter v1 medido |
 | 57 | POST /fuel-orders/{id}/confirm | UNKNOWN | DEPRECATE | contradice el flujo de aceptación (L03) |
 | 58 | POST /fuel-orders/{id}/cancel | UNKNOWN | V2 | cancel v2 |
@@ -161,7 +161,7 @@ evidencia/rol (U14 no cerrada para esa ruta).
 
 ## U14 — resolución
 
-77/77 rutas clasificadas con acción **o** blocker: 30 `KEEP`/`V2`/`REDESIGN` con v2 ya disponible, 9
+77/77 rutas históricas clasificadas con acción **o** blocker: 30 `KEEP`/`V2`/`REDESIGN` con v2 ya disponible, 9
 `DEPRECATE`, 7 `BLOCKER` por rol admin inasignable, y el resto `BLOCKER` por ledger externo `UNKNOWN`. **U14
 queda cerrada a nivel de acción por ruta**; el *retiro* (sunset) queda explícitamente bloqueado hasta tener
 evidencia de consumo y el registro aprobado (T24-B).

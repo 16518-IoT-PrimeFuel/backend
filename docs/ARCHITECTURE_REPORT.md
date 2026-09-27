@@ -94,7 +94,7 @@ flowchart LR
     RESP --> HTTP
 ```
 
-La separación no es uniforme: `vehicles`, `drivers` y `provider-ratings` acceden al repositorio directamente desde el controlador; `fuel-requests` también usa un servicio concreto y entidades JPA. Por tanto, el patrón DDD es la intención dominante, no una regla aplicada a todos los módulos.
+La separación no es uniforme: las rutas v1 de vehicles, drivers, provider-ratings y fuel-requests se retiraron en T24-B. Los flujos vigentes de flota y abastecimiento usan controladores v2 y seams de aplicación.
 
 ## 3. Endpoints
 
@@ -143,10 +143,10 @@ Tipos relevantes: `FuelType` incluye `DIESEL`, `GASOLINE`, variantes de octanaje
 
 | Método y ruta | Función / reglas observables |
 |---|---|
-| `POST /api/v1/fuel-requests` | Crea solicitud con comprador, proveedor, equipo/producto, cantidad, precio, dirección, fecha y origen. |
-| `GET /api/v1/fuel-requests` | Lista; filtros opcionales `buyerCompanyId` y `providerId`. |
-| `POST /api/v1/fuel-requests/{requestId}/accept` | Acepta solicitud y crea/devuelve una orden. |
-| `POST /api/v1/fuel-requests/{requestId}/reject` | Rechaza con `{reason}`. |
+| `POST /api/v2/replenishment-requests` | Crea solicitud para la organización activa; exige fecha desde hoy en Lima y completa la dirección desde el sitio de la cisterna si se omite. |
+| `GET /api/v2/replenishment-requests` | Lista solicitudes de la organización activa. |
+| `GET /api/v2/replenishment-requests/{requestId}` | Consulta solicitud dentro del tenant activo. |`n| `POST /api/v2/replenishment-requests/{requestId}/accept` | Acepta una solicitud pendiente, crea una orden y la vincula en una transacción; devuelve `orderId`. |
+| `POST /api/v2/replenishment-requests/{requestId}/reject` | Rechaza solicitud pendiente con `{reason}`. |
 | `POST /api/v1/fuel-orders` | Crea orden directamente con `companyId`, `providerId`, `fuelProductId`, `equipmentId`, cantidad, dirección y fecha. |
 | `POST /api/v1/fuel-orders/{orderId}/confirm` | Confirma orden. |
 | `POST /api/v1/fuel-orders/{orderId}/cancel` | Cancela orden. |
@@ -155,7 +155,7 @@ Tipos relevantes: `FuelType` incluye `DIESEL`, `GASOLINE`, variantes de octanaje
 | `GET /api/v1/fuel-orders/company/{companyId}` | Ordenes de comprador. |
 | `GET /api/v1/fuel-orders/provider/{providerId}` | Ordenes de proveedor. |
 
-Estados de solicitud: `PENDING → APPROVED` o `REJECTED`. Estados de orden definidos: `PENDING`, `CONFIRMED`, `DISPATCHED`, `PENDING_PAYMENT`, `PAID`, `IN_PROGRESS`, `DELIVERED`, `CANCELLED`. Los cambios de estado válidos se aplican en los agregados/servicios, no en el controlador.
+Estados de solicitud: `PENDING → ACCEPTED`, `REJECTED` o `CANCELLED`. Estados de orden definidos: `PENDING`, `CONFIRMED`, `DISPATCHED`, `PENDING_PAYMENT`, `PAID`, `IN_PROGRESS`, `DELIVERED`, `CANCELLED`. Los cambios de estado válidos se aplican en los agregados/servicios, no en el controlador.
 
 ### Payment
 
@@ -217,7 +217,7 @@ Estados: `PENDING`, `COMPLETED`, `FAILED`, `REFUNDED`. Métodos: `BANK_TRANSFER`
 
 ### Flujo solicitud → orden
 
-`FuelRequestService.create` persiste la solicitud. `accept` obtiene la solicitud, consulta el producto y crea la orden; `reject` registra el motivo. La API también permite crear una orden directamente, por lo que la solicitud no es un requisito técnico.
+`ReplenishmentRequestsController` crea solicitudes en el tenant de la membresía autenticada. `ReplenishmentAcceptanceFlow` acepta, consume la decisión, invoca ordering para crear la orden y la vincula dentro de una transacción.
 
 ### Flujo orden → pago → entrega
 
@@ -248,7 +248,7 @@ Payment recibe `orderId` y consulta el repositorio de órdenes para validar/actu
 | H2 | Tests. |
 | Spring DevTools | Runtime de desarrollo, opcional. |
 
-Configuración principal: perfil por defecto `dev`, MySQL configurable con `DATABASE_*`, puerto con `PORT`, orígenes CORS con `CORS_ALLOWED_ORIGINS`, y secreto JWT con `AUTHORIZATION_JWT_SECRET`. Flyway administra las migraciones versionadas V1–V32 y Hibernate usa `ddl-auto=validate`.
+Configuración principal: perfil por defecto `dev`, MySQL configurable con `DATABASE_*`, puerto con `PORT`, orígenes CORS con `CORS_ALLOWED_ORIGINS`, y secreto JWT con `AUTHORIZATION_JWT_SECRET`. Flyway administra las migraciones versionadas V1–V34 y Hibernate usa `ddl-auto=validate`.
 
 ## 6. Observaciones y riesgos técnicos
 
@@ -257,7 +257,7 @@ Configuración principal: perfil por defecto `dev`, MySQL configurable con `DATA
 - Hay validación inconsistente: varios `Resource` no tienen anotaciones `@Valid`/Bean Validation y algunos controladores aceptan entidades/records directamente.
 - `GET /deliveries/provider/{providerId}` hace `findAll()` y filtra en memoria; debe pasar a una consulta del repositorio si el volumen crece.
 - Reporting hace varios `findAll()` completos y agrupa en memoria; es suficiente para un MVP, pero tiene coste O(n) por cada lectura y presión de memoria.
-- `vehicles`, `drivers`, `provider-ratings` y parte de `fuel-requests` saltan la capa de aplicación; esto aumenta el acoplamiento del HTTP con persistencia.
+- Las rutas v1 de vehicles, drivers, provider-ratings y fuel-requests se retiraron en T24-B.
 - La API usa `Double` para precios, cantidades e ingresos. Para dinero conviene `BigDecimal`.
 - `application-dev.properties` deja `spring.jpa.open-in-view=true`, mientras MySQL lo desactiva; el comportamiento cambia por perfil.
 - Flyway es la fuente de cambios de esquema; no se deben editar migraciones aplicadas. La migración V32 elimina la tabla física `provider_ratings`.
@@ -265,7 +265,7 @@ Configuración principal: perfil por defecto `dev`, MySQL configurable con `DATA
 
 ## 7. Pruebas y estado del proyecto
 
-La suite H2 incluye 270 pruebas y 4 omitidas en la verificación del 2026-09-26. La especificación OpenAPI se sirve en `/api-docs` y Swagger UI en `/swagger-ui.html`.
+La suite H2 incluye 268 pruebas y 4 omitidas en la verificación del 2026-09-27. La especificación OpenAPI se sirve en `/api-docs` y Swagger UI en `/swagger-ui.html`.
 
 ## 8. Estructura de paquetes
 
@@ -302,8 +302,8 @@ Inventario de cuerpos obtenido de `@RequestBody` y sus Resource records. Los nom
 | `POST /equipment/{id}/update` | Mismos campos editables que equipment, sin `companyId`. |
 | `POST /equipment/{id}/favorite-provider` | `{"providerId":2}` |
 | `POST /fuel-orders` | `{"companyId":1,"providerId":2,"fuelProductId":3,"equipmentId":4,"requestedQuantity":100,"deliveryAddress":"...","scheduledDate":"2026-09-11"}` |
-| `POST /fuel-requests` | `{"buyerCompanyId":1,"providerId":2,"equipmentId":4,"fuelProductId":3,"quantity":100,"unit":"LITERS","deliveryAddress":"...","deliveryDate":"2026-09-11","source":"MANUAL"}`. `unit` y `source` son opcionales; producto, combustible, nombre y precio se derivan del producto registrado. |
-| `POST /fuel-requests/{id}/reject` | `{"reason":"..."}` |
+| `POST /api/v2/replenishment-requests` | `{"customerAccountId":1,"tankId":4,"providerId":2,"fuelProductId":3,"quantity":100,"unit":"LITERS","deliveryAddress":"...","deliveryDate":"2026-09-27","source":"MANUAL"}`. La dirección puede omitirse si el sitio tiene una. |
+| `POST /api/v2/replenishment-requests/{id}/reject` | `{"reason":"..."}` |
 | `POST /payments` | `{"orderId":1,"companyId":1,"amount":125,"paymentMethod":"BANK_TRANSFER"}` |
 | `POST /payments/{id}/complete` | `{"transactionReference":"..."}` |
 | `POST /deliveries` | `{"orderId":1,"providerId":2,"driverId":3,"vehicleId":4,"scheduledDate":"2026-09-11","notes":"..."}` |

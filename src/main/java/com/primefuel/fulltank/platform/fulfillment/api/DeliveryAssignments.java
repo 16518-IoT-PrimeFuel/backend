@@ -18,6 +18,9 @@ public interface DeliveryAssignments {
     /** The delivery produced by an assignment command, if the command already ran. */
     Optional<DeliveryAssignmentSnapshot> findByAssignmentCommandId(String assignmentCommandId);
 
+    /** Prevents a second assignment with a different command id for an order already assigned. */
+    Optional<DeliveryAssignmentSnapshot> findByOrderId(Long orderId);
+
     /** Creates the delivery already in the {@code ASSIGNED} physical state (assignment ≠ start). */
     Result<DeliveryAssignmentSnapshot, ApplicationError> createAssigned(CreateAssignedDeliveryCommand command);
 

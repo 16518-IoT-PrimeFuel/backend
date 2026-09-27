@@ -23,6 +23,8 @@ public final class ReplenishmentRequestPersistenceAssembler {
         domain.setStatus(entity.getStatus());
         domain.setSource(entity.getSource());
         domain.setEpisodeKey(entity.getEpisodeKey());
+        domain.setDeliveryAddress(entity.getDeliveryAddress());
+        domain.setDeliveryDate(entity.getDeliveryDate());
         domain.setRejectionReason(entity.getRejectionReason());
         domain.setOrderId(entity.getOrderId());
         domain.setAcceptanceConsumed(entity.isAcceptanceConsumed());
@@ -47,6 +49,8 @@ public final class ReplenishmentRequestPersistenceAssembler {
         entity.setStatus(domain.getStatus());
         entity.setSource(domain.getSource());
         entity.setEpisodeKey(domain.getEpisodeKey());
+        entity.setDeliveryAddress(domain.getDeliveryAddress());
+        entity.setDeliveryDate(domain.getDeliveryDate());
         entity.setRejectionReason(domain.getRejectionReason());
         entity.setOrderId(domain.getOrderId());
         entity.setAcceptanceConsumed(domain.isAcceptanceConsumed());

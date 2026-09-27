@@ -142,7 +142,7 @@ flowchart TD
 - **Specs incluidas:** S01.
 - **Dependencias:** ninguna.
 - **Riesgos:** fixtures contra entorno compartido; convertir defectos en comportamiento aprobado; consumidor mobile desconocido.
-- **Estado posterior:** ledger 77/77, matriz de estados y seguridad reproducible, snapshot de esquema y consumidores.
+- **Estado posterior:** ledger histórico 77/77, matriz de estados y seguridad reproducible, snapshot de esquema y consumidores.
 - **Exit criteria:** build; 10 pruebas previas; caracterización v1; casos negativos tenant A/B; MySQL aislado preparado.
 - **Rollback point:** retirar solo el harness nuevo; cero cambios de datos o contratos.
 
@@ -265,7 +265,7 @@ flowchart TD
 - **Persistence impact:** fixtures sintéticos y snapshot de metadatos; sin DDL.
 - **Security/tenancy impact:** casos A/B, endpoints públicos y IDs cruzados.
 - **Dependencies:** ninguna.
-- **Acceptance criteria:** ledger 77/77; orden directa, accept/reject, confirm/dispatch, create/complete delivery y payment reproducibles.
+- **Acceptance criteria:** ledger histórico 77/77; orden directa, accept/reject, confirm/dispatch, create/complete delivery y payment reproducibles.
 - **Test plan:** MockMvc/H2 + MySQL aislado para constraints/carreras; snapshot OpenAPI.
 - **Rollback strategy:** borrar solo pruebas/harness nuevos.
 - **Definition of Done:** reglas comunes + consumidor conocido o `UNKNOWN` por operación.
@@ -753,7 +753,7 @@ flowchart TD
 - **Persistence impact:** solo ledger/telemetría sin PII; mapas existentes se conservan.
 - **Security/tenancy impact:** v1 también aplica tenant; adapter nunca restaura fuga.
 - **Dependencies:** S04, S05, S06, S10, S14, S15, S20.
-- **Acceptance criteria:** 77/77 reconciliadas con runtime y consumers; contratos soportados verdes.
+- **Acceptance criteria:** 77 rutas históricas reconciliadas antes de los retiros y consumers; contratos soportados verdes.
 - **Test plan:** provider/consumer contract, bodies/status/dates/IDs/state mapping.
 - **Rollback strategy:** reactivar adapter sin revertir datos.
 - **Definition of Done:** reglas comunes + U14 cerrada por ruta o marcada bloqueante.
@@ -835,11 +835,11 @@ flowchart TD
 >   el DAG original), dependencia dura de T24-B para las 6 familias administrativas del sunset. No se incluye
 >   dentro del alcance de T24-B directamente.
 
-> **T24-B parcial ejecutado (2026-09-26, decisión de producto).** Se retiraron `vehicles` y `drivers`
-> v1 (10 rutas) y `provider-ratings` (3 rutas) sin esperar métricas. V32 elimina la tabla física
-> `provider_ratings`; se mantienen `drivers` y `vehicles` para Fleet v2. El retiro de `fuel-requests`
-> queda bloqueado: el contrato v2 no persiste dirección ni fecha y la aceptación aún no crea/vincula
-> `FuelOrder` dentro de la transacción. Las demás familias de sunset siguen abiertas.
+> **T24-B completado (2026-09-27).** Se retiraron `vehicles` y `drivers` v1 (10 rutas),
+> `provider-ratings` (3 rutas) y `fuel-requests` (5 rutas) por decisión de producto, sin esperar
+> métricas. V32 elimina `provider_ratings`; V34 elimina `fuel_requests`. `drivers` y `vehicles` se
+> conservan para Fleet v2. La aceptación v2 persiste los datos de entrega, crea `FuelOrder` y la
+> vincula en una transacción. Las demás familias de sunset siguen abiertas.
 
 ## 6. Catálogo de tickets
 
@@ -868,7 +868,7 @@ Cada ticket tiene un solo intento arquitectónico. `A` establece contrato/modelo
 | T09-A | S09 | Regla de reposición y episodios | Evaluar nivel bajo de forma determinista. | `replenishment/policy`, policy migrations | T06-B, T08-B, T10-B + U03/U04 | Modelar histéresis/episode; reloj inyectable; ejecutar en shadow. |
 | T09-B | S09 | Generación automática idempotente | Crear una request por episodio. | policy consumer, replenishment.api | T09-A | Emitir command con idempotency key; cerrar/rearmar episode; probar reject/recovery. |
 | T10-A | S10 | Agregado y comandos de revisión | Introducir lifecycle único de solicitud. | `replenishment/internal`, request persistence | T05-B, T06-B, T11-B, T19-B | Modelar estados/version; snapshots; comandos create/accept/reject/cancel/consume. |
-| T10-B | S10 | Puente FuelRequest/FuelOrder compatible | Enrutar v1 por replenishment y conservar IDs. | ordering controllers/services/adapters | T10-A | Mapear states/IDs; adaptar creación/aceptación; contratos v1/v2; impedir direct order v2. |
+| T10-B | S10 | Puente FuelRequest/FuelOrder compatible | Retirado en T24-B; v2 crea solicitud y orden enlazada. | ordering controllers/services/adapters | T10-A | Mapear states/IDs; adaptar creación/aceptación; contratos v1/v2; impedir direct order v2. |
 | T11-A | S11 | Interfaz Supply y unidades | Encapsular producto/volumen por tenant. | `supply/api`, inventory internals | T04-B, T03-B + U05 | Definir snapshots/Volume; filtrar tenant/active; adapter fuel_products. |
 | T11-B | S11 | Reserva y conciliación de suministro | Evitar sobreventa y escritura desde delivery. | supply reservations, inventory service, MySQL tests | T11-A | Añadir reserva/lock; release/reconcile; snapshot histórico; probar carreras. |
 | T12-A | S12 | Extraer Fleet de CRUD | Exponer Driver/Tanker sin repositorios directos. | `fleet/api`, fulfillment driver/vehicle adapters | T04-B, T02-B | Crear snapshots/commands; mapear estados; separar driverId/userId. |
@@ -948,12 +948,12 @@ Cada ticket tiene un solo intento arquitectónico. `A` establece contrato/modelo
 | T20-B | v1 GET y v2 `/me` verdes; POST medido/deprecado. | REST contracts/retry/A-B | Historial preservado. | T20-A | T22-A | T15-B,T16-B,T17-A | M | MEDIUM |
 | T21-A | Journal inmutable y atómico con state. | DB constraints/authorization | Retención/PII aprobadas. | T14-B,T16-B,T17-B,T19-B | T21-B | T18-A,T22-A | M | HIGH |
 | T21-B | Timeline reconstruye cadena y marca gaps. | rebuild/checkpoint/dup | Projection descartable; journal no. | T21-A | — | T18-B,T22-B | M | HIGH |
-| T22-A | Ledger actualizado con 64 rutas v1 activas y las familias retiradas marcadas. | consumer-driven contract/OpenAPI | Fuentes externas requeridas. | T04-B,T05-B,T06-B,T10-B,T14-B,T15-B,T20-B | T22-B | T17-B,T18-A,T21-A,T23-B | L | HIGH |
+| T22-A | Ledger actualizado con 59 rutas v1 activas y las familias retiradas marcadas. | consumer-driven contract/OpenAPI | Fuentes externas requeridas. | T04-B,T05-B,T06-B,T10-B,T14-B,T15-B,T20-B | T22-B | T17-B,T18-A,T21-A,T23-B | L | HIGH |
 | T22-B | Golden contracts y telemetry prueban cutover. | v1/v2 end-to-end | No redirect de POST; ventana comunicada. | T22-A | T24-A | T21-B | L | HIGH |
 | T23-A | Semántica, transiciones, permisos y cardinalidad de Payment quedan decididos sin borrar/renombrar. | controller/application/domain characterization + data/consumer audit | UNKNOWN comercial bloquea v2 financiero, no logística. | T01-B,T02-B,T04-B,T14-B | T23-B | T15-A,T16-A | M | HIGH |
 | T23-B | Delivery cierra sin payment; invariantes viven en payment; histórico y analítica siguen disponibles. | create/complete/refund invalid+retry+concurrency+history | Rutas/DTO v1 hasta S22; tabla preservada. | T23-A | T24-A | T22-A,T21-A | L | HIGH |
 | T24-A | Clases vacías sin refs removidas; docs/runtime coinciden. | build/ref search/docs verification | Endpoint/data legacy no entra por arrastre. | T22-B,T23-B,T03-B | T24-B | T18-B | S | LOW |
-| T24-B | Retiro parcial: Fleet v1 y provider-ratings ejecutados por decisión de producto; fuel-requests y las demás familias permanecen abiertas. | full contracts/migration/restore | V32 elimina provider_ratings; el resto requiere gates por familia. | T24-A | — | — | M | HIGH |
+| T24-B | Retiro completado: Fleet v1, provider-ratings y solicitudes de combustible (V32, V34); las demás familias siguen abiertas. | full contracts/migration/restore | V32 elimina provider_ratings y V34 elimina fuel_requests; el resto requiere gates por familia. | T24-A | — | — | M | HIGH |
 
 ## 7. Mapa de paralelización
 
@@ -1015,7 +1015,7 @@ No paralelizar migraciones que escriban la misma tabla (`users`, `buyer_companie
 | Clientes/sitios | buyer-companies v1 | customers/sites v2 | companyId↔customerId map | buyer_companies + customer/site | lectura doble; escritura v2 proyecta ID v1 si aplica | backfill 100% o cuarentena | sunset por operación y retención aprobada |
 | Equipment legacy→modelo profundo | equipment REST v1 | equipment v2 (`customers/sites/tanks`) | Equipment DTO mapper interno | equipment + tanks/config | metadata dual-write solo para mapeables; nivel autoritativo v2 | comparación sin drift y cliente migrado | ningún consumer requiere el DTO legacy; el bounded context `equipment` permanece |
 | Inventory→Supply | fuel-products v1 | products/supply API v2 | resource/state/unit mapper | fuel_products + reservations | stock legacy y reservations coexistentes | delivery usa ReserveSupply, no repo | v1 sin tráfico y semántica de stock resuelta |
-| Requests/Orders→Replenishment | fuel-requests + fuel-orders v1 | replenishment-requests v2 | request/order ID+state adapter | fuel_requests/orders + request/version/episode | FuelOrder como proyección legacy | create/accept v1 pasan por S10 y contratos verdes | direct-order sin consumidores; payment/delivery desacoplados |
+| Requests/Orders→Replenishment | fuel-requests + fuel-orders v1 | replenishment-requests v2 | request/order ID+state adapter | fuel_requests/orders + request/version/episode | FuelOrder como proyección legacy | la solicitud y aceptación legacy se retiraron en T24-B; v2 crea y vincula la orden | direct-order sin consumidores; payment/delivery desacoplados |
 | Vehicles/Drivers→Fleet | CRUD v1 (retirado en T24-B) | drivers/tankers + fleet.api v2 | status/capacity mapper | drivers/vehicles + reservations | catálogos comunes; reservas solo v2 | assignment usa Fleet API | 10 rutas retiradas por decisión de producto; tablas activas para v2 |
 | Fulfillment→Delivery | deliveries v1 | delivery commands v2 | state/action mapper | deliveries + journal/safety | estado v1 derivado del lifecycle v2 | create v1 ya no despacha implícitamente o usa modo compatible documentado | consumer ledger cerrado y históricos reconciliados |
 | Telemetry | nivel manual de equipment | ingest técnico + ApplyValidatedReading | manual reading adapter marcado por origen | raw readings + tank snapshot | manual e IoT; IoT shadow | calidad/SLA y device bindings aprobados | manual solo si producto decide retirarlo |
@@ -1057,7 +1057,7 @@ El register cubre las 77 operaciones observadas; una fila física por operación
 | Equipment | 5 | REDESIGN | tanks/customers/{id}/tanks | metadata separada de nivel; adapter solo para mapeables |
 | Favorite provider | 1 | DEPRECATE | sin equivalente de selección | conservar histórico; nunca usar para tenancy |
 | FuelProducts | 7 | REDESIGN | products/supply v2 | active, unit y tenant; delete→deactivate si referenciado |
-| FuelRequests | 5 | BLOCKER | replenishment-requests v2 | datos de dirección/fecha y creación transaccional de FuelOrder faltantes; T5/PORT-2 deben conservarse |
+| FuelRequests | 5 | BLOCKER | replenishment-requests v2 | completado: dirección/fecha, aceptación transaccional y FuelOrder vinculada; T5/PORT-2 conservados |
 | FuelOrders create/confirm | 2 | DEPRECATE | request create/accept v2 | impedir orden directa v2; adapter v1 medido |
 | FuelOrders restantes | 5 | REDESIGN | request queries/cancel v2 | mapper orderId/requestId/state |
 | Drivers | 5 | RETIRED | fleet drivers v2 | retiros ejecutados por decisión de producto; filtros de tenant y elegibilidad viven en v2 |
@@ -1102,7 +1102,7 @@ Secuencia obligatoria por register: expand → deploy compatible → backfill id
 
 | Wave | Build | Unit tests | Application tests | Integration tests | Architecture tests | DB migration tests | API contract tests | Security/tenancy tests | Module-specific gate |
 |---|---|---|---|---|---|---|---|---|---|
-| W0 | Maven/JDK26 | 10 existentes | context + critical flows | H2; MySQL harness smoke | dependency snapshot only | metadata snapshot | 77/77 OpenAPI/golden | public routes + A/B negatives | state/side-effect characterization |
+| W0 | Maven/JDK26 | 10 existentes | context + critical flows | H2; MySQL harness smoke | dependency snapshot only | metadata snapshot | 59 operaciones v1 activas | public routes + A/B negatives | state/side-effect characterization |
 | W1 | Boot4/JDK/BOM | envelope/rules | module boot | crash/replay | no new imports/cycles; module pilot | empty+legacy upgrade+restore | v1 unchanged | CurrentAccess seam | backlog/poison event |
 | W2 | full | membership/customer invariants | onboarding/invite | dual-read/backfill | `iam`/`equipment` deps | retry/quarantine/counts | auth/company v1+v2 | exhaustive actor/scope/revoke | token stale after revoke |
 | W3 | full | Volume/Tank/Request states | manual request→accept | MySQL races/reservations | `equipment`/supply/replenishment | expand/backfill/maps | equipment/product/order/request | cross-tenant relations | accept/reject one winner |
@@ -1142,7 +1142,7 @@ Gate universal de merge: build, pruebas anteriores y nuevas, `git diff --check`,
 - **Files/packages likely affected:** solo `src/test/**`, fixtures/contract snapshots y documentación de prueba; no production source.
 - **Preconditions:** `JAVA_HOME=C:\\Users\\crama\\.jdks\\openjdk-26.0.2`; perfil test aislado; snapshot MySQL no productivo cuando se habilite ese subgate.
 - **Implementation steps:** (1) generar/guardar OpenAPI del runtime; (2) reconciliar los 77 mappings con método, path, request/response/status y auth; (3) añadir golden tests por familia, priorizando auth, fuel-request/order, delivery y payment; (4) registrar consumer conocido o `UNKNOWN`; (5) dejar cada defecto actual como caso etiquetado, no corregido.
-- **Acceptance criteria:** 77/77 filas; build y 10 pruebas previas verdes; snapshot determinista; cambios cosméticos ordenados; ninguna modificación de producción.
+- **Acceptance criteria:** 77 filas históricas; build y 10 pruebas previas verdes; snapshot determinista; cambios cosméticos ordenados; ninguna modificación de producción.
 - **Tests required:** MockMvc contract tests y self-check del ledger contra mappings runtime.
 - **Migration concerns:** no usar credenciales/datos reales; no convertir comportamiento inseguro en requisito permanente.
 - **Blocked by / Blocks / Parallel:** bloqueado por nada; bloquea T01-B; no paralelizar con cambios REST del mismo baseline.

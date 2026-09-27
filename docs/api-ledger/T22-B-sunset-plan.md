@@ -1,6 +1,6 @@
 # T22-B — Adapters y plan de sunset verificado (S22)
 
-El sunset general conserva sus gates de medición. Por decisión de producto del 2026-09-26, T24-B ya retiró de inmediato Fleet v1 (drivers y vehicles) y provider-ratings, sin esperar esa ventana.
+El sunset general conserva sus gates de medición. Por decisión de producto, T24-B retiró de inmediato Fleet v1, provider-ratings y fuel-requests; estas decisiones no esperaron la ventana de métricas.
 
 ## 1. Golden contracts v1/v2 (coexistencia verificada)
 
@@ -14,7 +14,7 @@ La coexistencia v1↔v2 ya está cubierta por tests verdes:
 | v2 delivery lifecycle | `DeliveriesV2ControllerTest` |
 | v2 assignment orchestration | `AssignDeliveryFlowTest` |
 | v1 POST notificaciones (deprecado) + v2 `/me` | `MeNotificationsControllerTest` |
-| v1 inventory/Fleet T5 (Swagger) | build verde del ledger 77/77 (`ApiLedgerSelfCheckTest`) |
+| v1 inventory/Fleet T5 (Swagger) | build verde del ledger 59/59 (`ApiLedgerSelfCheckTest`) |
 
 Se agregó `V1V2CoexistenceGoldenTest` para dejar explícito que la misma operación responde en ambas versiones
 (v1 create de delivery + v2 lectura/assignación) sin romperse mutuamente.
@@ -30,7 +30,7 @@ versión; no corre un scheduler semanal.
 > Estado: **instrumentación implementada**; aprobar sunset aún requiere una ventana real de medición y el
 > ledger externo de consumidores.
 
-## 3. Registro de sunset (NO ejecutado)
+## 3. Registro de sunset
 
 Cada familia requiere: **consumer/ledger**, **versión destino**, **última observación**, **owner**, **fecha
 aprobada**. Ninguna celda de fecha está aprobada todavía.
@@ -40,7 +40,7 @@ aprobada**. Ninguna celda de fecha está aprobada todavía.
 | Drivers/Vehicles v1 (10) | fleet v2 | Decisión de producto T24-B (2026-09-26) | Fleet | inmediata | ✅ sí |
 | Deliveries v1 (8) | delivery v2 (ya existe) | ledger externo + métricas | Fulfillment | propuesta | ❌ no |
 | Notifications v1 (7) | `/me/notifications` v2 (ya existe) | ledger externo + métricas | Notifications | propuesta | ❌ no |
-| FuelRequests/Orders v1 (12) | replenishment-requests v2 | ledger + mapper IDs + cierre S10 | Ordering | propuesta | ❌ no |
+| Solicitudes v1 (5) | replenishment-requests v2 | T24-B; aceptación crea orden vinculada | Ordering | inmediata | ✅ sí |
 | FuelProducts v1 (7) | supply v2 | ledger + delete→deactivate | Supply | propuesta | ❌ no |
 | Equipment v1 (5) | tanks/customers v2 | ledger + mapeo metadata | Equipment | propuesta | ❌ no |
 | IAM v1 (14) | organization/`/me` v2 | ledger + rol plataforma | IAM | propuesta | ❌ no |

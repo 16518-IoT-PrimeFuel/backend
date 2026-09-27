@@ -1,6 +1,10 @@
 package com.primefuel.fulltank.platform.contract;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
+import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerCommandService;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.EquipmentCommandService;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.TankCommandService;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +20,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import static org.mockito.Mockito.when;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -44,8 +49,14 @@ class AuthorizationContractTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired private CustomerCommandService customerCommandService;
+    @Autowired private EquipmentCommandService equipmentCommandService;
+    @Autowired private TankCommandService tankCommandService;
+
     @MockitoBean
     private JavaMailSender mailSender;
+
+    @MockitoBean private MembershipAccess membershipAccess;
 
     @Test
     void protectedEndpointsRejectUnauthenticatedRequests() throws Exception {
@@ -99,21 +110,24 @@ class AuthorizationContractTest {
                 .andReturn().getResponse().getContentAsString();
         long fuelProductId = objectMapper.readTree(productResponse).get("id").asLong();
 
-        var requestResponse = mockMvc.perform(post("/api/v1/fuel-requests")
+        var assets = ReplenishmentTestFixtures.create(customerCommandService, equipmentCommandService,
+                tankCommandService, buyerCompanyId, "Av. Neg 1");
+        when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(assets.organizationId()));
+        var requestResponse = mockMvc.perform(post("/api/v2/replenishment-requests")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""
-                                {"buyerCompanyId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
+                                {"customerAccountId":%d,"tankId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
                                  "unit":"GALLONS","deliveryAddress":"Av. Neg 1","deliveryDate":"2099-10-15",
                                  "source":"MANUAL"}
-                                """.formatted(buyerCompanyId, ownerProviderId, fuelProductId)))
+                                """.formatted(assets.customerId(), assets.tankId(), ownerProviderId, fuelProductId)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         long requestId = objectMapper.readTree(requestResponse).get("id").asLong();
 
-        mockMvc.perform(post("/api/v1/fuel-requests/{id}/accept", requestId).with(stranger))
-                .andExpect(status().isNotFound());
-        mockMvc.perform(post("/api/v1/fuel-requests/{id}/accept", requestId).with(owner))
+        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(stranger))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(owner))
                 .andExpect(status().isOk());
     }
 
@@ -151,22 +165,25 @@ class AuthorizationContractTest {
                 .andReturn().getResponse().getContentAsString();
         long fuelProductId = objectMapper.readTree(productResponse).get("id").asLong();
 
-        var requestResponse = mockMvc.perform(post("/api/v1/fuel-requests")
+        var assets = ReplenishmentTestFixtures.create(customerCommandService, equipmentCommandService,
+                tankCommandService, buyerCompanyId, "Av. Neg 2");
+        when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(assets.organizationId()));
+        var requestResponse = mockMvc.perform(post("/api/v2/replenishment-requests")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""
-                                {"buyerCompanyId":%d,"providerId":%d,"fuelProductId":%d,"quantity":5,
+                                {"customerAccountId":%d,"tankId":%d,"providerId":%d,"fuelProductId":%d,"quantity":5,
                                  "unit":"GALLONS","deliveryAddress":"Av. Neg 2","deliveryDate":"2099-10-15",
                                  "source":"MANUAL"}
-                                """.formatted(buyerCompanyId, providerId, fuelProductId)))
+                                """.formatted(assets.customerId(), assets.tankId(), providerId, fuelProductId)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         long requestId = objectMapper.readTree(requestResponse).get("id").asLong();
 
-        var acceptResponse = mockMvc.perform(post("/api/v1/fuel-requests/{id}/accept", requestId).with(provider))
+        var acceptResponse = mockMvc.perform(post("/api/v2/replenishment-requests/{id}/accept", requestId).with(provider))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        long orderId = objectMapper.readTree(acceptResponse).get("id").asLong();
+        long orderId = objectMapper.readTree(acceptResponse).get("orderId").asLong();
 
         mockMvc.perform(post("/api/v1/payments")
                         .with(buyer)

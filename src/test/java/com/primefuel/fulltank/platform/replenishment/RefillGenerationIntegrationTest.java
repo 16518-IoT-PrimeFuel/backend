@@ -5,6 +5,7 @@ import com.primefuel.fulltank.platform.equipment.application.commandservices.Cus
 import com.primefuel.fulltank.platform.equipment.application.commandservices.TankCommandService;
 import com.primefuel.fulltank.platform.equipment.application.internal.commandservices.TankReadingServiceImpl;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterCustomerCommand;
+import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterSiteCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterTankCommand;
 import com.primefuel.fulltank.platform.inventory.application.commandservices.FuelProductCommandService;
 import com.primefuel.fulltank.platform.inventory.domain.model.commands.CreateFuelProductCommand;
@@ -26,6 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.Instant;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,6 +76,9 @@ class RefillGenerationIntegrationTest {
     private TankAssets tankAssets;
 
     @Autowired
+    private Clock clock;
+
+    @Autowired
     private CustomerCommandService customerCommandService;
 
     @Autowired
@@ -87,8 +94,11 @@ class RefillGenerationIntegrationTest {
         var customer = customerCommandService.handle(
                 new RegisterCustomerCommand(ORGANIZATION, "Cliente refill " + ruc, ruc, null, null, null, null));
         assertThat(customer.isSuccess()).isTrue();
+        var site = customerCommandService.handle(new RegisterSiteCommand(
+                ORGANIZATION, customer.getOrElse(null).getId(), "Sitio refill", "Av. Combustibles 123"));
+        assertThat(site.isSuccess()).isTrue();
         var tank = tankCommandService.handle(new RegisterTankCommand(
-                ORGANIZATION, customer.getOrElse(null).getId(), null, "Tanque refill " + ruc,
+                ORGANIZATION, customer.getOrElse(null).getId(), site.getOrElse(null).getId(), "Tanque refill " + ruc,
                 "DIESEL", 500.0, "LITRE", 400.0, null));
         assertThat(tank.isSuccess()).isTrue();
         return tank.getOrElse(null).getId();
@@ -142,6 +152,9 @@ class RefillGenerationIntegrationTest {
         assertThat(requests).hasSize(1);
         assertThat(requests.get(0).getSource()).isEqualTo(ReplenishmentSource.AUTOMATIC);
         assertThat(requests.get(0).getQuantity()).isEqualTo(450.0);
+        assertThat(requests.get(0).getDeliveryAddress()).isEqualTo("Av. Combustibles 123");
+        assertThat(requests.get(0).getDeliveryDate())
+                .isEqualTo(LocalDate.now(clock.withZone(ZoneId.of("America/Lima"))));
 
         var episodes = episodesFor(tankId);
         assertThat(episodes).hasSize(1);

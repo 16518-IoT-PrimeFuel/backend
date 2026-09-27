@@ -1,33 +1,32 @@
 # T24-B — Retiro de endpoints v1 confirmado por producto
 
-Decisión de producto del 2026-09-26: retirar de inmediato las familias de vehículos, conductores y calificaciones, sin esperar la ventana de métricas. El retiro de solicitudes de combustible queda bloqueado hasta que la aceptación v2 cree y vincule una orden dentro de una misma transacción.
+Decisión de producto del 2026-09-26: retirar de inmediato las familias de vehículos, conductores y calificaciones, sin esperar la ventana de métricas. El 2026-09-27 se completó también el retiro de solicitudes de combustible, una vez que la aceptación v2 pudo crear y vincular una orden en una sola transacción.
 
 ## Rutas retiradas
 
 | Familia | Rutas retiradas | Continuidad |
 |---|---|---|
-| Vehículos (5) | `GET/POST /api/v1/vehicles`, `GET/PUT/DELETE /api/v1/vehicles/{id}` | `GET/POST /api/v2/tankers`, `GET/PUT /api/v2/tankers/{tankerId}`, activar/desactivar en v2. |
-| Conductores (5) | `GET/POST /api/v1/drivers`, `GET/PUT/DELETE /api/v1/drivers/{id}` | `/api/v2/drivers` con tenant desde principal, elegibilidad y ciclo activar/desactivar. |
+| Vehículos (5) | `GET/POST /api/v1/vehicles`, `GET/PUT/DELETE /api/v1/vehicles/{id}` | `/api/v2/tankers` |
+| Conductores (5) | `GET/POST /api/v1/drivers`, `GET/PUT/DELETE /api/v1/drivers/{id}` | `/api/v2/drivers` |
 | Calificaciones (3) | `GET/POST /api/v1/provider-ratings`, `PUT /api/v1/provider-ratings/{id}` | Sin reemplazo. |
+| Solicitudes de combustible (5) | `POST/GET /api/v1/fuel-requests`, `GET /api/v1/fuel-requests/{requestId}`, `POST /api/v1/fuel-requests/{requestId}/accept`, `POST /api/v1/fuel-requests/{requestId}/reject` | `/api/v2/replenishment-requests`; aceptación en `POST /api/v2/replenishment-requests/{requestId}/accept`. |
 
-## Código y datos
+## Código, datos y transacción
 
-Se retiraron los controladores v1 y recursos de vehículos/conductores, y el slice completo sin consumidores de `ProviderRating` (controlador, recurso, agregado, repositorios y adaptador JPA). `drivers` y `vehicles` permanecen: son las tablas que usa Fleet v2. V32 elimina únicamente la tabla física `provider_ratings`, que no tiene claves foráneas entrantes.
+El primer retiro eliminó los controladores v1 de vehículos/conductores y el slice sin consumidores internos de `ProviderRating`. `drivers` y `vehicles` permanecen porque Fleet v2 las usa; V32 elimina la tabla física `provider_ratings`.
 
-La migración `V32__drop_retired_tables.sql` ejecuta `DROP TABLE provider_ratings`. No se modifica ninguna migración aplicada ni `scripts/seed-first-admin.sql`.
+La continuación v2 de solicitudes ahora recibe `deliveryAddress` y `deliveryDate`. La fecha es obligatoria y no puede ser anterior al día de negocio de America/Lima. Si falta la dirección se toma del sitio asociado a la cisterna. La aceptación, el consumo de la decisión, la creación de `FuelOrder` mediante la lógica ya existente en ordering y la vinculación de la orden se ejecutan en una sola transacción. La respuesta incluye `orderId`; si faltan los mapeos de cliente o cisterna al identificador legacy, responde 409 y revierte la aceptación.
+
+Se eliminaron `FuelRequestsController`, `LegacyFuelRequestBridge`, `FuelRequestService`, la entidad, repositorio, recursos y estado del aggregate legacy, además del test dedicado al bridge. No quedan consumidores internos. V34 ejecuta `DROP TABLE fuel_requests`; la columna histórica `fuel_orders.request_id` se conserva y las órdenes creadas desde v2 la dejan nula. No había claves foráneas entrantes a `fuel_requests`.
+
+V33 agrega `delivery_address` y `delivery_date` a `replenishment_requests`. No se modificaron migraciones anteriores ni `scripts/seed-first-admin.sql`.
 
 ## Pruebas y consumidores
 
-Los flujos `OrderFulfillmentGoldenPathTest`, `DeliveryV1LifecycleMappingTest`, `V1V2CoexistenceGoldenTest`, `StateLifecycleRetryCharacterizationTest`, `CrossTenantIsolationTest` y `PaymentCharacterizationTest` preparan flota mediante endpoints v2. Los contratos de los endpoints v1 retirados ya no existen; los contratos de entrega, seguridad entre tenants y pagos siguen caracterizados.
+Los golden y characterization tests de aceptación, aislamiento, autorización y entrega usan la API v2 como preparación. Se mantiene la cobertura de entrega, pagos y límites entre tenants; se elimina únicamente el test dedicado al bridge v1. `OpenApiSnapshotTest` actualiza el snapshot con 59 operaciones v1 activas y `ApiLedgerSelfCheckTest` compara el ledger actualizado.
 
-`frontend` está vacío. En `Mobile-app/docs/specs/USER_STORIES.md:62` y `:131` quedan menciones futuras a `/api/v1/fuel-requests`; para migrar ese consumidor: `POST /api/v2/replenishment-requests` y `POST /api/v2/replenishment-requests/{id}/reject`. Los repos consumidores no se modificaron.
+En los consumidores externos inspeccionados, `frontend` no contiene llamadas a las rutas retiradas. En `Mobile-app/docs/specs/USER_STORIES.md` hay menciones a la antigua solicitud; su reemplazo es `POST /api/v2/replenishment-requests` y sus operaciones v2 de decisión.
 
-## Bloqueo pendiente de solicitudes
+## Riesgos y verificación
 
-`CreateReplenishmentRequestResource` no recibe dirección ni fecha de entrega. El contrato y aggregate v2 tampoco guardan esos datos. El flujo legacy exigía dirección y validaba `deliveryDate` respecto de `LocalDate.now(clock.withZone(ZoneId.of("America/Lima")))`. Aceptar v2 creando una orden sin esos datos no preservaría las validaciones PORT-2/T5. Además, mientras no haya orden vinculada, `POST /api/v2/deliveries` no puede resolver la aceptación para esa orden.
-
-Por eso permanecen `FuelRequestsController`, `LegacyFuelRequestBridge`, el aggregate `FuelRequest` y la tabla física `fuel_requests`; no se agrega V32 para esa tabla. Antes de retirar esa familia hay que definir y persistir sus datos de entrega en v2, y mover la creación de orden al composition root con ambas escrituras en una transacción.
-
-## Verificación
-
-`OpenApiSnapshotTest` regenera el snapshot con 64 operaciones v1. `ApiLedgerSelfCheckTest` se ajusta al ledger después de retirar estas 13 rutas. `./mvnw.cmd test` finalizó con 270 pruebas, 0 fallos, 0 errores y 4 omitidas.
+El despliegue requiere aplicar V33 antes de usar los nuevos campos y V34 después de confirmar que ningún dato histórico de `fuel_requests` deba conservarse. El cambio no valida MySQL desde este repositorio. La verificación local ejecuta la suite Maven con H2.

@@ -1,8 +1,9 @@
 # T01-A — REST baseline ledger (S01)
 
 Parent spec: S01 — Caracterizar contratos y estados actuales.
-Scope: characterization only. Nothing here was fixed; every defect found while reconciling the
-64 mappings is recorded as a `known-gap` and left exactly as the runtime behaves today.
+Alcance: ledger histórico y contratos vigentes. Las 77 rutas de la línea base se redujeron a 59
+operaciones v1 activas tras los retiros T24-B. Los defectos observados se anotan como `known-gap`
+según el estado actual del runtime.
 
 How this was built: `grep -rn "@GetMapping\|@PostMapping\|@PutMapping\|@PatchMapping\|@DeleteMapping"`
 across `src/main/java/**/interfaces/rest/*Controller.java`, combined with each class's
@@ -14,7 +15,7 @@ springdoc `/api-docs` document by `OpenApiSnapshotTest`. 3 of the 21 controller 
 `NotificationController`, `OrderingController`, `PaymentController`) were empty placeholder
 classes with zero `@RequestMapping` methods — they contributed 0 operations and are not counted
 below. **T24-A resolved this known-gap: all six were deleted** (verified empty and unreferenced).
-The ledger now has 64 active v1 operations after the T24-B product retirements.
+The ledger now has 59 active v1 operations after the T24-B product retirements.
 
 Auth column legend: `public` = matched by `permitAll()` in `WebSecurityConfiguration`;
 `@PreAuthorize(expr)` = declared on the method; `manual: <check>` = no `@PreAuthorize`, the
@@ -75,21 +76,16 @@ sibling frontend/mobile repo checked out alongside this backend to inspect).
 | 47 | GET | `/api/v1/fuel-orders/{orderId}` | FuelOrdersController | manual: ownsCompanyOrProvider(order.companyId, order.providerId) | 200, 404 | UNKNOWN | |
 | 48 | GET | `/api/v1/fuel-orders/company/{companyId}` | FuelOrdersController | `@PreAuthorize` ownsCompany(companyId) | 200 | UNKNOWN | |
 | 49 | GET | `/api/v1/fuel-orders/provider/{providerId}` | FuelOrdersController | `@PreAuthorize` ownsProvider(providerId) | 200 | UNKNOWN | |
-| 50 | POST | `/api/v1/fuel-requests` | FuelRequestsController | `@PreAuthorize` ownsCompany(resource.buyerCompanyId) | 201, 400 | UNKNOWN | |
-| 51 | GET | `/api/v1/fuel-requests` | FuelRequestsController | manual: exactly one of `buyerCompanyId`/`providerId`, and caller must own it | 200, 400, 403 | UNKNOWN | **known-gap**: requires exactly one of the two query params — an admin (or a user with no ownership at all) cannot call this endpoint at all; both-present and both-absent are rejected identically as 400/403 depending on which branch is hit, and the 403 has no response body (`ResponseEntity.status(403).build()`), unlike every other denial path in this controller which returns 404. |
-| 52 | GET | `/api/v1/fuel-requests/{requestId}` | FuelRequestsController | manual: ownsCompanyOrProvider(request.buyerCompanyId, request.providerId) | 200, 404 | UNKNOWN | |
-| 53 | POST | `/api/v1/fuel-requests/{requestId}/accept` | FuelRequestsController | manual: ownsProvider(request.providerId) | 200, 404, 500 | UNKNOWN | **known-gap**: `FuelRequestService.accept()` throws a plain `IllegalStateException` ("Only pending requests can be accepted") when the request is not `PENDING`. `GlobalExceptionHandler` has no specific handler for `IllegalStateException`, so it falls through to the generic `RuntimeException` handler and comes back as `500 UNEXPECTED_ERROR` — not the `Result<T, ApplicationError>` pattern (with a proper 409) used by every command service elsewhere in the codebase. |
-| 54 | POST | `/api/v1/fuel-requests/{requestId}/reject` | FuelRequestsController | manual: ownsProvider(request.providerId) | 200, 404, 400, 500 | UNKNOWN | Same `IllegalStateException` → 500 gap as row 66 for an already-processed request. A blank/missing `reason` throws `IllegalArgumentException`, which `GlobalExceptionHandler` does map to a clean 400. |
-| 55 | POST | `/api/v1/payments` | PaymentsController | `@PreAuthorize` ownsCompany(resource.companyId) | 201, 400, 404 | UNKNOWN | **known-gap**: only checks that the order exists and that `amount` equals `order.totalPrice` — never checks `order.status`. A payment can be created against a `CANCELLED` order (see row 58's note); characterized in `OrderFulfillmentGoldenPathTest#cancellingAnOrderDoesNotBlockCreatingAPaymentForIt`. |
-| 56 | POST | `/api/v1/payments/{paymentId}/complete` | PaymentsController | manual: ownsCompany(payment.companyId) or ownsProvider(order.providerId) | 200, 404 | UNKNOWN | Also calls `FuelOrder#markPaid()`, which only refuses a `CANCELLED` order — completing a payment created against a cancelled order (row 68) is itself blocked here, but the inconsistent order/payment pairing was already allowed to exist. |
-| 57 | POST | `/api/v1/payments/{paymentId}/refund` | PaymentsController | manual: same as row 69 | 200, 404 | UNKNOWN | `Payment#refund()` has no status guard — a `PENDING` (never completed) payment can be "refunded". |
-| 58 | GET | `/api/v1/payments` | PaymentsController | `@PreAuthorize` hasAuthority('ROLE_ADMIN') | 200 | UNKNOWN | |
-| 59 | GET | `/api/v1/payments/{paymentId}` | PaymentsController | manual: ownsCompany(payment.companyId) or ownsProvider(order.providerId) | 200, 404 | UNKNOWN | |
-| 60 | GET | `/api/v1/payments/order/{orderId}` | PaymentsController | manual: same as row 72 | 200, 404 | UNKNOWN | |
-| 61 | GET | `/api/v1/payments/company/{companyId}` | PaymentsController | `@PreAuthorize` ownsCompany(companyId) | 200 | UNKNOWN | |
-| 62 | GET | `/api/v1/analytics/platform` | AnalyticsController | `@PreAuthorize` hasAuthority('ROLE_ADMIN') | 200 | UNKNOWN | |
-| 63 | GET | `/api/v1/analytics/providers/{providerId}` | AnalyticsController | `@PreAuthorize` ownsProvider(providerId) | 200 | UNKNOWN | |
-| 64 | GET | `/api/v1/analytics/buyers/{companyId}` | AnalyticsController | `@PreAuthorize` ownsCompany(companyId) | 200 | UNKNOWN | |
+| 50 | POST | `/api/v1/payments` | PaymentsController | `@PreAuthorize` ownsCompany(resource.companyId) | 201, 400, 404 | UNKNOWN | **known-gap**: only checks that the order exists and that `amount` equals `order.totalPrice` — never checks `order.status`. A payment can be created against a `CANCELLED` order (see row 58's note); characterized in `OrderFulfillmentGoldenPathTest#cancellingAnOrderDoesNotBlockCreatingAPaymentForIt`. |
+| 51 | POST | `/api/v1/payments/{paymentId}/complete` | PaymentsController | manual: ownsCompany(payment.companyId) or ownsProvider(order.providerId) | 200, 404 | UNKNOWN | Also calls `FuelOrder#markPaid()`, which only refuses a `CANCELLED` order — completing a payment created against a cancelled order (row 68) is itself blocked here, but the inconsistent order/payment pairing was already allowed to exist. |
+| 52 | POST | `/api/v1/payments/{paymentId}/refund` | PaymentsController | manual: same as row 69 | 200, 404 | UNKNOWN | `Payment#refund()` has no status guard — a `PENDING` (never completed) payment can be "refunded". |
+| 53 | GET | `/api/v1/payments` | PaymentsController | `@PreAuthorize` hasAuthority('ROLE_ADMIN') | 200 | UNKNOWN | |
+| 54 | GET | `/api/v1/payments/{paymentId}` | PaymentsController | manual: ownsCompany(payment.companyId) or ownsProvider(order.providerId) | 200, 404 | UNKNOWN | |
+| 55 | GET | `/api/v1/payments/order/{orderId}` | PaymentsController | manual: same as row 72 | 200, 404 | UNKNOWN | |
+| 56 | GET | `/api/v1/payments/company/{companyId}` | PaymentsController | `@PreAuthorize` ownsCompany(companyId) | 200 | UNKNOWN | |
+| 57 | GET | `/api/v1/analytics/platform` | AnalyticsController | `@PreAuthorize` hasAuthority('ROLE_ADMIN') | 200 | UNKNOWN | |
+| 58 | GET | `/api/v1/analytics/providers/{providerId}` | AnalyticsController | `@PreAuthorize` ownsProvider(providerId) | 200 | UNKNOWN | |
+| 59 | GET | `/api/v1/analytics/buyers/{companyId}` | AnalyticsController | `@PreAuthorize` ownsCompany(companyId) | 200 | UNKNOWN | |
 
 ## Resumen de brechas conocidas (no corregidas en T01-A)
 

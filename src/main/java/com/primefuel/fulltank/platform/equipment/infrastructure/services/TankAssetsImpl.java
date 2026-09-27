@@ -4,6 +4,7 @@ import com.primefuel.fulltank.platform.equipment.api.TankAssets;
 import com.primefuel.fulltank.platform.equipment.application.internal.commandservices.TankReadingServiceImpl;
 import com.primefuel.fulltank.platform.equipment.domain.model.aggregates.Tank;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.TankRepository;
+import com.primefuel.fulltank.platform.equipment.domain.repositories.CustomerSiteRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -14,10 +15,13 @@ public class TankAssetsImpl implements TankAssets {
 
     private final TankRepository tankRepository;
     private final TankReadingServiceImpl tankReadingService;
+    private final CustomerSiteRepository customerSiteRepository;
 
-    public TankAssetsImpl(TankRepository tankRepository, TankReadingServiceImpl tankReadingService) {
+    public TankAssetsImpl(TankRepository tankRepository, TankReadingServiceImpl tankReadingService,
+                          CustomerSiteRepository customerSiteRepository) {
         this.tankRepository = tankRepository;
         this.tankReadingService = tankReadingService;
+        this.customerSiteRepository = customerSiteRepository;
     }
 
     @Override
@@ -31,6 +35,21 @@ public class TankAssetsImpl implements TankAssets {
             return Optional.empty();
         }
         return tankRepository.findByLegacyEquipmentId(equipmentId).map(Tank::getId);
+    }
+
+    @Override
+    public Optional<Long> legacyEquipmentIdForTank(Long tankId) {
+        return tankId == null ? Optional.empty()
+                : tankRepository.findById(tankId).map(Tank::getLegacyEquipmentId);
+    }
+
+    @Override
+    public Optional<String> deliveryAddressForTank(Long tankId) {
+        return tankId == null ? Optional.empty() : tankRepository.findById(tankId)
+                .map(Tank::getSiteId)
+                .flatMap(customerSiteRepository::findById)
+                .map(site -> site.getAddress() == null ? null : site.getAddress().trim())
+                .filter(address -> !address.isBlank());
     }
 
     @Override

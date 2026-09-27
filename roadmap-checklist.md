@@ -5,7 +5,7 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 
 ## W0 — Baseline reproducible (S01)
 
-- [x] **T01-A** — Baseline de rutas y contratos. Ledger 77/77 + 11 tests golden. Build 21/21 verde.
+- [x] **T01-A** — Baseline de rutas y contratos. Ledger 77 rutas históricas + 11 tests golden. Build 21/21 verde.
       → `docs/api-ledger/T01-A-rest-ledger.md`
 - [x] **T01-B** — Caracterización de estados y seguridad. 7 known-gaps reproducidos con test
       determinista (2 luego resueltos por hotfix, ver abajo). Build 30/30 verde.
@@ -105,13 +105,8 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       seam `replenishment.api.ReplenishmentLookup`, v2 `/api/v2/replenishment-requests`, `V11` validada
       en MySQL 8.0.46. Build verde.
       → `docs/api-ledger/T10-A-replenishment-request.md`
-- [x] **T10-B** — Puente FuelRequest/FuelOrder compatible (**cierra W3**). `LegacyFuelRequestBridge`:
-      la creación v1 también crea una `ReplenishmentRequest` (clave de episodio `fuel-request:{id}`,
-      organización/cliente/tanque resueltos por seams), la aceptación consume el acceptance una sola vez
-      y conserva el `requestId` legacy correlacionando el `orderId`; el rechazo se propaga. Sin orden
-      directa v2. Sin esquema nuevo. Build verde.
-      → `docs/api-ledger/T10-B-legacy-request-bridge.md`
-- [x] **T5** — Fecha de negocio de FuelRequest validada con `Clock` en `America/Lima`; test fijo cubre
+- [x] **T10-B** — Flujo v2 único de solicitud→aceptación→orden vinculada en una transacción. Se eliminó el puente legacy en T24-B; V34 elimina la tabla antigua y se conserva `fuel_orders.request_id` histórico.
+- [x] **T5** — Fecha de negocio de la solicitud v2 validada con `Clock` en `America/Lima`; test fijo cubre
       25/09 aceptado tras medianoche UTC y 24/09 rechazado con HTTP 400. → `docs/api-ledger/T5-lima-business-date.md`
 
 ## W4 — Dispositivos, telemetría y reposición automática (S07, S08, S09)
@@ -312,7 +307,7 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       Marcar leída es idempotente. `MeNotificationsControllerTest` (2): privacidad entre dos miembros, read
       idempotente, POST v1 sigue 201. `./mvnw.cmd test` 193/193. Sin cambio de esquema.
       → `docs/api-ledger/T20-B-me-inbox-and-deprecation.md`
-- [x] **T22-A** — Auditoría de consumidores y contratos v2 (**U14 resuelta ruta por ruta**). 77/77 rutas
+- [x] **T22-A** — Auditoría de consumidores y contratos v2 (**U14 resuelta ruta por ruta**). 77 rutas históricas
       clasificadas con acción o blocker en `T22-A-consumer-audit-and-v2-contracts.md`: `KEEP`/`V2`/`REDESIGN`
       donde ya existe v2 (deliveries, drivers/tankers, replenishment-requests, `/me/notifications`, supply/fleet
       APIs), `DEPRECATE` (provider-ratings, favorite-provider, directorio global, orden directa/confirm,
@@ -359,7 +354,7 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
       `InventoryController`, `OrderingController`, `PaymentController`, `NotificationController`. Docs
       alineadas: T01-A ledger (nota de placeholders), ARCHITECTURE_REPORT, checklist Swagger, T23-A F9
       (resuelto), y 6 diagramas `.puml` (nodos y relación eliminados). Snapshot OpenAPI regenerado por test;
-      **77/77 rutas intactas**. No se tocó T24-B (retiro real, sigue bloqueado).
+      **77 rutas históricas reconciliadas**; después, T24-B redujo el runtime a 59 rutas v1 activas.
       `./mvnw.cmd test` verde. → `docs/api-ledger/T24-A-marker-cleanup.md`
 - [x] T24-PRE-ADMIN — Asignación de rol de plataforma (U19). `ROLE_ADMIN` era un
       string en `@Secured` de 7 controllers sin existir en `Roles` ni en ningún flujo de asignación — no
@@ -369,7 +364,7 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 - [x] T24-PRE-METRICS — Métricas de tráfico por patrón y versión con V27 y `GET /api/v2/admin/api-metrics`.
       El sunset sigue bloqueado por ventana real de medición y ledger externo de consumidores `UNKNOWN`.
       → `docs/api-ledger/T24-PRE-METRICS-route-usage.md`
-- [x] T24-B — Retiro inmediato de `drivers` (5 rutas), `vehicles` (5) y `provider-ratings` (3) por decisión de producto (2026-09-26), sin esperar métricas. OpenAPI, ledger y V32 actualizados. `fuel-requests` sigue pendiente: faltan dirección y fecha de entrega en el contrato v2 para conservar PORT-2/T5 y crear la orden en la aceptación transaccional. Siguen abiertos `fuel-orders` create/confirm, `favorite-provider`, notificaciones POST y las demás familias. → `docs/api-ledger/T24-B-endpoint-retirement.md`
+- [x] T24-B — Retiro inmediato de `drivers` (5 rutas), `vehicles` (5) y `provider-ratings` (3) por decisión de producto (2026-09-26), sin esperar métricas. OpenAPI, ledger y V32 actualizados. `fuel-requests` también fue retirada tras implementar dirección/fecha en v2 y aceptación transaccional con orden vinculada (V33/V34). Siguen abiertos `fuel-orders` create/confirm, `favorite-provider`, notificaciones POST y las demás familias. → `docs/api-ledger/T24-B-endpoint-retirement.md`
 
 ## Documentación Swagger (OpenAPI + javadoc de REST)
 
@@ -389,7 +384,7 @@ documentó 401 (filtro bearer global, uniforme en todos los endpoints autenticad
       `Customers`, `Equipment`, `Tanks`, `Products`, `ProviderRatings`, `Analytics`.
 - [x] **Swagger T3 — Inventory + Replenishment** (3 controllers, 16 métodos): `FuelProducts`,
       `RefillPolicies`, `ReplenishmentRequests`.
-- [x] **Swagger T4 — Ordering** (2 controllers, 12 métodos): `FuelOrders`, `FuelRequests`.
+- [x] **Swagger T4 — Ordering**: documentación de los controladores activos; el controlador legacy de solicitudes se retiró en T24-B.
 - [x] **Swagger T5 — Fulfillment/Fleet** (6 controllers, 42 métodos): `Deliveries`, `DeliveriesV2`,
       `Drivers`, `Vehicles`, `DriversV2`, `TankersV2`.
 - [x] **Swagger T6 — Payment + Notification + Telemetry** (3 controllers, 15 métodos): `Payments`,
@@ -399,5 +394,5 @@ Build final **156/156 verde** (`mvnw test`; incluye los tests concurrentes de T1
 comportamiento. Hallazgos de mapeo de códigos (documentados, **no** corregidos — "characterize ≠ fix"):
 `POST /api/v1/buyer-companies|provider-companies` sin `@Valid` (input inválido → 500 en vez de 400);
 `ProviderRatings{create,update}` devuelve 400 para referencias inexistentes (convención esperaría 404);
-transiciones de estado inválidas en `fuel-requests accept`/`payments complete`/`payments refund` caen en
+transiciones de estado inválidas de aceptación v2 y de `payments complete`/`payments refund` caen en
 500 en vez de 409; varios gates de ownership devuelven 403 en lugar de 404 (y al revés) según el controller.

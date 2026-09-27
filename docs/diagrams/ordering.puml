@@ -20,14 +20,10 @@ skinparam package {
 ' =========================== INTERFACES ===========================
 package "interfaces.rest" <<interfaces>> {
   class FuelOrdersController
-  class FuelRequestsController
 
   package "resources" {
     class CreateFuelOrderResource <<record>>
     class FuelOrderResource <<record>>
-    class CreateFuelRequestResource <<record>>
-    class FuelRequestResource <<record>>
-    class RejectFuelRequestResource <<record>>
   }
   package "transform" {
     class CreateFuelOrderCommandFromResourceAssembler
@@ -42,7 +38,6 @@ package "application" <<application>> {
   package "internal" {
     class FuelOrderCommandServiceImpl
     class FuelOrderQueryServiceImpl
-    class FuelRequestService
   }
 }
 
@@ -79,11 +74,6 @@ package "domain" <<domain>> {
       DELIVERED
       CANCELLED
     }
-    enum RequestStatus {
-      PENDING
-      APPROVED
-      REJECTED
-    }
   }
   package "model.commands" {
     class CreateFuelOrderCommand <<record>>
@@ -108,11 +98,9 @@ package "infrastructure" <<infrastructure>> {
   }
   package "persistence.jpa.entities" {
     class FuelOrderPersistenceEntity <<entity>>
-    class FuelRequestPersistenceEntity <<entity>>
   }
   package "persistence.jpa.repositories" {
     interface FuelOrderPersistenceRepository
-    interface FuelRequestPersistenceRepository
   }
   package "persistence.jpa.assemblers" {
     class FuelOrderPersistenceAssembler
@@ -122,7 +110,6 @@ package "infrastructure" <<infrastructure>> {
 ' =========================== RELACIONES ===========================
 FuelOrdersController ..> FuelOrderCommandService
 FuelOrdersController ..> FuelOrderQueryService
-FuelRequestsController ..> FuelRequestService
 
 FuelOrderCommandServiceImpl ..|> FuelOrderCommandService
 FuelOrderQueryServiceImpl ..|> FuelOrderQueryService
@@ -130,10 +117,8 @@ FuelOrderQueryServiceImpl ..|> FuelOrderQueryService
 FuelOrderCommandServiceImpl ..> FuelOrderRepository
 FuelOrderCommandServiceImpl ..> FuelOrder
 FuelOrderQueryServiceImpl ..> FuelOrderRepository
-FuelRequestService ..> FuelRequestPersistenceRepository
 
 FuelOrder --> OrderStatus
-FuelRequestPersistenceEntity --> RequestStatus
 
 FuelOrderRepositoryImpl ..|> FuelOrderRepository
 FuelOrderRepositoryImpl ..> FuelOrderPersistenceRepository

@@ -2,9 +2,10 @@ package com.primefuel.fulltank.platform.replenishment.interfaces.rest;
 
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
+import com.primefuel.fulltank.platform.equipment.api.TankAssets;
+import com.primefuel.fulltank.platform.applicationflows.ReplenishmentAcceptanceFlow;
 import com.primefuel.fulltank.platform.replenishment.application.commandservices.ReplenishmentCommandService;
 import com.primefuel.fulltank.platform.replenishment.application.queryservices.ReplenishmentQueryService;
-import com.primefuel.fulltank.platform.replenishment.domain.model.commands.AcceptReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.CancelReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.CreateReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.RejectReplenishmentRequestCommand;
@@ -16,6 +17,8 @@ import com.primefuel.fulltank.platform.replenishment.interfaces.rest.resources.R
 import com.primefuel.fulltank.platform.replenishment.interfaces.rest.resources.ReplenishmentRequestResource;
 import com.primefuel.fulltank.platform.replenishment.interfaces.rest.transform.ReplenishmentRequestResourceFromDomainAssembler;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
+import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ErrorResponseAssembler;
+import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -27,6 +30,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @RestController
 @RequestMapping(value = "/api/v2/replenishment-requests", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -37,27 +43,38 @@ public class ReplenishmentRequestsController {
     private final ReplenishmentQueryService queryService;
     private final MembershipAccess membershipAccess;
     private final TenantAccess tenantAccess;
+    private final TankAssets tankAssets;
+    private final Clock clock;
+    private final ReplenishmentAcceptanceFlow acceptanceFlow;
 
     public ReplenishmentRequestsController(ReplenishmentCommandService commandService,
                                            ReplenishmentQueryService queryService,
                                            MembershipAccess membershipAccess,
-                                           TenantAccess tenantAccess) {
+                                           TenantAccess tenantAccess,
+                                           TankAssets tankAssets,
+                                           Clock clock,
+                                           ReplenishmentAcceptanceFlow acceptanceFlow) {
         this.commandService = commandService;
         this.queryService = queryService;
         this.membershipAccess = membershipAccess;
         this.tenantAccess = tenantAccess;
+        this.tankAssets = tankAssets;
+        this.clock = clock;
+        this.acceptanceFlow = acceptanceFlow;
     }
 
     /**
      * Crea una solicitud de abastecimiento para la organización activa.
      *
-     * <p>La organización se deriva de la membresía autenticada. El producto debe estar disponible para el distribuidor indicado; {@code episodeKey} evita duplicados de episodios automáticos.</p>
+     * <p>La organización se deriva de la membresía autenticada. La fecha de entrega no puede ser anterior
+     * al día de negocio de Lima. Si la dirección se omite, se toma del sitio de la cisterna; el producto
+     * debe estar disponible para el distribuidor y {@code episodeKey} evita duplicados automáticos.</p>
      */
     @Operation(summary = "Crear solicitud de abastecimiento",
-            description = "Registra una solicitud para la organización activa. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.")
+            description = "Registra una solicitud para la organización activa con fecha de entrega desde hoy en Lima. La dirección vacía se completa desde el sitio de la cisterna. Cuando se envía {@code episodeKey}, una repetición devuelve la solicitud ya creada para ese episodio.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Solicitud creada o solicitud existente del episodio devuelta."),
-            @ApiResponse(responseCode = "400", description = "El cuerpo es inválido, no se resolvió una organización o el valor de un campo no está permitido."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo es inválido, la fecha de entrega es anterior a hoy en Lima o no hay dirección disponible para la cisterna."),
             @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
             @ApiResponse(responseCode = "404", description = "El producto no está disponible para el distribuidor indicado.")
     })
@@ -70,9 +87,22 @@ public class ReplenishmentRequestsController {
         var source = resource.source() == null
                 ? ReplenishmentSource.MANUAL
                 : ReplenishmentSource.valueOf(resource.source().trim().toUpperCase());
+        if (resource.deliveryDate().isBefore(LocalDate.now(clock.withZone(ZoneId.of("America/Lima"))))) {
+            return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                    ApplicationError.validationError("deliveryDate", "Delivery date cannot be in the past"));
+        }
+        var address = resource.deliveryAddress();
+        if (address == null || address.isBlank()) {
+            address = tankAssets.deliveryAddressForTank(resource.tankId()).orElse(null);
+        }
+        if (address == null || address.isBlank()) {
+            return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                    ApplicationError.validationError("deliveryAddress", "A delivery address is required"));
+        }
         var result = commandService.handle(new CreateReplenishmentRequestCommand(
                 organizationId.get(), resource.customerAccountId(), resource.tankId(), resource.providerId(),
-                resource.fuelProductId(), resource.quantity(), resource.unit(), source, resource.episodeKey()));
+                resource.fuelProductId(), resource.quantity(), resource.unit(), source, resource.episodeKey(),
+                address.trim(), resource.deliveryDate()));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result, ReplenishmentRequestResourceFromDomainAssembler::toResourceFromDomain, HttpStatus.CREATED);
     }
@@ -127,13 +157,14 @@ public class ReplenishmentRequestsController {
     /**
      * Acepta una solicitud de abastecimiento pendiente.
      *
-     * <p>Solo el distribuidor destinatario puede aceptarla. La decisión requiere que siga pendiente; una decisión previa o concurrente produce conflicto.</p>
+     * <p>Solo el distribuidor destinatario puede aceptarla. La decisión requiere que siga pendiente; en la misma
+     * transacción se consume la aceptación, se crea una orden y se vincula por {@code orderId}. Una decisión
+     * previa, un mapeo heredado ausente o una creación fallida produce conflicto y revierte el conjunto.</p>
      */
     @Operation(summary = "Aceptar solicitud de abastecimiento",
-            description = "Registra la aceptación para el distribuidor destinatario mientras la solicitud siga pendiente.")
+            description = "Acepta la solicitud del distribuidor destinatario y crea una orden vinculada en una única transacción. La respuesta incluye el orderId que requiere POST /api/v2/deliveries.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Solicitud de abastecimiento aceptada."),
-            @ApiResponse(responseCode = "400", description = "El estado o los argumentos no permiten aceptar la solicitud."),
+            @ApiResponse(responseCode = "200", description = "Solicitud aceptada y orden creada y vinculada; la respuesta incluye orderId."),
             @ApiResponse(responseCode = "403", description = "El usuario no representa al distribuidor destinatario."),
             @ApiResponse(responseCode = "404", description = "No existe la solicitud indicada."),
             @ApiResponse(responseCode = "409", description = "La solicitud ya no está pendiente o se decidió en paralelo.")
@@ -143,7 +174,7 @@ public class ReplenishmentRequestsController {
         if (!providerOwns(requestId)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        var result = commandService.handle(new AcceptReplenishmentRequestCommand(requestId));
+        var result = acceptanceFlow.accept(requestId);
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result, ReplenishmentRequestResourceFromDomainAssembler::toResourceFromDomain, HttpStatus.OK);
     }

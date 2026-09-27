@@ -1,0 +1,76 @@
+package com.primefuel.fulltank.platform.applicationflows;
+
+import com.primefuel.fulltank.platform.equipment.api.CustomerDirectory;
+import com.primefuel.fulltank.platform.equipment.api.TankAssets;
+import com.primefuel.fulltank.platform.ordering.api.FuelOrderCreation;
+import com.primefuel.fulltank.platform.replenishment.api.ReplenishmentLookup;
+import com.primefuel.fulltank.platform.replenishment.application.commandservices.ReplenishmentCommandService;
+import com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.ReplenishmentRequest;
+import com.primefuel.fulltank.platform.replenishment.domain.model.commands.AcceptReplenishmentRequestCommand;
+import com.primefuel.fulltank.platform.replenishment.domain.model.commands.AttachReplenishmentOrderCommand;
+import com.primefuel.fulltank.platform.replenishment.domain.model.commands.ConsumeReplenishmentAcceptanceCommand;
+import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
+import com.primefuel.fulltank.platform.shared.application.result.Result;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class ReplenishmentAcceptanceExecutor {
+
+    private final ReplenishmentLookup requests;
+    private final ReplenishmentCommandService replenishmentCommands;
+    private final CustomerDirectory customers;
+    private final TankAssets tanks;
+    private final FuelOrderCreation orders;
+
+    public ReplenishmentAcceptanceExecutor(ReplenishmentLookup requests,
+                                           ReplenishmentCommandService replenishmentCommands,
+                                           CustomerDirectory customers, TankAssets tanks,
+                                           FuelOrderCreation orders) {
+        this.requests = requests;
+        this.replenishmentCommands = replenishmentCommands;
+        this.customers = customers;
+        this.tanks = tanks;
+        this.orders = orders;
+    }
+
+    @Transactional
+    public ReplenishmentRequest execute(Long requestId) {
+        var request = requests.findById(requestId).orElseThrow(() -> fail(
+                ApplicationError.notFound("ReplenishmentRequest", String.valueOf(requestId))));
+        var accepted = replenishmentCommands.handle(new AcceptReplenishmentRequestCommand(requestId));
+        if (accepted.isFailure()) throw fail(errorOf(accepted));
+        var consumed = replenishmentCommands.handle(new ConsumeReplenishmentAcceptanceCommand(requestId));
+        if (consumed.isFailure() || !consumed.getOrElse(false)) {
+            throw fail(ApplicationError.conflict("ReplenishmentRequest", "The request was already accepted"));
+        }
+
+        var companyId = customers.legacyCompanyIdForCustomer(request.customerAccountId())
+                .orElseThrow(() -> fail(ApplicationError.conflict("ReplenishmentRequest",
+                        "No legacy company mapping exists for customer account " + request.customerAccountId())));
+        var equipmentId = tanks.legacyEquipmentIdForTank(request.tankId())
+                .orElseThrow(() -> fail(ApplicationError.conflict("ReplenishmentRequest",
+                        "No legacy equipment mapping exists for tank " + request.tankId())));
+        var orderId = orders.create(new FuelOrderCreation.Command(companyId, request.providerId(),
+                request.fuelProductId(), equipmentId, request.quantity(), request.deliveryAddress(),
+                request.deliveryDate()));
+        if (orderId.isFailure()) throw fail(errorOf(orderId));
+
+        var attached = replenishmentCommands.handle(new AttachReplenishmentOrderCommand(requestId,
+                orderId.getOrElse(null)));
+        if (attached.isFailure()) throw fail(errorOf(attached));
+        return attached.getOrElse(null);
+    }
+
+    private static ReplenishmentAcceptanceFailedException fail(ApplicationError error) {
+        return new ReplenishmentAcceptanceFailedException(error);
+    }
+
+    private static <T> ApplicationError errorOf(Result<T, ApplicationError> result) {
+        return switch (result) {
+            case Result.Failure<T, ApplicationError> failure -> failure.error();
+            case Result.Success<T, ApplicationError> ignored ->
+                    ApplicationError.unexpected("replenishment acceptance", "A failed result was expected");
+        };
+    }
+}

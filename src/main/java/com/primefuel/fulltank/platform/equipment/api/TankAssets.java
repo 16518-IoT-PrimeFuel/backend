@@ -9,6 +9,10 @@ public interface TankAssets {
 
     Optional<Long> tankIdForLegacyEquipment(Long equipmentId);
 
+    Optional<Long> legacyEquipmentIdForTank(Long tankId);
+
+    Optional<String> deliveryAddressForTank(Long tankId);
+
     /**
      * Applies a telemetry-sourced level to a tank. Returns {@code false} when the observation is not newer
      * than the current one, so a snapshot never regresses on out-of-order input.

@@ -23,6 +23,8 @@ public final class ReplenishmentRequestResourceFromDomainAssembler {
                 request.getSource() == null ? null : request.getSource().name(),
                 request.getRejectionReason(),
                 request.getOrderId(),
+                request.getDeliveryAddress(),
+                request.getDeliveryDate(),
                 request.getVersion());
     }
 }

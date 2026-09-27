@@ -21,6 +21,17 @@ public interface ReplenishmentLookup {
             String unit,
             double unitPrice,
             String status,
-            Long orderId) {
+            Long orderId,
+            Long customerAccountId,
+            String deliveryAddress,
+            java.time.LocalDate deliveryDate,
+            boolean acceptanceConsumed) {
+
+        public ReplenishmentView(Long id, Long organizationId, Long providerId, Long fuelProductId,
+                                 Long tankId, double quantity, String unit, double unitPrice,
+                                 String status, Long orderId) {
+            this(id, organizationId, providerId, fuelProductId, tankId, quantity, unit,
+                    unitPrice, status, orderId, null, null, null, false);
+        }
     }
 }

@@ -9,4 +9,6 @@ public interface CustomerDirectory {
     Optional<Long> customerIdForLegacyCompany(Long legacyCompanyId);
 
     Optional<Long> organizationIdForCustomer(Long customerAccountId);
+
+    Optional<Long> legacyCompanyIdForCustomer(Long customerAccountId);
 }

@@ -1,50 +1,15 @@
-# T10-B — Puente FuelRequest/FuelOrder compatible (S10, cierra W3)
+# T10-B — Cierre del puente de solicitudes legacy (S10)
 
-Parent spec: S10. Precondition: T10-A.
+## Estado
 
-## What was added
+El puente `LegacyFuelRequestBridge` dejó de existir al completar T24-B. La solicitud de abastecimiento v2 es el único flujo de creación y decisión. La aceptación orquesta, dentro de una transacción, la transición a `ACCEPTED`, el consumo único de esa decisión, la creación de `FuelOrder` por la seam pública de ordering y la vinculación de su identificador a la solicitud.
 
-- `LegacyFuelRequestBridge` (ordering) routes the v1 fuel-request flow through the `replenishment`
-  module while preserving legacy identity:
-  - **create**: creates the legacy `fuel_requests` row (unchanged) and a linked `ReplenishmentRequest`
-    correlated by the episode key `fuel-request:{legacyId}`, resolving organization/customer from the
-    customer mapping (`equipment.api.CustomerDirectory`) and the tank from
-    `equipment.api.TankAssets` (falling back to the legacy `buyerCompanyId` when no customer is mapped).
-  - **accept**: accepts the linked request and **consumes its acceptance exactly once** before creating
-    the order; the order keeps the legacy `requestId`, and the resulting `orderId` is attached to the
-    replenishment request. A second accept fails, so no duplicate order can be produced.
-  - **reject**: propagates the decision to the linked request.
-  - Legacy rows with no linked request keep working unchanged (rollback path).
-- `FuelRequestsController` delegates create/accept/reject to the bridge; the reads still use
-  `FuelRequestService`.
-- **v2 direct order creation does not exist**: the only v2 surface is
-  `/api/v2/replenishment-requests`, which produces no `FuelOrder`; orders still arise only from an
-  accepted review (S10's "orden directa v2 imposible").
+La creación de la orden reutiliza `FuelOrderCommandService`; no copia el cálculo de precio ni las validaciones de producto/equipo. La orquestación entre bounded contexts vive en `applicationflows`. Para construir la orden se resuelven `customerAccountId → legacyCompanyId` y `tankId → equipmentId`; si falta cualquiera de los mapeos, la API devuelve 409 y se revierte la transacción.
 
-No new schema in this ticket.
+Las solicitudes manuales exigen fecha de entrega no anterior al día de negocio de Lima. La dirección se completa desde el sitio de la cisterna cuando se omite. Las solicitudes automáticas registran la dirección del sitio y la fecha actual de Lima.
 
-## Architecture-baseline note (explicit delta)
+## Retiro
 
-The frozen ArchUnit baseline grew by **one** entry (180 → 181):
-`Constructor <FuelRequestService.<init>(...)> has parameter of type <FuelProductRepository>`.
-This is a **pre-existing** dependency of `FuelRequestService` on `inventory.domain` (the same pair was
-already frozen as a field dependency), which ArchUnit re-reported under its constructor-parameter form
-once the module gained a new class. No new cross-module coupling was introduced. To avoid touching the
-constructors of classes that already carry frozen dependencies, the bridge collaborators are
-field-injected into the legacy service/controller, and the bridge itself lives in a new component.
+Se eliminaron `FuelRequestsController`, `LegacyFuelRequestBridge`, `FuelRequestService` y su modelo, recursos y persistencia legacy. V34 elimina la tabla física `fuel_requests`; se conserva `fuel_orders.request_id` por compatibilidad histórica, pero las órdenes nuevas dejan ese campo nulo. No hay claves foráneas entrantes que deban quitarse.
 
-## Tests
-
-`LegacyFuelRequestBridgeTest`: a v1 request creates a linked replenishment (episode key, organization);
-accepting creates the order with the legacy `requestId`, leaves the replenishment `ACCEPTED` with the
-order attached, and a second accept throws (no second order); rejecting propagates `REJECTED`.
-
-## Asunciones abiertas
-
-- **A1 — `organizationId` falls back to the legacy `buyerCompanyId`** when the buyer company has no
-  mapped customer yet (rows still awaiting the T05-B backfill).
-- **A2 — `customer_account_id` is nullable** on `replenishment_requests` so legacy-originated requests
-  can exist before a customer is mapped (V11 adjusted accordingly and re-validated on MySQL 8.0.46).
-- **A3 — the ArchUnit baseline delta above is accepted.** If we prefer a strict "baseline never grows"
-  rule, the alternative is to reorder/annotate `FuelRequestService` so ArchUnit keeps reporting the
-  field-based dependency — to be decided together.
+El contrato vigente y los escenarios cubiertos quedan en `ReplenishmentAcceptanceIntegrationTest`, `ReplenishmentLimaBusinessDateTest`, `OrderFulfillmentGoldenPathTest` y `StateLifecycleRetryCharacterizationTest`.

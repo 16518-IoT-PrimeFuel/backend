@@ -57,6 +57,12 @@ public class ReplenishmentRequestPersistenceEntity extends AuditableAbstractPers
     @Column(name = "episode_key", length = 120)
     private String episodeKey;
 
+    @Column(name = "delivery_address", length = 255)
+    private String deliveryAddress;
+
+    @Column(name = "delivery_date")
+    private java.time.LocalDate deliveryDate;
+
     @Column(name = "rejection_reason", length = 240)
     private String rejectionReason;
 

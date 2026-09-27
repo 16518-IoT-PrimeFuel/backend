@@ -35,4 +35,4 @@ Crea el primer administrador con el procedimiento manual de `scripts/seed-first-
 
 ## Esquema de base de datos
 
-Flyway es responsable de los cambios de esquema (V1–V32). Hibernate usa `ddl-auto=validate`; no crea ni modifica tablas en ejecución. No edites migraciones que ya se hayan aplicado: agrega una nueva migración con el siguiente número. Las tablas `drivers` y `vehicles` se mantienen porque Fleet v2 las utiliza.
+Flyway es responsable de los cambios de esquema (V1–V34). Hibernate usa `ddl-auto=validate`; no crea ni modifica tablas en ejecución. No edites migraciones que ya se hayan aplicado: agrega una nueva migración con el siguiente número. Las tablas `drivers` y `vehicles` se mantienen porque Fleet v2 las utiliza.

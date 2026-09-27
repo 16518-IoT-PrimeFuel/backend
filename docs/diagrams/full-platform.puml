@@ -162,12 +162,10 @@ package "equipment" <<context>> {
 package "ordering" <<context>> {
   package "interfaces   " as or_if <<interfaces>> {
     class FuelOrdersController
-    class FuelRequestsController
   }
   package "application   " as or_app <<application>> {
     interface FuelOrderCommandService
     interface FuelOrderQueryService
-    class FuelRequestService
   }
   package "domain   " as or_dom <<domain>> {
     class FuelOrder {
@@ -180,13 +178,11 @@ package "ordering" <<context>> {
       OrderStatus status
     }
     enum OrderStatus
-    enum RequestStatus
     interface FuelOrderRepository
   }
   package "infrastructure   " as or_inf <<infrastructure>> {
     class FuelOrderRepositoryImpl
     class FuelOrderPersistenceEntity
-    class FuelRequestPersistenceEntity
   }
 }
 
@@ -357,7 +353,6 @@ FuelOrder .[#red].> FuelProduct : fuelProductId
 FuelOrder .[#red].> Equipment : equipmentId
 FuelOrder .[#red].> BuyerCompany : companyId
 FuelOrder .[#red].> ProviderCompany : providerId
-FuelOrder .[#red].> FuelRequestPersistenceEntity : requestId
 Delivery .[#red].> FuelOrder : orderId
 Payment .[#red].> FuelOrder : orderId
 Payment .[#red].> BuyerCompany : companyId

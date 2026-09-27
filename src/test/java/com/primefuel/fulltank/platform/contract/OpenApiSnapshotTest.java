@@ -65,8 +65,8 @@ class OpenApiSnapshotTest {
             if (!pathName.startsWith("/api/v1/")) continue;
             operationCount += paths.get(pathName).size();
         }
-        assertEquals(64, operationCount,
-                "springdoc's /api-docs no longer describes 64 operations under /api/v1/**. "
+        assertEquals(59, operationCount,
+                "springdoc's /api-docs no longer describes 59 operations under /api/v1/**. "
                         + "Update docs/api-ledger/T01-A-rest-ledger.md if this is intentional.");
 
         String deterministicJson = objectMapper.writerWithDefaultPrettyPrinter()

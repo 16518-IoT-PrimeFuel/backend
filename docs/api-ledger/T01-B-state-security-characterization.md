@@ -1,10 +1,10 @@
-# T01-B — State and security characterization (S01)
+# T01-B — Caracterización de estados y seguridad (S01)
 
 > **Build no verificado en esta máquina — pendiente de verificación por el usuario.** El known-gap #3 se
 > marcó como resuelto por T14-B y su test se renombró/ajustó; sin SDK de Java no se ejecutó `test`.
 
 Parent spec: S01 — Caracterizar contratos y estados actuales.
-Precondition: T01-A (`docs/api-ledger/T01-A-rest-ledger.md`), 77/77 routes ledgered, 11 golden/
+Precondition: T01-A (`docs/api-ledger/T01-A-rest-ledger.md`), 77 rutas históricas documentadas, 11 golden/
 contract tests green.
 
 Scope: characterization only. Nothing in `src/main/java` was touched. Every gap below is
@@ -13,8 +13,8 @@ none of it is fixed here. Tests live under
 `src/test/java/com/primefuel/fulltank/platform/contract/characterization/`:
 
 - `StateLifecycleRetryCharacterizationTest` — state-machine retries/duplicates across
-  fuel-requests, the direct fuel-order path, deliveries and payments.
-- `CrossTenantIsolationTest` — tenant A / tenant B fixtures across fuel-requests, fuel-orders,
+  replenishment v2, the direct fuel-order path, deliveries and payments.
+- `CrossTenantIsolationTest` — tenant A / tenant B fixtures across replenishment v2, fuel-orders,
   deliveries, payments and equipment.
 
 MySQL note: the roadmap's W0 gate row asks for "H2 + MySQL harness smoke" for negative/concurrent
@@ -32,12 +32,12 @@ concurrent-race tests once available.
 
 | # | Known-gap | Test | Severity | Resolved later by |
 |---|-----------|------|----------|--------------------|
-| 1 | `FuelRequestService#accept()` on an already-processed (non-PENDING) request throws a raw `IllegalStateException`; `GlobalExceptionHandler`'s generic fallback turns it into `500 UNEXPECTED_ERROR` instead of `409 Conflict`. Already flagged in T01-A row 66 as a documented defect; this test is the deterministic reproduction the roadmap asked T01-B to add. | `StateLifecycleRetryCharacterizationTest#acceptingAnAlreadyAcceptedFuelRequestReturns500InsteadOf409` | MEDIUM | S10 (`ReplenishmentRequest` lifecycle with proper `PENDING→ACCEPTED\|REJECTED\|CANCELLED` guards and once-only consume) |
-| 2 | Same raw-`IllegalStateException`→500 path as #1, triggered by `reject()` after the request already transitioned via `accept()`. Documented in T01-A row 67. | `StateLifecycleRetryCharacterizationTest#rejectingAnAlreadyAcceptedFuelRequestReturns500InsteadOf409` | MEDIUM | S10 |
+| 1 | La aceptación repetida de una solicitud v2 aceptada devuelve 409 y no crea otra orden. | `StateLifecycleRetryCharacterizationTest#acceptingAnAlreadyAcceptedReplenishmentReturns409WithoutAnotherOrder` | MEDIUM | T24-B / T10-B |
+| 2 | Rechazar una solicitud v2 después de su aceptación devuelve 409. | `StateLifecycleRetryCharacterizationTest#rejectingAnAlreadyAcceptedReplenishmentReturns409` | MEDIUM | T24-B / T10-B |
 | 3 | ~~**New.**~~ **FIXED (T14-B).** `Delivery#complete()` had no status guard, but `DeliveryCommandServiceImpl#handle(CompleteDeliveryCommand)` re-ran `FuelOrder#receive()`, which *does* guard on `OrderStatus.DISPATCHED`. After the first `/complete` the order is `PENDING_PAYMENT`, so retrying `/complete` threw a raw `IllegalStateException` → `500` instead of `409`. T14-B reroutes the v1 close through the physical machine, so the retry is rejected by the terminal `COMPLETED` state as a **409** before any order/equipment side effect runs. Test updated to assert 409. | `StateLifecycleRetryCharacterizationTest#completingAnAlreadyDeliveredDeliveryNowReturns409` (renamed; now asserts the fix) | ~~MEDIUM~~ RESOLVED | T14-B (v1 adapter over the S14 physical lifecycle) |
 | 4 | `Payment#refund()` has no status guard at all: a payment that was never completed (still `PENDING`) can be "refunded" directly. Documented in T01-A row 70; this is the deterministic test. | `StateLifecycleRetryCharacterizationTest#refundingAPendingNeverCompletedPaymentSucceedsWithNoGuard` | MEDIUM | S23 (Payment state machine with validated transitions) |
 | 5 | **New.** `POST /api/v1/fuel-orders` (the "direct order" route) lets a buyer create a `FuelOrder` without ever going through the `FuelRequest` `PENDING→accept` negotiation. Both creation paths coexist and are indistinguishable except for a null `requestId`. Characterized as still-working AS-IS behavior — the roadmap (S10) explicitly requires v2 to make the direct path impossible. | `StateLifecycleRetryCharacterizationTest#directOrderCreationBypassesTheFuelRequestNegotiationFlowEntirely` | LOW | S10 |
-| 6 | ~~**New, CRITICAL.**~~ **FIXED (hotfix, out-of-band, see below).** `POST /api/v1/fuel-orders` (`FuelOrderCommandServiceImpl#handle(CreateFuelOrderCommand)`) only checked that `fuelProductId` exists — it never checked that `resource.providerId()` was the product's actual owner, unlike `FuelRequestService#create`, which does exactly that check for the fuel-request path. A buyer could pair tenant A's fuel product with tenant B's `providerId`; the resulting order surfaced under provider B's own `GET /api/v1/fuel-orders/provider/{id}` even though B never listed that product. Now rejected with `403 FORBIDDEN`. | `CrossTenantIsolationTest#directOrderCreationRejectsAProviderIdThatDoesNotOwnTheChosenFuelProduct` (renamed; now asserts the fix) | ~~CRITICAL~~ RESOLVED (was Risk Register R01 — fuga entre distribuidores) | Hotfixed directly; full ownership model still lands with S10 (single lifecycle for order/request creation, provider derived from the product, not from client input) |
+| 6 | ~~**New, CRITICAL.**~~ **FIXED (hotfix, out-of-band, see below).** `POST /api/v1/fuel-orders` (`FuelOrderCommandServiceImpl#handle(CreateFuelOrderCommand)`) only checked that `fuelProductId` exists — it never checked that `resource.providerId()` was the product's actual owner, unlike `la validación de ownership del flujo v2`, which does exactly that check for the fuel-request path. A buyer could pair tenant A's fuel product with tenant B's `providerId`; the resulting order surfaced under provider B's own `GET /api/v1/fuel-orders/provider/{id}` even though B never listed that product. Now rejected with `403 FORBIDDEN`. | `CrossTenantIsolationTest#directOrderCreationRejectsAProviderIdThatDoesNotOwnTheChosenFuelProduct` (renamed; now asserts the fix) | ~~CRITICAL~~ RESOLVED (was Risk Register R01 — fuga entre distribuidores) | Hotfixed directly; full ownership model still lands with S10 (single lifecycle for order/request creation, provider derived from the product, not from client input) |
 | 7 | ~~**New, CRITICAL — cross-tenant WRITE.**~~ **FIXED (hotfix, out-of-band, see below).** `CreateFuelOrderCommand` carried an `equipmentId` that was never validated against `companyId`, neither at order creation (`FuelOrderCommandServiceImpl`) nor at delivery completion (`DeliveryCommandServiceImpl#handle(CompleteDeliveryCommand)`, which just does `equipmentRepository.findById(order.getEquipmentId())` and calls `receiveFuel()` unconditionally). A buyer (tenant A) could place a direct order referencing tenant B's `equipmentId`; once tenant A's provider completed the delivery, **tenant B's tank level was mutated** by an order tenant B never created, saw, or approved. Order creation now returns `403 FORBIDDEN` when `equipmentId` doesn't belong to `companyId` (validation is skipped when `equipmentId` is null, matching its existing optional semantics on the fuel-request path). | `CrossTenantIsolationTest#directOrderCreationRejectsAnEquipmentIdThatDoesNotBelongToTheBuyerCompany` (renamed; now asserts the fix) | ~~CRITICAL~~ RESOLVED (was Risk Register R01 — fuga entre distribuidores; this instance was a write, strictly worse than the read-only leaks R01 anticipates) | Hotfixed directly; the full transactional orchestration still lands with S06 (Tank ownership/validation) + S15 (`AssignDelivery` validating every cross-module reference against the accepted request's tenant before mutating anything) |
 
 ### Hotfix note (2026-09-21, out-of-band, ahead of the roadmap sequence)
@@ -60,7 +60,7 @@ To keep the A/B fixtures honest — and to catch a future regression the moment 
 test file also asserts the paths that are *already* scoped correctly today, so this suite fails
 loudly if any of them stop being scoped:
 
-- `GET /api/v1/fuel-requests/{id}` — tenant B's buyer and provider principals both get `404`,
+- La consulta v2 de una solicitud ajena responde `404` para los principals comprador y proveedor de otro tenant.
   never tenant A's data (`CrossTenantIsolationTest#tenantBCannotReadTenantAsFuelRequestOrFuelOrderOrDeliveryOrPayment`).
 - `GET /api/v1/fuel-orders/{id}` — same 404 scoping for a stranger buyer.
 - `GET /api/v1/deliveries/{id}` — same 404 scoping for both a stranger buyer and provider.
@@ -85,9 +85,9 @@ loudly if any of them stop being scoped:
   11 from T01-A + 9 new from T01-B). See `target/surefire-reports/*.txt`.
 - Fixtures A/B para aislamiento cross-tenant: **sí**, `CrossTenantIsolationTest` builds two full
   tenants (`Tenant` fixture: buyer company + provider company + fuel product each) per scenario.
-- Casos nuevos de aislamiento cross-tenant en fuel-requests/deliveries/payments/equipment: **sí**,
+- Casos nuevos de aislamiento cross-tenant en replenishment/deliveries/payments/equipment: **sí**,
   found and reproduced two CRITICAL cross-tenant gaps in the direct fuel-order path (#6 and #7
-  above) that were not in the T01-A ledger; fuel-requests, deliveries, payments and equipment
+  above) that were not in the T01-A ledger; replenishment v2, deliveries, payments and equipment
   reads themselves are correctly scoped today (see previous section).
 
 ## Headline finding for the user
