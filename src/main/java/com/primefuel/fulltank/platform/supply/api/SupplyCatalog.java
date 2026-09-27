@@ -1,6 +1,5 @@
 package com.primefuel.fulltank.platform.supply.api;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -10,8 +9,6 @@ import java.util.Optional;
 public interface SupplyCatalog {
 
     Optional<SupplySnapshot> findForTenant(Long providerId, Long fuelProductId);
-
-    List<SupplySnapshot> listForTenant(Long providerId, boolean onlyActive);
 
     record SupplySnapshot(
             Long fuelProductId,

@@ -7,7 +7,6 @@ import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetEquipme
 import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetEquipmentByIdQuery;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.CreateEquipmentResource;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.EquipmentResource;
-import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.FavoriteProviderResource;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.UpdateEquipmentResource;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.CreateEquipmentCommandFromResourceAssembler;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.EquipmentResourceFromEntityAssembler;
@@ -28,7 +27,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v1/equipment", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/equipment", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Equipos", description = "Gestión de equipos heredados asociados a empresas compradoras")
 public class EquipmentController {
 
@@ -45,32 +44,6 @@ public class EquipmentController {
         this.equipmentQueryService = equipmentQueryService;
         this.equipmentRepository = equipmentRepository;
         this.currentUserAccess = currentUserAccess;
-    }
-
-    /**
-     * Asigna el distribuidor logístico de combustible preferido para un equipo.
-     *
-     * <p>Solo puede llamarlo un comprador sobre equipos de su propia empresa. Un equipo de otro tenant se informa como no encontrado.</p>
-     */
-    @Operation(summary = "Asignar distribuidor preferido a un equipo",
-            description = "Registra el distribuidor preferido del equipo. Requiere rol comprador y propiedad del equipo por la empresa del usuario.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Distribuidor preferido asignado."),
-            @ApiResponse(responseCode = "403", description = "El usuario no tiene el rol comprador."),
-            @ApiResponse(responseCode = "404", description = "El equipo no existe o pertenece a otra empresa.")
-    })
-    @PostMapping("/{equipmentId}/favorite-provider")
-    @PreAuthorize("@currentUserAccess.isBuyerRole()")
-    public ResponseEntity<EquipmentResource> assignFavoriteProvider(
-            @PathVariable Long equipmentId, @RequestBody FavoriteProviderResource resource) {
-        return equipmentRepository.findById(equipmentId)
-                .filter(equipment -> currentUserAccess.ownsCompany(equipment.getCompanyId()))
-                .map(equipment -> {
-                    equipment.assignFavoriteProvider(resource.providerId());
-                    var saved = equipmentRepository.save(equipment);
-                    return ResponseEntity.ok(EquipmentResourceFromEntityAssembler.toResourceFromEntity(saved));
-                })
-                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -98,10 +71,10 @@ public class EquipmentController {
     /**
      * Actualiza los campos de un equipo.
      *
-     * <p>Solo se actualizan equipos del tenant autenticado; los ajenos responden como no encontrados. El nivel recibido también actualiza la cisterna vinculada como lectura manual.</p>
+     * <p>Solo se actualizan equipos del tenant autenticado; los ajenos responden como no encontrados. El nivel recibido también actualiza el tanque vinculada como lectura manual.</p>
      */
     @Operation(summary = "Actualizar equipo",
-            description = "Aplica los campos editables al equipo de la empresa del usuario y sincroniza el nivel con la cisterna vinculada cuando corresponde.")
+            description = "Aplica los campos editables al equipo de la empresa del usuario y sincroniza el nivel con el tanque vinculada cuando corresponde.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Equipo actualizado."),
             @ApiResponse(responseCode = "404", description = "El equipo no existe o pertenece a otra empresa.")

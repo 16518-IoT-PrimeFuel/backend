@@ -30,17 +30,6 @@ public class InventorySupplyCatalog implements SupplyCatalog {
                 .map(this::toSnapshot);
     }
 
-    @Override
-    public List<SupplySnapshot> listForTenant(Long providerId, boolean onlyActive) {
-        if (providerId == null) {
-            return List.of();
-        }
-        return fuelProductQueryService.handle(new GetFuelProductsByProviderIdQuery(providerId)).stream()
-                .filter(product -> !onlyActive || Boolean.TRUE.equals(product.getActive()))
-                .map(this::toSnapshot)
-                .toList();
-    }
-
     private SupplySnapshot toSnapshot(com.primefuel.fulltank.platform.inventory.domain.model.aggregates.FuelProduct product) {
         var unit = Unit.fromCode(product.getUnit());
         var stock = Volume.of(product.getAvailableStock() == null ? 0.0 : product.getAvailableStock(), unit);

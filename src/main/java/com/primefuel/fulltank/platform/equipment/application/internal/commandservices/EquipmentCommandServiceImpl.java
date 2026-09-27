@@ -45,7 +45,7 @@ public class EquipmentCommandServiceImpl implements EquipmentCommandService {
         equipment.update(command);
         var saved = equipmentRepository.save(equipment);
 
-        // v1 compatibility bridge: a mapped tank mirrors the level, but as a MANUAL edit, not as a
+        // Legacy equipment bridge: a mapped tank mirrors the level, but as a MANUAL edit, not as a
         // validated reading, so telemetry precedence is preserved.
         if (command.currentLevel() != null) {
             tankRepository.findByLegacyEquipmentId(saved.getId())

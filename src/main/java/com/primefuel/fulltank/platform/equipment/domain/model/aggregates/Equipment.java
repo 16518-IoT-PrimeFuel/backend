@@ -60,10 +60,6 @@ public class Equipment extends AbstractDomainAggregateRoot<Equipment> {
         this.favoriteProviderId = command.favoriteProviderId();
     }
 
-    public void assignFavoriteProvider(Long providerId) {
-        this.favoriteProviderId = providerId;
-    }
-
     public void receiveFuel(Double quantity) {
         this.currentLevel = Math.min(this.tankCapacity, this.currentLevel + quantity);
     }

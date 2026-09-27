@@ -39,13 +39,11 @@ class SupplyCatalogTest {
         assertThat(inactiveForSeven.isSuccess()).isTrue();
         assertThat(otherTenant.isSuccess()).isTrue();
 
-        var activeOnly = supplyCatalog.listForTenant(7L, true);
-        assertThat(activeOnly).hasSize(1);
-        assertThat(activeOnly.getFirst().fuelProductId()).isEqualTo(activeForSeven.getOrElse(null).getId());
-        assertThat(activeOnly.getFirst().unit()).isEqualTo("GALLON");
-        assertThat(activeOnly.getFirst().stock()).isEqualTo(100.0);
-
-        assertThat(supplyCatalog.listForTenant(7L, false)).hasSize(2);
+        var active = supplyCatalog.findForTenant(7L, activeForSeven.getOrElse(null).getId()).orElseThrow();
+        assertThat(active.unit()).isEqualTo("GALLON");
+        assertThat(active.stock()).isEqualTo(100.0);
+        assertThat(supplyCatalog.findForTenant(7L, inactiveForSeven.getOrElse(null).getId()).orElseThrow().active())
+                .isFalse();
 
         var otherTenantId = otherTenant.getOrElse(null).getId();
         assertThat(supplyCatalog.findForTenant(7L, otherTenantId)).isEmpty();
