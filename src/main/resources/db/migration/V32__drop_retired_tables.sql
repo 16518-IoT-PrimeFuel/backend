@@ -1,0 +1,1 @@
+drop table provider_ratings;

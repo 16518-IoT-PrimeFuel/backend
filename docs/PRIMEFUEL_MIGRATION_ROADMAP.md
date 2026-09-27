@@ -835,6 +835,12 @@ flowchart TD
 >   el DAG original), dependencia dura de T24-B para las 6 familias administrativas del sunset. No se incluye
 >   dentro del alcance de T24-B directamente.
 
+> **T24-B parcial ejecutado (2026-09-26, decisión de producto).** Se retiraron `vehicles` y `drivers`
+> v1 (10 rutas) y `provider-ratings` (3 rutas) sin esperar métricas. V32 elimina la tabla física
+> `provider_ratings`; se mantienen `drivers` y `vehicles` para Fleet v2. El retiro de `fuel-requests`
+> queda bloqueado: el contrato v2 no persiste dirección ni fecha y la aceptación aún no crea/vincula
+> `FuelOrder` dentro de la transacción. Las demás familias de sunset siguen abiertas.
+
 ## 6. Catálogo de tickets
 
 Cada ticket tiene un solo intento arquitectónico. `A` establece contrato/modelo/migración aditiva; `B` integra el flujo, conserva compatibilidad y demuestra el spec. No se fusionan A+B cuando B cambia comportamiento o datos.
@@ -942,12 +948,12 @@ Cada ticket tiene un solo intento arquitectónico. `A` establece contrato/modelo
 | T20-B | v1 GET y v2 `/me` verdes; POST medido/deprecado. | REST contracts/retry/A-B | Historial preservado. | T20-A | T22-A | T15-B,T16-B,T17-A | M | MEDIUM |
 | T21-A | Journal inmutable y atómico con state. | DB constraints/authorization | Retención/PII aprobadas. | T14-B,T16-B,T17-B,T19-B | T21-B | T18-A,T22-A | M | HIGH |
 | T21-B | Timeline reconstruye cadena y marca gaps. | rebuild/checkpoint/dup | Projection descartable; journal no. | T21-A | — | T18-B,T22-B | M | HIGH |
-| T22-A | 77 rutas tienen consumer/version/action o blocker. | consumer-driven contract/OpenAPI | Fuentes externas requeridas. | T04-B,T05-B,T06-B,T10-B,T14-B,T15-B,T20-B | T22-B | T17-B,T18-A,T21-A,T23-B | L | HIGH |
+| T22-A | Ledger actualizado con 64 rutas v1 activas y las familias retiradas marcadas. | consumer-driven contract/OpenAPI | Fuentes externas requeridas. | T04-B,T05-B,T06-B,T10-B,T14-B,T15-B,T20-B | T22-B | T17-B,T18-A,T21-A,T23-B | L | HIGH |
 | T22-B | Golden contracts y telemetry prueban cutover. | v1/v2 end-to-end | No redirect de POST; ventana comunicada. | T22-A | T24-A | T21-B | L | HIGH |
 | T23-A | Semántica, transiciones, permisos y cardinalidad de Payment quedan decididos sin borrar/renombrar. | controller/application/domain characterization + data/consumer audit | UNKNOWN comercial bloquea v2 financiero, no logística. | T01-B,T02-B,T04-B,T14-B | T23-B | T15-A,T16-A | M | HIGH |
 | T23-B | Delivery cierra sin payment; invariantes viven en payment; histórico y analítica siguen disponibles. | create/complete/refund invalid+retry+concurrency+history | Rutas/DTO v1 hasta S22; tabla preservada. | T23-A | T24-A | T22-A,T21-A | L | HIGH |
 | T24-A | Clases vacías sin refs removidas; docs/runtime coinciden. | build/ref search/docs verification | Endpoint/data legacy no entra por arrastre. | T22-B,T23-B,T03-B | T24-B | T18-B | S | LOW |
-| T24-B | No uso demostrado, backup/restore y una familia por cambio. | full contracts/migration/restore | DROP en ticket/release separado autorizado. | T24-A | — | — | M | HIGH |
+| T24-B | Retiro parcial: Fleet v1 y provider-ratings ejecutados por decisión de producto; fuel-requests y las demás familias permanecen abiertas. | full contracts/migration/restore | V32 elimina provider_ratings; el resto requiere gates por familia. | T24-A | — | — | M | HIGH |
 
 ## 7. Mapa de paralelización
 
@@ -1010,7 +1016,7 @@ No paralelizar migraciones que escriban la misma tabla (`users`, `buyer_companie
 | Equipment legacy→modelo profundo | equipment REST v1 | equipment v2 (`customers/sites/tanks`) | Equipment DTO mapper interno | equipment + tanks/config | metadata dual-write solo para mapeables; nivel autoritativo v2 | comparación sin drift y cliente migrado | ningún consumer requiere el DTO legacy; el bounded context `equipment` permanece |
 | Inventory→Supply | fuel-products v1 | products/supply API v2 | resource/state/unit mapper | fuel_products + reservations | stock legacy y reservations coexistentes | delivery usa ReserveSupply, no repo | v1 sin tráfico y semántica de stock resuelta |
 | Requests/Orders→Replenishment | fuel-requests + fuel-orders v1 | replenishment-requests v2 | request/order ID+state adapter | fuel_requests/orders + request/version/episode | FuelOrder como proyección legacy | create/accept v1 pasan por S10 y contratos verdes | direct-order sin consumidores; payment/delivery desacoplados |
-| Vehicles/Drivers→Fleet | CRUD v1 | drivers/tankers + fleet.api v2 | status/capacity mapper | drivers/vehicles + reservations | catálogos comunes; reservas solo v2 | assignment usa Fleet API | CRUD v1 sin consumidores y deletes son deactivate |
+| Vehicles/Drivers→Fleet | CRUD v1 (retirado en T24-B) | drivers/tankers + fleet.api v2 | status/capacity mapper | drivers/vehicles + reservations | catálogos comunes; reservas solo v2 | assignment usa Fleet API | 10 rutas retiradas por decisión de producto; tablas activas para v2 |
 | Fulfillment→Delivery | deliveries v1 | delivery commands v2 | state/action mapper | deliveries + journal/safety | estado v1 derivado del lifecycle v2 | create v1 ya no despacha implícitamente o usa modo compatible documentado | consumer ledger cerrado y históricos reconciliados |
 | Telemetry | nivel manual de equipment | ingest técnico + ApplyValidatedReading | manual reading adapter marcado por origen | raw readings + tank snapshot | manual e IoT; IoT shadow | calidad/SLA y device bindings aprobados | manual solo si producto decide retirarlo |
 | Notification | POST notifications + GET por IDs | eventos + `/me/notifications` | v1 GET mapper; POST auditado | notifications + delivery attempts | manual POST y event listeners temporalmente, con source/idempotency | eventos cubren casos soportados y fanout correcto | no consumers de POST y política U17 cerrada |
@@ -1021,7 +1027,7 @@ No paralelizar migraciones que escriban la misma tabla (`users`, `buyer_companie
 
 | Legacy-ID | Element | Path | Why obsolete | Current consumers | Replacement | Removal preconditions | DB impact | API impact | Test impact | Target wave |
 |---|---|---|---|---|---|---|---|---|---|---|
-| L01 | Provider ratings | `catalog/.../ProviderRatingsController.java` | marketplace fuera del target único | REST/mobile documentado; repo/JPA | ninguno hasta decisión U13 | consumer audit, export/histórico, spec de satisfacción si aplica | conservar/exportar provider_ratings antes de drop posterior | deprecar 3 rutas | contracts + data restore | W7 |
+| L01 | Provider ratings | Slice de `catalog` retirado en T24-B | marketplace fuera del target único | Sin consumidores internos; consumers externos revisados | Sin reemplazo | Decisión de producto 2026-09-26 | V32 elimina `provider_ratings` (sin FK entrante) | 3 rutas retiradas | rutas retiradas y ledger ajustado | W7 |
 | L02 | Favorite provider | `equipment/.../EquipmentController.java` | preferencia no define tenant | DTOs/mappers/ruta | ownership explícito customer/tank | S04–S06 y consumer audit | conservar campo como histórico; drop posterior | deprecar action | mapping + v1 contract | W7 |
 | L03 | Direct FuelOrder + confirm | `ordering/.../FuelOrdersController.java` | omite revisión del distribuidor | payment, fulfillment, reporting, clientes | S10 + adapter | S14/S15/S22/S23 | conservar fuel_orders/IDs | deprecar create/confirm; read adapters | state/contract/history | W7 |
 | L04 | Provider directory global | `iam/.../ProviderCompaniesController.java` | no marketplace multi-provider | REST consumers UNKNOWN | propia organization v2 | S04/S22 | provider_companies→organizations; no drop temprano | deprecar list global | authorization/contracts | W7 |
@@ -1051,17 +1057,15 @@ El register cubre las 77 operaciones observadas; una fila física por operación
 | Equipment | 5 | REDESIGN | tanks/customers/{id}/tanks | metadata separada de nivel; adapter solo para mapeables |
 | Favorite provider | 1 | DEPRECATE | sin equivalente de selección | conservar histórico; nunca usar para tenancy |
 | FuelProducts | 7 | REDESIGN | products/supply v2 | active, unit y tenant; delete→deactivate si referenciado |
-| FuelRequests | 5 | REDESIGN | replenishment-requests v2 | version/idempotency/ownership; IDs v1 correlacionados |
+| FuelRequests | 5 | BLOCKER | replenishment-requests v2 | datos de dirección/fecha y creación transaccional de FuelOrder faltantes; T5/PORT-2 deben conservarse |
 | FuelOrders create/confirm | 2 | DEPRECATE | request create/accept v2 | impedir orden directa v2; adapter v1 medido |
 | FuelOrders restantes | 5 | REDESIGN | request queries/cancel v2 | mapper orderId/requestId/state |
-| Drivers | 2 GET | MOVE | fleet drivers v2 | semántica equivalente con filtro tenant |
-| Drivers | 3 mutate | REDESIGN | fleet drivers v2 | delete desactiva; vigencia/eligibility |
-| Vehicles | 2 GET | MOVE | fleet tankers v2 | renombre contractual versionado |
-| Vehicles | 3 mutate | REDESIGN | fleet tankers v2 | capacity/unit; delete desactiva |
+| Drivers | 5 | RETIRED | fleet drivers v2 | retiros ejecutados por decisión de producto; filtros de tenant y elegibilidad viven en v2 |
+| Vehicles | 5 | RETIRED | fleet tankers v2 | retiros ejecutados por decisión de producto; las tablas siguen activas en Fleet v2 |
 | Deliveries | 8 | REDESIGN | delivery v2 | create asigna, no inicia; complete usa volumen/evidencia |
 | Notifications POST | 1 | DEPRECATE | eventos internos | retirar tras cobertura/consumer audit |
 | Notifications read/query | 6 | REDESIGN | `/me/notifications` | recipient membership y privacidad |
-| ProviderRatings | 3 | DEPRECATE | sin sustitución confirmada | U13 y export histórico |
+| ProviderRatings | 3 | RETIRED | sin sustitución | retirado por decisión de producto; tabla eliminada con V32 |
 | Payments | 7 | KEEP + REDESIGN PENDING | v1 provisional; futuro `payment` v2 | U12; preservar datos, definir semántica/permisos y desacoplar físico |
 | Analytics | 3 | REDESIGN | insights v2 | scope tenant; admin plataforma explícito; financiero separado |
 | **Total** | **77** |  |  |  |

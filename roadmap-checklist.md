@@ -369,7 +369,7 @@ sus entregables están confirmados (no implica commit — ver estado de cada uno
 - [x] T24-PRE-METRICS — Métricas de tráfico por patrón y versión con V27 y `GET /api/v2/admin/api-metrics`.
       El sunset sigue bloqueado por ventana real de medición y ledger externo de consumidores `UNKNOWN`.
       → `docs/api-ledger/T24-PRE-METRICS-route-usage.md`
-- [ ] T24-B — Retiro controlado de endpoints confirmados. Bloqueado por ventana de medición real (T24-PRE-METRICS ya operativo) y ledger externo de consumidores `UNKNOWN` (fuera de este repo).
+- [x] T24-B — Retiro inmediato de `drivers` (5 rutas), `vehicles` (5) y `provider-ratings` (3) por decisión de producto (2026-09-26), sin esperar métricas. OpenAPI, ledger y V32 actualizados. `fuel-requests` sigue pendiente: faltan dirección y fecha de entrega en el contrato v2 para conservar PORT-2/T5 y crear la orden en la aceptación transaccional. Siguen abiertos `fuel-orders` create/confirm, `favorite-provider`, notificaciones POST y las demás familias. → `docs/api-ledger/T24-B-endpoint-retirement.md`
 
 ## Documentación Swagger (OpenAPI + javadoc de REST)
 

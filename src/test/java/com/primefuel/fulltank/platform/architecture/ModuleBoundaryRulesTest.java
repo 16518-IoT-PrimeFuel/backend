@@ -56,6 +56,9 @@ class ModuleBoundaryRulesTest {
     void moduleBoundariesRespectTheFrozenBaseline() {
         JavaClasses classes = productionClasses();
         for (String module : BUSINESS_MODULES) {
+            // ponytail: catalog has no production slice; skip it to avoid changing the frozen rule keys until one returns.
+            if (module.equals("catalog") && classes.stream().noneMatch(javaClass ->
+                    javaClass.getPackageName().startsWith(ROOT + ".catalog."))) continue;
             FreezingArchRule.freeze(moduleMustNotReachIntoAnotherModulesInternals(module)).check(classes);
         }
     }

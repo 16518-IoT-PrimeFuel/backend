@@ -252,27 +252,27 @@ class OrderFulfillmentGoldenPathTest {
     }
 
     private long createDriver(RequestPostProcessor provider, long providerId) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/drivers")
+        var response = mockMvc.perform(post("/api/v2/drivers")
                         .with(provider)
                         .contentType("application/json")
                         .content("""
-                                {"providerId":%d,"firstName":"Golden","lastName":"Driver",
+                                {"firstName":"Golden","lastName":"Driver",
                                  "licenseNumber":"L-1","phoneNumber":"999000111","email":"driver@example.test",
                                  "status":"AVAILABLE"}
-                                """.formatted(providerId)))
+                                """))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(response).get("id").asLong();
     }
 
     private long createVehicle(RequestPostProcessor provider, long providerId) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/vehicles")
+        var response = mockMvc.perform(post("/api/v2/tankers")
                         .with(provider)
                         .contentType("application/json")
                         .content("""
-                                {"providerId":%d,"licensePlate":"ABC-123","brand":"Volvo","model":"FH",
+                                {"licensePlate":"ABC-123","brand":"Volvo","model":"FH",
                                  "capacity":2000,"unit":"GALLONS","status":"AVAILABLE"}
-                                """.formatted(providerId)))
+                                """))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(response).get("id").asLong();

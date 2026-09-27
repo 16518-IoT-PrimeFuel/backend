@@ -196,8 +196,6 @@ package "ordering" <<context>> {
 package "fulfillment" <<context>> {
   package "interfaces    " as fu_if <<interfaces>> {
     class DeliveriesController
-    class DriversController
-    class VehiclesController
   }
   package "application    " as fu_app <<application>> {
     interface DeliveryCommandService
@@ -283,20 +281,10 @@ package "notification" <<context>> {
 '====================================================================
 package "catalog" <<context>> {
   package "interfaces       " as ca_if <<interfaces>> {
-    class ProviderRatingsController
   }
   package "domain       " as ca_dom <<domain>> {
-    class ProviderRating {
-      Long id
-      Long companyId
-      Long providerId
-      Integer rating
-    }
-    interface ProviderRatingRepository
   }
   package "infrastructure       " as ca_inf <<infrastructure>> {
-    class ProviderRatingRepositoryImpl
-    class ProviderRatingPersistenceEntity
   }
 }
 
@@ -351,8 +339,6 @@ NotificationsController ..> NotificationCommandService
 NotificationRepositoryImpl ..|> NotificationRepository
 Notification --> NotificationType
 
-ProviderRatingsController ..> ProviderRatingRepository
-ProviderRatingRepositoryImpl ..|> ProviderRatingRepository
 
 AnalyticsController ..> AnalyticsQueryService
 AnalyticsQueryServiceImpl ..|> AnalyticsQueryService
@@ -376,8 +362,6 @@ Delivery .[#red].> FuelOrder : orderId
 Payment .[#red].> FuelOrder : orderId
 Payment .[#red].> BuyerCompany : companyId
 Notification .[#red].> User : userId
-ProviderRating .[#red].> BuyerCompany : companyId
-ProviderRating .[#red].> ProviderCompany : providerId
 FuelProduct .[#red].> ProviderCompany : providerId
 Equipment .[#red].> BuyerCompany : companyId
 
@@ -389,7 +373,6 @@ FuelOrder         --|> AbstractDomainAggregateRoot
 Delivery          --|> AbstractDomainAggregateRoot
 Payment           --|> AbstractDomainAggregateRoot
 Notification      --|> AbstractDomainAggregateRoot
-ProviderRating    --|> AbstractDomainAggregateRoot
 
 UserPersistenceEntity          --|> AuditableAbstractPersistenceEntity
 FuelProductPersistenceEntity   --|> AuditableAbstractPersistenceEntity
@@ -398,5 +381,4 @@ FuelOrderPersistenceEntity     --|> AuditableAbstractPersistenceEntity
 DeliveryPersistenceEntity      --|> AuditableAbstractPersistenceEntity
 PaymentPersistenceEntity       --|> AuditableAbstractPersistenceEntity
 NotificationPersistenceEntity  --|> AuditableAbstractPersistenceEntity
-ProviderRatingPersistenceEntity --|> AuditableAbstractPersistenceEntity
 @enduml

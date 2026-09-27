@@ -99,3 +99,8 @@ que solo crean drivers/vehicles (nunca hacen DELETE ni listan).
   conservada tras el soft-disable (A6), además de la elegibilidad (T12-B). Los adapters v1
   (`DriversController`/`VehiclesController`) siguen cubiertos indirectamente por las pruebas de
   caracterización; su cobertura directa queda para T14-B/T15-B si se considera necesario.
+
+
+## Estado tras T24-B
+
+El 2026-09-26 se retiraron los adapters legacy de vehículos y conductores por decisión de producto. Fleet v2 sigue siendo el contrato HTTP para el catálogo, cambios de estado y elegibilidad; las tablas `drivers` y `vehicles` se conservan.

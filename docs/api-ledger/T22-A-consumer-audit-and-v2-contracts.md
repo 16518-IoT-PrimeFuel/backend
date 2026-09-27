@@ -3,14 +3,14 @@
 Deps: T20-B + T04-B, T05-B, T06-B, T10-B, T14-B, T15-B. **Resuelve U14 ruta por ruta** (77 rutas v1).
 
 > **Regla de evidencia:** no se inventan consumidores. La columna *Consumer* de `T01-A-rest-ledger.md` es
-> `UNKNOWN` para todas las rutas porque **no hay un repo frontend/mobile junto a este backend**. Por lo tanto
+> `UNKNOWN` para todas las rutas porque **el repositorio `frontend` está vacío; se inspeccionó `Mobile-app`**. Por lo tanto
 > ninguna ruta puede declararse `SUNSET` todavía: sunset exige consumer verificado, versión, última observación,
 > owner y fecha aprobada (roadmap §10). Lo verificable hoy es (a) qué ruta tiene ya un v2 en este repo, (b) qué
 > consume otro módulo del propio backend, (c) qué rutas son inalcanzables por un modelo de roles real.
 
 ## Método
 
-- Base: las 77 filas de `docs/api-ledger/T01-A-rest-ledger.md` (verificadas por `ApiLedgerSelfCheckTest` y el
+- Base histórica: las 77 filas previas al retiro; el ledger actual tiene 64 de `docs/api-ledger/T01-A-rest-ledger.md` (verificadas por `ApiLedgerSelfCheckTest` y el
   snapshot OpenAPI).
 - Decisiones de familia: roadmap §10 (tabla "Autoridad de rutas"). Estado real de v2 en este repo: `deliveries`
   v2 (T14-A/T15), `drivers`/`tankers` v2 (T12-A), `replenishment-requests` v2 (T10-A), `notifications` `/me` v2
@@ -18,10 +18,10 @@ Deps: T20-B + T04-B, T05-B, T06-B, T10-B, T14-B, T15-B. **Resuelve U14 ruta por 
 - Consumers internos verificables: `reporting.AnalyticsQueryServiceImpl` (lee órdenes, deliveries y pagos vía
   *query services*, no REST), y los contract tests (golden path / characterization).
 
-## Decisión por ruta (77/77)
+## Decisión por ruta (auditoría histórica de 77 rutas)
 
 Leyenda de acción: **KEEP** = mantener v1 tal cual; **V2** = v2 disponible, v1 queda como adapter;
-**DEPRECATE** = sin reemplazo confirmado, deprecar (no retirar); **BLOCKER** = no se puede aprobar acción sin
+**DEPRECATE** = mantener deprecado; **RETIRED** = retirado por decisión de producto el 2026-09-26; **BLOCKER** = no se puede aprobar acción sin
 evidencia/rol (U14 no cerrada para esa ruta).
 
 ### Autenticación / IAM
@@ -47,9 +47,9 @@ evidencia/rol (U14 no cerrada para esa ruta).
 
 | # | Ruta | Consumer | Acción | Rationale |
 |---|---|---|---|---|
-| 1 | GET /provider-ratings | UNKNOWN | DEPRECATE | Sin scoping de tenant (T01-A #1); sin sustitución (U13) |
-| 2 | POST /provider-ratings | UNKNOWN | DEPRECATE | idem |
-| 3 | PUT /provider-ratings/{id} | UNKNOWN | DEPRECATE | idem |
+| 1 | GET /provider-ratings | UNKNOWN | RETIRED | Retirada por decisión de producto; tabla eliminada en V32 |
+| 2 | POST /provider-ratings | UNKNOWN | RETIRED | Retirada por decisión de producto; tabla eliminada en V32 |
+| 3 | PUT /provider-ratings/{id} | UNKNOWN | RETIRED | Retirada por decisión de producto; tabla eliminada en V32 |
 | 4 | POST /equipment/{id}/favorite-provider | UNKNOWN | DEPRECATE | Preferencia sin dominio de tenancy (L02) |
 | 5 | POST /equipment | UNKNOWN | V2 | v2 tanks/customers |
 | 6 | POST /equipment/{id}/update | UNKNOWN | V2 | ruta acción inconsistente; migra a v2 |
@@ -90,16 +90,16 @@ evidencia/rol (U14 no cerrada para esa ruta).
 
 | # | Ruta | Consumer | Acción | Rationale |
 |---|---|---|---|---|
-| 18 | GET /drivers | UNKNOWN | V2 | v2 `drivers` ya disponible |
-| 19 | GET /drivers/{id} | UNKNOWN | V2 | — |
-| 20 | POST /drivers | UNKNOWN | V2 | — |
-| 21 | PUT /drivers/{id} | UNKNOWN | V2 | — |
-| 22 | DELETE /drivers/{id} | UNKNOWN | V2 | v2 delete desactiva |
-| 23 | GET /vehicles | UNKNOWN | V2 | v2 `tankers` ya disponible |
-| 24 | GET /vehicles/{id} | UNKNOWN | V2 | — |
-| 25 | POST /vehicles | UNKNOWN | V2 | — |
-| 26 | PUT /vehicles/{id} | UNKNOWN | V2 | — |
-| 27 | DELETE /vehicles/{id} | UNKNOWN | V2 | v2 delete desactiva |
+| 18 | GET /drivers | UNKNOWN | RETIRED | v2 `drivers` ya disponible |
+| 19 | GET /drivers/{id} | UNKNOWN | RETIRED | — |
+| 20 | POST /drivers | UNKNOWN | RETIRED | — |
+| 21 | PUT /drivers/{id} | UNKNOWN | RETIRED | — |
+| 22 | DELETE /drivers/{id} | UNKNOWN | RETIRED | Retirada; v2 conserva el ciclo de flota |
+| 23 | GET /vehicles | UNKNOWN | RETIRED | v2 `tankers` ya disponible |
+| 24 | GET /vehicles/{id} | UNKNOWN | RETIRED | — |
+| 25 | POST /vehicles | UNKNOWN | RETIRED | — |
+| 26 | PUT /vehicles/{id} | UNKNOWN | RETIRED | — |
+| 27 | DELETE /vehicles/{id} | UNKNOWN | RETIRED | Retirada; v2 conserva el ciclo de flota |
 
 ### Deliveries (Delivery v2 ya existente)
 
@@ -170,3 +170,5 @@ evidencia de consumo y el registro aprobado (T24-B).
 
 Sin cambios de código en este ticket (auditoría). Último `./mvnw.cmd test`: **196/196 verde** (4 skipped = IT
 MySQL gated). No se retiró ningún endpoint.
+
+Decisión de producto del 2026-09-26: quedan retiradas las 10 rutas de vehículos/conductores y las 3 de calificaciones; se ejecutó sin esperar métricas. Las rutas de solicitudes de combustible siguen activas hasta habilitar la creación transaccional de la orden en la aceptación v2; ver T24-B-endpoint-retirement.md.

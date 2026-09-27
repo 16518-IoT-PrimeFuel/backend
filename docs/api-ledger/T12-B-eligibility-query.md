@@ -48,7 +48,7 @@ scoring ni ordenamiento de conductores/cisternas — eso queda explícitamente f
 ## v1
 
 No se adapta v1: la elegibilidad es una capacidad nueva y no existe endpoint v1 que la exponga. Los
-adapters v1 de `drivers`/`vehicles` (T12-A) siguen intactos.
+Los adapters v1 de `drivers` y `vehicles` fueron retirados en T24-B; los endpoints v2 de Fleet y estas consultas de elegibilidad continúan activos.
 
 ## Tests
 

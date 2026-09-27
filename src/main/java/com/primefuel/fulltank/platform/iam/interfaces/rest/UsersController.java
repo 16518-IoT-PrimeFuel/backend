@@ -22,7 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/users", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Users", description = "Users management endpoints")
+@Tag(name = "Usuarios", description = "Consulta de cuentas de usuario")
 public class UsersController {
 
     private final UserQueryService userQueryService;
@@ -32,15 +32,15 @@ public class UsersController {
     }
 
     /**
-     * Lists every user in the platform.
+     * Lista todas las cuentas de usuario de la plataforma.
      *
-     * <p>Administrative endpoint; restricted to callers holding the ROLE_ADMIN authority.</p>
+     * <p>Solo pueden consultarlo administradores con la autoridad ROLE_ADMIN.</p>
      */
-    @Operation(summary = "List all users",
-            description = "Returns every registered user. Restricted to administrators.")
+    @Operation(summary = "Listar usuarios",
+            description = "Devuelve todas las cuentas registradas; requiere la autoridad ROLE_ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Users returned."),
-            @ApiResponse(responseCode = "403", description = "Caller does not hold the ROLE_ADMIN authority.")
+            @ApiResponse(responseCode = "200", description = "Lista de usuarios devuelta."),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene la autoridad ROLE_ADMIN.")
     })
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -51,16 +51,16 @@ public class UsersController {
     }
 
     /**
-     * Retrieves a single user.
+     * Consulta una cuenta de usuario por su identificador.
      *
-     * <p>A user may only read their own profile.</p>
+     * <p>Solo se permite consultar el perfil del usuario autenticado.</p>
      */
-    @Operation(summary = "Get a user by id",
-            description = "Returns the user identified by the path id when the caller is that same user.")
+    @Operation(summary = "Consultar usuario por identificador",
+            description = "Devuelve el perfil indicado cuando pertenece al usuario autenticado; la identidad no se acepta desde el cuerpo de la solicitud.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User returned."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the requested user."),
-            @ApiResponse(responseCode = "404", description = "User does not exist.")
+            @ApiResponse(responseCode = "200", description = "Perfil de usuario devuelto."),
+            @ApiResponse(responseCode = "403", description = "El perfil solicitado no pertenece al usuario autenticado."),
+            @ApiResponse(responseCode = "404", description = "No existe la cuenta solicitada.")
     })
     @GetMapping("/{userId}")
     @PreAuthorize("@currentUserAccess.ownsUser(#userId)")

@@ -190,27 +190,27 @@ class DeliveryV1LifecycleMappingTest {
         }
 
         private long createDriver() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/drivers")
+            var response = mockMvc.perform(post("/api/v2/drivers")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"providerId":%d,"firstName":"Mapping","lastName":"Driver",
+                                    {"firstName":"Mapping","lastName":"Driver",
                                      "licenseNumber":"L-MAP-%d","phoneNumber":"999000113","email":"mapping-driver-%d@example.test",
                                      "status":"AVAILABLE"}
-                                    """.formatted(providerId, FIXTURE_SEQUENCE.incrementAndGet(), FIXTURE_SEQUENCE.incrementAndGet())))
+                                    """.formatted(FIXTURE_SEQUENCE.incrementAndGet(), FIXTURE_SEQUENCE.incrementAndGet())))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();
         }
 
         private long createVehicle() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/vehicles")
+            var response = mockMvc.perform(post("/api/v2/tankers")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"providerId":%d,"licensePlate":"MAP-V%d","brand":"Volvo","model":"FH",
+                                    {"licensePlate":"MAP-V%d","brand":"Volvo","model":"FH",
                                      "capacity":2000,"unit":"GALLONS","status":"AVAILABLE"}
-                                    """.formatted(providerId, FIXTURE_SEQUENCE.incrementAndGet())))
+                                    """.formatted(FIXTURE_SEQUENCE.incrementAndGet())))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();

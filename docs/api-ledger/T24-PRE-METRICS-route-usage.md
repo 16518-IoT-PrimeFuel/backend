@@ -20,3 +20,8 @@ reporte ordenado por versión/ruta y acepta `?version=v1` o `?version=v2`; requi
 `ApiRouteMetricsControllerTest` comprueba que distintos IDs de ruta producen una clave de patrón común,
 cuentan solicitudes y separan callers. También comprueba el acceso admin. `ApiRouteMetricsFailureTest`
 comprueba que una excepción en el recorder no cambia el status del endpoint.
+
+
+## Decisión posterior
+
+El 2026-09-26 la decisión de producto retiró drivers, ehicles y provider-ratings sin esperar la ventana de métricas. El resto de las familias sigue sujeto a la medición y aprobación documentadas aquí.

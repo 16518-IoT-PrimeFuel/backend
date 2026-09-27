@@ -1,8 +1,6 @@
 # T22-B — Adapters y plan de sunset verificado (S22)
 
-Depende de T22-A. **Prepara el terreno: NO retira ningún endpoint.** Este documento es el registro de sunset y
-el plan de medición; la ejecución (retiro real) es T24-B y está **bloqueada** hasta que este registro esté
-aprobado.
+El sunset general conserva sus gates de medición. Por decisión de producto del 2026-09-26, T24-B ya retiró de inmediato Fleet v1 (drivers y vehicles) y provider-ratings, sin esperar esa ventana.
 
 ## 1. Golden contracts v1/v2 (coexistencia verificada)
 
@@ -39,7 +37,7 @@ aprobada**. Ninguna celda de fecha está aprobada todavía.
 
 | Familia (# rutas) | Destino | Prerequisito para sunset | Owner | Ventana | Ejecutado |
 |---|---|---|---|---|---|
-| Drivers/Vehicles v1 (10) | fleet v2 (ya existe) | ledger externo + métricas | Fleet | propuesta | ❌ no |
+| Drivers/Vehicles v1 (10) | fleet v2 | Decisión de producto T24-B (2026-09-26) | Fleet | inmediata | ✅ sí |
 | Deliveries v1 (8) | delivery v2 (ya existe) | ledger externo + métricas | Fulfillment | propuesta | ❌ no |
 | Notifications v1 (7) | `/me/notifications` v2 (ya existe) | ledger externo + métricas | Notifications | propuesta | ❌ no |
 | FuelRequests/Orders v1 (12) | replenishment-requests v2 | ledger + mapper IDs + cierre S10 | Ordering | propuesta | ❌ no |
@@ -48,7 +46,8 @@ aprobada**. Ninguna celda de fecha está aprobada todavía.
 | IAM v1 (14) | organization/`/me` v2 | ledger + rol plataforma | IAM | propuesta | ❌ no |
 | Payments v1 (7) | v2 financiero (spec futura) | U12/spec + ledger | Payment | propuesta | ❌ no |
 | Analytics v1 (3) | insights v2 | rol plataforma + scope tenant | Reporting | propuesta | ❌ no |
-| DEPRECATE (provider-ratings, favorite-provider, directorio global, orden directa/confirm, notifications POST) | sin sustituto | U13/ledger | Product | propuesta | ❌ no |
+| Provider-ratings (3) | sin sustituto | Decisión de producto T24-B (2026-09-26) | Product | inmediata | ✅ sí |
+| DEPRECATE (favorite-provider, directorio global, orden directa/confirm, notifications POST) | sin sustituto | U13/ledger | Product | propuesta | ❌ no |
 
 ## 4. Blockers heredados de T22-A (impiden ejecutar)
 
@@ -63,13 +62,14 @@ aprobada**. Ninguna celda de fecha está aprobada todavía.
 > desde el aviso). Los consumidores deben migrar a *v2 destino*. El retiro no usa redirects para métodos de
 > escritura y no revierte datos. Fuente de verdad: este registro + `T22-A-consumer-audit-and-v2-contracts.md`.
 
-## 6. Garantías de este ticket
+## 6. Estado del sunset
 
-- **No se retiró ningún endpoint** ni se cambió ningún contrato (solo se agregó un test de coexistencia y este
-  documento).
-- El retiro (T24-B) queda **bloqueado** hasta aprobación explícita del registro (ledger + métricas + rol
-  plataforma).
+- Se retiraron en T24-B las rutas de Fleet v1 y provider-ratings por decisión de producto.
+- Los retiros de otras familias siguen sujetos a las métricas y evidencia de consumidores externas.
+- Fuel requests permanece activa hasta completar la aceptación con creación y vínculo transaccional de la orden.
 
 ## Build
 
-`./mvnw.cmd test`: verde (ver checklist). Sin cambios de contrato ni de esquema.
+La verificación de la suite completa queda registrada en `T24-B-endpoint-retirement.md`. V32 elimina la tabla `provider_ratings`; no se borra información de drivers/vehicles ni de fuel requests.
+
+T24-B ejecutó el retiro inmediato de Fleet v1 y calificaciones por decisión de producto. Fuel requests no se retiró: su aceptación v2 aún no crea una orden con los datos de entrega necesarios. El resto de familias conserva sus gates.

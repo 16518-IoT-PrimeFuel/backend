@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 })
 class ApiLedgerSelfCheckTest {
 
-    private static final int EXPECTED_OPERATION_COUNT = 77;
+    private static final int EXPECTED_OPERATION_COUNT = 64;
     private static final Pattern LEDGER_ROW = Pattern.compile(
             "^\\|\\s*\\d+\\s*\\|\\s*(GET|POST|PUT|PATCH|DELETE)\\s*\\|\\s*(`[^`]+`)\\s*\\|");
 
@@ -50,15 +50,15 @@ class ApiLedgerSelfCheckTest {
     private JavaMailSender mailSender;
 
     @Test
-    void ledgerHas77RowsMatchingTheLiveApiV1RequestMappings() throws IOException {
+    void ledgerHas64RowsMatchingTheLiveApiV1RequestMappings() throws IOException {
         Set<String> runtimeOperations = collectRuntimeApiV1Operations();
         assertEquals(EXPECTED_OPERATION_COUNT, runtimeOperations.size(),
-                "Runtime /api/v1/** mapping count drifted from the T01-A baseline of 77. "
+                "Runtime /api/v1/** mapping count drifted from the T01-A baseline of 64. "
                         + "Update docs/api-ledger/T01-A-rest-ledger.md if this is an intentional change.");
 
         Set<String> ledgerOperations = collectLedgerOperations();
         assertEquals(EXPECTED_OPERATION_COUNT, ledgerOperations.size(),
-                "docs/api-ledger/T01-A-rest-ledger.md must list exactly 77 operations.");
+                "docs/api-ledger/T01-A-rest-ledger.md must list exactly 64 operations.");
 
         assertEquals(runtimeOperations, ledgerOperations,
                 "Ledger rows and live /api/v1/** mappings diverged. Every method+path pair must match exactly.");

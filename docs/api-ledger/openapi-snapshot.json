@@ -771,37 +771,6 @@
         "required" : [ "email", "firstName", "lastName", "licenseNumber", "phoneNumber" ],
         "type" : "object"
       },
-      "DriverResource" : {
-        "properties" : {
-          "email" : {
-            "type" : "string"
-          },
-          "firstName" : {
-            "type" : "string"
-          },
-          "id" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "lastName" : {
-            "type" : "string"
-          },
-          "licenseNumber" : {
-            "type" : "string"
-          },
-          "phoneNumber" : {
-            "type" : "string"
-          },
-          "providerId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "status" : {
-            "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
       "DriverV2Resource" : {
         "properties" : {
           "active" : {
@@ -1419,27 +1388,6 @@
         },
         "type" : "object"
       },
-      "ProviderRatingResource" : {
-        "properties" : {
-          "companyId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "id" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "providerId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "rating" : {
-            "format" : "int32",
-            "type" : "integer"
-          }
-        },
-        "type" : "object"
-      },
       "RefillEpisodeResource" : {
         "properties" : {
           "closedAt" : {
@@ -2023,44 +1971,12 @@
         },
         "required" : [ "observedAt", "state" ],
         "type" : "object"
-      },
-      "VehicleResource" : {
-        "properties" : {
-          "brand" : {
-            "type" : "string"
-          },
-          "capacity" : {
-            "format" : "double",
-            "type" : "number"
-          },
-          "id" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "licensePlate" : {
-            "type" : "string"
-          },
-          "model" : {
-            "type" : "string"
-          },
-          "providerId" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "unit" : {
-            "type" : "string"
-          }
-        },
-        "type" : "object"
       }
     },
     "securitySchemes" : {
       "bearerAuth" : {
         "bearerFormat" : "JWT",
-        "description" : "JWT Bearer token for API authentication",
+        "description" : "Token JWT Bearer para autenticar solicitudes a la API",
         "name" : "bearerAuth",
         "scheme" : "bearer",
         "type" : "http"
@@ -2070,12 +1986,12 @@
   "info" : {
     "contact" : {
       "email" : "support@primefuel.com",
-      "name" : "FullTank Support",
+      "name" : "Soporte de FullTank",
       "url" : "https://primefuel.com/support"
     },
-    "description" : "FullTank B2B Fuel Marketplace Platform â RESTful API built with DDD, Spring Boot 4, Java 26, and MySQL.",
+    "description" : "API de FullTank para gestionar abastecimiento, flota, entregas, inventario y pagos por organizaciÃ³n.",
     "license" : {
-      "name" : "Apache 2.0",
+      "name" : "Apache 2.0 (licencia)",
       "url" : "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
     "title" : "FullTank Platform",
@@ -2193,7 +2109,7 @@
     },
     "/api/v1/authentication/password-reset/confirm" : {
       "post" : {
-        "description" : "Applies the new password when the reset token is valid, single-use and not expired.",
+        "description" : "Actualiza la contraseña cuando el token es válido, no ha vencido y no se ha utilizado; el token se consume una sola vez.",
         "operationId" : "confirmPasswordReset",
         "requestBody" : {
           "content" : {
@@ -2214,7 +2130,7 @@
                 }
               }
             },
-            "description" : "Password updated; no content returned."
+            "description" : "Contraseña actualizada sin contenido de respuesta."
           },
           "400" : {
             "content" : {
@@ -2224,16 +2140,16 @@
                 }
               }
             },
-            "description" : "The token is missing, expired or already used, or the new password is invalid."
+            "description" : "El token falta, venció o ya se usó, o la nueva contraseña no es válida."
           }
         },
-        "summary" : "Confirm a password reset",
-        "tags" : [ "Authentication" ]
+        "summary" : "Confirmar restablecimiento de contraseña",
+        "tags" : [ "Autenticación" ]
       }
     },
     "/api/v1/authentication/password-reset/request" : {
       "post" : {
-        "description" : "Sends reset instructions to the address if an account exists, without revealing whether the account is registered.",
+        "description" : "Inicia la recuperación de contraseña y no revela si el correo está registrado.",
         "operationId" : "requestPasswordReset",
         "requestBody" : {
           "content" : {
@@ -2254,7 +2170,7 @@
                 }
               }
             },
-            "description" : "Reset request accepted."
+            "description" : "Solicitud de restablecimiento aceptada."
           },
           "400" : {
             "content" : {
@@ -2264,16 +2180,16 @@
                 }
               }
             },
-            "description" : "The email field failed validation."
+            "description" : "El correo no cumple la validación requerida."
           }
         },
-        "summary" : "Request a password reset",
-        "tags" : [ "Authentication" ]
+        "summary" : "Solicitar restablecimiento de contraseña",
+        "tags" : [ "Autenticación" ]
       }
     },
     "/api/v1/authentication/sign-in" : {
       "post" : {
-        "description" : "Verifies the supplied credentials and returns the authenticated user together with a JWT.",
+        "description" : "Verifica las credenciales y devuelve el perfil autenticado, sus membresías y un token JWT.",
         "operationId" : "signIn",
         "requestBody" : {
           "content" : {
@@ -2294,7 +2210,7 @@
                 }
               }
             },
-            "description" : "Credentials accepted; token issued."
+            "description" : "Credenciales aceptadas y token emitido."
           },
           "400" : {
             "content" : {
@@ -2304,7 +2220,7 @@
                 }
               }
             },
-            "description" : "The username or password is incorrect."
+            "description" : "El nombre de usuario o la contraseña son incorrectos."
           },
           "404" : {
             "content" : {
@@ -2314,16 +2230,16 @@
                 }
               }
             },
-            "description" : "No user matches the given username."
+            "description" : "No existe una cuenta con ese nombre de usuario."
           }
         },
-        "summary" : "Authenticate a user",
-        "tags" : [ "Authentication" ]
+        "summary" : "Iniciar sesión",
+        "tags" : [ "Autenticación" ]
       }
     },
     "/api/v1/authentication/sign-up" : {
       "post" : {
-        "description" : "Creates a user account together with its organization and owner membership, validating that the selected role matches the business profile supplied.",
+        "description" : "Crea la cuenta y su organización, y asigna al usuario la membresía OWNER. El rol debe coincidir con el perfil comercial enviado.",
         "operationId" : "signUp",
         "requestBody" : {
           "content" : {
@@ -2344,7 +2260,7 @@
                 }
               }
             },
-            "description" : "Account and organization created."
+            "description" : "Cuenta y organización creadas."
           },
           "400" : {
             "content" : {
@@ -2354,7 +2270,7 @@
                 }
               }
             },
-            "description" : "Request body failed validation or the role/profile combination is invalid."
+            "description" : "El cuerpo no cumple la validación o el rol no coincide con el perfil comercial."
           },
           "404" : {
             "content" : {
@@ -2364,7 +2280,7 @@
                 }
               }
             },
-            "description" : "One of the referenced roles does not exist."
+            "description" : "No existe uno de los roles indicados."
           },
           "409" : {
             "content" : {
@@ -2374,7 +2290,7 @@
                 }
               }
             },
-            "description" : "The username, buyer RUC, provider RUC or organization RUC already exists."
+            "description" : "El nombre de usuario o alguno de los RUC ya está registrado."
           },
           "500" : {
             "content" : {
@@ -2384,11 +2300,11 @@
                 }
               }
             },
-            "description" : "Unexpected error while bootstrapping the organization or membership."
+            "description" : "Ocurrió un error al crear la organización o su membresía."
           }
         },
-        "summary" : "Register a new account",
-        "tags" : [ "Authentication" ]
+        "summary" : "Registrar una cuenta",
+        "tags" : [ "Autenticación" ]
       }
     },
     "/api/v1/buyer-companies" : {
@@ -2953,218 +2869,6 @@
         },
         "summary" : "Fail a delivery",
         "tags" : [ "Deliveries" ]
-      }
-    },
-    "/api/v1/drivers" : {
-      "get" : {
-        "description" : "Returns the drivers of the given provider tenant when it matches the caller's own provider.",
-        "operationId" : "getByProvider_1",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "providerId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DriverResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Drivers returned."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/DriverResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Caller does not own the requested provider tenant."
-          }
-        },
-        "summary" : "List drivers by provider",
-        "tags" : [ "drivers-controller" ]
-      },
-      "post" : {
-        "description" : "Registers a driver under the caller's provider tenant.",
-        "operationId" : "create_5",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/DriverResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverResource"
-                }
-              }
-            },
-            "description" : "Driver created."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverResource"
-                }
-              }
-            },
-            "description" : "The driver data is invalid."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverResource"
-                }
-              }
-            },
-            "description" : "Caller does not own the provider in the request body."
-          }
-        },
-        "summary" : "Create a driver",
-        "tags" : [ "drivers-controller" ]
-      }
-    },
-    "/api/v1/drivers/{id}" : {
-      "delete" : {
-        "description" : "Soft-disables a driver owned by the caller's provider tenant, preserving the record.",
-        "operationId" : "delete_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Driver disabled; no content returned."
-          },
-          "404" : {
-            "description" : "Driver does not exist or is not owned by the caller."
-          }
-        },
-        "summary" : "Disable a driver",
-        "tags" : [ "drivers-controller" ]
-      },
-      "get" : {
-        "description" : "Returns the driver identified by the path id when it belongs to the caller's provider tenant.",
-        "operationId" : "getById_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverResource"
-                }
-              }
-            },
-            "description" : "Driver returned."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverResource"
-                }
-              }
-            },
-            "description" : "Driver does not exist or belongs to another provider tenant."
-          }
-        },
-        "summary" : "Get a driver by id",
-        "tags" : [ "drivers-controller" ]
-      },
-      "put" : {
-        "description" : "Applies field changes to a driver owned by the caller's provider tenant.",
-        "operationId" : "update_4",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/DriverResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverResource"
-                }
-              }
-            },
-            "description" : "Driver updated."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverResource"
-                }
-              }
-            },
-            "description" : "The driver data is invalid."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DriverResource"
-                }
-              }
-            },
-            "description" : "Driver does not exist or is not owned by the caller."
-          }
-        },
-        "summary" : "Update a driver",
-        "tags" : [ "drivers-controller" ]
       }
     },
     "/api/v1/equipment" : {
@@ -4092,7 +3796,7 @@
       },
       "post" : {
         "description" : "Creates a legacy fuel request (and its linked replenishment review) for the caller's buyer company.",
-        "operationId" : "create_4",
+        "operationId" : "create_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5130,176 +4834,9 @@
         "tags" : [ "Provider Companies" ]
       }
     },
-    "/api/v1/provider-ratings" : {
-      "get" : {
-        "description" : "Returns provider ratings, optionally filtered by buyer company and/or provider company.",
-        "operationId" : "getAll",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "companyId",
-          "required" : false,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        }, {
-          "in" : "query",
-          "name" : "providerId",
-          "required" : false,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/ProviderRatingResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Ratings returned."
-          }
-        },
-        "summary" : "List provider ratings",
-        "tags" : [ "provider-ratings-controller" ]
-      },
-      "post" : {
-        "description" : "Records a 1-to-5 rating from the caller's buyer company to a provider company.",
-        "operationId" : "create_3",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ProviderRatingResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Rating created."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "The rating, company or provider is invalid, or the referenced company/provider does not exist."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Caller does not own the buyer company in the request body."
-          },
-          "409" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "The buyer company has already rated this provider."
-          }
-        },
-        "summary" : "Create a provider rating",
-        "tags" : [ "provider-ratings-controller" ]
-      }
-    },
-    "/api/v1/provider-ratings/{id}" : {
-      "put" : {
-        "description" : "Changes the score of an existing rating owned by the caller's buyer company.",
-        "operationId" : "update_3",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ProviderRatingResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Rating updated."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "The rating is invalid, the referenced company/provider does not exist, or the buyer/provider of the rating was changed."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Caller does not own the buyer company in the request body."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Rating does not exist."
-          }
-        },
-        "summary" : "Update a provider rating",
-        "tags" : [ "provider-ratings-controller" ]
-      }
-    },
     "/api/v1/users" : {
       "get" : {
-        "description" : "Returns every registered user. Restricted to administrators.",
+        "description" : "Devuelve todas las cuentas registradas; requiere la autoridad ROLE_ADMIN.",
         "operationId" : "getAllUsers",
         "responses" : {
           "200" : {
@@ -5313,7 +4850,7 @@
                 }
               }
             },
-            "description" : "Users returned."
+            "description" : "Lista de usuarios devuelta."
           },
           "403" : {
             "content" : {
@@ -5326,16 +4863,16 @@
                 }
               }
             },
-            "description" : "Caller does not hold the ROLE_ADMIN authority."
+            "description" : "El usuario autenticado no tiene la autoridad ROLE_ADMIN."
           }
         },
-        "summary" : "List all users",
-        "tags" : [ "Users" ]
+        "summary" : "Listar usuarios",
+        "tags" : [ "Usuarios" ]
       }
     },
     "/api/v1/users/{userId}" : {
       "get" : {
-        "description" : "Returns the user identified by the path id when the caller is that same user.",
+        "description" : "Devuelve el perfil indicado cuando pertenece al usuario autenticado; la identidad no se acepta desde el cuerpo de la solicitud.",
         "operationId" : "getUserById",
         "parameters" : [ {
           "in" : "path",
@@ -5355,7 +4892,7 @@
                 }
               }
             },
-            "description" : "User returned."
+            "description" : "Perfil de usuario devuelto."
           },
           "403" : {
             "content" : {
@@ -5365,7 +4902,7 @@
                 }
               }
             },
-            "description" : "Caller is not the requested user."
+            "description" : "El perfil solicitado no pertenece al usuario autenticado."
           },
           "404" : {
             "content" : {
@@ -5375,223 +4912,11 @@
                 }
               }
             },
-            "description" : "User does not exist."
+            "description" : "No existe la cuenta solicitada."
           }
         },
-        "summary" : "Get a user by id",
-        "tags" : [ "Users" ]
-      }
-    },
-    "/api/v1/vehicles" : {
-      "get" : {
-        "description" : "Returns the tankers of the given provider tenant when it matches the caller's own provider.",
-        "operationId" : "getByProvider",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "providerId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/VehicleResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Vehicles returned."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/VehicleResource"
-                  },
-                  "type" : "array"
-                }
-              }
-            },
-            "description" : "Caller does not own the requested provider tenant."
-          }
-        },
-        "summary" : "List vehicles by provider",
-        "tags" : [ "vehicles-controller" ]
-      },
-      "post" : {
-        "description" : "Registers a tanker under the caller's provider tenant.",
-        "operationId" : "create_2",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/VehicleResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/VehicleResource"
-                }
-              }
-            },
-            "description" : "Vehicle created."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/VehicleResource"
-                }
-              }
-            },
-            "description" : "The vehicle data is invalid."
-          },
-          "403" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/VehicleResource"
-                }
-              }
-            },
-            "description" : "Caller does not own the provider in the request body."
-          }
-        },
-        "summary" : "Create a vehicle",
-        "tags" : [ "vehicles-controller" ]
-      }
-    },
-    "/api/v1/vehicles/{id}" : {
-      "delete" : {
-        "description" : "Soft-disables a tanker owned by the caller's provider tenant, preserving the record.",
-        "operationId" : "delete",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Vehicle disabled; no content returned."
-          },
-          "404" : {
-            "description" : "Vehicle does not exist or is not owned by the caller."
-          }
-        },
-        "summary" : "Disable a vehicle",
-        "tags" : [ "vehicles-controller" ]
-      },
-      "get" : {
-        "description" : "Returns the tanker identified by the path id when it belongs to the caller's provider tenant.",
-        "operationId" : "getById",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/VehicleResource"
-                }
-              }
-            },
-            "description" : "Vehicle returned."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/VehicleResource"
-                }
-              }
-            },
-            "description" : "Vehicle does not exist or belongs to another provider tenant."
-          }
-        },
-        "summary" : "Get a vehicle by id",
-        "tags" : [ "vehicles-controller" ]
-      },
-      "put" : {
-        "description" : "Applies field changes to a tanker owned by the caller's provider tenant.",
-        "operationId" : "update_2",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/VehicleResource"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/VehicleResource"
-                }
-              }
-            },
-            "description" : "Vehicle updated."
-          },
-          "400" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/VehicleResource"
-                }
-              }
-            },
-            "description" : "The vehicle data is invalid."
-          },
-          "404" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/VehicleResource"
-                }
-              }
-            },
-            "description" : "Vehicle does not exist or is not owned by the caller."
-          }
-        },
-        "summary" : "Update a vehicle",
-        "tags" : [ "vehicles-controller" ]
+        "summary" : "Consultar usuario por identificador",
+        "tags" : [ "Usuarios" ]
       }
     },
     "/api/v2/admin/api-metrics" : {
@@ -5645,7 +4970,7 @@
     "/api/v2/admin/deliveries/{deliveryId}/transport-evidence" : {
       "delete" : {
         "description" : "Removes only raw GPS samples and the tracking projection for the delivery.",
-        "operationId" : "delete_2",
+        "operationId" : "delete",
         "parameters" : [ {
           "in" : "path",
           "name" : "deliveryId",
@@ -8808,7 +8133,7 @@
     "bearerAuth" : [ ]
   } ],
   "servers" : [ {
-    "description" : "API Server",
+    "description" : "Servidor de la API",
     "url" : "http://localhost:8080"
   } ],
   "tags" : [ {
@@ -8820,6 +8145,9 @@
   }, {
     "description" : "Reconstructed physical and safety history",
     "name" : "Delivery timeline"
+  }, {
+    "description" : "Registro, inicio de sesión y recuperación de contraseña",
+    "name" : "Autenticación"
   }, {
     "description" : "Tank assets and configuration (v2)",
     "name" : "Tanks"
@@ -8869,9 +8197,6 @@
     "description" : "Replenishment request lifecycle (v2)",
     "name" : "Replenishment"
   }, {
-    "description" : "Users management endpoints",
-    "name" : "Users"
-  }, {
     "description" : "Current user's in-app notification inbox (v2)",
     "name" : "My notifications"
   }, {
@@ -8899,8 +8224,8 @@
     "description" : "Transport tracking query (v2)",
     "name" : "Transport tracking"
   }, {
-    "description" : "Authentication endpoints",
-    "name" : "Authentication"
+    "description" : "Consulta de cuentas de usuario",
+    "name" : "Usuarios"
   }, {
     "description" : "Organizations the authenticated user belongs to (v2)",
     "name" : "Organizations"

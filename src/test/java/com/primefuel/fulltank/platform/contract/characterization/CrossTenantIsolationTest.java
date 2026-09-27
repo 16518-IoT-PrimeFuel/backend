@@ -254,27 +254,27 @@ class CrossTenantIsolationTest {
         }
 
         private long createDriver() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/drivers")
+            var response = mockMvc.perform(post("/api/v2/drivers")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"providerId":%d,"firstName":"Xtenant","lastName":"Driver",
+                                    {"firstName":"Xtenant","lastName":"Driver",
                                      "licenseNumber":"L-XT-%d","phoneNumber":"999000113","email":"xtenant-driver-%d@example.test",
                                      "status":"AVAILABLE"}
-                                    """.formatted(providerId, fixtureSeq(), fixtureSeq())))
+                                    """.formatted(fixtureSeq(), fixtureSeq())))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();
         }
 
         private long createVehicle() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/vehicles")
+            var response = mockMvc.perform(post("/api/v2/tankers")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"providerId":%d,"licensePlate":"XT-V%d","brand":"Volvo","model":"FH",
+                                    {"licensePlate":"XT-V%d","brand":"Volvo","model":"FH",
                                      "capacity":2000,"unit":"GALLONS","status":"AVAILABLE"}
-                                    """.formatted(providerId, fixtureSeq())))
+                                    """.formatted(fixtureSeq())))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();

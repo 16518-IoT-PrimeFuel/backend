@@ -20,15 +20,11 @@ skinparam package {
 ' =========================== INTERFACES ===========================
 package "interfaces.rest" <<interfaces>> {
   class DeliveriesController
-  class DriversController
-  class VehiclesController
 
   package "resources" {
     class CreateDeliveryResource <<record>>
     class DeliveryResource <<record>>
     class FailDeliveryResource <<record>>
-    class DriverResource <<record>>
-    class VehicleResource <<record>>
   }
   package "transform" {
     class CreateDeliveryCommandFromResourceAssembler
@@ -64,26 +60,6 @@ package "domain" <<domain>> {
       + complete()
       + fail(String)
     }
-    class Driver {
-      - Long id
-      - Long providerId
-      - String firstName
-      - String lastName
-      - String licenseNumber
-      - String phoneNumber
-      - String email
-      - String status
-    }
-    class Vehicle {
-      - Long id
-      - Long providerId
-      - String licensePlate
-      - String brand
-      - String model
-      - Double capacity
-      - String unit
-      - String status
-    }
   }
   package "model.valueobjects" {
     enum DeliveryStatus {
@@ -106,8 +82,6 @@ package "domain" <<domain>> {
   }
   package "repositories" {
     interface DeliveryRepository
-    interface DriverRepository
-    interface VehicleRepository
   }
 }
 
@@ -115,31 +89,21 @@ package "domain" <<domain>> {
 package "infrastructure" <<infrastructure>> {
   package "persistence.jpa.adapters" {
     class DeliveryRepositoryImpl
-    class DriverRepositoryImpl
-    class VehicleRepositoryImpl
   }
   package "persistence.jpa.entities" {
     class DeliveryPersistenceEntity <<entity>>
-    class DriverPersistenceEntity <<entity>>
-    class VehiclePersistenceEntity <<entity>>
   }
   package "persistence.jpa.repositories" {
     interface DeliveryPersistenceRepository
-    interface DriverPersistenceRepository
-    interface VehiclePersistenceRepository
   }
   package "persistence.jpa.assemblers" {
     class DeliveryPersistenceAssembler
-    class DriverPersistenceAssembler
-    class VehiclePersistenceAssembler
   }
 }
 
 ' =========================== RELACIONES ===========================
 DeliveriesController ..> DeliveryCommandService
 DeliveriesController ..> DeliveryQueryService
-DriversController ..> DriverRepository
-VehiclesController ..> VehicleRepository
 
 DeliveryCommandServiceImpl ..|> DeliveryCommandService
 DeliveryQueryServiceImpl ..|> DeliveryQueryService
@@ -150,8 +114,6 @@ DeliveryQueryServiceImpl ..> DeliveryRepository
 Delivery --> DeliveryStatus
 
 DeliveryRepositoryImpl ..|> DeliveryRepository
-DriverRepositoryImpl ..|> DriverRepository
-VehicleRepositoryImpl ..|> VehicleRepository
 
 DeliveryRepositoryImpl ..> DeliveryPersistenceRepository
 DeliveryRepositoryImpl ..> DeliveryPersistenceAssembler

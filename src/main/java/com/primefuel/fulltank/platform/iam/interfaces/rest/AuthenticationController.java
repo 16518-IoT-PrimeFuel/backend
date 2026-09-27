@@ -28,7 +28,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping(value = "/api/v1/authentication", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Authentication", description = "Authentication endpoints")
+@Tag(name = "Autenticación", description = "Registro, inicio de sesión y recuperación de contraseña")
 public class AuthenticationController {
 
     private final UserCommandService userCommandService;
@@ -50,15 +50,14 @@ public class AuthenticationController {
      * email and the company RUC must be unique. On success the organization is created and the new
      * user is granted an OWNER membership within the same transaction.</p>
      */
-    @Operation(summary = "Register a new account",
-            description = "Creates a user account together with its organization and owner membership, "
-                    + "validating that the selected role matches the business profile supplied.")
+    @Operation(summary = "Registrar una cuenta",
+            description = "Crea la cuenta y su organización, y asigna al usuario la membresía OWNER. El rol debe coincidir con el perfil comercial enviado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Account and organization created."),
-            @ApiResponse(responseCode = "400", description = "Request body failed validation or the role/profile combination is invalid."),
-            @ApiResponse(responseCode = "404", description = "One of the referenced roles does not exist."),
-            @ApiResponse(responseCode = "409", description = "The username, buyer RUC, provider RUC or organization RUC already exists."),
-            @ApiResponse(responseCode = "500", description = "Unexpected error while bootstrapping the organization or membership.")
+            @ApiResponse(responseCode = "201", description = "Cuenta y organización creadas."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no cumple la validación o el rol no coincide con el perfil comercial."),
+            @ApiResponse(responseCode = "404", description = "No existe uno de los roles indicados."),
+            @ApiResponse(responseCode = "409", description = "El nombre de usuario o alguno de los RUC ya está registrado."),
+            @ApiResponse(responseCode = "500", description = "Ocurrió un error al crear la organización o su membresía.")
     })
     @PostMapping("/sign-up")
     public ResponseEntity<?> signUp(@Valid @RequestBody SignUpResource resource) {
@@ -76,12 +75,12 @@ public class AuthenticationController {
      * <p>Public endpoint. The supplied password is matched against the stored hash; on success the
      * response pairs the user resource with a freshly signed token and the caller's memberships.</p>
      */
-    @Operation(summary = "Authenticate a user",
-            description = "Verifies the supplied credentials and returns the authenticated user together with a JWT.")
+    @Operation(summary = "Iniciar sesión",
+            description = "Verifica las credenciales y devuelve el perfil autenticado, sus membresías y un token JWT.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Credentials accepted; token issued."),
-            @ApiResponse(responseCode = "400", description = "The username or password is incorrect."),
-            @ApiResponse(responseCode = "404", description = "No user matches the given username.")
+            @ApiResponse(responseCode = "200", description = "Credenciales aceptadas y token emitido."),
+            @ApiResponse(responseCode = "400", description = "El nombre de usuario o la contraseña son incorrectos."),
+            @ApiResponse(responseCode = "404", description = "No existe una cuenta con ese nombre de usuario.")
     })
     @PostMapping("/sign-in")
     public ResponseEntity<?> signIn(@RequestBody SignInResource resource) {
@@ -102,12 +101,11 @@ public class AuthenticationController {
      * so it never discloses registration. When the account exists, a single-use token valid for 30
      * minutes is emailed and any previous token is replaced.</p>
      */
-    @Operation(summary = "Request a password reset",
-            description = "Sends reset instructions to the address if an account exists, "
-                    + "without revealing whether the account is registered.")
+    @Operation(summary = "Solicitar restablecimiento de contraseña",
+            description = "Inicia la recuperación de contraseña y no revela si el correo está registrado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "202", description = "Reset request accepted."),
-            @ApiResponse(responseCode = "400", description = "The email field failed validation.")
+            @ApiResponse(responseCode = "202", description = "Solicitud de restablecimiento aceptada."),
+            @ApiResponse(responseCode = "400", description = "El correo no cumple la validación requerida.")
     })
     @PostMapping("/password-reset/request")
     public ResponseEntity<?> requestPasswordReset(@Valid @RequestBody PasswordResetRequestResource resource) {
@@ -122,11 +120,11 @@ public class AuthenticationController {
      * <p>Public endpoint. The token must be unexpired and unused; on success it is consumed and the
      * password is replaced by a hash of the new value.</p>
      */
-    @Operation(summary = "Confirm a password reset",
-            description = "Applies the new password when the reset token is valid, single-use and not expired.")
+    @Operation(summary = "Confirmar restablecimiento de contraseña",
+            description = "Actualiza la contraseña cuando el token es válido, no ha vencido y no se ha utilizado; el token se consume una sola vez.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Password updated; no content returned."),
-            @ApiResponse(responseCode = "400", description = "The token is missing, expired or already used, or the new password is invalid.")
+            @ApiResponse(responseCode = "204", description = "Contraseña actualizada sin contenido de respuesta."),
+            @ApiResponse(responseCode = "400", description = "El token falta, venció o ya se usó, o la nueva contraseña no es válida.")
     })
     @PostMapping("/password-reset/confirm")
     public ResponseEntity<?> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmResource resource) {

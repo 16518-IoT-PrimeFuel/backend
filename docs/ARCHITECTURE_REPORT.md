@@ -49,9 +49,9 @@ Los endpoints están bajo `/api/v1`. La aplicación escucha en el puerto `8080` 
     Container(inventory, "Inventory", "DDD module", "Productos, precio y stock de combustible")
     Container(ordering, "Ordering", "DDD module", "Solicitudes, órdenes y estados")
     Container(payment, "Payment", "DDD module", "Pagos, completado y reembolso")
-    Container(fulfillment, "Fulfillment", "DDD module", "Vehículos, conductores y entregas")
+    Container(fulfillment, "Fulfillment", "DDD module", "Asignación y entregas")
+    Container(fleet, "Fleet", "DDD module", "Conductores, cisternas y elegibilidad")
     Container(equipment, "Equipment", "DDD module", "Equipos/tanques del comprador")
-    Container(catalog, "Catalog", "DDD module", "Calificaciones de proveedores")
     Container(notification, "Notification", "DDD module", "Notificaciones por usuario")
     Container(reporting, "Reporting", "DDD module", "Analítica calculada en lectura")
     ContainerDb(db, "MySQL", "JPA/Hibernate", "Tablas compartidas por módulos")
@@ -62,7 +62,7 @@ Los endpoints están bajo `/api/v1`. La aplicación escucha en el puerto `8080` 
     Rel(api, payment, "Invoca application services")
     Rel(api, fulfillment, "Invoca application services")
     Rel(api, equipment, "Invoca application services")
-    Rel(api, catalog, "Invoca repositories/services")
+    Rel(api, fleet, "Invoca catálogo y elegibilidad")
     Rel(api, notification, "Invoca application services")
     Rel(api, reporting, "Invoca query service")
     Rel(iam, db, "JPA")
@@ -71,7 +71,7 @@ Los endpoints están bajo `/api/v1`. La aplicación escucha en el puerto `8080` 
     Rel(payment, db, "JPA")
     Rel(fulfillment, db, "JPA")
     Rel(equipment, db, "JPA")
-    Rel(catalog, db, "JPA")
+    Rel(fleet, db, "JPA; conserva drivers y vehicles")
     Rel(notification, db, "JPA")
     Rel(reporting, ordering, "Consulta órdenes")
     Rel(reporting, payment, "Consulta pagos")
@@ -183,8 +183,8 @@ Estados: `PENDING`, `COMPLETED`, `FAILED`, `REFUNDED`. Métodos: `BANK_TRANSFER`
 | `GET /api/v1/deliveries/{deliveryId}` | Consulta entrega. |
 | `GET /api/v1/deliveries/order/{orderId}` | Busca entrega por orden. |
 | `GET /api/v1/deliveries/provider/{providerId}` | Filtra por proveedor, aunque internamente carga todas y filtra en memoria. |
-| `GET /api/v1/vehicles?providerId={id}` | Vehículos de proveedor. También CRUD con `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}`. |
-| `GET /api/v1/drivers?providerId={id}` | Conductores de proveedor. También CRUD con `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}`. |
+| Fleet v2 | `GET/POST /api/v2/tankers`, `GET/PUT /api/v2/tankers/{tankerId}` y activar/desactivar. |
+| Fleet v2 | `GET/POST /api/v2/drivers`, `GET/PUT /api/v2/drivers/{driverId}` y activar/desactivar. |
 
 `DeliveryStatus` y las reglas exactas de transición están en el agregado/servicio de fulfillment. Vehículos y conductores aplican por defecto `unit=LITERS` (vehículo) y `status=AVAILABLE` cuando faltan esos valores.
 
@@ -192,9 +192,7 @@ Estados: `PENDING`, `COMPLETED`, `FAILED`, `REFUNDED`. Métodos: `BANK_TRANSFER`
 
 | Método y ruta | Función |
 |---|---|
-| `GET /api/v1/provider-ratings?companyId=&providerId=` | Lista calificaciones con filtros opcionales. |
-| `POST /api/v1/provider-ratings` | Crea rating 1–5; valida que existan comprador/proveedor y evita duplicado por pareja. |
-| `PUT /api/v1/provider-ratings/{id}` | Cambia solo el rating; compañía y proveedor no pueden cambiar. |
+| Calificaciones | El slice de calificaciones fue retirado en T24-B; no tiene reemplazo. |
 | `POST /api/v1/notifications` | Crea notificación. Puede identificar destinatario por `userId`, `companyId` o `providerId`. |
 | `POST /api/v1/notifications/{notificationId}/mark-as-read` | Marca como leída. |
 | `GET /api/v1/notifications/{notificationId}` | Consulta notificación. |
@@ -250,7 +248,7 @@ Payment recibe `orderId` y consulta el repositorio de órdenes para validar/actu
 | H2 | Tests. |
 | Spring DevTools | Runtime de desarrollo, opcional. |
 
-Configuración principal: perfil por defecto `dev`, MySQL configurable con `DATABASE_*` o `MYSQL_*`, puerto con `PORT`, orígenes CORS con `CORS_ALLOWED_ORIGINS`, y secreto JWT con `AUTHORIZATION_JWT_SECRET`. Hibernate usa `ddl-auto=update`; esto facilita desarrollo, pero no sustituye migraciones versionadas para producción.
+Configuración principal: perfil por defecto `dev`, MySQL configurable con `DATABASE_*`, puerto con `PORT`, orígenes CORS con `CORS_ALLOWED_ORIGINS`, y secreto JWT con `AUTHORIZATION_JWT_SECRET`. Flyway administra las migraciones versionadas V1–V32 y Hibernate usa `ddl-auto=validate`.
 
 ## 6. Observaciones y riesgos técnicos
 
@@ -262,12 +260,12 @@ Configuración principal: perfil por defecto `dev`, MySQL configurable con `DATA
 - `vehicles`, `drivers`, `provider-ratings` y parte de `fuel-requests` saltan la capa de aplicación; esto aumenta el acoplamiento del HTTP con persistencia.
 - La API usa `Double` para precios, cantidades e ingresos. Para dinero conviene `BigDecimal`.
 - `application-dev.properties` deja `spring.jpa.open-in-view=true`, mientras MySQL lo desactiva; el comportamiento cambia por perfil.
-- `ddl-auto=update` puede alterar el esquema automáticamente y no hay evidencia de migraciones Flyway/Liquibase.
+- Flyway es la fuente de cambios de esquema; no se deben editar migraciones aplicadas. La migración V32 elimina la tabla física `provider_ratings`.
 - Las clases vacías que existían como marcadores (`InventoryController`, `OrderingController`, `FulfillmentController`, `NotificationController`, `DirectoryController`, `PaymentController`) fueron **eliminadas en T24-A** por no tener referencias ni endpoints; se conservan los diagramas PlantUML por contexto, ya sin esos nodos.
 
 ## 7. Pruebas y estado del proyecto
 
-Solo se observa una prueba de contexto en `src/test/java/com/primefuel/fulltank/platform/FullTankPlatformApplicationTests.java`; no hay una suite visible de contratos REST, autorización por rol, transiciones de estado o integración con MySQL. El reporte describe el comportamiento estático del código; para verificar contratos efectivos conviene arrancar la aplicación y consultar `/v3/api-docs`.
+La suite H2 incluye 270 pruebas y 4 omitidas en la verificación del 2026-09-26. La especificación OpenAPI se sirve en `/api-docs` y Swagger UI en `/swagger-ui.html`.
 
 ## 8. Estructura de paquetes
 
@@ -279,7 +277,7 @@ com.primefuel.fulltank.platform
 ├── payment       pagos
 ├── fulfillment   entregas, vehículos y conductores
 ├── equipment     equipos/tanques y proveedor favorito
-├── catalog       ratings de proveedores
+├── supply       catálogo de productos y precios
 ├── notification  notificaciones
 ├── reporting     consultas analíticas
 └── shared        errores, CORS, OpenAPI, JPA y resultados
@@ -310,9 +308,8 @@ Inventario de cuerpos obtenido de `@RequestBody` y sus Resource records. Los nom
 | `POST /payments/{id}/complete` | `{"transactionReference":"..."}` |
 | `POST /deliveries` | `{"orderId":1,"providerId":2,"driverId":3,"vehicleId":4,"scheduledDate":"2026-09-11","notes":"..."}` |
 | `POST /deliveries/{id}/fail` | `{"reason":"..."}` |
-| `POST /vehicles`, `PUT /vehicles/{id}` | `{"providerId":2,"licensePlate":"...","brand":"...","model":"...","capacity":1000,"unit":"LITERS","status":"AVAILABLE"}`. `id` solo se devuelve; no se necesita en el body. |
-| `POST /drivers`, `PUT /drivers/{id}` | `{"providerId":2,"firstName":"...","lastName":"...","licenseNumber":"...","phoneNumber":"...","email":"...","status":"AVAILABLE"}`. `id` solo se devuelve. |
-| `POST /provider-ratings`, `PUT /provider-ratings/{id}` | `{"companyId":1,"providerId":2,"rating":5}`. Para actualizar, los IDs deben permanecer iguales a los de la calificación existente. |
+| Fleet v2 | `TankerInputResource` y `DriverInputResource` usan tenant del principal; el cliente no envía `providerId`. |
+| Calificaciones | No hay cuerpo vigente: la familia se retiró en T24-B y no tiene reemplazo. |
 | `POST /notifications` | `{"userId":1,"companyId":null,"providerId":null,"type":"NEW_REQUEST","title":"...","message":"...","referenceId":1}`. Se resuelve el destinatario mediante `userId`, `companyId` o `providerId`. |
 
 No reciben body: aceptar solicitud, confirmar/cancelar orden, completar/reembolsar pago, dispatch/completar entrega, asignar proveedor favorito sí recibe body, marcar notificación leída, y los DELETE. Las acciones de rechazo/fallo sí exigen `reason` de forma lógica.
