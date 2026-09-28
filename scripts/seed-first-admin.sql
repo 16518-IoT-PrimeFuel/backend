@@ -1,4 +1,4 @@
-SET @admin_username = 'replace-with-admin-username';
+SET @admin_username = 'samuel';
 
 INSERT INTO user_roles (user_id, role_id)
 SELECT u.id, r.id
