@@ -15,7 +15,7 @@ class AuthenticatedUserResourceFromEntityAssemblerTest {
     void includesRoleAndBusinessIdentifiers() {
         var user = new User("provider", "hash", List.of(new Role(Roles.ROLE_PROVIDER)), 12L, 34L);
 
-        var resource = AuthenticatedUserResourceFromEntityAssembler.toResourceFromEntity(user, "jwt");
+        var resource = AuthenticatedUserResourceFromEntityAssembler.toResourceFromEntity(user, "jwt", List.of());
 
         assertEquals(List.of("ROLE_PROVIDER"), resource.roles());
         assertEquals(12L, resource.companyId());

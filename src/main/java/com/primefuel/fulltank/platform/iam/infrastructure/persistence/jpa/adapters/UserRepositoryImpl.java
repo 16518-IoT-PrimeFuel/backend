@@ -37,12 +37,6 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Optional<User> findByProviderId(Long providerId) {
-        return userRepository.findByProviderId(providerId)
-                .map(UserPersistenceAssembler::toDomainFromPersistence);
-    }
-
-    @Override
     public List<User> findAll() {
         return userRepository.findAll().stream()
                 .map(UserPersistenceAssembler::toDomainFromPersistence)

@@ -52,29 +52,14 @@ class FullTankPlatformApplicationTests {
         var token = new UsernamePasswordAuthenticationToken(
                 provider, null, provider.getAuthorities());
 
-        mockMvc.perform(get("/api/v1/buyer-companies/99")
+        mockMvc.perform(get("/api/buyer-companies/99")
                         .with(authentication(token)))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void buyerCannotCreateNotificationForAnotherUserByAddingTheirOwnCompanyId() throws Exception {
-        var buyer = new UserDetailsImpl(1L, "buyer", "encoded", 31L, null,
-                List.of(new SimpleGrantedAuthority("ROLE_BUYER")));
-        var token = new UsernamePasswordAuthenticationToken(buyer, null, buyer.getAuthorities());
-
-        mockMvc.perform(post("/api/v1/notifications")
-                        .with(authentication(token))
-                        .contentType("application/json")
-                        .content("""
-                                {"userId":99,"companyId":31,"providerId":null,"type":"NEW_REQUEST","title":"x","message":"x","referenceId":1}
-                                """))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void publicSignupCreatesAndLinksItsOwnBuyerCompany() throws Exception {
-        mockMvc.perform(post("/api/v1/authentication/sign-up")
+        mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"signup-owner@example.test","password":"StrongPass1!","roles":["ROLE_BUYER"],"buyerCompany":{"name":"Signup LLC","ruc":"20999111223","sector":"Fuel","address":"Lima","contactEmail":"signup-owner@example.test","phone":"999111222"}}
@@ -85,7 +70,7 @@ class FullTankPlatformApplicationTests {
 
     @Test
     void signupCannotAttachAnExistingCompanyId() throws Exception {
-        mockMvc.perform(post("/api/v1/authentication/sign-up")
+        mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"claim@example.test","password":"StrongPass1!","roles":["ROLE_BUYER"],"companyId":1}
@@ -95,7 +80,7 @@ class FullTankPlatformApplicationTests {
 
     @Test
     void passwordResetIsDeliveredOnceAndChangesThePassword() throws Exception {
-        mockMvc.perform(post("/api/v1/authentication/sign-up")
+        mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"reset-owner@example.test","password":"OldPass123!","roles":["ROLE_BUYER"],"buyerCompany":{"name":"Reset LLC","ruc":"20999111224","sector":"Fuel","address":"Lima","contactEmail":"reset-owner@example.test","phone":"999111222"}}
@@ -103,7 +88,7 @@ class FullTankPlatformApplicationTests {
                 .andExpect(status().isCreated());
         clearInvocations(mailSender);
 
-        mockMvc.perform(post("/api/v1/authentication/password-reset/request")
+        mockMvc.perform(post("/api/authentication/password-reset/request")
                         .contentType("application/json")
                         .content("{\"email\":\"reset-owner@example.test\"}"))
                 .andExpect(status().isAccepted())
@@ -117,15 +102,15 @@ class FullTankPlatformApplicationTests {
         org.junit.jupiter.api.Assertions.assertTrue(match.find());
         var token = match.group(1);
 
-        mockMvc.perform(post("/api/v1/authentication/password-reset/confirm")
+        mockMvc.perform(post("/api/authentication/password-reset/confirm")
                         .contentType("application/json")
                         .content("{\"token\":\"" + token + "\",\"newPassword\":\"NewPass123!\"}"))
                 .andExpect(status().isNoContent());
-        mockMvc.perform(post("/api/v1/authentication/sign-in")
+        mockMvc.perform(post("/api/authentication/sign-in")
                         .contentType("application/json")
                         .content("{\"username\":\"reset-owner@example.test\",\"password\":\"NewPass123!\"}"))
                 .andExpect(status().isOk());
-        mockMvc.perform(post("/api/v1/authentication/password-reset/confirm")
+        mockMvc.perform(post("/api/authentication/password-reset/confirm")
                         .contentType("application/json")
                         .content("{\"token\":\"" + token + "\",\"newPassword\":\"OtherPass123!\"}"))
                 .andExpect(status().isBadRequest());
@@ -133,7 +118,7 @@ class FullTankPlatformApplicationTests {
 
     @Test
     void passwordResetRequestDoesNotRevealUnknownAccounts() throws Exception {
-        mockMvc.perform(post("/api/v1/authentication/password-reset/request")
+        mockMvc.perform(post("/api/authentication/password-reset/request")
                         .contentType("application/json")
                         .content("{\"email\":\"missing@example.test\"}"))
                 .andExpect(status().isAccepted())

@@ -1,6 +1,11 @@
 package com.primefuel.fulltank.platform.contract.characterization;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
+import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerCommandService;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.EquipmentCommandService;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.TankCommandService;
+import com.primefuel.fulltank.platform.contract.ReplenishmentTestFixtures;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -17,6 +22,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import static org.mockito.Mockito.when;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -48,8 +54,14 @@ class CrossTenantIsolationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired private CustomerCommandService customerCommandService;
+    @Autowired private EquipmentCommandService equipmentCommandService;
+    @Autowired private TankCommandService tankCommandService;
+
     @MockitoBean
     private JavaMailSender mailSender;
+
+    @MockitoBean private MembershipAccess membershipAccess;
 
     @Test
     void tenantBCannotReadTenantAsFuelRequestOrFuelOrderOrDeliveryOrPayment() throws Exception {
@@ -57,21 +69,22 @@ class CrossTenantIsolationTest {
         var b = new Tenant("xtenant-b");
 
         long requestId = a.createFuelRequest();
-        var acceptResponse = mockMvc.perform(post("/api/v1/fuel-requests/{id}/accept", requestId).with(a.provider))
+        var acceptResponse = mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(a.provider))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         JsonNode order = objectMapper.readTree(acceptResponse);
-        long orderId = order.get("id").asLong();
+        long orderId = order.get("orderId").asLong();
         long deliveryId = a.createDelivery(orderId);
-        long paymentId = a.createPayment(orderId, order.get("totalPrice").asDouble());
+        long paymentId = a.createPayment(orderId, order.get("unitPrice").asDouble() * order.get("quantity").asDouble());
 
         // Correctly scoped today: tenant B's buyer/provider principals get 404, not the data.
-        mockMvc.perform(get("/api/v1/fuel-requests/{id}", requestId).with(b.buyer)).andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v1/fuel-requests/{id}", requestId).with(b.provider)).andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v1/fuel-orders/{id}", orderId).with(b.buyer)).andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v1/deliveries/{id}", deliveryId).with(b.buyer)).andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v1/deliveries/{id}", deliveryId).with(b.provider)).andExpect(status().isNotFound());
-        mockMvc.perform(get("/api/v1/payments/{id}", paymentId).with(b.provider)).andExpect(status().isNotFound());
+        when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(b.buyerCompanyId));
+        mockMvc.perform(get("/api/replenishment-requests/{id}", requestId).with(b.buyer)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/replenishment-requests/{id}", requestId).with(b.provider)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/fuel-orders/{id}", orderId).with(b.buyer)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/deliveries/{id}", deliveryId).with(b.buyer)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/deliveries/{id}", deliveryId).with(b.provider)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/payments/{id}", paymentId).with(b.provider)).andExpect(status().isNotFound());
     }
 
     @Test
@@ -81,21 +94,31 @@ class CrossTenantIsolationTest {
         long equipmentId = a.createEquipment(500.0, 100.0);
 
         // Correctly scoped today: EquipmentController filters by ownsCompany() on the read path.
-        mockMvc.perform(get("/api/v1/equipment/{id}", equipmentId).with(b.buyer)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/equipment/{id}", equipmentId).with(b.buyer)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void tenantBCannotReadTenantAsBuyerCompanyOrProviderCompany() throws Exception {
+        var a = new Tenant("xtenant-co-a");
+        var b = new Tenant("xtenant-co-b");
+
+        // @PreAuthorize ownsCompany/ownsProvider rejects before lookup: 403, not 404.
+        mockMvc.perform(get("/api/buyer-companies/{id}", a.buyerCompanyId).with(b.buyer)).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/provider-companies/{id}", a.providerId).with(b.provider)).andExpect(status().isForbidden());
     }
 
     @Test
     void directOrderCreationRejectsAProviderIdThatDoesNotOwnTheChosenFuelProduct() throws Exception {
         // Regression test for the R01 hotfix in FuelOrderCommandServiceImpl#handle(CreateFuelOrderCommand):
-        // POST /api/v1/fuel-orders used to only check @currentUserAccess.ownsCompany(resource.companyId())
+        // POST /api/fuel-orders used to only check @currentUserAccess.ownsCompany(resource.companyId())
         // and that fuelProductId exists, never that resource.providerId() actually owns the product
-        // (unlike FuelRequestService#create, which always did that check). Now it must be rejected
+        // The v2 acceptance flow must also reject a provider that does not own the selected product.
         // with 403 instead of pairing tenant A's fuel product with tenant B's providerId.
         var productOwner = new Tenant("xorder-product-owner");
         var strangerProvider = new Tenant("xorder-stranger-provider");
         var buyer = new Tenant("xorder-buyer");
 
-        mockMvc.perform(post("/api/v1/fuel-orders")
+        mockMvc.perform(post("/api/fuel-orders")
                         .with(buyer.buyer)
                         .contentType("application/json")
                         .content("""
@@ -105,7 +128,7 @@ class CrossTenantIsolationTest {
                                 """.formatted(buyer.buyerCompanyId, strangerProvider.providerId, productOwner.fuelProductId)))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(get("/api/v1/fuel-orders/provider/{id}", strangerProvider.providerId).with(strangerProvider.provider))
+        mockMvc.perform(get("/api/fuel-orders/provider/{id}", strangerProvider.providerId).with(strangerProvider.provider))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
     }
@@ -115,7 +138,7 @@ class CrossTenantIsolationTest {
         // Regression test for the R01 hotfix: CreateFuelOrderCommand used to carry an equipmentId
         // that was never validated against companyId, neither in
         // FuelOrderCommandServiceImpl#handle(CreateFuelOrderCommand) nor in
-        // DeliveryCommandServiceImpl#handle(CompleteDeliveryCommand) (which just did
+        // the delivery completion effects (which just did
         // equipmentRepository.findById(order.getEquipmentId()) and called receiveFuel()). Tenant A
         // could place a direct order referencing tenant B's equipmentId and, once completed, mutate
         // tenant B's tank level with fuel B never ordered. Maps to Risk Register R01 (CRITICAL) —
@@ -124,7 +147,7 @@ class CrossTenantIsolationTest {
         long victimEquipmentId = victim.createEquipment(1000.0, 200.0);
 
         var attacker = new Tenant("xwrite-attacker");
-        mockMvc.perform(post("/api/v1/fuel-orders")
+        mockMvc.perform(post("/api/fuel-orders")
                         .with(attacker.buyer)
                         .contentType("application/json")
                         .content("""
@@ -135,7 +158,7 @@ class CrossTenantIsolationTest {
                 .andExpect(status().isForbidden());
 
         // Tenant B's tank level is untouched.
-        mockMvc.perform(get("/api/v1/equipment/{id}", victimEquipmentId).with(victim.buyer))
+        mockMvc.perform(get("/api/equipment/{id}", victimEquipmentId).with(victim.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.currentLevel").value(200.0));
     }
@@ -175,14 +198,17 @@ class CrossTenantIsolationTest {
         }
 
         long createFuelRequest() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/fuel-requests")
+            var assets = ReplenishmentTestFixtures.create(customerCommandService, equipmentCommandService,
+                    tankCommandService, buyerCompanyId, "Av. Xtenant 1");
+            when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(assets.organizationId()));
+            var response = mockMvc.perform(post("/api/replenishment-requests")
                             .with(buyer)
                             .contentType("application/json")
                             .content("""
-                                    {"buyerCompanyId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
-                                     "unit":"GALLONS","deliveryAddress":"Av. Xtenant 1","deliveryDate":"2026-10-15",
+                                    {"customerAccountId":%d,"tankId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
+                                     "unit":"GALLONS","deliveryAddress":"Av. Xtenant 1","deliveryDate":"2099-10-15",
                                      "source":"MANUAL"}
-                                    """.formatted(buyerCompanyId, providerId, fuelProductId)))
+                                    """.formatted(assets.customerId(), assets.tankId(), providerId, fuelProductId)))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();
@@ -191,20 +217,20 @@ class CrossTenantIsolationTest {
         long createDelivery(long orderId) throws Exception {
             long driverId = createDriver();
             long vehicleId = createVehicle();
-            var response = mockMvc.perform(post("/api/v1/deliveries")
+            var response = mockMvc.perform(post("/api/deliveries")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"orderId":%d,"providerId":%d,"driverId":%d,"vehicleId":%d,
-                                     "scheduledDate":"2026-10-01","notes":"xtenant fixture"}
+                                    {"commandId":"cmd-%1$d","orderId":%1$d,"driverId":%3$d,"tankerId":%4$d,
+                                     "windowStart":"2099-10-15T08:00:00Z","windowEnd":"2099-10-15T16:00:00Z","scheduledDate":"2026-10-01","notes":"xtenant fixture"}
                                     """.formatted(orderId, providerId, driverId, vehicleId)))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
-            return objectMapper.readTree(response).get("id").asLong();
+            return objectMapper.readTree(response).get("deliveryId").asLong();
         }
 
         long createPayment(long orderId, double totalPrice) throws Exception {
-            var response = mockMvc.perform(post("/api/v1/payments")
+            var response = mockMvc.perform(post("/api/payments")
                             .with(buyer)
                             .contentType("application/json")
                             .content("""
@@ -216,7 +242,7 @@ class CrossTenantIsolationTest {
         }
 
         long createEquipment(double tankCapacity, double currentLevel) throws Exception {
-            var response = mockMvc.perform(post("/api/v1/equipment")
+            var response = mockMvc.perform(post("/api/equipment")
                             .with(buyer)
                             .contentType("application/json")
                             .content("""
@@ -231,7 +257,7 @@ class CrossTenantIsolationTest {
         }
 
         private long createFuelProduct() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/fuel-products")
+            var response = mockMvc.perform(post("/api/fuel-products")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
@@ -244,27 +270,27 @@ class CrossTenantIsolationTest {
         }
 
         private long createDriver() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/drivers")
+            var response = mockMvc.perform(post("/api/drivers")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"providerId":%d,"firstName":"Xtenant","lastName":"Driver",
+                                    {"firstName":"Xtenant","lastName":"Driver",
                                      "licenseNumber":"L-XT-%d","phoneNumber":"999000113","email":"xtenant-driver-%d@example.test",
                                      "status":"AVAILABLE"}
-                                    """.formatted(providerId, fixtureSeq(), fixtureSeq())))
+                                    """.formatted(fixtureSeq(), fixtureSeq())))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();
         }
 
         private long createVehicle() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/vehicles")
+            var response = mockMvc.perform(post("/api/tankers")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"providerId":%d,"licensePlate":"XT-V%d","brand":"Volvo","model":"FH",
+                                    {"licensePlate":"XT-V%d","brand":"Volvo","model":"FH",
                                      "capacity":2000,"unit":"GALLONS","status":"AVAILABLE"}
-                                    """.formatted(providerId, fixtureSeq())))
+                                    """.formatted(fixtureSeq())))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();
@@ -272,7 +298,7 @@ class CrossTenantIsolationTest {
     }
 
     private long signUpBuyer(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_BUYER"],
@@ -285,7 +311,7 @@ class CrossTenantIsolationTest {
     }
 
     private long signUpProvider(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_PROVIDER"],

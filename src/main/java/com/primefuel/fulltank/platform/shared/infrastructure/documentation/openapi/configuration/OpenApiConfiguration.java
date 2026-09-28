@@ -26,6 +26,9 @@ public class OpenApiConfiguration {
     @Value("${documentation.application.version}")
     String applicationVersion;
 
+    @Value("${documentation.application.server-url}")
+    String serverUrl;
+
     @Bean
     public OpenAPI fullTankPlatformOpenApi() {
         var openApi = new OpenAPI();
@@ -35,17 +38,17 @@ public class OpenApiConfiguration {
                         .description(this.applicationDescription)
                         .version(this.applicationVersion)
                         .contact(new Contact()
-                                .name("FullTank Support")
+                                .name("Soporte de FullTank")
                                 .email("support@primefuel.com")
                                 .url("https://primefuel.com/support"))
                         .license(new License()
-                                .name("Apache 2.0")
+                                .name("Apache 2.0 (licencia)")
                                 .url("https://www.apache.org/licenses/LICENSE-2.0.html")));
 
         openApi.servers(List.of(
                 new Server()
-                        .url("http://localhost:8080")
-                        .description("Local Development Environment")
+                        .url(this.serverUrl)
+                        .description("Servidor de la API")
         ));
 
         final String securitySchemeName = "bearerAuth";
@@ -57,7 +60,7 @@ public class OpenApiConfiguration {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .description("JWT Bearer token for API authentication")));
+                                        .description("Token JWT Bearer para autenticar solicitudes a la API")));
 
         return openApi;
     }

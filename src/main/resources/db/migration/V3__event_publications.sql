@@ -1,0 +1,2 @@
+create table event_publications (aggregate_version bigint, completed_at datetime(6), created_at datetime(6) not null, id bigint not null auto_increment, occurred_at datetime(6) not null, organization_id bigint not null, updated_at datetime(6) not null, event_id varchar(36) not null, aggregate_id varchar(64) not null, aggregate_type varchar(80) not null, event_type varchar(120) not null, payload TEXT not null, primary key (id)) engine=InnoDB;
+alter table event_publications add constraint UKk77oh225ehtwkri42yrplj7xr unique (event_id);

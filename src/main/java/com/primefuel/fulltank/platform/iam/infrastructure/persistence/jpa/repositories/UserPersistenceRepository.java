@@ -10,6 +10,5 @@ import java.util.Optional;
 public interface UserPersistenceRepository extends JpaRepository<UserPersistenceEntity, Long> {
     Optional<UserPersistenceEntity> findByUsername(String username);
     Optional<UserPersistenceEntity> findByCompanyId(Long companyId);
-    Optional<UserPersistenceEntity> findByProviderId(Long providerId);
     boolean existsByUsername(String username);
 }

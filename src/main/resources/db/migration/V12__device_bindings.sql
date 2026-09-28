@@ -1,0 +1,2 @@
+create table device_bindings (active_slot integer, created_at datetime(6) not null, id bigint not null auto_increment, organization_id bigint not null, tank_id bigint not null, updated_at datetime(6) not null, valid_from datetime(6) not null, valid_to datetime(6), channel varchar(60) not null, device_id varchar(120) not null, status VARCHAR(20) not null, primary key (id)) engine=InnoDB;
+alter table device_bindings add constraint uk_device_bindings_open_channel unique (device_id, channel, active_slot);

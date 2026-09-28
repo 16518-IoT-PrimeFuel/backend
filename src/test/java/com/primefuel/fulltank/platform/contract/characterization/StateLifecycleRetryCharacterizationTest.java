@@ -1,6 +1,11 @@
 package com.primefuel.fulltank.platform.contract.characterization;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
+import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerCommandService;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.EquipmentCommandService;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.TankCommandService;
+import com.primefuel.fulltank.platform.contract.ReplenishmentTestFixtures;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -17,13 +22,14 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import static org.mockito.Mockito.when;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * T01-B: reproduces AS-IS state-transition retries/duplicates for fuel-requests, fuel-orders
+ * T01-B: reproduces state-transition retries/duplicates for replenishment requests, fuel-orders
  * (direct order path), deliveries and payments. Every result here is the current runtime
  * behavior, not an approval of it — surprising outcomes are marked {@code known-gap} and are
  * deliberately NOT fixed. See docs/api-ledger/T01-B-state-security-characterization.md.
@@ -46,60 +52,62 @@ class StateLifecycleRetryCharacterizationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired private CustomerCommandService customerCommandService;
+    @Autowired private EquipmentCommandService equipmentCommandService;
+    @Autowired private TankCommandService tankCommandService;
+
     @MockitoBean
     private JavaMailSender mailSender;
 
-    @Test
-    void acceptingAnAlreadyAcceptedFuelRequestReturns500InsteadOf409() throws Exception {
-        // known-gap (T01-A row 66): FuelRequestService#accept() throws a plain
-        // IllegalStateException on a non-PENDING request; GlobalExceptionHandler has no specific
-        // mapping for it, so it falls back to the generic 500 handler instead of a 409 Conflict.
-        var f = new Fixture("retry-accept");
-        long requestId = f.createFuelRequest();
+    @MockitoBean private MembershipAccess membershipAccess;
 
-        mockMvc.perform(post("/api/v1/fuel-requests/{id}/accept", requestId).with(f.provider))
+    @Test
+    void acceptingAnAlreadyAcceptedReplenishmentReturns409WithoutAnotherOrder() throws Exception {
+        var f = new Fixture("retry-accept");
+        long requestId = f.createReplenishmentRequest();
+
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(f.provider))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/fuel-requests/{id}/accept", requestId).with(f.provider))
-                .andExpect(status().isInternalServerError());
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(f.provider))
+                .andExpect(status().isConflict());
     }
 
     @Test
-    void rejectingAnAlreadyAcceptedFuelRequestReturns500InsteadOf409() throws Exception {
-        // known-gap (T01-A row 67): same raw IllegalStateException path as accept-twice, but
-        // triggered by reject() after the request already transitioned to APPROVED via accept().
+    void rejectingAnAlreadyAcceptedReplenishmentReturns409() throws Exception {
         var f = new Fixture("retry-reject");
-        long requestId = f.createFuelRequest();
+        long requestId = f.createReplenishmentRequest();
 
-        mockMvc.perform(post("/api/v1/fuel-requests/{id}/accept", requestId).with(f.provider))
+        mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(f.provider))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/fuel-requests/{id}/reject", requestId)
+        mockMvc.perform(post("/api/replenishment-requests/{id}/reject", requestId)
                         .with(f.provider)
                         .contentType("application/json")
                         .content("{\"reason\":\"too late\"}"))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isConflict());
     }
 
     @Test
-    void completingAnAlreadyDeliveredDeliveryReturns500InsteadOf409() throws Exception {
-        // known-gap: Delivery#complete() has no status guard, but the command handler also
-        // re-runs FuelOrder#receive(), which DOES guard on OrderStatus.DISPATCHED. After the
-        // first /complete the order is PENDING_PAYMENT, so the retry's receive() throws a raw
-        // IllegalStateException that again falls through to the generic 500 handler instead of a
-        // 409. The whole handler is @Transactional, so the retry's (redundant) equipment refuel
-        // and driver/vehicle status writes are rolled back with it — no double side effects
-        // survive, only the wrong status code.
+    void completingAnAlreadyDeliveredDeliveryNowReturns409() throws Exception {
+        // The second close is rejected by the terminal COMPLETED state as a 409 *before* any
+        // order/equipment side effect runs — no double volume, no duplicate journal rows.
         var f = new Fixture("retry-complete");
-        long orderId = f.createDirectOrder();
-        long deliveryId = f.createDelivery(orderId);
-
-        mockMvc.perform(post("/api/v1/deliveries/{id}/complete", deliveryId).with(f.provider))
+        var accepted = mockMvc.perform(post("/api/replenishment-requests/{id}/accept",
+                        f.createReplenishmentRequest()).with(f.provider))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("DELIVERED"));
+                .andReturn().getResponse().getContentAsString();
+        long deliveryId = f.createDelivery(objectMapper.readTree(accepted).get("orderId").asLong());
+        mockMvc.perform(post("/api/deliveries/{id}/start", deliveryId).with(f.provider)).andExpect(status().isOk());
+        mockMvc.perform(post("/api/deliveries/{id}/arrive", deliveryId).with(f.provider)).andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/deliveries/{id}/complete", deliveryId).with(f.provider))
-                .andExpect(status().isInternalServerError());
+        mockMvc.perform(post("/api/deliveries/{id}/complete", deliveryId).with(f.provider)
+                        .contentType("application/json").content("{\"deliveredVolume\":10}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/deliveries/{id}/complete", deliveryId).with(f.provider)
+                        .contentType("application/json").content("{\"deliveredVolume\":10}"))
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -110,22 +118,22 @@ class StateLifecycleRetryCharacterizationTest {
         long orderId = f.createDirectOrder();
         long paymentId = f.createPayment(orderId);
 
-        mockMvc.perform(post("/api/v1/payments/{id}/refund", paymentId).with(f.buyer))
+        mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REFUNDED"));
     }
 
     @Test
-    void directOrderCreationBypassesTheFuelRequestNegotiationFlowEntirely() throws Exception {
-        // known-gap: POST /api/v1/fuel-orders (the "direct order" route, row 56) lets a buyer
-        // create a FuelOrder without ever going through a FuelRequest's PENDING->accept
+    void directOrderCreationBypassesTheReplenishmentRequestNegotiationFlowEntirely() throws Exception {
+        // known-gap: POST /api/fuel-orders (the "direct order" route, row 56) lets a buyer
+        // create a FuelOrder without ever going through a ReplenishmentRequest's PENDING->accept
         // negotiation. Both creation paths coexist and produce indistinguishable FuelOrder rows
         // (requestId is null for the direct path) — the roadmap (S10) calls this out as
         // something v2 must make impossible; T01-A/T01-B only characterize that it still works.
         var f = new Fixture("retry-direct-order");
         long orderId = f.createDirectOrder();
 
-        mockMvc.perform(post("/api/v1/fuel-orders/{id}/confirm", orderId).with(f.buyer))
+        mockMvc.perform(post("/api/fuel-orders/{id}/confirm", orderId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CONFIRMED"));
     }
@@ -164,22 +172,25 @@ class StateLifecycleRetryCharacterizationTest {
             this.fuelProductId = createFuelProduct();
         }
 
-        long createFuelRequest() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/fuel-requests")
+        long createReplenishmentRequest() throws Exception {
+            var assets = ReplenishmentTestFixtures.create(customerCommandService, equipmentCommandService,
+                    tankCommandService, buyerCompanyId, "Av. Retry 1");
+            when(membershipAccess.currentOrganizationId()).thenReturn(java.util.Optional.of(assets.organizationId()));
+            var response = mockMvc.perform(post("/api/replenishment-requests")
                             .with(buyer)
                             .contentType("application/json")
                             .content("""
-                                    {"buyerCompanyId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
-                                     "unit":"GALLONS","deliveryAddress":"Av. Retry 1","deliveryDate":"2026-10-15",
+                                    {"customerAccountId":%d,"tankId":%d,"providerId":%d,"fuelProductId":%d,"quantity":10,
+                                     "unit":"GALLONS","deliveryAddress":"Av. Retry 1","deliveryDate":"2099-10-15",
                                      "source":"MANUAL"}
-                                    """.formatted(buyerCompanyId, providerId, fuelProductId)))
+                                    """.formatted(assets.customerId(), assets.tankId(), providerId, fuelProductId)))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();
         }
 
         long createDirectOrder() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/fuel-orders")
+            var response = mockMvc.perform(post("/api/fuel-orders")
                             .with(buyer)
                             .contentType("application/json")
                             .content("""
@@ -195,24 +206,24 @@ class StateLifecycleRetryCharacterizationTest {
         long createDelivery(long orderId) throws Exception {
             long driverId = createDriver();
             long vehicleId = createVehicle();
-            var response = mockMvc.perform(post("/api/v1/deliveries")
+            var response = mockMvc.perform(post("/api/deliveries")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"orderId":%d,"providerId":%d,"driverId":%d,"vehicleId":%d,
-                                     "scheduledDate":"2026-10-01","notes":"retry fixture"}
+                                    {"commandId":"cmd-%1$d","orderId":%1$d,"driverId":%3$d,"tankerId":%4$d,
+                                     "windowStart":"2099-10-15T08:00:00Z","windowEnd":"2099-10-15T16:00:00Z","scheduledDate":"2026-10-01","notes":"retry fixture"}
                                     """.formatted(orderId, providerId, driverId, vehicleId)))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
-            return objectMapper.readTree(response).get("id").asLong();
+            return objectMapper.readTree(response).get("deliveryId").asLong();
         }
 
         long createPayment(long orderId) throws Exception {
-            JsonNode order = objectMapper.readTree(mockMvc.perform(post("/api/v1/fuel-orders/{id}/confirm", orderId)
+            JsonNode order = objectMapper.readTree(mockMvc.perform(post("/api/fuel-orders/{id}/confirm", orderId)
                             .with(buyer))
                     .andReturn().getResponse().getContentAsString());
             double totalPrice = order.get("totalPrice").asDouble();
-            var response = mockMvc.perform(post("/api/v1/payments")
+            var response = mockMvc.perform(post("/api/payments")
                             .with(buyer)
                             .contentType("application/json")
                             .content("""
@@ -224,7 +235,7 @@ class StateLifecycleRetryCharacterizationTest {
         }
 
         private long createFuelProduct() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/fuel-products")
+            var response = mockMvc.perform(post("/api/fuel-products")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
@@ -237,27 +248,27 @@ class StateLifecycleRetryCharacterizationTest {
         }
 
         private long createDriver() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/drivers")
+            var response = mockMvc.perform(post("/api/drivers")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"providerId":%d,"firstName":"Retry","lastName":"Driver",
+                                    {"firstName":"Retry","lastName":"Driver",
                                      "licenseNumber":"L-RTY-%d","phoneNumber":"999000112","email":"retry-driver-%d@example.test",
                                      "status":"AVAILABLE"}
-                                    """.formatted(providerId, fixtureSeq(), fixtureSeq())))
+                                    """.formatted(fixtureSeq(), fixtureSeq())))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();
         }
 
         private long createVehicle() throws Exception {
-            var response = mockMvc.perform(post("/api/v1/vehicles")
+            var response = mockMvc.perform(post("/api/tankers")
                             .with(provider)
                             .contentType("application/json")
                             .content("""
-                                    {"providerId":%d,"licensePlate":"RTY-V%d","brand":"Volvo","model":"FH",
+                                    {"licensePlate":"RTY-V%d","brand":"Volvo","model":"FH",
                                      "capacity":2000,"unit":"GALLONS","status":"AVAILABLE"}
-                                    """.formatted(providerId, fixtureSeq())))
+                                    """.formatted(fixtureSeq())))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return objectMapper.readTree(response).get("id").asLong();
@@ -265,7 +276,7 @@ class StateLifecycleRetryCharacterizationTest {
     }
 
     private long signUpBuyer(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_BUYER"],
@@ -278,7 +289,7 @@ class StateLifecycleRetryCharacterizationTest {
     }
 
     private long signUpProvider(String username) throws Exception {
-        var response = mockMvc.perform(post("/api/v1/authentication/sign-up")
+        var response = mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
                                 {"username":"%s","password":"StrongPass1!","roles":["ROLE_PROVIDER"],

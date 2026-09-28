@@ -4,7 +4,10 @@ import com.primefuel.fulltank.platform.shared.application.result.ApplicationErro
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ErrorResponseAssembler;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,6 +22,7 @@ import java.util.ResourceBundle;
 @NullMarked
 public class GlobalExceptionHandler {
 
+    private static final Logger LOG = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private static final String MESSAGES_BASENAME = "messages";
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -50,6 +54,12 @@ public class GlobalExceptionHandler {
         return ErrorResponseAssembler.toErrorResponseFromApplicationError(applicationError);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                ApplicationError.validationError("request-body", "Malformed or unreadable JSON request body"));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
         var applicationError = ApplicationError.validationError(
@@ -61,20 +71,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
-        var applicationError = ApplicationError.unexpected(
-                resolveMessageOrDefault("error.unexpected.context", "global-exception-handler"),
-                ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred"
-        );
-        return ErrorResponseAssembler.toErrorResponseFromApplicationError(applicationError);
+        return unexpected(ex);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception ex) {
-        var applicationError = ApplicationError.unexpected(
+        return unexpected(ex);
+    }
+
+    /** Internal messages (class names, parser details) stay in the log, never in the response. */
+    private ResponseEntity<?> unexpected(Exception ex) {
+        LOG.error("Unhandled exception", ex);
+        return ErrorResponseAssembler.toErrorResponseFromApplicationError(ApplicationError.unexpected(
                 resolveMessageOrDefault("error.unexpected.context", "global-exception-handler"),
-                ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred"
-        );
-        return ErrorResponseAssembler.toErrorResponseFromApplicationError(applicationError);
+                "An unexpected error occurred"));
     }
 
     private String resolveMessageOrDefault(String key, String defaultValue, Object... args) {

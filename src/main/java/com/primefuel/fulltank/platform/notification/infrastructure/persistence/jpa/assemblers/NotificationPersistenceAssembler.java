@@ -19,6 +19,12 @@ public final class NotificationPersistenceAssembler {
         domain.setRead(entity.isRead());
         domain.setReferenceId(entity.getReferenceId());
         domain.setCreatedAt(entity.getCreatedAt());
+        domain.setOrganizationId(entity.getOrganizationId());
+        domain.setEventId(entity.getEventId());
+        domain.setChannel(entity.getChannel());
+        domain.setDeliveryStatus(entity.getDeliveryStatus());
+        domain.setAttempts(entity.getAttempts());
+        domain.setLastAttemptAt(entity.getLastAttemptAt());
         return domain;
     }
 
@@ -34,6 +40,12 @@ public final class NotificationPersistenceAssembler {
         entity.setMessage(domain.getMessage());
         entity.setRead(domain.isRead());
         entity.setReferenceId(domain.getReferenceId());
+        entity.setOrganizationId(domain.getOrganizationId());
+        entity.setEventId(domain.getEventId());
+        entity.setChannel(domain.getChannel());
+        entity.setDeliveryStatus(domain.getDeliveryStatus());
+        entity.setAttempts(domain.getAttempts());
+        entity.setLastAttemptAt(domain.getLastAttemptAt());
         return entity;
     }
 }

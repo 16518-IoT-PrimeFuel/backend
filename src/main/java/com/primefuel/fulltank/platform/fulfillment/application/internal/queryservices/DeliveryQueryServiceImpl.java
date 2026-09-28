@@ -4,7 +4,6 @@ import com.primefuel.fulltank.platform.fulfillment.application.queryservices.Del
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.queries.GetAllDeliveriesQuery;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.queries.GetDeliveryByIdQuery;
-import com.primefuel.fulltank.platform.fulfillment.domain.model.queries.GetDeliveryByOrderIdQuery;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryRepository;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +22,6 @@ public class DeliveryQueryServiceImpl implements DeliveryQueryService {
     @Override
     public Optional<Delivery> handle(GetDeliveryByIdQuery query) {
         return deliveryRepository.findById(query.deliveryId());
-    }
-
-    @Override
-    public Optional<Delivery> handle(GetDeliveryByOrderIdQuery query) {
-        return deliveryRepository.findByOrderId(query.orderId());
     }
 
     @Override

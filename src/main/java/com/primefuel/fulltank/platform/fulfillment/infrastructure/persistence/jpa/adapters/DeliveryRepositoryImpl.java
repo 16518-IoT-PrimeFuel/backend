@@ -31,6 +31,15 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
     }
 
     @Override
+    public Optional<Delivery> findByAssignmentCommandId(String assignmentCommandId) {
+        if (assignmentCommandId == null) {
+            return Optional.empty();
+        }
+        return deliveryPersistenceRepository.findByAssignmentCommandId(assignmentCommandId)
+                .map(DeliveryPersistenceAssembler::toDomainFromPersistence);
+    }
+
+    @Override
     public List<Delivery> findAll() {
         return deliveryPersistenceRepository.findAll().stream()
                 .map(DeliveryPersistenceAssembler::toDomainFromPersistence)
@@ -49,5 +58,12 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
         var entity = DeliveryPersistenceAssembler.toPersistenceFromDomain(delivery);
         return DeliveryPersistenceAssembler.toDomainFromPersistence(
                 deliveryPersistenceRepository.save(entity));
+    }
+
+    @Override
+    public Delivery saveAndFlush(Delivery delivery) {
+        var entity = DeliveryPersistenceAssembler.toPersistenceFromDomain(delivery);
+        return DeliveryPersistenceAssembler.toDomainFromPersistence(
+                deliveryPersistenceRepository.saveAndFlush(entity));
     }
 }

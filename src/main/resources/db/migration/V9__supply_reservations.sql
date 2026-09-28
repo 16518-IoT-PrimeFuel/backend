@@ -1,0 +1,3 @@
+create table supply_stock_locks (created_at datetime(6) not null, fuel_product_id bigint not null, id bigint not null auto_increment, provider_id bigint not null, updated_at datetime(6) not null, primary key (id)) engine=InnoDB;
+alter table supply_stock_locks add constraint uk_supply_stock_locks_provider_product unique (provider_id, fuel_product_id);
+create table supply_reservations (quantity float(53) not null, unit_price float(53) not null, created_at datetime(6) not null, fuel_product_id bigint not null, id bigint not null auto_increment, provider_id bigint not null, updated_at datetime(6) not null, reference varchar(120) not null, unit varchar(20) not null, status VARCHAR(20) not null, primary key (id)) engine=InnoDB;

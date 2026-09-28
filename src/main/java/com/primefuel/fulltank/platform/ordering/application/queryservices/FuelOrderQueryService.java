@@ -14,4 +14,11 @@ public interface FuelOrderQueryService {
     List<FuelOrder> handle(GetAllFuelOrdersQuery query);
     List<FuelOrder> handle(GetFuelOrdersByCompanyIdQuery query);
     List<FuelOrder> handle(GetFuelOrdersByProviderIdQuery query);
+
+    /**
+     * The requested quantity of an order, without exposing the {@link FuelOrder} aggregate. Added for
+     * S14/T14-A: the delivery physical close needs the requested volume as evidence context, and other
+     * modules must not reach into {@code ordering.domain..}.
+     */
+    Optional<Double> findRequestedQuantity(Long orderId);
 }

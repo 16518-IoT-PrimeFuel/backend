@@ -40,4 +40,12 @@ public class FuelOrderQueryServiceImpl implements FuelOrderQueryService {
     public List<FuelOrder> handle(GetFuelOrdersByProviderIdQuery query) {
         return fuelOrderRepository.findByProviderId(query.providerId());
     }
+
+    @Override
+    public Optional<Double> findRequestedQuantity(Long orderId) {
+        if (orderId == null) {
+            return Optional.empty();
+        }
+        return fuelOrderRepository.findById(orderId).map(FuelOrder::getRequestedQuantity);
+    }
 }

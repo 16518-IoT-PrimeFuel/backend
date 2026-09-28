@@ -40,6 +40,14 @@ public class CurrentUserAccess {
         return hasAuthority("ROLE_PROVIDER");
     }
 
+    public java.util.Optional<Long> currentProviderId() {
+        var principal = principal();
+        if (principal == null || !hasAuthority("ROLE_PROVIDER")) {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.ofNullable(principal.getProviderId());
+    }
+
     private boolean hasAuthority(String authority) {
         var principal = principal();
         return principal != null && principal.getAuthorities().stream()

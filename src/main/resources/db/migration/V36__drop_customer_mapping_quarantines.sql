@@ -1,0 +1,1 @@
+drop table customer_mapping_quarantines;
