@@ -51,7 +51,7 @@ public class TankersController {
      * <p>El distribuidor se obtiene del principal y nunca del cuerpo.</p>
      */
     @Operation(summary = "Registrar cisterna",
-            description = "Crea una cisterna para el tenant distribuidor autenticado, identificado a partir del principal.")
+            description = "Crea una cisterna para el tenant distribuidor autenticado, identificado a partir del principal;  Requiere cuenta con ROLE_PROVIDER")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Cisterna registrada."),
             @ApiResponse(responseCode = "400", description = "El cuerpo no supera la validación o los datos de la cisterna no son válidos."),

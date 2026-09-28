@@ -52,7 +52,7 @@ public class EquipmentController {
      * <p>El identificador de empresa del cuerpo debe corresponder al tenant del usuario.</p>
      */
     @Operation(summary = "Crear equipo",
-            description = "Registra un equipo heredado para la empresa indicada, que debe pertenecer al usuario autenticado.")
+            description = "Registra un equipo heredado para la empresa indicada, que debe pertenecer al usuario autenticado; PD: Registro de Camiones")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Equipo creado."),
             @ApiResponse(responseCode = "403", description = "La empresa indicada no pertenece al usuario autenticado.")

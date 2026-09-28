@@ -98,7 +98,7 @@ public class DriversController {
      * <p>La consulta se limita al tenant del principal; un conductor de otro tenant se informa como no encontrado.</p>
      */
     @Operation(summary = "Consultar conductor por identificador",
-            description = "Devuelve el conductor indicado si pertenece al tenant distribuidor autenticado.")
+            description = "Devuelve el conductor indicado si pertenece al tenant distribuidor autenticado; Importante registrarse con ROLE_PROVIDER")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Conductor devuelto."),
             @ApiResponse(responseCode = "403", description = "El usuario autenticado no tiene identidad de distribuidor."),

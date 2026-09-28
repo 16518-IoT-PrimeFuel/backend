@@ -54,7 +54,7 @@ public class GeofencePoliciesController {
      * <p>El distribuidor se resuelve en el servidor. El radio define un círculo en metros; la geometría inválida devuelve 400.
      */
     @Operation(summary = "Crear versión de geocerca para entrega",
-            description = "Crea una nueva versión del círculo de seguridad de una entrega para el distribuidor autenticado y conserva las versiones previas.")
+            description = "Crea una nueva versión del círculo de seguridad de una entrega para el distribuidor autenticado y conserva las versiones previas; REQUIERE CUENTA ROL_PROVIDER")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Versión de política creada."),
             @ApiResponse(responseCode = "400", description = "Geometría inválida: falta el centro, sus coordenadas no son válidas o el radio no es positivo."),

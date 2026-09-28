@@ -60,7 +60,7 @@ public class AnalyticsController {
      * <p>Solo el distribuidor propietario puede consultarlos; los resultados abarcan su tenant completo.</p>
      */
     @Operation(summary = "Consultar indicadores del distribuidor",
-            description = "Devuelve métricas agregadas del tenant distribuidor cuando el usuario pertenece a esa empresa.")
+            description = "Devuelve métricas agregadas del tenant distribuidor cuando el usuario pertenece a esa empresa; Requiere cuenta con ROLE_PROVIDER")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Indicadores del distribuidor devueltos."),
             @ApiResponse(responseCode = "403", description = "El usuario no pertenece al distribuidor solicitado.")

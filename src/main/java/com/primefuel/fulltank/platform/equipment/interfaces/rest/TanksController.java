@@ -41,13 +41,21 @@ public class TanksController {
     /**
      * Registra un tanque para una cuenta de cliente de la organización activa.
      *
-     * <p>La organización se obtiene de la identidad autenticada. La cuenta y el sitio deben pertenecer a ella; la capacidad y el nivel inicial deben respetar sus invariantes.</p>
+     * <p>Puede usarlo un usuario autenticado con una membresía activa en la organización propietaria de la cuenta.
+     * En el flujo habitual, esto corresponde al comprador ({@code ROLE_BUYER}) de una organización {@code CUSTOMER}.
+     * Un proveedor ({@code ROLE_PROVIDER}) de otra organización no puede registrar tanques para esa cuenta.
+     * La organización se obtiene de la identidad autenticada; la cuenta y el sitio deben pertenecer a ella.</p>
      */
     @Operation(summary = "Registrar tanque",
-            description = "Crea un tanque para una cuenta y un sitio de la organización activa, y valida capacidad, unidad y nivel inicial.")
+            description = "Crea un tanque para una cuenta y un sitio de la organización activa. "
+                    + "Puede hacerlo un usuario con membresía activa en la organización de la cuenta; en el flujo habitual, "
+                    + "es el comprador (ROLE_BUYER) de una organización CUSTOMER. Un proveedor (ROLE_PROVIDER) de otra "
+                    + "organización no puede usar una cuenta ajena. La cuenta y el sitio deben pertenecer a la organización "
+                    + "activa; también se validan capacidad, unidad y nivel inicial.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Tanque creado."),
-            @ApiResponse(responseCode = "400", description = "El cuerpo es inválido o la cuenta, el sitio o la capacidad incumplen las reglas del dominio."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo es inválido, la cuenta o el sitio no pertenecen a la organización activa, "
+                    + "o la cuenta, el sitio, la capacidad, la unidad o el nivel inicial incumplen las reglas del dominio."),
             @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
             @ApiResponse(responseCode = "409", description = "El equipo heredado indicado ya está asociado a un tanque.")
     })

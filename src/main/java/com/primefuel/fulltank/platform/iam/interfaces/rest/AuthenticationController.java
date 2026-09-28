@@ -51,7 +51,14 @@ public class AuthenticationController {
      * user is granted an OWNER membership within the same transaction.</p>
      */
     @Operation(summary = "Registrar una cuenta",
-            description = "Crea la cuenta y su organización, y asigna al usuario la membresía OWNER. El rol debe coincidir con el perfil comercial enviado.")
+            description = """
+                    Crea la cuenta y su organización, y asigna al usuario la membresía OWNER. El rol debe coincidir con el perfil comercial enviado.
+
+                    | Rol en `roles` | Bloque a enviar | Bloque a omitir |
+                    |---|---|---|
+                    | `["ROLE_BUYER"]` | `buyerCompany` | `providerCompany` |
+                    | `["ROLE_PROVIDER"]` | `providerCompany` | `buyerCompany` |
+                    """)
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Cuenta y organización creadas."),
             @ApiResponse(responseCode = "400", description = "El cuerpo no cumple la validación o el rol no coincide con el perfil comercial."),
