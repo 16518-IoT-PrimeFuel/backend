@@ -43,20 +43,20 @@ public class InvitationsController {
     /**
      * Invita una dirección de correo a una organización.
      *
-     * <p>Solo los miembros de la organización pueden invitar. No se duplican invitaciones pendientes al mismo correo;
+     * <p>Solo OWNER o ADMIN de la organización pueden invitar, y OWNER no es invitable. No se duplican invitaciones pendientes al mismo correo;
      * el rol debe estar admitido y el token es de un solo uso y tiene vigencia limitada.</p>
      */
     @Operation(summary = "Invitar miembro a una organización",
-            description = "Crea una invitación pendiente para el correo y rol indicados en la organización de la ruta. Requiere una membresía en esa organización.")
+            description = "Crea una invitación pendiente para el correo y rol (ADMIN o MEMBER) indicados en la organización de la ruta. Requiere ser OWNER o ADMIN de esa organización.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Invitación creada."),
-            @ApiResponse(responseCode = "400", description = "El cuerpo no supera la validación o el rol no está admitido."),
-            @ApiResponse(responseCode = "403", description = "El usuario no pertenece a la organización indicada."),
+            @ApiResponse(responseCode = "400", description = "El cuerpo no supera la validación o el rol no está admitido (OWNER no es invitable)."),
+            @ApiResponse(responseCode = "403", description = "El usuario no es OWNER ni ADMIN de la organización indicada."),
             @ApiResponse(responseCode = "404", description = "La organización no existe."),
             @ApiResponse(responseCode = "409", description = "Ya existe una invitación pendiente para este correo.")
     })
     @PostMapping("/organizations/{organizationId}/invitations")
-    @PreAuthorize("@membershipAccess.belongsToOrganization(#organizationId)")
+    @PreAuthorize("@membershipAccess.canManageOrganization(#organizationId)")
     public ResponseEntity<?> invite(@PathVariable Long organizationId,
                                     @Valid @RequestBody InviteMemberResource resource) {
         MembershipRole role;
@@ -65,6 +65,10 @@ public class InvitationsController {
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.badRequest()
                     .body(ApplicationError.validationError("role", "Unknown membership role"));
+        }
+        if (role == MembershipRole.OWNER) { // la propiedad no se cede por invitación
+            return ResponseEntity.badRequest()
+                    .body(ApplicationError.validationError("role", "OWNER cannot be invited"));
         }
         var result = invitationCommandService.handle(new InviteMemberCommand(
                 organizationId, resource.email(), role, membershipAccess.currentUserId().orElse(null)));
@@ -106,7 +110,7 @@ public class InvitationsController {
             description = "Revoca una invitación pendiente de una organización a la que pertenece el usuario autenticado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Invitación revocada."),
-            @ApiResponse(responseCode = "403", description = "El usuario no pertenece a la organización de la invitación."),
+            @ApiResponse(responseCode = "403", description = "El usuario no es OWNER ni ADMIN de la organización de la invitación."),
             @ApiResponse(responseCode = "404", description = "La invitación no existe."),
             @ApiResponse(responseCode = "409", description = "La invitación no está pendiente y no puede revocarse.")
     })
@@ -116,7 +120,7 @@ public class InvitationsController {
         if (existing.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        if (!membershipAccess.belongsToOrganization(existing.get().getOrganizationId())) {
+        if (!membershipAccess.canManageOrganization(existing.get().getOrganizationId())) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         var result = invitationCommandService.handle(new RevokeInvitationCommand(invitationId));

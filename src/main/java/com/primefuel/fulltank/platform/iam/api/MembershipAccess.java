@@ -9,4 +9,7 @@ public interface MembershipAccess {
     Optional<Long> currentOrganizationId();
 
     boolean belongsToOrganization(Long organizationId);
+
+    /** OWNER o ADMIN activo en la organización: puede invitar y revocar. */
+    boolean canManageOrganization(Long organizationId);
 }
