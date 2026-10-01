@@ -111,16 +111,14 @@ class StateLifecycleRetryCharacterizationTest {
     }
 
     @Test
-    void refundingAPendingNeverCompletedPaymentSucceedsWithNoGuard() throws Exception {
-        // known-gap (T01-A row 70): Payment#refund() has no status guard at all, so a payment
-        // that was never completed (still PENDING) can be "refunded" directly.
+    void refundingAPendingNeverCompletedPaymentIsRejected() throws Exception {
+        // T01-A row 70 closed: refund requires a COMPLETED payment, so a still-PENDING one gets 409.
         var f = new Fixture("retry-refund");
         long orderId = f.createDirectOrder();
         long paymentId = f.createPayment(orderId);
 
         mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(f.buyer))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("REFUNDED"));
+                .andExpect(status().isConflict());
     }
 
     @Test

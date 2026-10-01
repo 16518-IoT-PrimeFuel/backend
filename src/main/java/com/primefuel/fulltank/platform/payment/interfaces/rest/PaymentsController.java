@@ -114,12 +114,13 @@ public class PaymentsController {
     /**
      * Reembolsa un pago.
      *
-     * <p>Puede operarlo la empresa compradora o el distribuidor de la orden. El estado pasa a reembolsado sin restricción del estado previo.</p>
+     * <p>Puede operarlo la empresa compradora o el distribuidor de la orden. Solo se reembolsa un pago COMPLETED; repetirlo sobre uno ya reembolsado es idempotente.</p>
      */
     @Operation(summary = "Reembolsar pago",
-            description = "Marca el pago como reembolsado; repetir la operación conserva ese estado.")
+            description = "Marca como reembolsado un pago completado; repetir la operación conserva ese estado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Pago reembolsado."),
+            @ApiResponse(responseCode = "409", description = "El pago no está completado (PENDING o FAILED) y no puede reembolsarse."),
             @ApiResponse(responseCode = "404", description = "El pago no existe o el usuario no puede consultarlo.")
     })
     @PostMapping("/{paymentId}/refund")
