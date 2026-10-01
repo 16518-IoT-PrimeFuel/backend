@@ -13,6 +13,7 @@ public interface ReplenishmentRequestPersistenceRepository
         extends JpaRepository<ReplenishmentRequestPersistenceEntity, Long> {
 
     List<ReplenishmentRequestPersistenceEntity> findByOrganizationId(Long organizationId);
+    List<ReplenishmentRequestPersistenceEntity> findByProviderIdOrderByIdDesc(Long providerId);
     Optional<ReplenishmentRequestPersistenceEntity> findByEpisodeKey(String episodeKey);
     Optional<ReplenishmentRequestPersistenceEntity> findByOrderId(Long orderId);
     Optional<ReplenishmentRequestPersistenceEntity> findFirstByTankIdAndStatus(

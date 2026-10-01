@@ -4,6 +4,7 @@ import com.primefuel.fulltank.platform.replenishment.application.queryservices.R
 import com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.ReplenishmentRequest;
 import com.primefuel.fulltank.platform.replenishment.domain.model.queries.GetReplenishmentRequestByIdQuery;
 import com.primefuel.fulltank.platform.replenishment.domain.model.queries.GetReplenishmentRequestsByOrganizationQuery;
+import com.primefuel.fulltank.platform.replenishment.domain.model.queries.GetReplenishmentRequestsByProviderQuery;
 import com.primefuel.fulltank.platform.replenishment.domain.repositories.ReplenishmentRequestRepository;
 import org.springframework.stereotype.Service;
 
@@ -27,5 +28,10 @@ public class ReplenishmentQueryServiceImpl implements ReplenishmentQueryService 
     @Override
     public List<ReplenishmentRequest> handle(GetReplenishmentRequestsByOrganizationQuery query) {
         return repository.findByOrganizationId(query.organizationId());
+    }
+
+    @Override
+    public List<ReplenishmentRequest> handle(GetReplenishmentRequestsByProviderQuery query) {
+        return repository.findByProviderId(query.providerId());
     }
 }

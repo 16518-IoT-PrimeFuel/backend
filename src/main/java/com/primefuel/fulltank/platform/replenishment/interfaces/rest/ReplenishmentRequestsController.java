@@ -9,6 +9,7 @@ import com.primefuel.fulltank.platform.replenishment.domain.model.commands.Creat
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.RejectReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.queries.GetReplenishmentRequestByIdQuery;
 import com.primefuel.fulltank.platform.replenishment.domain.model.queries.GetReplenishmentRequestsByOrganizationQuery;
+import com.primefuel.fulltank.platform.replenishment.domain.model.queries.GetReplenishmentRequestsByProviderQuery;
 import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.ReplenishmentSource;
 import com.primefuel.fulltank.platform.replenishment.interfaces.rest.resources.CreateReplenishmentRequestResource;
 import com.primefuel.fulltank.platform.replenishment.interfaces.rest.resources.RejectReplenishmentRequestResource;
@@ -107,13 +108,19 @@ public class ReplenishmentRequestsController {
      *
      * <p>La solicitud debe pertenecer a la organización activa; las de otros tenants responden como no encontradas.</p>
      */
+    @Operation(summary = "Bandeja de solicitudes del distribuidor",
+            description = "Lista todas las solicitudes dirigidas al distribuidor autenticado, de todos sus clientes y estados, ordenadas de más reciente a más antigua.")
+    @GetMapping("/inbox")
+    public ResponseEntity<List<ReplenishmentRequestResource>> inbox() {
+        var providerId = tenantAccess.currentProviderId();
+        if (providerId.isEmpty()) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        var requests = queryService.handle(new GetReplenishmentRequestsByProviderQuery(providerId.get()));
+        return ResponseEntity.ok(requests.stream()
+                .map(ReplenishmentRequestResourceFromDomainAssembler::toResourceFromDomain).toList());
+    }
+
     @Operation(summary = "Consultar solicitud por identificador",
             description = "Devuelve la solicitud indicada si pertenece a la organización activa del usuario o si el usuario es el distribuidor destinatario.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Solicitud de abastecimiento devuelta."),
-            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene organización activa ni identidad de distribuidor."),
-            @ApiResponse(responseCode = "404", description = "La solicitud no existe o no pertenece a su organización ni a su distribuidor.")
-    })
     @GetMapping("/{requestId}")
     public ResponseEntity<ReplenishmentRequestResource> get(@PathVariable Long requestId) {
         var organizationId = membershipAccess.currentOrganizationId();

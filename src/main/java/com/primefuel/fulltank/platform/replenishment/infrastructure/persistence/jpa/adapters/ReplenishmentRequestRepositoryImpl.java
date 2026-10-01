@@ -38,6 +38,12 @@ public class ReplenishmentRequestRepositoryImpl implements ReplenishmentRequestR
     }
 
     @Override
+    public List<ReplenishmentRequest> findByProviderId(Long providerId) {
+        return persistenceRepository.findByProviderIdOrderByIdDesc(providerId).stream()
+                .map(ReplenishmentRequestPersistenceAssembler::toDomainFromPersistence).toList();
+    }
+
+    @Override
     public Optional<ReplenishmentRequest> findByOrderId(Long orderId) {
         if (orderId == null) {
             return Optional.empty();
