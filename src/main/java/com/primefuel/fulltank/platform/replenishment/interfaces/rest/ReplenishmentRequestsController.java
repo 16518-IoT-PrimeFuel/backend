@@ -108,20 +108,23 @@ public class ReplenishmentRequestsController {
      * <p>La solicitud debe pertenecer a la organización activa; las de otros tenants responden como no encontradas.</p>
      */
     @Operation(summary = "Consultar solicitud por identificador",
-            description = "Devuelve la solicitud indicada solo si pertenece a la organización activa del usuario.")
+            description = "Devuelve la solicitud indicada si pertenece a la organización activa del usuario o si el usuario es el distribuidor destinatario.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Solicitud de abastecimiento devuelta."),
-            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene una organización activa."),
-            @ApiResponse(responseCode = "404", description = "La solicitud no existe o pertenece a otra organización.")
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene organización activa ni identidad de distribuidor."),
+            @ApiResponse(responseCode = "404", description = "La solicitud no existe o no pertenece a su organización ni a su distribuidor.")
     })
     @GetMapping("/{requestId}")
     public ResponseEntity<ReplenishmentRequestResource> get(@PathVariable Long requestId) {
         var organizationId = membershipAccess.currentOrganizationId();
-        if (organizationId.isEmpty()) {
+        var providerId = tenantAccess.currentProviderId();
+        if (organizationId.isEmpty() && providerId.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
+        // El distribuidor destinatario también puede leerla: accept/reject ya lo autorizan por providerId.
         return queryService.handle(new GetReplenishmentRequestByIdQuery(requestId))
-                .filter(request -> organizationId.get().equals(request.getOrganizationId()))
+                .filter(request -> organizationId.map(id -> id.equals(request.getOrganizationId())).orElse(false)
+                        || providerId.map(id -> id.equals(request.getProviderId())).orElse(false))
                 .map(request -> new ResponseEntity<>(
                         ReplenishmentRequestResourceFromDomainAssembler.toResourceFromDomain(request), HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
