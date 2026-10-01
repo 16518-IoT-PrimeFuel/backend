@@ -104,9 +104,9 @@ public class ReplenishmentRequestsController {
     }
 
     /**
-     * Consulta una solicitud de abastecimiento por identificador.
+     * Lista las solicitudes dirigidas al distribuidor autenticado, de todos sus clientes.
      *
-     * <p>La solicitud debe pertenecer a la organización activa; las de otros tenants responden como no encontradas.</p>
+     * <p>La identidad del distribuidor se obtiene del principal, nunca de parámetros del cliente.</p>
      */
     @Operation(summary = "Bandeja de solicitudes del distribuidor",
             description = "Lista todas las solicitudes dirigidas al distribuidor autenticado, de todos sus clientes y estados, ordenadas de más reciente a más antigua.")
@@ -121,6 +121,11 @@ public class ReplenishmentRequestsController {
 
     @Operation(summary = "Consultar solicitud por identificador",
             description = "Devuelve la solicitud indicada si pertenece a la organización activa del usuario o si el usuario es el distribuidor destinatario.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Solicitud de abastecimiento devuelta."),
+            @ApiResponse(responseCode = "403", description = "El usuario no está autenticado o no tiene organización activa ni identidad de distribuidor."),
+            @ApiResponse(responseCode = "404", description = "La solicitud no existe o no pertenece a su organización ni a su distribuidor.")
+    })
     @GetMapping("/{requestId}")
     public ResponseEntity<ReplenishmentRequestResource> get(@PathVariable Long requestId) {
         var organizationId = membershipAccess.currentOrganizationId();
