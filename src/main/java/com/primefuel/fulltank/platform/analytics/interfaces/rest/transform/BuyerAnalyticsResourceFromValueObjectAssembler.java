@@ -1,7 +1,7 @@
-package com.primefuel.fulltank.platform.reporting.interfaces.rest.transform;
+package com.primefuel.fulltank.platform.analytics.interfaces.rest.transform;
 
-import com.primefuel.fulltank.platform.reporting.domain.model.valueobjects.BuyerAnalytics;
-import com.primefuel.fulltank.platform.reporting.interfaces.rest.resources.BuyerAnalyticsResource;
+import com.primefuel.fulltank.platform.analytics.domain.model.valueobjects.BuyerAnalytics;
+import com.primefuel.fulltank.platform.analytics.interfaces.rest.resources.BuyerAnalyticsResource;
 
 public final class BuyerAnalyticsResourceFromValueObjectAssembler {
 

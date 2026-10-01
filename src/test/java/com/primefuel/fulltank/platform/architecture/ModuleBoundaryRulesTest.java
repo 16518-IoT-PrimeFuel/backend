@@ -27,7 +27,7 @@ class ModuleBoundaryRulesTest {
             "notification",
             "ordering",
             "payment",
-            "reporting");
+            "analytics");
 
     private static JavaClasses productionClasses() {
         return new ClassFileImporter()

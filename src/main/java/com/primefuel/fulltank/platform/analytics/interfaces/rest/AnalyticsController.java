@@ -1,15 +1,15 @@
-package com.primefuel.fulltank.platform.reporting.interfaces.rest;
+package com.primefuel.fulltank.platform.analytics.interfaces.rest;
 
-import com.primefuel.fulltank.platform.reporting.application.queryservices.AnalyticsQueryService;
-import com.primefuel.fulltank.platform.reporting.domain.model.queries.GetBuyerAnalyticsQuery;
-import com.primefuel.fulltank.platform.reporting.domain.model.queries.GetPlatformSummaryQuery;
-import com.primefuel.fulltank.platform.reporting.domain.model.queries.GetProviderAnalyticsQuery;
-import com.primefuel.fulltank.platform.reporting.interfaces.rest.resources.BuyerAnalyticsResource;
-import com.primefuel.fulltank.platform.reporting.interfaces.rest.resources.PlatformSummaryResource;
-import com.primefuel.fulltank.platform.reporting.interfaces.rest.resources.ProviderAnalyticsResource;
-import com.primefuel.fulltank.platform.reporting.interfaces.rest.transform.BuyerAnalyticsResourceFromValueObjectAssembler;
-import com.primefuel.fulltank.platform.reporting.interfaces.rest.transform.PlatformSummaryResourceFromValueObjectAssembler;
-import com.primefuel.fulltank.platform.reporting.interfaces.rest.transform.ProviderAnalyticsResourceFromValueObjectAssembler;
+import com.primefuel.fulltank.platform.analytics.application.queryservices.AnalyticsQueryService;
+import com.primefuel.fulltank.platform.analytics.domain.model.queries.GetBuyerAnalyticsQuery;
+import com.primefuel.fulltank.platform.analytics.domain.model.queries.GetPlatformSummaryQuery;
+import com.primefuel.fulltank.platform.analytics.domain.model.queries.GetProviderAnalyticsQuery;
+import com.primefuel.fulltank.platform.analytics.interfaces.rest.resources.BuyerAnalyticsResource;
+import com.primefuel.fulltank.platform.analytics.interfaces.rest.resources.PlatformSummaryResource;
+import com.primefuel.fulltank.platform.analytics.interfaces.rest.resources.ProviderAnalyticsResource;
+import com.primefuel.fulltank.platform.analytics.interfaces.rest.transform.BuyerAnalyticsResourceFromValueObjectAssembler;
+import com.primefuel.fulltank.platform.analytics.interfaces.rest.transform.PlatformSummaryResourceFromValueObjectAssembler;
+import com.primefuel.fulltank.platform.analytics.interfaces.rest.transform.ProviderAnalyticsResourceFromValueObjectAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
