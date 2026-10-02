@@ -1,8 +1,11 @@
 package com.primefuel.fulltank.platform.equipment.interfaces.rest;
 
+import com.primefuel.fulltank.platform.equipment.application.commandservices.ProviderBuyerCommandService;
 import com.primefuel.fulltank.platform.equipment.application.queryservices.ProviderBuyerQueryService;
+import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterProviderBuyerCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetProviderBuyerCompaniesQuery;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.ProviderBuyerCompanyResource;
+import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.RegisterProviderBuyerResource;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.ProviderBuyerCompanyResourceFromDomainAssembler;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
@@ -31,10 +34,15 @@ import java.util.List;
 public class ProviderBuyerCompaniesController {
     private final ProviderBuyerQueryService queries;
     private final TenantAccess access;
+    private final ProviderBuyerCommandService commands;
 
-    public ProviderBuyerCompaniesController(ProviderBuyerQueryService queries, TenantAccess access) {
+    public ProviderBuyerCompaniesController(
+            ProviderBuyerQueryService queries,
+            TenantAccess access,
+            ProviderBuyerCommandService commands) {
         this.queries = queries;
         this.access = access;
+        this.commands = commands;
     }
 
     @GetMapping
@@ -62,4 +70,58 @@ public class ProviderBuyerCompaniesController {
                         .toList());
     }
 
+    @PostMapping
+    @PreAuthorize("@currentUserAccess.isProvider()")
+    @Operation(
+            summary = "Registrar o vincular comprador antes del primer pedido",
+            description =
+                    "Con buyerCompanyId vincula una empresa existente. Sin id requiere name y ruc"
+                            + " únicos; crea empresa, organización compradora, cuenta y sitio, sin"
+                            + " usuario ni credenciales IAM. La relación pertenece al proveedor"
+                            + " autenticado y habilita tanques, lecturas y episodios sin historial"
+                            + " comercial. Duplicado 409.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "201",
+                description = "Comprador vinculado",
+                content =
+                        @Content(
+                                schema =
+                                        @Schema(
+                                                implementation =
+                                                        ProviderBuyerCompanyResource.class))),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+        @ApiResponse(responseCode = "403", description = "Sin proveedor"),
+        @ApiResponse(responseCode = "404", description = "Comprador existente no encontrado"),
+        @ApiResponse(responseCode = "409", description = "RUC o vínculo duplicado")
+    })
+    public ResponseEntity<?> create(@Valid @RequestBody RegisterProviderBuyerResource body) {
+        var provider = access.currentProviderId();
+        if (provider.isEmpty())
+            return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                    ApplicationError.forbidden("Provider identity required"));
+        var result =
+                commands.handle(
+                        new RegisterProviderBuyerCommand(
+                                provider.get(),
+                                body.buyerCompanyId(),
+                                body.name(),
+                                body.ruc(),
+                                body.sector(),
+                                body.address(),
+                                body.contactEmail(),
+                                body.phone(),
+                                body.siteName()));
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                result,
+                id ->
+                        queries.handle(new GetProviderBuyerCompaniesQuery(provider.get())).stream()
+                                .filter(c -> id.equals(c.id()))
+                                .map(
+                                        ProviderBuyerCompanyResourceFromDomainAssembler
+                                                ::toResourceFromDomain)
+                                .findFirst()
+                                .orElseThrow(),
+                HttpStatus.CREATED);
+    }
 }
