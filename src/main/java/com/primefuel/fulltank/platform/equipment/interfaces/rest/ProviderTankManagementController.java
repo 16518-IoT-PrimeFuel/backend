@@ -88,6 +88,51 @@ public class ProviderTankManagementController {
         return respond(result, provider.get(), HttpStatus.CREATED);
     }
 
+    @PutMapping("/{tankId}")
+    @Operation(
+            summary = "Editar política, producto o dispositivo del tanque",
+            description =
+                    "Solo compradores vinculados. Campos omitidos se conservan; deviceId exige"
+                        + " channel. Reemplazar dispositivo cierra la asociación previa del canal y"
+                        + " conserva su historia. No cambia propietario/capacidad.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Tanque actualizado",
+                content = @Content(schema = @Schema(implementation = ProviderTankResource.class))),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+        @ApiResponse(responseCode = "403", description = "Sin proveedor autenticado"),
+        @ApiResponse(responseCode = "404", description = "Tanque no vinculado o producto ajeno"),
+        @ApiResponse(responseCode = "409", description = "Dispositivo duplicado")
+    })
+    public ResponseEntity<?> update(
+            @PathVariable @Positive Long tankId,
+            @Valid @RequestBody UpdateProviderTankResource body) {
+        var provider = access.currentProviderId();
+        if (provider.isEmpty())
+            throw new AccessDeniedException("Provider identity or ownership required");
+        if (body.deviceId() != null
+                        && (body.deviceId().isBlank()
+                                || body.channel() == null
+                                || body.channel().isBlank())
+                || body.channel() != null && body.deviceId() == null)
+            return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                    ApplicationError.validationError(
+                            "device", "deviceId and channel are required together"));
+        return respond(
+                commands.handle(
+                        new UpdateProviderTankCommand(
+                                provider.get(),
+                                tankId,
+                                body.fuelProductId(),
+                                body.lowLevelPercent(),
+                                body.deviceId(),
+                                body.channel(),
+                                body.autoGenerateEnabled())),
+                provider.get(),
+                HttpStatus.OK);
+    }
+
     private ResponseEntity<?> respond(
             Result<Long, ApplicationError> result, Long provider, HttpStatus status) {
         return ResponseEntityAssembler.toResponseEntityFromResult(

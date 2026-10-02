@@ -111,6 +111,117 @@ public class ProviderTankCommandServiceImpl implements ProviderTankCommandServic
         return Result.success(tank.getId());
     }
 
+    public Result<Long, ApplicationError> handle(UpdateProviderTankCommand c) {
+        if (!buyers.canReadTank(c.providerId(), c.tankId()))
+            return Result.failure(ApplicationError.notFound("Tank", String.valueOf(c.tankId())));
+        var tank = repository.findById(c.tankId()).orElse(null);
+        if (tank == null)
+            return Result.failure(ApplicationError.notFound("Tank", String.valueOf(c.tankId())));
+        var old =
+                policyLookup
+                        .findPolicy(tank.getId())
+                        .filter(p -> tank.getOrganizationId().equals(p.organizationId()))
+                        .orElse(null);
+        var productId =
+                c.fuelProductId() != null
+                        ? c.fuelProductId()
+                        : old == null ? null : old.fuelProductId();
+        var product =
+                products.findById(productId)
+                        .filter(p -> c.providerId().equals(p.providerId()) && p.active())
+                        .orElse(null);
+        if (productId != null
+                && product == null
+                && (c.fuelProductId() != null
+                        || old == null
+                        || c.providerId().equals(old.providerId())))
+            return Result.failure(
+                    ApplicationError.notFound("FuelProduct", String.valueOf(productId)));
+        if (Boolean.TRUE.equals(c.autoGenerateEnabled()) && productId == null)
+            return Result.failure(
+                    ApplicationError.validationError(
+                            "fuelProductId", "A product is required for automatic replenishment"));
+        if (c.deviceId() != null) {
+            var duplicate =
+                    bindings.findOpenByDeviceId(c.deviceId()).stream()
+                            .filter(
+                                    d ->
+                                            !tank.getId().equals(d.getTankId())
+                                                    || !tank.getOrganizationId()
+                                                            .equals(d.getOrganizationId()))
+                            .findFirst();
+            if (duplicate.isPresent())
+                return Result.failure(
+                        ApplicationError.conflict(
+                                "DeviceBinding",
+                                duplicateReason(c.providerId(), duplicate.get().getTankId())));
+            var existing = bindings.findOpenByDeviceAndChannel(c.deviceId(), c.channel());
+            if (existing.isPresent()
+                    && (!tank.getId().equals(existing.get().getTankId())
+                            || !tank.getOrganizationId()
+                                    .equals(existing.get().getOrganizationId())))
+                return Result.failure(
+                        ApplicationError.conflict(
+                                "DeviceBinding",
+                                duplicateReason(c.providerId(), existing.get().getTankId())));
+            if (existing.isEmpty()) {
+                var now = Instant.now();
+                for (var binding : bindings.findOpenByTankId(tank.getId())) {
+                    if (tank.getOrganizationId().equals(binding.getOrganizationId())
+                            && Objects.equals(c.channel(), binding.getChannel())) {
+                        var revoked = devices.handle(new RevokeDeviceCommand(binding.getId(), now));
+                        if (revoked instanceof Result.Failure<?, ?> failed)
+                            return rollback((ApplicationError) failed.error());
+                    }
+                }
+                var bound =
+                        devices.handle(
+                                new BindDeviceCommand(
+                                        tank.getOrganizationId(),
+                                        c.deviceId(),
+                                        c.channel(),
+                                        tank.getId(),
+                                        now));
+                if (bound instanceof Result.Failure<?, ?> failed)
+                    return rollback((ApplicationError) failed.error());
+            }
+        }
+        if (c.fuelProductId() != null && !product.fuelType().equals(tank.getFuelType())) {
+            var updated =
+                    tanks.handle(
+                            new UpdateTankConfigurationCommand(
+                                    tank.getId(),
+                                    product.fuelType(),
+                                    tank.getCapacity().amount(),
+                                    tank.getCapacity().unit().name()));
+            if (updated instanceof Result.Failure<?, ?> failed)
+                return rollback((ApplicationError) failed.error());
+        }
+        double low =
+                c.lowLevelPercent() != null
+                        ? c.lowLevelPercent()
+                        : old == null
+                                ? policyLookup.defaultLowLevelPercent()
+                                : old.lowLevelPercent();
+        var configured =
+                policies.configure(
+                        tank.getId(),
+                        tank.getOrganizationId(),
+                        low,
+                        old == null ? DEFAULT_HYSTERESIS_PERCENT : old.hysteresisPercent(),
+                        old == null ? DEFAULT_TARGET_LEVEL_PERCENT : old.targetLevelPercent(),
+                        c.fuelProductId() != null || old == null
+                                ? c.providerId()
+                                : old.providerId(),
+                        productId,
+                        c.autoGenerateEnabled() != null
+                                ? c.autoGenerateEnabled()
+                                : old != null && old.autoGenerateEnabled());
+        if (configured instanceof Result.Failure<?, ?> failed)
+            return rollback((ApplicationError) failed.error());
+        return Result.success(tank.getId());
+    }
+
     private String duplicateReason(Long providerId, Long tankId) {
         return buyers.canReadTank(providerId, tankId)
                 ? "Device already linked to tank " + tankId

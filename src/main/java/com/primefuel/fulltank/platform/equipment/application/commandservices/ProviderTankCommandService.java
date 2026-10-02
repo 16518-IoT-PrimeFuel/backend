@@ -6,4 +6,5 @@ import com.primefuel.fulltank.platform.shared.application.result.*;
 public interface ProviderTankCommandService {
     Result<Long, ApplicationError> handle(RegisterProviderTankCommand command);
 
+    Result<Long, ApplicationError> handle(UpdateProviderTankCommand command);
 }
