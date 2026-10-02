@@ -168,6 +168,7 @@ public class ProviderBuyerQueryServiceImpl
                 .filter(org -> linkedOrganizations(providerId).contains(org));
     }
 
+    @Override
     public Optional<Long> linkedBuyerCompany(Long providerId, Long organizationId) {
         return links.findByProviderId(providerId).stream()
                 .filter(l -> organizationId.equals(l.getOrganizationId()))

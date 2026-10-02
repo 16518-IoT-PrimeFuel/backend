@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.equipment.application.internal.queryservices;
 
+import com.primefuel.fulltank.platform.equipment.api.ProviderBuyerAccess;
 import com.primefuel.fulltank.platform.equipment.application.queryservices.ProviderTankQueryService;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.repositories.DeviceBindingRepository;
 import com.primefuel.fulltank.platform.equipment.domain.model.aggregates.Tank;
@@ -23,7 +24,7 @@ import java.util.*;
 @Service
 @Transactional(readOnly = true)
 public class ProviderTankQueryServiceImpl implements ProviderTankQueryService {
-    private final ProviderBuyerQueryServiceImpl buyers;
+    private final ProviderBuyerAccess buyers;
     private final BuyerCompanyDirectory companies;
     private final LegacyCompanyDirectory legacy;
     private final TankRepository tanks;
@@ -33,7 +34,7 @@ public class ProviderTankQueryServiceImpl implements ProviderTankQueryService {
     private final FuelProductLookup products;
 
     public ProviderTankQueryServiceImpl(
-            ProviderBuyerQueryServiceImpl buyers,
+            ProviderBuyerAccess buyers,
             BuyerCompanyDirectory companies,
             LegacyCompanyDirectory legacy,
             TankRepository tanks,

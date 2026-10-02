@@ -10,4 +10,6 @@ public interface ProviderBuyerAccess {
     Set<Long> linkedOrganizations(Long providerId);
 
     Optional<Long> linkedBuyerOrganization(Long providerId, Long buyerCompanyId);
+
+    Optional<Long> linkedBuyerCompany(Long providerId, Long organizationId);
 }
