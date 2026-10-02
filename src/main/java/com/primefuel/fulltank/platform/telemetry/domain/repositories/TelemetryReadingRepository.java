@@ -7,8 +7,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TelemetryReadingRepository {
-    Optional<TelemetryReading> findByDeviceChannelAndSequence(String deviceId, String channel, long sequence);
-    List<TelemetryReading> findByDeviceAndChannelOrderByCapturedAtAsc(String deviceId, String channel);
+    Optional<TelemetryReading> findByDeviceChannelAndSequence(
+            String deviceId, String channel, long sequence);
+
+    List<TelemetryReading> findByDeviceAndChannelOrderByCapturedAtAsc(
+            String deviceId, String channel);
+
+    List<TelemetryReading> findAcceptedByTankIdAndOrganizationId(Long tankId, Long organizationId);
+
     long countByQuality(ReadingQuality quality);
+
     TelemetryReading save(TelemetryReading reading);
 }

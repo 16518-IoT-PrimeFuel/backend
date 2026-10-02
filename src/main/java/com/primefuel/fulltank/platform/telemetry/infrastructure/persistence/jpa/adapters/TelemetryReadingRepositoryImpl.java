@@ -5,6 +5,7 @@ import com.primefuel.fulltank.platform.telemetry.domain.model.valueobjects.Readi
 import com.primefuel.fulltank.platform.telemetry.domain.repositories.TelemetryReadingRepository;
 import com.primefuel.fulltank.platform.telemetry.infrastructure.persistence.jpa.assemblers.TelemetryReadingPersistenceAssembler;
 import com.primefuel.fulltank.platform.telemetry.infrastructure.persistence.jpa.repositories.TelemetryReadingPersistenceRepository;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,20 +16,38 @@ public class TelemetryReadingRepositoryImpl implements TelemetryReadingRepositor
 
     private final TelemetryReadingPersistenceRepository persistenceRepository;
 
-    public TelemetryReadingRepositoryImpl(TelemetryReadingPersistenceRepository persistenceRepository) {
+    public TelemetryReadingRepositoryImpl(
+            TelemetryReadingPersistenceRepository persistenceRepository) {
         this.persistenceRepository = persistenceRepository;
     }
 
     @Override
-    public Optional<TelemetryReading> findByDeviceChannelAndSequence(String deviceId, String channel, long sequence) {
-        return persistenceRepository.findByDeviceIdAndChannelAndSequence(deviceId, channel, sequence)
+    public Optional<TelemetryReading> findByDeviceChannelAndSequence(
+            String deviceId, String channel, long sequence) {
+        return persistenceRepository
+                .findByDeviceIdAndChannelAndSequence(deviceId, channel, sequence)
                 .map(TelemetryReadingPersistenceAssembler::toDomainFromPersistence);
     }
 
     @Override
-    public List<TelemetryReading> findByDeviceAndChannelOrderByCapturedAtAsc(String deviceId, String channel) {
-        return persistenceRepository.findByDeviceIdAndChannelOrderByCapturedAtAsc(deviceId, channel).stream()
-                .map(TelemetryReadingPersistenceAssembler::toDomainFromPersistence).toList();
+    public List<TelemetryReading> findByDeviceAndChannelOrderByCapturedAtAsc(
+            String deviceId, String channel) {
+        return persistenceRepository
+                .findByDeviceIdAndChannelOrderByCapturedAtAsc(deviceId, channel)
+                .stream()
+                .map(TelemetryReadingPersistenceAssembler::toDomainFromPersistence)
+                .toList();
+    }
+
+    @Override
+    public List<TelemetryReading> findAcceptedByTankIdAndOrganizationId(
+            Long tankId, Long organizationId) {
+        return persistenceRepository
+                .findByTankIdAndOrganizationIdAndQualityOrderByCapturedAtAscIdAsc(
+                        tankId, organizationId, ReadingQuality.ACCEPTED)
+                .stream()
+                .map(TelemetryReadingPersistenceAssembler::toDomainFromPersistence)
+                .toList();
     }
 
     @Override
