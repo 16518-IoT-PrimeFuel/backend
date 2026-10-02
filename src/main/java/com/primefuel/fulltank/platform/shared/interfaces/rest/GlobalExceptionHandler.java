@@ -57,6 +57,7 @@ public class GlobalExceptionHandler {
 
     private static boolean isProviderRoute(String uri) {
         return uri.startsWith("/api/provider/")
+                || uri.startsWith("/api/payments/provider/")
                 || uri.startsWith("/api/analytics/providers/")
                 || uri.equals("/api/deliveries")
                 || uri.equals("/api/deliveries/recommendation")

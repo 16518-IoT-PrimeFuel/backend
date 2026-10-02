@@ -1357,6 +1357,54 @@
         },
         "type" : "object"
       },
+      "ProviderPaymentResource" : {
+        "properties" : {
+          "amount" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "buyerCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "buyerName" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "currency" : {
+            "description" : "Moneda no persistida actualmente; null, nunca inferida",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "paidAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "paymentMethod" : {
+            "enum" : [ "BANK_TRANSFER", "CREDIT_CARD", "DEBIT_CARD", "CASH" ],
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "PENDING", "COMPLETED", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "ProviderTankReadingResource" : {
         "properties" : {
           "capturedAt" : {
@@ -6029,6 +6077,68 @@
         "tags" : [ "Pagos" ]
       }
     },
+    "/api/payments/provider/{providerId}" : {
+      "get" : {
+        "operationId" : "getPaymentsByProvider",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "enum" : [ "PENDING", "COMPLETED", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderPaymentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Listar pagos del distribuidor"
+          },
+          "400" : {
+            "description" : "Id, estado, fecha o período inválido"
+          },
+          "403" : {
+            "description" : "Sin rol proveedor o proveedor ajeno"
+          }
+        },
+        "summary" : "Listar pagos del distribuidor",
+        "tags" : [ "Pagos" ]
+      }
+    },
     "/api/payments/{paymentId}" : {
       "get" : {
         "description" : "Devuelve el pago si el usuario pertenece a la empresa compradora o al distribuidor de la orden.",
@@ -6593,7 +6703,7 @@
     },
     "/api/provider/tanks/{tankId}" : {
       "get" : {
-        "operationId" : "getProviderTank",
+        "operationId" : "get",
         "parameters" : [ {
           "in" : "path",
           "name" : "tankId",
