@@ -3,8 +3,10 @@ package com.primefuel.fulltank.platform.ordering.infrastructure.services;
 import com.primefuel.fulltank.platform.ordering.api.OrderLookup;
 import com.primefuel.fulltank.platform.ordering.domain.model.aggregates.FuelOrder;
 import com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository;
+
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 /** Adapter over {@link FuelOrderRepository} exposing the order snapshot as {@code ordering.api}. */
@@ -25,10 +27,25 @@ public class OrderLookupImpl implements OrderLookup {
         return orderRepository.findById(orderId).map(OrderLookupImpl::toSnapshot);
     }
 
+    @Override
+    public List<OrderSnapshot> findByProviderId(Long providerId) {
+        return orderRepository.findByProviderId(providerId).stream()
+                .map(OrderLookupImpl::toSnapshot)
+                .toList();
+    }
+
     private static OrderSnapshot toSnapshot(FuelOrder order) {
-        return new OrderSnapshot(order.getId(), order.getRequestId(), order.getCompanyId(),
-                order.getProviderId(), order.getFuelProductId(), order.getEquipmentId(),
-                order.getRequestedQuantity(), order.getTotalPrice(),
-                order.getStatus() == null ? null : order.getStatus().name());
+        return new OrderSnapshot(
+                order.getId(),
+                order.getRequestId(),
+                order.getCompanyId(),
+                order.getProviderId(),
+                order.getFuelProductId(),
+                order.getEquipmentId(),
+                order.getRequestedQuantity(),
+                order.getTotalPrice(),
+                order.getStatus() == null ? null : order.getStatus().name(),
+                order.getDeliveryAddress(),
+                order.getScheduledDate());
     }
 }
