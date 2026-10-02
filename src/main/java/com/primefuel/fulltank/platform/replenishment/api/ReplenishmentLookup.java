@@ -1,7 +1,8 @@
 package com.primefuel.fulltank.platform.replenishment.api;
 
-import java.util.Optional;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 public interface ReplenishmentLookup {
 
@@ -9,8 +10,12 @@ public interface ReplenishmentLookup {
 
     Optional<ReplenishmentView> findByEpisodeKey(String episodeKey);
 
-    /** The request correlated with a legacy order (T15-A: resolve the acceptance behind an order). */
+    /**
+     * The request correlated with a legacy order (T15-A: resolve the acceptance behind an order).
+     */
     Optional<ReplenishmentView> findByOrderId(Long orderId);
+
+    List<ReplenishmentView> findByProviderId(Long providerId);
 
     record ReplenishmentView(
             Long id,
@@ -26,6 +31,5 @@ public interface ReplenishmentLookup {
             Long customerAccountId,
             String deliveryAddress,
             LocalDate deliveryDate,
-            boolean acceptanceConsumed) {
-    }
+            boolean acceptanceConsumed) {}
 }
