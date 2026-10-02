@@ -94,6 +94,8 @@ public class NotificationFanoutListener {
 
     /** Event contract → notification. Only the events S20 cares about are mapped; others are ignored. */
     enum NotificationFanoutSpec {
+        CATALOG_EMPTY("inventory.catalog-empty.v1", NotificationType.GENERAL,
+                "Agrega productos a tu catálogo", "Un cliente no pudo solicitar una entrega porque tu organización no tiene productos visibles. Agrega o activa productos en Productos y precios para recibir solicitudes."),
         REQUEST_ACCEPTED("replenishment.accepted.v1", NotificationType.ORDER_ACCEPTED,
                 "Solicitud aceptada", "Tu solicitud de reposición fue aceptada."),
         REQUEST_REJECTED("replenishment.rejected.v1", NotificationType.ORDER_REJECTED,
