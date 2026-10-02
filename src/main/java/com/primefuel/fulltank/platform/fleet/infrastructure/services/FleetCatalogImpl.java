@@ -78,6 +78,14 @@ public class FleetCatalogImpl implements FleetCatalog {
                                         r.getWindow().end()));
     }
 
+    @Override
+    public boolean hasReservationConflict(
+            Long providerId, Long driverId, Long tankerId, Instant from, Instant to) {
+        return !reservations
+                .findActiveOverlapping(providerId, driverId, tankerId, from, to)
+                .isEmpty();
+    }
+
     static DriverSnapshot toSnapshot(Driver driver) {
         return new DriverSnapshot(
                 driver.getId(),

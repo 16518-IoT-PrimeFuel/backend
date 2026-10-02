@@ -22,7 +22,8 @@ public interface FleetCatalog {
 
     Optional<ReservationWindowSnapshot> findReservationWindow(String reference);
 
-
+    boolean hasReservationConflict(
+            Long providerId, Long driverId, Long tankerId, Instant from, Instant to);
 
     record ReservationWindowSnapshot(Long providerId, Instant start, Instant end) {}
 
