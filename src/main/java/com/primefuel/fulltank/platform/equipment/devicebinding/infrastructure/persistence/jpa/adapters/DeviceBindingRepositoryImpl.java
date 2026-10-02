@@ -4,6 +4,7 @@ import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.aggr
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.repositories.DeviceBindingRepository;
 import com.primefuel.fulltank.platform.equipment.devicebinding.infrastructure.persistence.jpa.assemblers.DeviceBindingPersistenceAssembler;
 import com.primefuel.fulltank.platform.equipment.devicebinding.infrastructure.persistence.jpa.repositories.DeviceBindingPersistenceRepository;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -20,7 +21,9 @@ public class DeviceBindingRepositoryImpl implements DeviceBindingRepository {
 
     @Override
     public Optional<DeviceBinding> findById(Long id) {
-        return persistenceRepository.findById(id).map(DeviceBindingPersistenceAssembler::toDomainFromPersistence);
+        return persistenceRepository
+                .findById(id)
+                .map(DeviceBindingPersistenceAssembler::toDomainFromPersistence);
     }
 
     @Override
@@ -32,13 +35,35 @@ public class DeviceBindingRepositoryImpl implements DeviceBindingRepository {
 
     @Override
     public List<DeviceBinding> findByDeviceAndChannel(String deviceId, String channel) {
-        return persistenceRepository.findByDeviceIdAndChannelOrderByValidFromAsc(deviceId, channel).stream()
-                .map(DeviceBindingPersistenceAssembler::toDomainFromPersistence).toList();
+        return persistenceRepository
+                .findByDeviceIdAndChannelOrderByValidFromAsc(deviceId, channel)
+                .stream()
+                .map(DeviceBindingPersistenceAssembler::toDomainFromPersistence)
+                .toList();
+    }
+
+    @Override
+    public List<DeviceBinding> findOpenByDeviceId(String deviceId) {
+        return persistenceRepository
+                .findByDeviceIdAndActiveSlot(deviceId, DeviceBinding.OPEN_SLOT)
+                .stream()
+                .map(DeviceBindingPersistenceAssembler::toDomainFromPersistence)
+                .toList();
+    }
+
+    @Override
+    public List<DeviceBinding> findOpenByTankId(Long tankId) {
+        return persistenceRepository
+                .findByTankIdAndActiveSlot(tankId, DeviceBinding.OPEN_SLOT)
+                .stream()
+                .map(DeviceBindingPersistenceAssembler::toDomainFromPersistence)
+                .toList();
     }
 
     @Override
     public DeviceBinding save(DeviceBinding binding) {
         var entity = DeviceBindingPersistenceAssembler.toPersistenceFromDomain(binding);
-        return DeviceBindingPersistenceAssembler.toDomainFromPersistence(persistenceRepository.saveAndFlush(entity));
+        return DeviceBindingPersistenceAssembler.toDomainFromPersistence(
+                persistenceRepository.saveAndFlush(entity));
     }
 }

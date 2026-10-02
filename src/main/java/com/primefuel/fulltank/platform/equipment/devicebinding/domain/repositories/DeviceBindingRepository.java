@@ -7,7 +7,14 @@ import java.util.Optional;
 
 public interface DeviceBindingRepository {
     Optional<DeviceBinding> findById(Long id);
+
     Optional<DeviceBinding> findOpenByDeviceAndChannel(String deviceId, String channel);
+
     List<DeviceBinding> findByDeviceAndChannel(String deviceId, String channel);
+
+    List<DeviceBinding> findOpenByDeviceId(String deviceId);
+
+    List<DeviceBinding> findOpenByTankId(Long tankId);
+
     DeviceBinding save(DeviceBinding binding);
 }
