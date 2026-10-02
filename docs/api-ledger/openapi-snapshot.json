@@ -6592,6 +6592,42 @@
       }
     },
     "/api/provider/tanks/{tankId}" : {
+      "get" : {
+        "operationId" : "getProviderTank",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderTankResource"
+                }
+              }
+            },
+            "description" : "Consultar tanque vinculado"
+          },
+          "400" : {
+            "description" : "Id inválido"
+          },
+          "403" : {
+            "description" : "Sin proveedor autenticado"
+          },
+          "404" : {
+            "description" : "Tanque inexistente, inactivo o ajeno"
+          }
+        },
+        "summary" : "Consultar tanque vinculado",
+        "tags" : [ "Tanques del distribuidor" ]
+      },
       "put" : {
         "description" : "Solo compradores vinculados. Campos omitidos se conservan; deviceId exige channel. Reemplazar dispositivo cierra la asociación previa del canal y conserva su historia. No cambia propietario/capacidad.",
         "operationId" : "update_1",

@@ -5,6 +5,7 @@ import com.primefuel.fulltank.platform.equipment.application.queryservices.Provi
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.repositories.DeviceBindingRepository;
 import com.primefuel.fulltank.platform.equipment.domain.model.aggregates.Tank;
 import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetProviderTanksQuery;
+import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetProviderTankByIdQuery;
 import com.primefuel.fulltank.platform.equipment.domain.model.valueobjects.ProviderTank;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.CustomerSiteRepository;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.TankRepository;
@@ -78,6 +79,16 @@ public class ProviderTankQueryServiceImpl implements ProviderTankQueryService {
                         .map(t -> toSnapshot(t, query.providerId()))
                         .toList();
         return Result.success(assets);
+    }
+
+    public Result<ProviderTank, ApplicationError> handle(GetProviderTankByIdQuery query) {
+        var tank = tanks.findById(query.tankId())
+                .filter(Tank::isActive)
+                .filter(t -> buyers.canReadTank(query.providerId(), t.getId()));
+        if (tank.isEmpty()) {
+            return Result.failure(ApplicationError.notFound("Tank", query.tankId().toString()));
+        }
+        return Result.success(toSnapshot(tank.get(), query.providerId()));
     }
 
     private ProviderTank toSnapshot(Tank t, Long providerId) {

@@ -2,6 +2,7 @@ package com.primefuel.fulltank.platform.equipment.interfaces.rest;
 
 import com.primefuel.fulltank.platform.equipment.application.queryservices.ProviderTankQueryService;
 import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetProviderTanksQuery;
+import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetProviderTankByIdQuery;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.ProviderTankResource;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.ProviderTankResourceFromDomainAssembler;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
@@ -32,6 +33,29 @@ public class ProviderTanksController {
     public ProviderTanksController(ProviderTankQueryService queries, TenantAccess access) {
         this.queries = queries;
         this.access = access;
+    }
+
+    @GetMapping("/{tankId}")
+    @PreAuthorize("@currentUserAccess.isProvider()")
+    @Operation(operationId = "getProviderTank", summary = "Consultar tanque vinculado",
+            description = "Mismo recurso que el listado. Solo tanques activos de compradores con"
+                    + " vínculo explícito, pedidos o solicitudes del proveedor autenticado.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Detalle del tanque",
+                content = @Content(schema = @Schema(implementation = ProviderTankResource.class))),
+        @ApiResponse(responseCode = "400", description = "Id inválido"),
+        @ApiResponse(responseCode = "403", description = "Sin proveedor autenticado"),
+        @ApiResponse(responseCode = "404", description = "Tanque inexistente, inactivo o ajeno")
+    })
+    public ResponseEntity<?> get(@PathVariable @Positive Long tankId) {
+        var provider = access.currentProviderId();
+        if (provider.isEmpty()) {
+            throw new AccessDeniedException("Provider identity or ownership required");
+        }
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                queries.handle(new GetProviderTankByIdQuery(provider.get(), tankId)),
+                ProviderTankResourceFromDomainAssembler::toResourceFromDomain,
+                HttpStatus.OK);
     }
 
     @GetMapping
