@@ -3,15 +3,22 @@ package com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.
 import com.primefuel.fulltank.platform.ordering.domain.model.aggregates.FuelOrder;
 import com.primefuel.fulltank.platform.ordering.infrastructure.persistence.jpa.entities.FuelOrderPersistenceEntity;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
 public final class FuelOrderPersistenceAssembler {
 
-    private FuelOrderPersistenceAssembler() {
-    }
+    private FuelOrderPersistenceAssembler() {}
 
     public static FuelOrder toDomainFromPersistence(FuelOrderPersistenceEntity entity) {
         if (entity == null) return null;
         var domain = new FuelOrder();
         domain.setId(entity.getId());
+        domain.setCreatedAt(
+                entity.getCreatedAt() == null
+                        ? null
+                        : LocalDateTime.ofInstant(
+                                entity.getCreatedAt().toInstant(), ZoneOffset.UTC));
         domain.setRequestId(entity.getRequestId());
         domain.setCompanyId(entity.getCompanyId());
         domain.setProviderId(entity.getProviderId());

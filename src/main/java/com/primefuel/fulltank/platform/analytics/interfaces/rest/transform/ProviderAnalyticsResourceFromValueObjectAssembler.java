@@ -5,12 +5,18 @@ import com.primefuel.fulltank.platform.analytics.interfaces.rest.resources.Provi
 
 public final class ProviderAnalyticsResourceFromValueObjectAssembler {
 
-    private ProviderAnalyticsResourceFromValueObjectAssembler() {
-    }
+    private ProviderAnalyticsResourceFromValueObjectAssembler() {}
 
     public static ProviderAnalyticsResource toResourceFromValueObject(ProviderAnalytics analytics) {
-        return new ProviderAnalyticsResource(analytics.providerId(), analytics.totalOrders(),
-                analytics.confirmedOrders(), analytics.cancelledOrders(), analytics.totalRevenue(),
-                analytics.monthlyRevenue());
+        return new ProviderAnalyticsResource(
+                analytics.providerId(),
+                analytics.totalOrders(),
+                analytics.confirmedOrders(),
+                analytics.cancelledOrders(),
+                analytics.totalRevenue(),
+                analytics.monthlyRevenue(),
+                analytics.pendingOrders(),
+                analytics.totalFuelSoldLitres(),
+                analytics.salesTrend());
     }
 }
