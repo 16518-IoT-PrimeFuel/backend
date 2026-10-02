@@ -1,6 +1,9 @@
 # T01-A REST ledger
 
-Contrato verificado contra RequestMappingHandlerMapping y springdoc; 115 operaciones.
+Base verificada contra RequestMappingHandlerMapping y springdoc: 115 operaciones.
+Se agregan tres GET de distribuidor: 118 operaciones esperadas. Estos cambios y el snapshot
+se actualizaron desde el código; pendiente contrastar con springdoc y ejecutar tests en la revisión
+de Claude, porque el usuario indicó no compilar mientras IntelliJ ejecuta el repo.
 Las rutas de distribuidor se detallan en [provider-contracts.md](provider-contracts.md).
 
 | # | Método | Ruta |
@@ -120,3 +123,6 @@ Las rutas de distribuidor se detallan en [provider-contracts.md](provider-contra
 | 113 | PUT | `/api/provider/tanks/{tankId}` |
 | 114 | PUT | `/api/tankers/{tankerId}` |
 | 115 | PUT | `/api/tanks/{tankId}/refill-policy` |
+| 116 | GET | `/api/provider/tanks/{tankId}` |
+| 117 | GET | `/api/payments/provider/{providerId}` |
+| 118 | GET | `/api/provider/buyer-companies/lookup` |

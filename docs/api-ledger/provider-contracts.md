@@ -9,8 +9,11 @@ Fuentes verificadas: [chapter1 §1.3](https://github.com/16518-IoT-PrimeFuel/Rep
 | GET /api/deliveries | [Entregas](provider-deliveries.md) |
 | GET /api/analytics/providers/{providerId} | [Analítica y período](provider-analytics.md) |
 | GET /api/provider/buyer-companies | [Compradores y sitios](provider-buyer-companies.md) |
+| GET /api/provider/buyer-companies/lookup | [RUC exacto y vínculo de comprador registrado](provider-buyer-lookup.md) |
 | POST /api/provider/buyer-companies | [Alta y vínculo explícito](provider-buyer-registration.md) |
 | GET /api/provider/tanks | [Tanques](provider-tanks.md) |
+| GET /api/provider/tanks/{tankId} | [Detalle de tanque](provider-tank-detail.md) |
+| GET /api/payments/provider/{providerId} | [Pagos del distribuidor](provider-payments.md) |
 | POST /api/provider/tanks | [Asociación](provider-tank-management.md) |
 | PUT /api/provider/tanks/{tankId} | [Edición](provider-tank-update.md) |
 | GET /api/provider/tanks/{tankId}/refill-episodes | [Episodios](provider-refill-episodes.md) |
@@ -20,7 +23,7 @@ Fuentes verificadas: [chapter1 §1.3](https://github.com/16518-IoT-PrimeFuel/Rep
 
 ## Decisiones para integración
 
-- Antes del primer pedido: POST /api/provider/buyer-companies crea o vincula al comprador; usar su id y sites para POST /api/provider/tanks. El vínculo explícito, pedidos o solicitudes habilitan el acceso. Ver [contrato de alta](provider-buyer-registration.md).
+- Antes del primer pedido: POST /api/provider/buyer-companies crea o vincula al comprador; para uno registrado, consultar primero el RUC exacto en lookup y enviar el buyerCompanyId obtenido. Usar id y sites del POST para POST /api/provider/tanks. El lookup solo revela identidad mínima y tiene cuota; el vínculo explícito, pedidos o solicitudes habilitan el acceso operativo. Ver [lookup](provider-buyer-lookup.md) y [contrato de alta](provider-buyer-registration.md).
 
 - buyerCompanyId = id de buyer-companies. customerAccountId/siteId se obtienen de sites en esa respuesta. Los IDs de organización, cuenta y compañía son distintos.
 - deviceId + channel identifica el canal IoT en el modelo existente; devices devuelve solo asociaciones vigentes, sin secretos. POST/PUT impiden asociar el mismo dispositivo a otro tanque incluso en un canal distinto. Hay V12/V13 y resolución temporal en ingesta, por lo que no hace falta una migración IoT ni cambiar POST /api/telemetry/readings. V38 agrega provider_buyer_links para admitir compradores sin pedidos previos.

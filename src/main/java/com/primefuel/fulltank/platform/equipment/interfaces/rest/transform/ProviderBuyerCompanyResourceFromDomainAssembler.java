@@ -10,6 +10,8 @@ public final class ProviderBuyerCompanyResourceFromDomainAssembler {
         return new ProviderBuyerCompanyResource(
                 c.id(),
                 c.name(),
+                c.ruc(),
+                c.sector(),
                 c.organizationId(),
                 c.tankCount(),
                 c.criticalTankCount(),

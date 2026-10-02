@@ -4,6 +4,10 @@ import com.primefuel.fulltank.platform.equipment.api.ProviderBuyerAccess;
 import com.primefuel.fulltank.platform.equipment.application.queryservices.ProviderBuyerQueryService;
 import com.primefuel.fulltank.platform.equipment.domain.model.aggregates.Tank;
 import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetProviderBuyerCompaniesQuery;
+import com.primefuel.fulltank.platform.equipment.domain.model.queries.LookupProviderBuyerCompanyQuery;
+import com.primefuel.fulltank.platform.equipment.domain.model.valueobjects.ProviderBuyerIdentity;
+import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
+import com.primefuel.fulltank.platform.shared.application.result.Result;
 import com.primefuel.fulltank.platform.equipment.domain.model.valueobjects.ProviderBuyerCompany;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.CustomerSiteRepository;
 import com.primefuel.fulltank.platform.equipment.domain.repositories.ProviderBuyerLinkRepository;
@@ -31,6 +35,12 @@ public class ProviderBuyerQueryServiceImpl
     private final TankRepository tanks;
     private final TankRefillLookup policies;
     private final CustomerSiteRepository sites;
+    private final Map<Long, LookupWindow> lookupWindows = new HashMap<>();
+    private static final long LOOKUP_WINDOW_NANOS = 60_000_000_000L;
+    private static final int LOOKUP_LIMIT = 10;
+    private static final int MAX_LOOKUP_WINDOWS = 10_000;
+
+    private record LookupWindow(long startedAt, int requests) {}
 
     public ProviderBuyerQueryServiceImpl(
             OrderLookup orders,
@@ -104,6 +114,8 @@ public class ProviderBuyerQueryServiceImpl
                             return new ProviderBuyerCompany(
                                     c.id(),
                                     c.name(),
+                                    c.ruc(),
+                                    c.sector(),
                                     org,
                                     assets.size(),
                                     assets.stream().filter(this::isCritical).count(),
@@ -130,6 +142,32 @@ public class ProviderBuyerQueryServiceImpl
                                                     .toList());
                         })
                 .toList();
+    }
+
+    public Result<ProviderBuyerIdentity, ApplicationError> handle(LookupProviderBuyerCompanyQuery query) {
+        if (!acquireLookup(query.providerId())) {
+            return Result.failure(new ApplicationError(
+                    "LOOKUP_RATE_LIMITED", "Buyer lookup rate limit exceeded",
+                    "At most ten exact RUC lookups per minute per provider; retry after 60 seconds"));
+        }
+        return companies.findByRuc(query.ruc())
+                .<Result<ProviderBuyerIdentity, ApplicationError>>map(c -> Result.success(
+                        new ProviderBuyerIdentity(c.id(), c.name(), c.ruc())))
+                .orElseGet(() -> Result.failure(ApplicationError.notFound("BuyerCompany", query.ruc())));
+    }
+
+    private synchronized boolean acquireLookup(Long providerId) {
+        long now = System.nanoTime();
+        lookupWindows.entrySet().removeIf(e -> now - e.getValue().startedAt() >= LOOKUP_WINDOW_NANOS);
+        var window = lookupWindows.get(providerId);
+        if (window == null) {
+            if (lookupWindows.size() >= MAX_LOOKUP_WINDOWS) return false;
+            lookupWindows.put(providerId, new LookupWindow(now, 1));
+            return true;
+        }
+        if (window.requests() >= LOOKUP_LIMIT) return false;
+        lookupWindows.put(providerId, new LookupWindow(window.startedAt(), window.requests() + 1));
+        return true;
     }
 
     public boolean canReadTank(Long providerId, Long tankId) {

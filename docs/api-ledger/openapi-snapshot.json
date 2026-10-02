@@ -1245,6 +1245,12 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "ruc" : {
+            "type" : "string"
+          },
+          "sector" : {
+            "type" : "string"
+          },
           "sites" : {
             "items" : {
               "$ref" : "#/components/schemas/SiteResource"
@@ -1254,6 +1260,21 @@
           "tankCount" : {
             "format" : "int64",
             "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "ProviderBuyerLookupResource" : {
+        "properties" : {
+          "buyerCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "ruc" : {
+            "type" : "string"
           }
         },
         "type" : "object"
@@ -6570,6 +6591,46 @@
         "tags" : [ "Clientes del distribuidor" ]
       }
     },
+    "/api/provider/buyer-companies/lookup" : {
+      "get" : {
+        "operationId" : "lookupProviderBuyerCompany",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "ruc",
+          "required" : true,
+          "schema" : {
+            "pattern" : "[0-9]{11}",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderBuyerLookupResource"
+                }
+              }
+            },
+            "description" : "Buscar comprador por RUC exacto para vincular"
+          },
+          "400" : {
+            "description" : "RUC ausente o inválido"
+          },
+          "403" : {
+            "description" : "Sin proveedor autenticado"
+          },
+          "404" : {
+            "description" : "RUC no registrado"
+          },
+          "429" : {
+            "description" : "LOOKUP_RATE_LIMITED; reintentar en 60 segundos"
+          }
+        },
+        "summary" : "Buscar comprador por RUC exacto para vincular",
+        "tags" : [ "Clientes del distribuidor" ]
+      }
+    },
     "/api/provider/tanks" : {
       "get" : {
         "description" : "Tanques activos de compradores con pedidos o solicitudes del proveedor autenticado. buyerCompanyId usa id de buyer-companies. Nivel y capacidad en unit; umbral porcentual; devices contiene asociaciones IoT vigentes sin credenciales.",
@@ -6703,7 +6764,7 @@
     },
     "/api/provider/tanks/{tankId}" : {
       "get" : {
-        "operationId" : "get",
+        "operationId" : "getProviderTank",
         "parameters" : [ {
           "in" : "path",
           "name" : "tankId",

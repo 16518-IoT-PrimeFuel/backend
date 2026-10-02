@@ -25,6 +25,9 @@ public final class ErrorResponseAssembler {
         HttpStatusCode status = toStatusFromErrorCode(error.code());
         String localizedMessage = toLocalizedMessageFromApplicationError(error);
         ErrorResource resource = new ErrorResource(error.code(), localizedMessage, error.details());
+        if ("LOOKUP_RATE_LIMITED".equals(error.code())) {
+            return ResponseEntity.status(status).header("Retry-After", "60").body(resource);
+        }
         return new ResponseEntity<>(resource, status);
     }
 
@@ -93,6 +96,7 @@ public final class ErrorResponseAssembler {
         return switch (errorCode) {
             case "FORBIDDEN" -> HttpStatus.FORBIDDEN;
             case "VALIDATION_ERROR" -> HttpStatus.BAD_REQUEST;
+            case "LOOKUP_RATE_LIMITED" -> HttpStatus.TOO_MANY_REQUESTS;
             case String s when s.endsWith("_NOT_FOUND") -> HttpStatus.NOT_FOUND;
             case "BUSINESS_RULE_VIOLATION" -> HttpStatusCode.valueOf(422);
             case String s when s.endsWith("_CONFLICT") -> HttpStatus.CONFLICT;

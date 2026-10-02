@@ -41,7 +41,18 @@ public class BuyerCompanyDirectoryImpl implements BuyerCompanyDirectory {
                                                                     .isPresent())
                                             .map(o -> o.getId())
                                             .orElse(null);
-                            return new BuyerSnapshot(c.getId(), c.getName(), org);
+                            return new BuyerSnapshot(
+                                    c.getId(),
+                                    c.getName(),
+                                    org,
+                                    c.getRuc(),
+                                    c.getSector());
                         });
+    }
+
+    @Override
+    public Optional<BuyerIdentity> findByRuc(String ruc) {
+        return companies.findByRuc(ruc)
+                .map(c -> new BuyerIdentity(c.getId(), c.getName(), c.getRuc()));
     }
 }

@@ -43,7 +43,12 @@ public class BuyerCompanyRegistrationImpl implements BuyerCompanyRegistration {
                         ApplicationError.notFound(
                                 "BuyerCompany", String.valueOf(registration.buyerCompanyId())));
             return Result.success(
-                    new BuyerSnapshot(buyer.getId(), buyer.getName(), organization.getId()));
+                    new BuyerSnapshot(
+                            buyer.getId(),
+                            buyer.getName(),
+                            organization.getId(),
+                            buyer.getRuc(),
+                            buyer.getSector()));
         }
         if (registration.name() == null
                 || registration.name().isBlank()
@@ -79,6 +84,11 @@ public class BuyerCompanyRegistrationImpl implements BuyerCompanyRegistration {
                                         registration.ruc(),
                                         OrganizationType.CUSTOMER)));
         return Result.success(
-                new BuyerSnapshot(buyer.getId(), buyer.getName(), organization.getId()));
+                new BuyerSnapshot(
+                        buyer.getId(),
+                        buyer.getName(),
+                        organization.getId(),
+                        buyer.getRuc(),
+                        buyer.getSector()));
     }
 }

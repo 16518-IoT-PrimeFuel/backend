@@ -4,6 +4,9 @@ import com.primefuel.fulltank.platform.equipment.application.commandservices.Pro
 import com.primefuel.fulltank.platform.equipment.application.queryservices.ProviderBuyerQueryService;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterProviderBuyerCommand;
 import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetProviderBuyerCompaniesQuery;
+import com.primefuel.fulltank.platform.equipment.domain.model.queries.LookupProviderBuyerCompanyQuery;
+import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.ProviderBuyerLookupResource;
+import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.ProviderBuyerLookupResourceFromDomainAssembler;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.ProviderBuyerCompanyResource;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.RegisterProviderBuyerResource;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.transform.ProviderBuyerCompanyResourceFromDomainAssembler;
@@ -19,6 +22,7 @@ import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -68,6 +72,32 @@ public class ProviderBuyerCompaniesController {
                 queries.handle(new GetProviderBuyerCompaniesQuery(provider.get())).stream()
                         .map(ProviderBuyerCompanyResourceFromDomainAssembler::toResourceFromDomain)
                         .toList());
+    }
+
+    @GetMapping("/lookup")
+    @PreAuthorize("@currentUserAccess.isProvider()")
+    @Operation(operationId = "lookupProviderBuyerCompany", summary = "Buscar comprador por RUC exacto para vincular",
+            description = "Solo identidad mínima, incluso antes del vínculo. RUC de once dígitos,"
+                    + " sin búsqueda parcial ni listados. Diez consultas por minuto por proveedor"
+                    + " y por instancia; aciertos y RUC inexistentes cuentan. No concede acceso"
+                    + " a tanques, contactos ni pedidos. Vincular después con POST {buyerCompanyId}.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Identidad mínima",
+                content = @Content(schema = @Schema(implementation = ProviderBuyerLookupResource.class))),
+        @ApiResponse(responseCode = "400", description = "RUC ausente o inválido"),
+        @ApiResponse(responseCode = "403", description = "Sin proveedor autenticado"),
+        @ApiResponse(responseCode = "404", description = "RUC no registrado"),
+        @ApiResponse(responseCode = "429", description = "LOOKUP_RATE_LIMITED; reintentar en 60 segundos")
+    })
+    public ResponseEntity<?> lookup(@RequestParam @Pattern(regexp = "[0-9]{11}") String ruc) {
+        var provider = access.currentProviderId();
+        if (provider.isEmpty()) {
+            throw new AccessDeniedException("Provider identity required");
+        }
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                queries.handle(new LookupProviderBuyerCompanyQuery(provider.get(), ruc)),
+                ProviderBuyerLookupResourceFromDomainAssembler::toResource,
+                HttpStatus.OK);
     }
 
     @PostMapping

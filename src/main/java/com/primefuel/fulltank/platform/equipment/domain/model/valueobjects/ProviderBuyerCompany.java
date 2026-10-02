@@ -5,6 +5,8 @@ import java.util.List;
 public record ProviderBuyerCompany(
         Long id,
         String name,
+        String ruc,
+        String sector,
         Long organizationId,
         long tankCount,
         long criticalTankCount,
