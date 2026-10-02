@@ -47,11 +47,7 @@ public class TanksController {
      * La organización se obtiene de la identidad autenticada; la cuenta y el sitio deben pertenecer a ella.</p>
      */
     @Operation(summary = "Registrar tanque",
-            description = "Crea un tanque para una cuenta y un sitio de la organización activa. "
-                    + "Puede hacerlo un usuario con membresía activa en la organización de la cuenta; en el flujo habitual, "
-                    + "es el comprador (ROLE_BUYER) de una organización CUSTOMER. Un proveedor (ROLE_PROVIDER) de otra "
-                    + "organización no puede usar una cuenta ajena. La cuenta y el sitio deben pertenecer a la organización "
-                    + "activa; también se validan capacidad, unidad y nivel inicial.")
+            description = "Flujo secundario de contingencia: el flujo principal del distribuidor es POST /api/provider/tanks. Crea un tanque para una cuenta y un sitio de la organización activa. Puede hacerlo un usuario con membresía activa en la organización de la cuenta; en el flujo habitual, es el comprador (ROLE_BUYER) de una organización CUSTOMER. Un proveedor (ROLE_PROVIDER) de otra organización no puede usar una cuenta ajena. La cuenta y el sitio deben pertenecer a la organización activa; también se validan capacidad, unidad y nivel inicial.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Tanque creado."),
             @ApiResponse(responseCode = "400", description = "El cuerpo es inválido, la cuenta o el sitio no pertenecen a la organización activa, "
