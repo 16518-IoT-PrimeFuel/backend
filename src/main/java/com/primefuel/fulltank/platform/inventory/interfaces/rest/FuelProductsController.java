@@ -28,6 +28,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+import com.primefuel.fulltank.platform.iam.api.LegacyCompanyDirectory;
+import com.primefuel.fulltank.platform.shared.events.EventEnvelope;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping(value = "/api/fuel-products", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -37,13 +46,40 @@ public class FuelProductsController {
     private final FuelProductCommandService fuelProductCommandService;
     private final FuelProductQueryService fuelProductQueryService;
     private final TenantAccess tenantAccess;
+    private final LegacyCompanyDirectory companies;
+    private final ApplicationEventPublisher events;
+    private final Clock clock;
 
     public FuelProductsController(FuelProductCommandService fuelProductCommandService,
                                   FuelProductQueryService fuelProductQueryService,
-                                  TenantAccess tenantAccess) {
+                                  TenantAccess tenantAccess, LegacyCompanyDirectory companies,
+                                  ApplicationEventPublisher events, Clock clock) {
         this.fuelProductCommandService = fuelProductCommandService;
         this.fuelProductQueryService = fuelProductQueryService;
         this.tenantAccess = tenantAccess;
+        this.companies = companies;
+        this.events = events;
+        this.clock = clock;
+    }
+
+    @PostMapping("/provider/{providerId}/empty-catalog-alert")
+    @PreAuthorize("@tenantAccess.isBuyerRole()")
+    @Transactional
+    @Operation(summary = "Avisar al distribuidor que debe publicar productos",
+            description = "Verifica que no existan productos activos y avisa a los miembros activos. Máximo un aviso por distribuidor al día.")
+    public ResponseEntity<Void> alertEmptyCatalog(@PathVariable Long providerId) {
+        var products = fuelProductQueryService.handle(new GetFuelProductsByProviderIdQuery(providerId));
+        if (products.stream().anyMatch(product -> !Boolean.FALSE.equals(product.getActive()))) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        var organizationId = companies.organizationIdForProvider(providerId);
+        if (organizationId.isEmpty()) return ResponseEntity.notFound().build();
+        // ponytail: one alert per provider/day; use catalog epochs if same-day re-alerting becomes necessary.
+        var key = "empty-catalog:" + providerId + ":" + LocalDate.now(clock.withZone(ZoneId.of("America/Lima")));
+        events.publishEvent(new EventEnvelope(UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.UTF_8)),
+                "inventory.catalog-empty.v1", "ProviderCompany", providerId.toString(),
+                organizationId.get(), 1L, clock.instant(), "{}"));
+        return ResponseEntity.noContent().build();
     }
 
     /**

@@ -15,6 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.Instant;
+import java.time.Clock;
+import java.time.ZoneOffset;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +40,18 @@ import static org.assertj.core.api.Assertions.assertThat;
         "authorization.jwt.secret=0123456789abcdef0123456789abcdef"
 })
 class FleetReservationTest {
+
+    @TestConfiguration
+    static class FixedClockConfiguration {
+        @Bean
+        @Primary
+        Clock reservationTestClock() {
+            return Clock.fixed(Instant.parse("2026-09-30T12:00:00Z"), ZoneOffset.UTC);
+        }
+    }
+
+    @Autowired
+    private Clock clock;
 
     private static final Instant T0 = Instant.parse("2026-10-01T08:00:00Z");
     private static final Instant T1 = Instant.parse("2026-10-01T09:00:00Z");
@@ -258,7 +275,7 @@ class FleetReservationTest {
         long providerId = 1L;
         long driverId = driver(providerId);
         long tankerId = tanker(providerId, 1000.0, "LITRE");
-        var end = Instant.now().minusSeconds(3600);
+        var end = clock.instant().minusSeconds(3600);
         var start = end.minusSeconds(3600);
         assertThat(fleetReservations.reserve(
                 reserveRef(providerId, driverId, tankerId, "overdue-1", start, end, 100.0, "LITRE"))

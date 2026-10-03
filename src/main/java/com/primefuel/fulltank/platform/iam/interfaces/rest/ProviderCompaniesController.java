@@ -107,7 +107,7 @@ public class ProviderCompaniesController {
      * <p>Solo el tenant propietario puede actualizarlo. Los campos editables se sustituyen con los valores recibidos.</p>
      */
     @Operation(summary = "Actualizar distribuidor",
-            description = "Reemplaza los campos editables del perfil indicado. Requiere pertenecer a ese tenant distribuidor.")
+            description = "Reemplaza los campos editables del perfil indicado; la calificación (rating) no es editable y se conserva. Requiere pertenecer a ese tenant distribuidor.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Perfil de distribuidor actualizado."),
             @ApiResponse(responseCode = "403", description = "El distribuidor indicado no pertenece al usuario autenticado."),
@@ -122,7 +122,7 @@ public class ProviderCompaniesController {
         var provider = result.get();
         provider.setName(resource.name());
         provider.setRuc(resource.ruc());
-        provider.setRating(resource.rating());
+        // El propio distribuidor no edita su calificación: se ignora `rating` (antes, omitirlo la borraba).
         provider.setAddress(resource.address());
         provider.setPhone(resource.phone());
         provider.setFuelTypesOffered(resource.fuelTypesOffered());

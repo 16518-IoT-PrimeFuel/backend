@@ -3,11 +3,13 @@ package com.primefuel.fulltank.platform.ordering.domain.model.aggregates;
 import com.primefuel.fulltank.platform.ordering.domain.model.commands.CreateFuelOrderCommand;
 import com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus;
 import com.primefuel.fulltank.platform.shared.domain.model.aggregates.AbstractDomainAggregateRoot;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -15,6 +17,7 @@ import java.time.LocalDate;
 public class FuelOrder extends AbstractDomainAggregateRoot<FuelOrder> {
 
     private Long id;
+    private LocalDateTime createdAt;
     private Long requestId;
     private Long companyId;
     private Long providerId;
@@ -48,7 +51,9 @@ public class FuelOrder extends AbstractDomainAggregateRoot<FuelOrder> {
 
     /** Only an order not yet dispatched can be cancelled; cancelling again is a no-op. */
     public void cancel() {
-        if (status != OrderStatus.PENDING && status != OrderStatus.CONFIRMED && status != OrderStatus.CANCELLED) {
+        if (status != OrderStatus.PENDING
+                && status != OrderStatus.CONFIRMED
+                && status != OrderStatus.CANCELLED) {
             throw new IllegalStateException("Only pending or confirmed orders can be cancelled");
         }
         this.status = OrderStatus.CANCELLED;
@@ -62,12 +67,14 @@ public class FuelOrder extends AbstractDomainAggregateRoot<FuelOrder> {
     }
 
     public void receive() {
-        if (status != OrderStatus.DISPATCHED) throw new IllegalStateException("Order is not dispatched");
+        if (status != OrderStatus.DISPATCHED)
+            throw new IllegalStateException("Order is not dispatched");
         this.status = OrderStatus.PENDING_PAYMENT;
     }
 
     public void markPaid() {
-        if (status == OrderStatus.CANCELLED) throw new IllegalStateException("Cancelled orders cannot be paid");
+        if (status == OrderStatus.CANCELLED)
+            throw new IllegalStateException("Cancelled orders cannot be paid");
         this.status = OrderStatus.PAID;
     }
 }

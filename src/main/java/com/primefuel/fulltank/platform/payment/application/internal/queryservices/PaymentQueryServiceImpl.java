@@ -3,6 +3,8 @@ package com.primefuel.fulltank.platform.payment.application.internal.queryservic
 import com.primefuel.fulltank.platform.payment.application.queryservices.PaymentQueryService;
 import com.primefuel.fulltank.platform.payment.domain.model.aggregates.Payment;
 import com.primefuel.fulltank.platform.payment.domain.model.queries.GetAllPaymentsQuery;
+import com.primefuel.fulltank.platform.payment.domain.model.queries.GetPaymentsByProviderIdQuery;
+import com.primefuel.fulltank.platform.payment.domain.model.valueobjects.ProviderPayment;
 import com.primefuel.fulltank.platform.payment.domain.model.queries.GetPaymentByIdQuery;
 import com.primefuel.fulltank.platform.payment.domain.model.queries.GetPaymentByOrderIdQuery;
 import com.primefuel.fulltank.platform.payment.domain.model.queries.GetPaymentsByCompanyIdQuery;
@@ -19,6 +21,11 @@ public class PaymentQueryServiceImpl implements PaymentQueryService {
 
     public PaymentQueryServiceImpl(PaymentRepository paymentRepository) {
         this.paymentRepository = paymentRepository;
+    }
+
+    @Override
+    public List<ProviderPayment> handle(GetPaymentsByProviderIdQuery query) {
+        return paymentRepository.findByProvider(query);
     }
 
     @Override

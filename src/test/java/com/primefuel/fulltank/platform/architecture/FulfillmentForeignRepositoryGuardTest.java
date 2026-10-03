@@ -28,7 +28,7 @@ class FulfillmentForeignRepositoryGuardTest {
             "^import\\s+com\\.primefuel\\.fulltank\\.platform\\."
                     + "(?!fulfillment\\.)"
                     + "(fleet|supply|replenishment|ordering|inventory|equipment|iam|telemetry|notification"
-                    + "|payment|reporting|catalog)\\."
+                    + "|payment|analytics|catalog)\\."
                     + "(domain\\.repositories|infrastructure)\\.");
 
     @Test

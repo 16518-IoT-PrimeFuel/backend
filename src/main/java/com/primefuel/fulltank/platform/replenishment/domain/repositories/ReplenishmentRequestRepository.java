@@ -8,6 +8,7 @@ import java.util.Optional;
 public interface ReplenishmentRequestRepository {
     Optional<ReplenishmentRequest> findById(Long id);
     List<ReplenishmentRequest> findByOrganizationId(Long organizationId);
+    List<ReplenishmentRequest> findByProviderId(Long providerId);
     Optional<ReplenishmentRequest> findByEpisodeKey(String episodeKey);
 
     /** The request correlated with a legacy order, if any. */

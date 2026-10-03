@@ -1,15 +1,20 @@
 package com.primefuel.fulltank.platform.ordering.api;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 /**
- * Public read seam over fuel orders (S23/T23-B). Other modules read an order's commercial snapshot through
- * this interface — they must not depend on {@code ordering.domain..} (which holds the query records and the
- * aggregate). Introduced so {@code payment} can validate its invariants without importing a domain type.
+ * Public read seam over fuel orders (S23/T23-B). Other modules read an order's commercial snapshot
+ * through this interface â€” they must not depend on {@code ordering.domain..} (which holds the
+ * query records and the aggregate). Introduced so {@code payment} can validate its invariants
+ * without importing a domain type.
  */
 public interface OrderLookup {
 
     Optional<OrderSnapshot> findById(Long orderId);
+
+    List<OrderSnapshot> findByProviderId(Long providerId);
 
     record OrderSnapshot(
             Long id,
@@ -20,6 +25,31 @@ public interface OrderLookup {
             Long equipmentId,
             Double requestedQuantity,
             Double totalPrice,
-            String status) {
+            String status,
+            String deliveryAddress,
+            LocalDate scheduledDate) {
+        public OrderSnapshot(
+                Long id,
+                Long requestId,
+                Long companyId,
+                Long providerId,
+                Long fuelProductId,
+                Long equipmentId,
+                Double requestedQuantity,
+                Double totalPrice,
+                String status) {
+            this(
+                    id,
+                    requestId,
+                    companyId,
+                    providerId,
+                    fuelProductId,
+                    equipmentId,
+                    requestedQuantity,
+                    totalPrice,
+                    status,
+                    null,
+                    null);
+        }
     }
 }

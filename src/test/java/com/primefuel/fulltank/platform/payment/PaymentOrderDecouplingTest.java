@@ -7,6 +7,8 @@ import com.primefuel.fulltank.platform.payment.application.commandservices.Payme
 import com.primefuel.fulltank.platform.payment.domain.model.aggregates.Payment;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.CompletePaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.CreatePaymentCommand;
+import com.primefuel.fulltank.platform.payment.domain.model.commands.RefundPaymentCommand;
+import com.primefuel.fulltank.platform.payment.domain.model.valueobjects.PaymentStatus;
 import com.primefuel.fulltank.platform.payment.domain.model.valueobjects.PaymentMethod;
 import com.primefuel.fulltank.platform.shared.infrastructure.persistence.jpa.repositories.EventPublicationPersistenceRepository;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
@@ -51,6 +53,22 @@ class PaymentOrderDecouplingTest {
         var order = new FuelOrder(new CreateFuelOrderCommand(companyId, providerId, 1L, null, 50.0,
                 "Av. Decoupling 1", LocalDate.parse("2099-10-15")), 50.0);
         return fuelOrderRepository.save(order).getId();
+    }
+
+    @Test
+    void onlyCompletedPaymentsCanBeRefundedAndRepeatingIsIdempotent() {
+        long companyId = 950L + SEQUENCE.incrementAndGet();
+        long orderId = order(companyId, 1L);
+        long paymentId = paymentCommandService
+                .handle(new CreatePaymentCommand(orderId, companyId, 50.0, PaymentMethod.CASH))
+                .getOrElse(null).getId();
+
+        assertThat(paymentCommandService.handle(new RefundPaymentCommand(paymentId)).isSuccess()).isFalse();
+
+        paymentCommandService.handle(new CompletePaymentCommand(paymentId, "ref-refund"));
+        var refunded = paymentCommandService.handle(new RefundPaymentCommand(paymentId));
+        assertThat(refunded.getOrElse(null).getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(paymentCommandService.handle(new RefundPaymentCommand(paymentId)).isSuccess()).isTrue();
     }
 
     @Test

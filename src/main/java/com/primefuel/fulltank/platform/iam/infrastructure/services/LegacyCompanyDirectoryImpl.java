@@ -7,6 +7,7 @@ import com.primefuel.fulltank.platform.iam.domain.repositories.BuyerCompanyRepos
 import com.primefuel.fulltank.platform.iam.domain.repositories.MembershipRepository;
 import com.primefuel.fulltank.platform.iam.domain.repositories.OrganizationRepository;
 import com.primefuel.fulltank.platform.iam.domain.repositories.UserRepository;
+import com.primefuel.fulltank.platform.iam.domain.repositories.ProviderCompanyRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -18,15 +19,30 @@ public class LegacyCompanyDirectoryImpl implements LegacyCompanyDirectory {
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
+    private final ProviderCompanyRepository providerCompanyRepository;
 
     public LegacyCompanyDirectoryImpl(BuyerCompanyRepository buyerCompanyRepository,
                                       OrganizationRepository organizationRepository,
                                       UserRepository userRepository,
-                                      MembershipRepository membershipRepository) {
+                                      MembershipRepository membershipRepository,
+                                      ProviderCompanyRepository providerCompanyRepository) {
         this.buyerCompanyRepository = buyerCompanyRepository;
         this.organizationRepository = organizationRepository;
         this.userRepository = userRepository;
         this.membershipRepository = membershipRepository;
+        this.providerCompanyRepository = providerCompanyRepository;
+    }
+
+    @Override
+    public Optional<Long> organizationIdForProvider(Long providerId) {
+        if (providerId == null) return Optional.empty();
+        return providerCompanyRepository.findById(providerId)
+                .flatMap(provider -> organizationRepository.findByRuc(provider.getRuc()))
+                .filter(organization -> organization.isActive() && organization.getType() == OrganizationType.DISTRIBUTOR)
+                .map(organization -> organization.getId())
+                .filter(organizationId -> membershipRepository.findActiveByOrganizationId(organizationId).stream()
+                        .anyMatch(membership -> userRepository.findById(membership.getUserId())
+                                .filter(user -> providerId.equals(user.getProviderId())).isPresent()));
     }
 
     /**

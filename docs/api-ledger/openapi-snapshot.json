@@ -492,6 +492,54 @@
         },
         "type" : "object"
       },
+      "DeliveryRecommendationResource" : {
+        "properties" : {
+          "criterion" : {
+            "type" : "string"
+          },
+          "driverId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "driverName" : {
+            "type" : "string"
+          },
+          "licensePlate" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "recommended" : {
+            "type" : "boolean"
+          },
+          "requestedVolumeLitres" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "tankerCapacityLitres" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "tankerId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "windowEnd" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "windowStart" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "DeliveryResource" : {
         "properties" : {
           "arrivedAt" : {
@@ -598,6 +646,43 @@
           },
           "toState" : {
             "enum" : [ "ASSIGNED", "STARTED", "ARRIVED", "DELIVERING", "COMPLETED", "FAILED", "CANCELLED" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "DeliveryValveObservationResource" : {
+        "properties" : {
+          "commandId" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "recordedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "state" : {
+            "type" : "string"
+          },
+          "unauthorized" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "DeviceResource" : {
+        "properties" : {
+          "channel" : {
+            "type" : "string"
+          },
+          "deviceId" : {
+            "type" : "string"
+          },
+          "validFrom" : {
+            "format" : "date-time",
             "type" : "string"
           }
         },
@@ -1106,9 +1191,23 @@
             },
             "type" : "array"
           },
+          "pendingOrders" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
           "providerId" : {
             "format" : "int64",
             "type" : "integer"
+          },
+          "salesTrend" : {
+            "items" : {
+              "$ref" : "#/components/schemas/SalesTrendPoint"
+            },
+            "type" : "array"
+          },
+          "totalFuelSoldLitres" : {
+            "format" : "double",
+            "type" : "number"
           },
           "totalOrders" : {
             "format" : "int64",
@@ -1117,6 +1216,65 @@
           "totalRevenue" : {
             "format" : "double",
             "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "ProviderBuyerCompanyResource" : {
+        "properties" : {
+          "activeOrderCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "criticalTankCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "historicalOrderCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "organizationId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "ruc" : {
+            "type" : "string"
+          },
+          "sector" : {
+            "type" : "string"
+          },
+          "sites" : {
+            "items" : {
+              "$ref" : "#/components/schemas/SiteResource"
+            },
+            "type" : "array"
+          },
+          "tankCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "ProviderBuyerLookupResource" : {
+        "properties" : {
+          "buyerCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "ruc" : {
+            "type" : "string"
           }
         },
         "type" : "object"
@@ -1150,6 +1308,236 @@
             "type" : "number"
           },
           "ruc" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ProviderDeliveryResource" : {
+        "properties" : {
+          "buyerCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "buyerCompanyName" : {
+            "type" : "string"
+          },
+          "customerAccountId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "deliveredVolume" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "deliveryAddress" : {
+            "type" : "string"
+          },
+          "driver" : {
+            "$ref" : "#/components/schemas/DriverResource"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "physicalState" : {
+            "type" : "string"
+          },
+          "requestedVolume" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "scheduledDate" : {
+            "type" : "string"
+          },
+          "siteId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tanker" : {
+            "$ref" : "#/components/schemas/TankerResource"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "windowEnd" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "windowStart" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ProviderPaymentResource" : {
+        "properties" : {
+          "amount" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "buyerCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "buyerName" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "currency" : {
+            "description" : "Moneda no persistida actualmente; null, nunca inferida",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "orderId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "paidAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "paymentMethod" : {
+            "enum" : [ "BANK_TRANSFER", "CREDIT_CARD", "DEBIT_CARD", "CASH" ],
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "PENDING", "COMPLETED", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ProviderTankReadingResource" : {
+        "properties" : {
+          "capturedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "channel" : {
+            "type" : "string"
+          },
+          "deviceId" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "level" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "quality" : {
+            "type" : "string"
+          },
+          "receivedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "sequence" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "tankId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ProviderTankResource" : {
+        "properties" : {
+          "buyerCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "capacity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "critical" : {
+            "type" : "boolean"
+          },
+          "currentLevel" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "customerAccountId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "deliveryAddress" : {
+            "type" : "string"
+          },
+          "devices" : {
+            "items" : {
+              "$ref" : "#/components/schemas/DeviceResource"
+            },
+            "type" : "array"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "fuelType" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "levelObservedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "levelPercent" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "levelSource" : {
+            "type" : "string"
+          },
+          "lowLevelPercent" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "organizationId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "siteId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "siteName" : {
+            "type" : "string"
+          },
+          "unit" : {
             "type" : "string"
           }
         },
@@ -1272,6 +1660,109 @@
         },
         "type" : "object"
       },
+      "RegisterProviderBuyerResource" : {
+        "properties" : {
+          "address" : {
+            "maxLength" : 255,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "buyerCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "contactEmail" : {
+            "format" : "email",
+            "maxLength" : 255,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "name" : {
+            "maxLength" : 150,
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "phone" : {
+            "maxLength" : 255,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "ruc" : {
+            "pattern" : "[0-9]{11}",
+            "type" : "string"
+          },
+          "sector" : {
+            "maxLength" : 100,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "siteName" : {
+            "maxLength" : 150,
+            "minLength" : 1,
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "RegisterProviderTankResource" : {
+        "properties" : {
+          "autoGenerateEnabled" : {
+            "type" : "boolean"
+          },
+          "buyerCompanyId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "capacity" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "channel" : {
+            "maxLength" : 60,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "customerAccountId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "deviceId" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "initialLevel" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "lowLevelPercent" : {
+            "format" : "double",
+            "maximum" : 90,
+            "minimum" : 0,
+            "type" : "number"
+          },
+          "name" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "siteId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "unit" : {
+            "minLength" : 1,
+            "pattern" : "LITRE|GALLON",
+            "type" : "string"
+          }
+        },
+        "required" : [ "buyerCompanyId", "capacity", "channel", "customerAccountId", "deviceId", "fuelProductId", "lowLevelPercent", "name", "siteId", "unit" ],
+        "type" : "object"
+      },
       "RegisterTankResource" : {
         "properties" : {
           "capacity" : {
@@ -1385,6 +1876,19 @@
         },
         "type" : "object"
       },
+      "SalesTrendPoint" : {
+        "properties" : {
+          "date" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "litres" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
       "SignInResource" : {
         "properties" : {
           "password" : {
@@ -1428,9 +1932,6 @@
       },
       "SiteResource" : {
         "properties" : {
-          "active" : {
-            "type" : "boolean"
-          },
           "address" : {
             "type" : "string"
           },
@@ -1444,10 +1945,6 @@
           },
           "name" : {
             "type" : "string"
-          },
-          "organizationId" : {
-            "format" : "int64",
-            "type" : "integer"
           }
         },
         "type" : "object"
@@ -1697,6 +2194,34 @@
         },
         "type" : "object"
       },
+      "UpdateProviderTankResource" : {
+        "properties" : {
+          "autoGenerateEnabled" : {
+            "type" : "boolean"
+          },
+          "channel" : {
+            "maxLength" : 60,
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "deviceId" : {
+            "maxLength" : 120,
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "fuelProductId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "lowLevelPercent" : {
+            "format" : "double",
+            "maximum" : 90,
+            "minimum" : 0,
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
       "UserResource" : {
         "properties" : {
           "companyId" : {
@@ -1770,7 +2295,7 @@
     "/api/admin/api-metrics" : {
       "get" : {
         "description" : "Devuelve por patrón la cantidad de solicitudes, el último acceso y el número de usuarios distintos. Solo para administradores.",
-        "operationId" : "list_4",
+        "operationId" : "list_8",
         "parameters" : [ {
           "in" : "query",
           "name" : "version",
@@ -2012,15 +2537,32 @@
     },
     "/api/analytics/providers/{providerId}" : {
       "get" : {
-        "description" : "Devuelve métricas agregadas del tenant distribuidor cuando el usuario pertenece a esa empresa.",
+        "description" : "ROLE_PROVIDER propietario. from/to ISO inclusivos: pedidos por creación UTC, ingresos por pago, litros vendidos una vez por orden con pago completado, en fecha de su primer pago. Sin fechas conserva los acumulados. salesTrend diario se puede agrupar semanal/mensualmente; unidades desconocidas se excluyen de litros.",
         "operationId" : "getProviderAnalytics",
         "parameters" : [ {
           "in" : "path",
           "name" : "providerId",
           "required" : true,
           "schema" : {
+            "exclusiveMinimum" : 0,
             "format" : "int64",
             "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "format" : "date",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -2181,7 +2723,7 @@
     },
     "/api/authentication/sign-up" : {
       "post" : {
-        "description" : "Crea la cuenta y su organización, y asigna al usuario la membresía OWNER. El rol debe coincidir con el perfil comercial enviado.",
+        "description" : "Crea la cuenta y su organización, y asigna al usuario la membresía OWNER. El rol debe coincidir con el perfil comercial enviado.\n\n| Rol en `roles` | Bloque a enviar | Bloque a omitir |\n|---|---|---|\n| `[\"ROLE_BUYER\"]` | `buyerCompany` | `providerCompany` |\n| `[\"ROLE_PROVIDER\"]` | `providerCompany` | `buyerCompany` |\n",
         "operationId" : "signUp",
         "requestBody" : {
           "content" : {
@@ -2649,6 +3191,71 @@
       }
     },
     "/api/deliveries" : {
+      "get" : {
+        "description" : "Tenant autenticado. providerId opcional debe coincidir. date ISO filtra fecha programada. Campos asociados pueden ser null en datos heredados.",
+        "operationId" : "list_5",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "providerId",
+          "required" : false,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "date",
+          "required" : false,
+          "schema" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderDeliveryResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Entregas propias o lista vacía"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderDeliveryResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Identificador o fecha inválida"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderDeliveryResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Rol incorrecto o proveedor ajeno"
+          }
+        },
+        "summary" : "Listar entregas del distribuidor",
+        "tags" : [ "Ciclo de entrega" ]
+      },
       "post" : {
         "description" : "Consume la aceptación de reposición de la orden, reserva suministro y flota, y crea la entrega en una transacción; es idempotente por commandId.",
         "operationId" : "assign",
@@ -2718,10 +3325,96 @@
         "tags" : [ "Asignación de entregas" ]
       }
     },
+    "/api/deliveries/recommendation" : {
+      "get" : {
+        "description" : "Solo orden propia respaldada por solicitud aceptada sin asignar. Reutiliza elegibilidad y descarta reservas activas superpuestas. Cisterna de menor capacidad suficiente en litros; empates por id; conductor de menor id. windowStart/windowEnd ISO UTC opcionales juntos; sin ellos se usa todo el día programado UTC. No reserva ni asigna. El modelo no permite optimizar ruta ni compatibilidad específica de cisterna/producto.",
+        "operationId" : "get_8",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "windowStart",
+          "required" : false,
+          "schema" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "windowEnd",
+          "required" : false,
+          "schema" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeliveryRecommendationResource"
+                }
+              }
+            },
+            "description" : "Propuesta o recommended=false con motivo"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Ventana o id inválido"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin proveedor autenticado"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Orden ajena o sin solicitud correlacionada"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Solicitud no aceptada o ya asignada"
+          }
+        },
+        "summary" : "Recomendar conductor y cisterna",
+        "tags" : [ "Asignación de entregas" ]
+      }
+    },
     "/api/deliveries/{deliveryId}" : {
       "get" : {
         "description" : "Devuelve una entrega propia con su estado heredado y su estado físico vigente.",
-        "operationId" : "get_4",
+        "operationId" : "get_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "deliveryId",
@@ -3054,8 +3747,8 @@
     },
     "/api/deliveries/{deliveryId}/geofence-policies" : {
       "post" : {
-        "description" : "Crea una nueva versión del círculo de seguridad de una entrega para el distribuidor autenticado y conserva las versiones previas.",
-        "operationId" : "create_1",
+        "description" : "Crea una nueva versión del círculo de seguridad de una entrega para el distribuidor autenticado y conserva las versiones previas; REQUIERE CUENTA ROL_PROVIDER",
+        "operationId" : "create_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "deliveryId",
@@ -3183,7 +3876,7 @@
     "/api/deliveries/{deliveryId}/timeline" : {
       "get" : {
         "description" : "Combina cambios de estado, decisiones de seguridad, eventos de válvula y registros de carga retenidos; las muestras GPS eliminadas no se incluyen.",
-        "operationId" : "get_5",
+        "operationId" : "get_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "deliveryId",
@@ -3471,6 +4164,67 @@
       }
     },
     "/api/deliveries/{deliveryId}/valve-observations" : {
+      "get" : {
+        "description" : "Historia ascendente del diario inmutable; último elemento es el último estado lógico registrado. recordedAt es el instante de registro del evento, no captura de hardware. Incluye apertura espontánea como OPEN con unauthorized=true. No envía comandos ni cambia la autorización del conductor para POST.",
+        "operationId" : "get_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "deliveryId",
+          "required" : true,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DeliveryValveObservationResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Historia lógica o []"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Id inválido"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin proveedor autenticado"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Entrega ajena o inexistente"
+          }
+        },
+        "summary" : "Consultar observaciones de válvula de una entrega propia",
+        "tags" : [ "Observaciones de válvula" ]
+      },
       "post" : {
         "description" : "El conductor asignado informa OPEN o CLOSED; una confirmación OPEN no autorizada se registra como incidente de seguridad.",
         "operationId" : "observe",
@@ -3552,7 +4306,7 @@
     "/api/drivers" : {
       "get" : {
         "description" : "Devuelve los conductores registrados para el tenant distribuidor autenticado.",
-        "operationId" : "list_2",
+        "operationId" : "list_4",
         "responses" : {
           "200" : {
             "content" : {
@@ -3671,7 +4425,7 @@
     },
     "/api/drivers/{driverId}" : {
       "get" : {
-        "description" : "Devuelve el conductor indicado si pertenece al tenant distribuidor autenticado.",
+        "description" : "Devuelve el conductor indicado si pertenece al tenant distribuidor autenticado; Importante registrarse con ROLE_PROVIDER",
         "operationId" : "get_2",
         "parameters" : [ {
           "in" : "path",
@@ -3719,7 +4473,7 @@
       },
       "put" : {
         "description" : "Aplica los cambios recibidos a un conductor del tenant distribuidor autenticado.",
-        "operationId" : "update_1",
+        "operationId" : "update_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "driverId",
@@ -3938,7 +4692,7 @@
         "tags" : [ "Equipos" ]
       },
       "post" : {
-        "description" : "Registra un equipo heredado para la empresa indicada, que debe pertenecer al usuario autenticado.",
+        "description" : "Registra un equipo heredado para la empresa indicada, que debe pertenecer al usuario autenticado; PD: Registro de Camiones",
         "operationId" : "createEquipment",
         "requestBody" : {
           "content" : {
@@ -4529,6 +5283,28 @@
         "tags" : [ "Productos de combustible" ]
       }
     },
+    "/api/fuel-products/provider/{providerId}/empty-catalog-alert" : {
+      "post" : {
+        "description" : "Verifica que no existan productos activos y avisa a los miembros activos. Máximo un aviso por distribuidor al día.",
+        "operationId" : "alertEmptyCatalog",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Avisar al distribuidor que debe publicar productos",
+        "tags" : [ "Productos de combustible" ]
+      }
+    },
     "/api/fuel-products/{fuelProductId}" : {
       "delete" : {
         "description" : "Elimina el producto del catálogo propio solo cuando ninguna solicitud ni orden existente lo utiliza.",
@@ -4743,7 +5519,7 @@
                 }
               }
             },
-            "description" : "El usuario no pertenece a la organización de la invitación."
+            "description" : "El usuario no es OWNER ni ADMIN de la organización de la invitación."
           },
           "404" : {
             "content" : {
@@ -4841,7 +5617,7 @@
     "/api/me/notifications" : {
       "get" : {
         "description" : "Devuelve las notificaciones de la bandeja del usuario autenticado.",
-        "operationId" : "list_3",
+        "operationId" : "list_7",
         "responses" : {
           "200" : {
             "content" : {
@@ -5057,7 +5833,7 @@
     },
     "/api/organizations/{organizationId}/invitations" : {
       "post" : {
-        "description" : "Crea una invitación pendiente para el correo y rol indicados en la organización de la ruta. Requiere una membresía en esa organización.",
+        "description" : "Crea una invitación pendiente para el correo y rol (ADMIN o MEMBER) indicados en la organización de la ruta. Requiere ser OWNER o ADMIN de esa organización.",
         "operationId" : "invite",
         "parameters" : [ {
           "in" : "path",
@@ -5097,7 +5873,7 @@
                 }
               }
             },
-            "description" : "El cuerpo no supera la validación o el rol no está admitido."
+            "description" : "El cuerpo no supera la validación o el rol no está admitido (OWNER no es invitable)."
           },
           "403" : {
             "content" : {
@@ -5107,7 +5883,7 @@
                 }
               }
             },
-            "description" : "El usuario no pertenece a la organización indicada."
+            "description" : "El usuario no es OWNER ni ADMIN de la organización indicada."
           },
           "404" : {
             "content" : {
@@ -5322,6 +6098,68 @@
         "tags" : [ "Pagos" ]
       }
     },
+    "/api/payments/provider/{providerId}" : {
+      "get" : {
+        "operationId" : "getPaymentsByProvider",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "enum" : [ "PENDING", "COMPLETED", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderPaymentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Listar pagos del distribuidor"
+          },
+          "400" : {
+            "description" : "Id, estado, fecha o período inválido"
+          },
+          "403" : {
+            "description" : "Sin rol proveedor o proveedor ajeno"
+          }
+        },
+        "summary" : "Listar pagos del distribuidor",
+        "tags" : [ "Pagos" ]
+      }
+    },
     "/api/payments/{paymentId}" : {
       "get" : {
         "description" : "Devuelve el pago si el usuario pertenece a la empresa compradora o al distribuidor de la orden.",
@@ -5422,7 +6260,7 @@
     },
     "/api/payments/{paymentId}/refund" : {
       "post" : {
-        "description" : "Marca el pago como reembolsado; repetir la operación conserva ese estado.",
+        "description" : "Marca como reembolsado un pago completado; repetir la operación conserva ese estado.",
         "operationId" : "refundPayment",
         "parameters" : [ {
           "in" : "path",
@@ -5453,6 +6291,16 @@
               }
             },
             "description" : "El pago no existe o el usuario no puede consultarlo."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El pago no está completado (PENDING o FAILED) y no puede reembolsarse."
           }
         },
         "summary" : "Reembolsar pago",
@@ -5582,7 +6430,7 @@
         "tags" : [ "Distribuidores" ]
       },
       "put" : {
-        "description" : "Reemplaza los campos editables del perfil indicado. Requiere pertenecer a ese tenant distribuidor.",
+        "description" : "Reemplaza los campos editables del perfil indicado; la calificación (rating) no es editable y se conserva. Requiere pertenecer a ese tenant distribuidor.",
         "operationId" : "updateProviderCompany",
         "parameters" : [ {
           "in" : "path",
@@ -5637,6 +6485,548 @@
         },
         "summary" : "Actualizar distribuidor",
         "tags" : [ "Distribuidores" ]
+      }
+    },
+    "/api/provider/buyer-companies" : {
+      "get" : {
+        "description" : "Empresas con vínculo explícito, órdenes o solicitudes del proveedor autenticado. id es buyerCompanyId. Tanques activos; crítico significa nivel <= umbral de política (20% por defecto). Pedidos históricos y activos limitados al proveedor.",
+        "operationId" : "list_3",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderBuyerCompanyResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Compradores propios, o [] sin relaciones"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderBuyerCompanyResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Sin rol/identidad de proveedor"
+          }
+        },
+        "summary" : "Listar compradores vinculados",
+        "tags" : [ "Clientes del distribuidor" ]
+      },
+      "post" : {
+        "description" : "Con buyerCompanyId vincula una empresa existente. Sin id requiere name y ruc únicos; crea empresa, organización compradora, cuenta y sitio, sin usuario ni credenciales IAM. La relación pertenece al proveedor autenticado y habilita tanques, lecturas y episodios sin historial comercial. Duplicado 409.",
+        "operationId" : "create_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegisterProviderBuyerResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderBuyerCompanyResource"
+                }
+              }
+            },
+            "description" : "Comprador vinculado"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Datos inválidos"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin proveedor"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Comprador existente no encontrado"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "RUC o vínculo duplicado"
+          }
+        },
+        "summary" : "Registrar o vincular comprador antes del primer pedido",
+        "tags" : [ "Clientes del distribuidor" ]
+      }
+    },
+    "/api/provider/buyer-companies/lookup" : {
+      "get" : {
+        "operationId" : "lookupProviderBuyerCompany",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "ruc",
+          "required" : true,
+          "schema" : {
+            "pattern" : "[0-9]{11}",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderBuyerLookupResource"
+                }
+              }
+            },
+            "description" : "Buscar comprador por RUC exacto para vincular"
+          },
+          "400" : {
+            "description" : "RUC ausente o inválido"
+          },
+          "403" : {
+            "description" : "Sin proveedor autenticado"
+          },
+          "404" : {
+            "description" : "RUC no registrado"
+          },
+          "429" : {
+            "description" : "LOOKUP_RATE_LIMITED; reintentar en 60 segundos"
+          }
+        },
+        "summary" : "Buscar comprador por RUC exacto para vincular",
+        "tags" : [ "Clientes del distribuidor" ]
+      }
+    },
+    "/api/provider/tanks" : {
+      "get" : {
+        "description" : "Tanques activos de compradores con pedidos o solicitudes del proveedor autenticado. buyerCompanyId usa id de buyer-companies. Nivel y capacidad en unit; umbral porcentual; devices contiene asociaciones IoT vigentes sin credenciales.",
+        "operationId" : "list_2",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "buyerCompanyId",
+          "required" : false,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderTankResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Tanques vinculados o []"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Identificador inválido"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin rol/identidad de proveedor"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Comprador inexistente o sin relación comercial"
+          }
+        },
+        "summary" : "Listar tanques de compradores vinculados",
+        "tags" : [ "Tanques del distribuidor" ]
+      },
+      "post" : {
+        "description" : "Flujo principal US-51. Comprador vinculado comercialmente; cuenta y sitio de su organización; producto activo propio. Guarda tanque, política y binding IoT en una transacción. autoGenerateEnabled por defecto true. El dispositivo aún requiere credencial técnica X-Device-Token.",
+        "operationId" : "create_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegisterProviderTankResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderTankResource"
+                }
+              }
+            },
+            "description" : "Tanque asociado"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Cuerpo, capacidad, unidad o umbral inválido"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin proveedor autenticado"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Comprador no vinculado o producto ajeno"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Dispositivo duplicado"
+          }
+        },
+        "summary" : "Asociar tanque, producto y dispositivo",
+        "tags" : [ "Tanques del distribuidor" ]
+      }
+    },
+    "/api/provider/tanks/{tankId}" : {
+      "get" : {
+        "operationId" : "getProviderTank",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderTankResource"
+                }
+              }
+            },
+            "description" : "Consultar tanque vinculado"
+          },
+          "400" : {
+            "description" : "Id inválido"
+          },
+          "403" : {
+            "description" : "Sin proveedor autenticado"
+          },
+          "404" : {
+            "description" : "Tanque inexistente, inactivo o ajeno"
+          }
+        },
+        "summary" : "Consultar tanque vinculado",
+        "tags" : [ "Tanques del distribuidor" ]
+      },
+      "put" : {
+        "description" : "Solo compradores vinculados. Campos omitidos se conservan; deviceId exige channel. Reemplazar dispositivo cierra la asociación previa del canal y conserva su historia. No cambia propietario/capacidad.",
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateProviderTankResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderTankResource"
+                }
+              }
+            },
+            "description" : "Tanque actualizado"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Datos inválidos"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin proveedor autenticado"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanque no vinculado o producto ajeno"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Dispositivo duplicado"
+          }
+        },
+        "summary" : "Editar política, producto o dispositivo del tanque",
+        "tags" : [ "Tanques del distribuidor" ]
+      }
+    },
+    "/api/provider/tanks/{tankId}/readings" : {
+      "get" : {
+        "description" : "Solo lecturas ACCEPTED atribuidas al tanque y comprador al capturarse. from/to son timestamps ISO UTC inclusivos, filtran capturedAt. Orden ascendente. Conserva historia de dispositivos reemplazados y excluye cuarentena. capturedAt/receivedAt permiten mostrar antigüedad.",
+        "operationId" : "get_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderTankReadingResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Lecturas aceptadas o []"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Id, timestamp o período inválido"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin proveedor autenticado"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanque ajeno o inexistente"
+          }
+        },
+        "summary" : "Consultar lecturas IoT de un tanque vinculado",
+        "tags" : [ "Telemetría" ]
+      }
+    },
+    "/api/provider/tanks/{tankId}/refill-episodes" : {
+      "get" : {
+        "description" : "Mismo contrato que la ruta del propietario; exige pedido o solicitud entre el proveedor autenticado y el comprador dueño del tanque. Lista vacía sin historial.",
+        "operationId" : "list_6",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/RefillEpisodeResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Episodios del tanque vinculado o []"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/RefillEpisodeResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Identificador inválido"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/RefillEpisodeResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Sin rol/identidad de proveedor"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/RefillEpisodeResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Tanque inexistente o comprador sin relación"
+          }
+        },
+        "summary" : "Consultar episodios de reposición como distribuidor",
+        "tags" : [ "Políticas de reposición" ]
       }
     },
     "/api/replenishment-requests" : {
@@ -5733,10 +7123,33 @@
         "tags" : [ "Solicitudes de abastecimiento" ]
       }
     },
+    "/api/replenishment-requests/inbox" : {
+      "get" : {
+        "description" : "Lista todas las solicitudes dirigidas al distribuidor autenticado, de todos sus clientes y estados, ordenadas de más reciente a más antigua.",
+        "operationId" : "inbox",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReplenishmentRequestResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bandeja de solicitudes del distribuidor",
+        "tags" : [ "Solicitudes de abastecimiento" ]
+      }
+    },
     "/api/replenishment-requests/{requestId}" : {
       "get" : {
-        "description" : "Devuelve la solicitud indicada solo si pertenece a la organización activa del usuario.",
-        "operationId" : "get_3",
+        "description" : "Devuelve la solicitud indicada si pertenece a la organización activa del usuario o si el usuario es el distribuidor destinatario.",
+        "operationId" : "get_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "requestId",
@@ -5765,7 +7178,7 @@
                 }
               }
             },
-            "description" : "El usuario no está autenticado o no tiene una organización activa."
+            "description" : "El usuario no está autenticado o no tiene organización activa ni identidad de distribuidor."
           },
           "404" : {
             "content" : {
@@ -5775,7 +7188,7 @@
                 }
               }
             },
-            "description" : "La solicitud no existe o pertenece a otra organización."
+            "description" : "La solicitud no existe o no pertenece a su organización ni a su distribuidor."
           }
         },
         "summary" : "Consultar solicitud por identificador",
@@ -6015,7 +7428,7 @@
         "tags" : [ "Cisternas de flota" ]
       },
       "post" : {
-        "description" : "Crea una cisterna para el tenant distribuidor autenticado, identificado a partir del principal.",
+        "description" : "Crea una cisterna para el tenant distribuidor autenticado, identificado a partir del principal;  Requiere cuenta con ROLE_PROVIDER",
         "operationId" : "register",
         "requestBody" : {
           "content" : {
@@ -6368,7 +7781,7 @@
         "tags" : [ "Tanques" ]
       },
       "post" : {
-        "description" : "Crea un tanque para una cuenta y un sitio de la organización activa, y valida capacidad, unidad y nivel inicial.",
+        "description" : "Flujo secundario de contingencia: el flujo principal del distribuidor es POST /api/provider/tanks. Crea un tanque para una cuenta y un sitio de la organización activa. Puede hacerlo un usuario con membresía activa en la organización de la cuenta; en el flujo habitual, es el comprador (ROLE_BUYER) de una organización CUSTOMER. Un proveedor (ROLE_PROVIDER) de otra organización no puede usar una cuenta ajena. La cuenta y el sitio deben pertenecer a la organización activa; también se validan capacidad, unidad y nivel inicial.",
         "operationId" : "registerTank",
         "requestBody" : {
           "content" : {
@@ -6399,7 +7812,7 @@
                 }
               }
             },
-            "description" : "El cuerpo es inválido o la cuenta, el sitio o la capacidad incumplen las reglas del dominio."
+            "description" : "El cuerpo es inválido, la cuenta o el sitio no pertenecen a la organización activa, o la cuenta, el sitio, la capacidad, la unidad o el nivel inicial incumplen las reglas del dominio."
           },
           "403" : {
             "content" : {

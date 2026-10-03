@@ -4,6 +4,7 @@ import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.iam.application.queryservices.MembershipQueryService;
 import com.primefuel.fulltank.platform.iam.domain.model.aggregates.Membership;
 import com.primefuel.fulltank.platform.iam.domain.model.queries.GetMembershipsByUserIdQuery;
+import com.primefuel.fulltank.platform.iam.domain.model.valueobjects.MembershipRole;
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,6 +45,18 @@ public class MembershipAccessImpl implements MembershipAccess {
         return currentUserId()
                 .map(userId -> activeMemberships(userId).stream()
                         .anyMatch(membership -> organizationId.equals(membership.getOrganizationId())))
+                .orElse(false);
+    }
+
+    @Override
+    public boolean canManageOrganization(Long organizationId) {
+        if (organizationId == null) {
+            return false;
+        }
+        return currentUserId()
+                .map(userId -> activeMemberships(userId).stream()
+                        .anyMatch(membership -> organizationId.equals(membership.getOrganizationId())
+                                && membership.getRole() != MembershipRole.MEMBER))
                 .orElse(false);
     }
 

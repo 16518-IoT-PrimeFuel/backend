@@ -2,6 +2,7 @@ package com.primefuel.fulltank.platform.telemetry.infrastructure.persistence.jpa
 
 import com.primefuel.fulltank.platform.telemetry.domain.model.valueobjects.ReadingQuality;
 import com.primefuel.fulltank.platform.telemetry.infrastructure.persistence.jpa.entities.TelemetryReadingPersistenceEntity;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +18,10 @@ public interface TelemetryReadingPersistenceRepository
 
     List<TelemetryReadingPersistenceEntity> findByDeviceIdAndChannelOrderByCapturedAtAsc(
             String deviceId, String channel);
+
+    List<TelemetryReadingPersistenceEntity>
+            findByTankIdAndOrganizationIdAndQualityOrderByCapturedAtAscIdAsc(
+                    Long tankId, Long organizationId, ReadingQuality quality);
 
     long countByQuality(ReadingQuality quality);
 }

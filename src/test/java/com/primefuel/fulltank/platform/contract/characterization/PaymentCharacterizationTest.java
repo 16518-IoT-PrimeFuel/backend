@@ -169,10 +169,13 @@ class PaymentCharacterizationTest {
 
     @Test
     void completeAfterRefundIsAccepted() throws Exception {
-        // current-behavior (finding F5): refund() has no guard and complete() has no guard, so a REFUNDED
-        // payment can be completed again (order#markPaid only refuses a CANCELLED order).
+        // current-behavior (finding F5): complete() has no guard, so a REFUNDED payment can be completed again
+        // (order#markPaid only refuses a CANCELLED order). refund() now requires COMPLETED first.
         var f = new Fixture("pay-complete-after-refund");
         long paymentId = f.createPayment(f.orderId, 50.0);
+        mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
+                        .contentType("application/json").content("{\"transactionReference\":\"first\"}"))
+                .andExpect(status().isOk());
         mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(f.buyer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REFUNDED"));
@@ -211,14 +214,12 @@ class PaymentCharacterizationTest {
     // ---- refund ------------------------------------------------------------------------------
 
     @Test
-    void refundAPendingPaymentSucceeds() throws Exception {
-        // current-behavior (T01-A row 70): refund() has no status guard, so a never-completed PENDING payment
-        // can be "refunded".
+    void refundAPendingPaymentIsRejected() throws Exception {
+        // T01-A row 70 closed: refund() only accepts a COMPLETED payment; a never-completed PENDING one gets 409.
         var f = new Fixture("pay-refund-pending");
         long paymentId = f.createPayment(f.orderId, 50.0);
         mockMvc.perform(post("/api/payments/{id}/refund", paymentId).with(f.buyer))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("REFUNDED"));
+                .andExpect(status().isConflict());
     }
 
     @Test

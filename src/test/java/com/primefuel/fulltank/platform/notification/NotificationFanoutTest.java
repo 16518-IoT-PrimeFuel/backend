@@ -106,6 +106,23 @@ class NotificationFanoutTest {
     }
 
     @Test
+    void emptyCatalogAlertReachesActiveMembersOnce() {
+        long organizationId = onboard(1010);
+        grant(organizationId, 1011);
+        long revoked = grant(organizationId, 1012);
+        membershipCommandService.handle(new RevokeMembershipCommand(revoked));
+        var envelope = new EventEnvelope(UUID.randomUUID(), "inventory.catalog-empty.v1",
+                "ProviderCompany", "42", organizationId, 1L, Instant.now(), "{}");
+        fanoutListener.on(envelope);
+        fanoutListener.on(envelope);
+        assertThat(notificationsFor(1010, NotificationType.GENERAL)).hasSize(1);
+        assertThat(notificationsFor(1011, NotificationType.GENERAL)).hasSize(1);
+        assertThat(notificationsFor(1012, NotificationType.GENERAL)).isEmpty();
+        assertThat(notificationsFor(1010, NotificationType.GENERAL).get(0).getMessage())
+                .contains("Agrega o activa productos");
+    }
+
+    @Test
     void anAcceptedRequestFansOutToEveryActiveMemberOfItsOrganization() {
         long ownerUserId = 1001;
         long memberUserId = 1002;

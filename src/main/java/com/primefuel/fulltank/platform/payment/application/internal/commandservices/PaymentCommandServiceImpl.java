@@ -6,6 +6,7 @@ import com.primefuel.fulltank.platform.payment.domain.model.aggregates.Payment;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.CompletePaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.CreatePaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.RefundPaymentCommand;
+import com.primefuel.fulltank.platform.payment.domain.model.valueobjects.PaymentStatus;
 import com.primefuel.fulltank.platform.payment.domain.repositories.PaymentRepository;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
@@ -91,6 +92,15 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
             return Result.failure(ApplicationError.notFound("Payment", command.paymentId().toString()));
         }
         var payment = existing.get();
+        // Solo un cobro completado se reembolsa; repetir sobre REFUNDED es idempotente.
+        // ponytail: solo cambia el estado; la devolución real llega con la pasarela de pagos.
+        if (payment.getStatus() == PaymentStatus.REFUNDED) {
+            return Result.success(payment);
+        }
+        if (payment.getStatus() != PaymentStatus.COMPLETED) {
+            return Result.failure(ApplicationError.conflict("Payment",
+                    "Only COMPLETED payments can be refunded; current status is " + payment.getStatus()));
+        }
         payment.refund();
         return Result.success(paymentRepository.save(payment));
     }

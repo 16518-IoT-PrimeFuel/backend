@@ -5,6 +5,15 @@ import com.primefuel.fulltank.platform.payment.application.queryservices.Payment
 import com.primefuel.fulltank.platform.payment.domain.model.commands.CompletePaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.RefundPaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.queries.GetAllPaymentsQuery;
+import com.primefuel.fulltank.platform.payment.domain.model.queries.GetPaymentsByProviderIdQuery;
+import com.primefuel.fulltank.platform.payment.domain.model.valueobjects.PaymentStatus;
+import com.primefuel.fulltank.platform.payment.interfaces.rest.resources.ProviderPaymentResource;
+import com.primefuel.fulltank.platform.payment.interfaces.rest.transform.ProviderPaymentResourceFromDomainAssembler;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Positive;
+import java.time.Instant;
 import com.primefuel.fulltank.platform.payment.domain.model.queries.GetPaymentByIdQuery;
 import com.primefuel.fulltank.platform.payment.domain.model.queries.GetPaymentByOrderIdQuery;
 import com.primefuel.fulltank.platform.payment.domain.model.queries.GetPaymentsByCompanyIdQuery;
@@ -27,6 +36,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 
@@ -114,12 +124,13 @@ public class PaymentsController {
     /**
      * Reembolsa un pago.
      *
-     * <p>Puede operarlo la empresa compradora o el distribuidor de la orden. El estado pasa a reembolsado sin restricción del estado previo.</p>
+     * <p>Puede operarlo la empresa compradora o el distribuidor de la orden. Solo se reembolsa un pago COMPLETED; repetirlo sobre uno ya reembolsado es idempotente.</p>
      */
     @Operation(summary = "Reembolsar pago",
-            description = "Marca el pago como reembolsado; repetir la operación conserva ese estado.")
+            description = "Marca como reembolsado un pago completado; repetir la operación conserva ese estado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Pago reembolsado."),
+            @ApiResponse(responseCode = "409", description = "El pago no está completado (PENDING o FAILED) y no puede reembolsarse."),
             @ApiResponse(responseCode = "404", description = "El pago no existe o el usuario no puede consultarlo.")
     })
     @PostMapping("/{paymentId}/refund")
@@ -210,6 +221,35 @@ public class PaymentsController {
         var payments = paymentQueryService.handle(new GetPaymentsByCompanyIdQuery(companyId));
         var resources = payments.stream().map(PaymentResourceFromEntityAssembler::toResourceFromEntity).toList();
         return new ResponseEntity<>(resources, HttpStatus.OK);
+    }
+
+    @GetMapping("/provider/{providerId}")
+    @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
+    @Operation(operationId = "getPaymentsByProvider", summary = "Listar pagos del distribuidor",
+            description = "Solo el proveedor autenticado propietario. Una consulta por proveedor,"
+                    + " con comprador y orden. status es PaymentStatus; from/to son instantes ISO"
+                    + " inclusivos sobre createdAt. Orden descendente por fecha e id. Moneda null"
+                    + " porque no se persiste en pagos ni órdenes.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Pagos propios o []",
+                content = @Content(array = @ArraySchema(
+                        schema = @Schema(implementation = ProviderPaymentResource.class)))),
+        @ApiResponse(responseCode = "400", description = "Id, estado, fecha o período inválido"),
+        @ApiResponse(responseCode = "403", description = "Sin rol proveedor o proveedor ajeno")
+    })
+    public ResponseEntity<List<ProviderPaymentResource>> getPaymentsByProvider(
+            @PathVariable @Positive Long providerId,
+            @RequestParam(required = false) PaymentStatus status,
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant to) {
+        var provider = tenantAccess.currentProviderId()
+                .orElseThrow(() -> new AccessDeniedException(
+                        "Provider identity required"));
+        var payments = paymentQueryService.handle(
+                new GetPaymentsByProviderIdQuery(provider, status, from, to));
+        return ResponseEntity.ok(payments.stream()
+                .map(ProviderPaymentResourceFromDomainAssembler::toResource)
+                .toList());
     }
 
     private boolean ownsPayment(Long paymentId) {

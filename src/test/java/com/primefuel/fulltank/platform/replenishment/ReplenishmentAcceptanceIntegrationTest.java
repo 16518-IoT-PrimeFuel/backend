@@ -268,7 +268,7 @@ class ReplenishmentAcceptanceIntegrationTest {
         var response = replenishmentCommands.handle(new CreateReplenishmentRequestCommand(
                 fixture.organizationId(), fixture.customerId(), fixture.tankId(), fixture.providerId(),
                 fixture.productId(), 100.0, "LITRE", ReplenishmentSource.MANUAL, null,
-                "Av. Prueba 123", LocalDate.of(2026, 9, 27)));
+                "Av. Prueba 123", LocalDate.now(java.time.ZoneId.of("America/Lima")).plusDays(7)));
         return response.getOrElse(null).getId();
     }
 
