@@ -17,6 +17,19 @@ public interface DeliveryIntegration {
     /** A failed or cancelled delivery: free the fleet and supply it was holding. */
     void releaseReservations(String assignmentReference);
 
+    /**
+     * A failed or cancelled delivery gives its order back: a dispatched order returns to CONFIRMED (so it can be
+     * assigned again) and the legacy driver/tanker status it set is freed. The request stays ACCEPTED and its
+     * acceptance stays consumed, so the need is still live and the next assignment skips the consume gate.
+     */
+    void reopenOrder(Long orderId, Long driverId, Long vehicleId);
+
+    /** Organization of the buyer behind the order (its replenishment request), the scope of its notifications. */
+    java.util.Optional<Long> buyerOrganizationId(Long orderId);
+
+    /** Organization of the distributor that owns the (legacy) provider id. */
+    java.util.Optional<Long> providerOrganizationId(Long providerId);
+
     record CompletionEffectsCommand(
             Long orderId,
             Long driverId,

@@ -26,7 +26,7 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
 
     @Override
     public Optional<Delivery> findByOrderId(Long orderId) {
-        return deliveryPersistenceRepository.findByOrderId(orderId)
+        return deliveryPersistenceRepository.findByActiveOrderId(orderId)
                 .map(DeliveryPersistenceAssembler::toDomainFromPersistence);
     }
 

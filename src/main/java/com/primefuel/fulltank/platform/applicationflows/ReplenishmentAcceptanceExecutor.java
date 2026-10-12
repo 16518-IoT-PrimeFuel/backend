@@ -58,7 +58,7 @@ public class ReplenishmentAcceptanceExecutor {
         var equipmentId = tanks.legacyEquipmentIdForTank(request.tankId()).orElse(null);
         var orderId = orders.create(new FuelOrderCreation.Command(companyId, request.providerId(),
                 request.fuelProductId(), equipmentId, request.quantity(), request.deliveryAddress(),
-                request.deliveryDate()));
+                request.deliveryDate(), request.id()));
         if (orderId.isFailure()) throw fail(AssignDeliveryExecutor.errorOf(orderId));
 
         var attached = replenishmentCommands.handle(new AttachReplenishmentOrderCommand(requestId,

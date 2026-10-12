@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -98,7 +99,7 @@ class ReplenishmentAcceptanceIntegrationTest {
         var orderId = accepted.get("orderId").asLong();
 
         assertThat(orders.findByProviderId(fixture.providerId())).hasSize(1);
-        assertThat(orders.findById(orderId).orElseThrow().getRequestId()).isNull();
+        assertThat(orders.findById(orderId).orElseThrow().getRequestId()).isEqualTo(created);
         assertThat(replenishmentLookup.findByOrderId(orderId)).isPresent();
 
         var driver = fleet.registerDriver(new RegisterDriverCommand(fixture.providerId(), null, "Prueba", "Conductor",
@@ -107,6 +108,11 @@ class ReplenishmentAcceptanceIntegrationTest {
         var tanker = fleet.registerTanker(new RegisterTankerCommand(fixture.providerId(),
                 "T-" + IDS.incrementAndGet(), "Volvo", "FH", 1000.0, "LITRE", "AVAILABLE"))
                 .getOrElse(null);
+
+        // An accepted (and consumed) request is still recommendable until a delivery exists.
+        mockMvc.perform(get("/api/deliveries/recommendation").param("orderId", String.valueOf(orderId))
+                        .with(provider))
+                .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/deliveries")
                         .with(provider)
@@ -119,10 +125,36 @@ class ReplenishmentAcceptanceIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.orderId").value(orderId));
 
+        // Once assigned, the recommendation is refused.
+        mockMvc.perform(get("/api/deliveries/recommendation").param("orderId", String.valueOf(orderId))
+                        .with(provider))
+                .andExpect(status().isConflict());
+
+        // The order exposes the request that originated it.
+        mockMvc.perform(get("/api/fuel-orders/{id}", orderId).with(provider))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requestId").value(created));
+
         mockMvc.perform(post("/api/replenishment-requests/{id}/accept", created)
                         .with(provider))
                 .andExpect(status().isConflict());
         assertThat(orders.findByProviderId(fixture.providerId())).hasSize(1);
+    }
+
+    @Test
+    void cancelledOrderIsNotRecommendable() throws Exception {
+        var fixture = fixture();
+        var requestId = createRequest(fixture);
+        var provider = auth(fixture.providerId(), "ROLE_PROVIDER");
+        var acceptedJson = mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(provider))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        var orderId = new tools.jackson.databind.ObjectMapper().readTree(acceptedJson).get("orderId").asLong();
+
+        mockMvc.perform(post("/api/fuel-orders/{id}/cancel", orderId).with(provider)).andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/deliveries/recommendation").param("orderId", String.valueOf(orderId))
+                        .with(provider))
+                .andExpect(status().isConflict());
     }
 
     @Test

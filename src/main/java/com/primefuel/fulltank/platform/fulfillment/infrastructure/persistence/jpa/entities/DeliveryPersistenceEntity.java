@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
         name = "deliveries",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_deliveries_assignment_command_id", columnNames = "assignment_command_id"),
-                @UniqueConstraint(name = "uk_deliveries_order_id", columnNames = "order_id")
+                @UniqueConstraint(name = "uk_deliveries_active_order_id", columnNames = "active_order_id")
         })
 @Getter
 @Setter
@@ -24,6 +24,13 @@ public class DeliveryPersistenceEntity extends AuditableAbstractPersistenceEntit
 
     @Column(nullable = false)
     private Long orderId;
+
+    /**
+     * The order while this delivery still holds it; null once FAILED/CANCELLED. Unique, so an order has one
+     * live delivery yet a failed one can be reassigned (NULLs never collide on MySQL or H2).
+     */
+    @Column(name = "active_order_id")
+    private Long activeOrderId;
 
     @Column(nullable = false)
     private Long providerId;

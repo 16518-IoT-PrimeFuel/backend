@@ -2,6 +2,7 @@ package com.primefuel.fulltank.platform.applicationflows;
 
 import com.primefuel.fulltank.platform.fleet.api.*;
 import com.primefuel.fulltank.platform.fleet.api.FleetCatalog;
+import com.primefuel.fulltank.platform.fulfillment.api.DeliveryAssignments;
 import com.primefuel.fulltank.platform.ordering.api.OrderLookup;
 import com.primefuel.fulltank.platform.replenishment.api.ReplenishmentLookup;
 import com.primefuel.fulltank.platform.shared.application.result.*;
@@ -21,16 +22,19 @@ public class DeliveryRecommendationQueryService {
     private final ReplenishmentLookup requests;
     private final EligibilityQuery eligibility;
     private final FleetCatalog fleet;
+    private final DeliveryAssignments deliveries;
 
     public DeliveryRecommendationQueryService(
             OrderLookup orders,
             ReplenishmentLookup requests,
             EligibilityQuery eligibility,
-            FleetCatalog fleet) {
+            FleetCatalog fleet,
+            DeliveryAssignments deliveries) {
         this.orders = orders;
         this.requests = requests;
         this.eligibility = eligibility;
         this.fleet = fleet;
+        this.deliveries = deliveries;
     }
 
     public Result<DeliveryRecommendation, ApplicationError> handle(DeliveryRecommendationQuery q) {
@@ -44,7 +48,11 @@ public class DeliveryRecommendationQueryService {
                         .orElse(null);
         if (order == null || request == null)
             return Result.failure(ApplicationError.notFound("Order", String.valueOf(q.orderId())));
-        if (!"ACCEPTED".equals(request.status()) || request.acceptanceConsumed())
+        // The acceptance flow consumes the acceptance on accept, so "already assigned" means a delivery exists.
+        // Assignable = what FuelOrder.dispatch() accepts (PENDING/CONFIRMED); CANCELLED/DISPATCHED/PAID... are not.
+        var assignable = "PENDING".equals(order.status()) || "CONFIRMED".equals(order.status());
+        if (!assignable || !"ACCEPTED".equals(request.status())
+                || deliveries.findByOrderId(q.orderId()).isPresent())
             return Result.failure(
                     ApplicationError.conflict(
                             "Order", "Request must be accepted and not already assigned"));

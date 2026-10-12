@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.fulfillment.infrastructure.persistence.jpa.assemblers;
 
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
+import com.primefuel.fulltank.platform.fulfillment.domain.model.valueobjects.DeliveryPhysicalState;
 import com.primefuel.fulltank.platform.fulfillment.infrastructure.persistence.jpa.entities.DeliveryPersistenceEntity;
 
 public final class DeliveryPersistenceAssembler {
@@ -39,6 +40,9 @@ public final class DeliveryPersistenceAssembler {
             entity.setId(domain.getId());
         }
         entity.setOrderId(domain.getOrderId());
+        var state = domain.currentPhysicalState();
+        entity.setActiveOrderId(state == DeliveryPhysicalState.FAILED || state == DeliveryPhysicalState.CANCELLED
+                ? null : domain.getOrderId());
         entity.setProviderId(domain.getProviderId());
         entity.setDriverId(domain.getDriverId());
         entity.setVehicleId(domain.getVehicleId());

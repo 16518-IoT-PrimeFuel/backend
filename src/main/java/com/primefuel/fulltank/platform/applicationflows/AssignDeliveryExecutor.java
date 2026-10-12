@@ -174,9 +174,9 @@ public class AssignDeliveryExecutor {
     private static boolean violatesOrderUnique(Throwable failure) {
         for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
             if (cause instanceof ConstraintViolationException constraint
-                    && "uk_deliveries_order_id".equalsIgnoreCase(constraint.getConstraintName())
+                    && "uk_deliveries_active_order_id".equalsIgnoreCase(constraint.getConstraintName())
                     || cause.getMessage() != null
-                    && cause.getMessage().toLowerCase(java.util.Locale.ROOT).contains("uk_deliveries_order_id")) {
+                    && cause.getMessage().toLowerCase(java.util.Locale.ROOT).contains("uk_deliveries_active_order_id")) {
                 return true;
             }
         }

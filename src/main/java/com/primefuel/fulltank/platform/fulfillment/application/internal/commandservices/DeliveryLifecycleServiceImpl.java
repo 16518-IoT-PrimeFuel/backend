@@ -157,8 +157,7 @@ public class DeliveryLifecycleServiceImpl {
             transitionRepository.add(new DeliveryStateTransition(null, saved.getId(),
                     DeliveryPhysicalState.DELIVERING, DeliveryPhysicalState.COMPLETED,
                     saved.getVersion(), occurredAt));
-            publicationRegistry.publish("delivery.completed.v1", AGGREGATE_TYPE, String.valueOf(saved.getId()),
-                    saved.getProviderId(), (long) saved.getVersion(),
+            publishDelivery("delivery.completed.v1", saved,
                     new DeliveryCompleted(saved.getId(), saved.getOrderId(), saved.getProviderId(),
                             saved.getDeliveredVolume(), saved.getRequestedVolume(), occurredAt).toPayloadJson());
             deliveryIntegration.applyCompletionEffects(new DeliveryIntegration.CompletionEffectsCommand(
@@ -178,9 +177,7 @@ public class DeliveryLifecycleServiceImpl {
                 DeliveryPhysicalState.ARRIVED, DeliveryPhysicalState.DELIVERING,
                 saved.getVersion(), occurredAt));
         // ponytail: detection never blocks the state transition; infrastructure failures must roll back both.
-        publicationRegistry.publish("delivery.discharge.started.v1", AGGREGATE_TYPE,
-                String.valueOf(saved.getId()), saved.getProviderId(), (long) saved.getVersion(),
-                "{\"deliveryId\":%d}".formatted(saved.getId()));
+        publishDelivery("delivery.discharge.started.v1", saved, "{\"deliveryId\":%d}".formatted(saved.getId()));
         return saved;
     }
     @Transactional
@@ -215,6 +212,8 @@ public class DeliveryLifecycleServiceImpl {
                         saved.getProviderId(), terminalState.name(), reason, occurredAt).toPayloadJson());
         if (result.isSuccess()) {
             deliveryIntegration.releaseReservations(delivery.getAssignmentCommandId());
+            // The attempt failed, not the need: the order goes back to CONFIRMED so it can be reassigned.
+            deliveryIntegration.reopenOrder(delivery.getOrderId(), delivery.getDriverId(), delivery.getVehicleId());
         }
         return result;
     }
@@ -229,12 +228,33 @@ public class DeliveryLifecycleServiceImpl {
             var saved = deliveryRepository.saveAndFlush(delivery);
             transitionRepository.add(new DeliveryStateTransition(null, saved.getId(), from,
                     saved.currentPhysicalState(), saved.getVersion(), occurredAt));
-            publicationRegistry.publish(eventType, AGGREGATE_TYPE, String.valueOf(saved.getId()),
-                    saved.getProviderId(), (long) saved.getVersion(), payloadBuilder.apply(saved, occurredAt));
+            publishDelivery(eventType, saved, payloadBuilder.apply(saved, occurredAt));
             return Result.success(saved);
         } catch (OptimisticLockingFailureException exception) {
             return concurrent();
         }
+    }
+
+    /**
+     * Publishes with the owning <em>organization</em> as scope — never the legacy provider id, which would
+     * notify an unrelated tenant. Completed/failed also go to the buyer's organization (its own envelope), so
+     * each side is notified only about its own deliveries. An unresolvable organization falls back to the
+     * provider id (the previous behaviour) rather than dropping the event.
+     */
+    private void publishDelivery(String eventType, Delivery saved, String payload) {
+        var provider = deliveryIntegration.providerOrganizationId(saved.getProviderId())
+                .orElse(saved.getProviderId());
+        publish(eventType, saved, provider, payload);
+        if ("delivery.completed.v1".equals(eventType) || "delivery.failed.v1".equals(eventType)) {
+            deliveryIntegration.buyerOrganizationId(saved.getOrderId())
+                    .filter(buyer -> !buyer.equals(provider))
+                    .ifPresent(buyer -> publish(eventType, saved, buyer, payload));
+        }
+    }
+
+    private void publish(String eventType, Delivery saved, Long organizationId, String payload) {
+        publicationRegistry.publish(eventType, AGGREGATE_TYPE, String.valueOf(saved.getId()), organizationId,
+                (long) saved.getVersion(), payload);
     }
 
     private static Result<Delivery, ApplicationError> notFound(Long deliveryId) {

@@ -8,7 +8,7 @@ import java.util.Optional;
 
 @Repository
 public interface DeliveryPersistenceRepository extends JpaRepository<DeliveryPersistenceEntity, Long> {
-    Optional<DeliveryPersistenceEntity> findByOrderId(Long orderId);
+    Optional<DeliveryPersistenceEntity> findByActiveOrderId(Long orderId);
     Optional<DeliveryPersistenceEntity> findByAssignmentCommandId(String assignmentCommandId);
     java.util.List<DeliveryPersistenceEntity> findByProviderId(Long providerId);
 }

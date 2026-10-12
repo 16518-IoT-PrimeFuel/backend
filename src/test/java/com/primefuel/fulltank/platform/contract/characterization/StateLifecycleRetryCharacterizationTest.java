@@ -52,6 +52,18 @@ class StateLifecycleRetryCharacterizationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired private com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository fuelOrderRepository;
+
+    private void awaitPayment(long orderId) {
+        setOrderStatus(orderId, com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus.PENDING_PAYMENT);
+    }
+
+    private void setOrderStatus(long orderId, com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus status) {
+        var order = fuelOrderRepository.findById(orderId).orElseThrow();
+        order.setStatus(status);
+        fuelOrderRepository.save(order);
+    }
+
     @Autowired private CustomerCommandService customerCommandService;
     @Autowired private EquipmentCommandService equipmentCommandService;
     @Autowired private TankCommandService tankCommandService;
@@ -221,6 +233,7 @@ class StateLifecycleRetryCharacterizationTest {
                             .with(buyer))
                     .andReturn().getResponse().getContentAsString());
             double totalPrice = order.get("totalPrice").asDouble();
+            awaitPayment(orderId);
             var response = mockMvc.perform(post("/api/payments")
                             .with(buyer)
                             .contentType("application/json")

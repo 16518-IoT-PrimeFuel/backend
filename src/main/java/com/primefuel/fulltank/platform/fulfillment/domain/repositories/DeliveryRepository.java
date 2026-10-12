@@ -7,6 +7,7 @@ import java.util.Optional;
 
 public interface DeliveryRepository {
     Optional<Delivery> findById(Long id);
+    /** The delivery currently holding the order (not FAILED/CANCELLED); a released one is not returned. */
     Optional<Delivery> findByOrderId(Long orderId);
 
     /** The delivery created by an orchestrated assignment command (T15-A idempotency), if any. */
