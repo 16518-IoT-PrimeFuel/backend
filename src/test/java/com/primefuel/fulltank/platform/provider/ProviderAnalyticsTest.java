@@ -60,9 +60,14 @@ class ProviderAnalyticsTest extends ProviderReadTestSupport {
                 new Payment(
                         new CreatePaymentCommand(
                                 order.getId(), f.company(), 25.0, PaymentMethod.BANK_TRANSFER));
-        installment.complete("two");
-        installment.setPaidAt(LocalDateTime.of(2026, 10, 1, 10, 0));
-        payments.save(installment);
+        // Legacy shape (pre one-payment-per-order): a FAILED row carries no active_order_id, so it can
+        // coexist; it is then forced to COMPLETED to simulate an old installment.
+        installment.fail();
+        installment = payments.save(installment);
+        jdbc.update(
+                "update payments set status='COMPLETED', transaction_reference='two', paid_at=? where id=?",
+                Timestamp.valueOf("2026-10-01 10:00:00"),
+                installment.getId());
         mvc.perform(get("/api/analytics/providers/{id}", f.provider()).with(provider(f.provider())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalOrders").value(1))

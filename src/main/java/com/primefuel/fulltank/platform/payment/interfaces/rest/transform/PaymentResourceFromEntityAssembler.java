@@ -11,6 +11,7 @@ public final class PaymentResourceFromEntityAssembler {
     public static PaymentResource toResourceFromEntity(Payment payment) {
         return new PaymentResource(payment.getId(), payment.getOrderId(), payment.getCompanyId(),
                 payment.getAmount(), payment.getStatus(), payment.getPaymentMethod(),
-                payment.getTransactionReference(), payment.getPaidAt());
+                payment.getTransactionReference(), payment.getPaidAt(),
+                payment.getOperationNumber(), payment.getCurrency());
     }
 }

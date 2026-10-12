@@ -7,5 +7,6 @@ import java.time.LocalDateTime;
 
 public record PaymentResource(Long id, Long orderId, Long companyId, Double amount,
                               PaymentStatus status, PaymentMethod paymentMethod,
-                              String transactionReference, LocalDateTime paidAt) {
+                              String transactionReference, LocalDateTime paidAt,
+                              String operationNumber, String currency) {
 }

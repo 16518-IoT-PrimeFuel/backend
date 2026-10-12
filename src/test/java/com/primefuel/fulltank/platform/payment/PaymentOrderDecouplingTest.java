@@ -7,6 +7,7 @@ import com.primefuel.fulltank.platform.payment.application.commandservices.Payme
 import com.primefuel.fulltank.platform.payment.domain.model.aggregates.Payment;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.CompletePaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.CreatePaymentCommand;
+import com.primefuel.fulltank.platform.payment.domain.model.commands.FailPaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.RefundPaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.valueobjects.PaymentStatus;
 import com.primefuel.fulltank.platform.payment.domain.model.valueobjects.PaymentMethod;
@@ -51,8 +52,83 @@ class PaymentOrderDecouplingTest {
 
     private long order(long companyId, long providerId) {
         var order = new FuelOrder(new CreateFuelOrderCommand(companyId, providerId, 1L, null, 50.0,
-                "Av. Decoupling 1", LocalDate.parse("2099-10-15")), 50.0);
+                "Av. Decoupling 1", LocalDate.parse("2099-10-15"), null), 50.0);
+        order.setStatus(com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus.PENDING_PAYMENT);
         return fuelOrderRepository.save(order).getId();
+    }
+
+    private static String code(Result<Payment, ApplicationError> result) {
+        return ((Result.Failure<Payment, ApplicationError>) result).error().code();
+    }
+
+    private long pendingPayment(long companyId, String operationNumber) {
+        return paymentCommandService
+                .handle(new CreatePaymentCommand(order(companyId, 1L), companyId, 1.0, PaymentMethod.CASH,
+                        operationNumber))
+                .getOrElse(null).getId();
+    }
+
+    @Test
+    void chargesTheOrderTotalIgnoringTheClientAmount() {
+        long companyId = 800L + SEQUENCE.incrementAndGet();
+        long orderId = order(companyId, 1L);
+        var payment = paymentCommandService
+                .handle(new CreatePaymentCommand(orderId, companyId, 0.01, PaymentMethod.CASH))
+                .getOrElse(null);
+        assertThat(payment.getAmount()).isEqualTo(50.0);
+        assertThat(payment.getCurrency()).isEqualTo("PEN");
+    }
+
+    @Test
+    void secondPaymentOnTheSameOrderOrOnAnOrderNotAwaitingPaymentIsAConflict() {
+        long companyId = 810L + SEQUENCE.incrementAndGet();
+        long orderId = order(companyId, 1L);
+        var first = new CreatePaymentCommand(orderId, companyId, 50.0, PaymentMethod.CASH);
+        assertThat(paymentCommandService.handle(first).isSuccess()).isTrue();
+        assertThat(code(paymentCommandService.handle(first))).isEqualTo("PAYMENT_CONFLICT");
+
+        var pending = fuelOrderRepository.save(new FuelOrder(new CreateFuelOrderCommand(companyId, 1L, 1L, null,
+                50.0, "Av. Decoupling 1", LocalDate.parse("2099-10-15"), null), 50.0));
+        assertThat(code(paymentCommandService.handle(new CreatePaymentCommand(pending.getId(), companyId, 50.0,
+                PaymentMethod.CASH)))).isEqualTo("PAYMENT_CONFLICT");
+    }
+
+    @Test
+    void operationNumberIsValidatedAndUnique() {
+        long companyId = 820L + SEQUENCE.incrementAndGet();
+        String number = "OP" + System.nanoTime();
+        pendingPayment(companyId, number);
+        assertThat(code(paymentCommandService.handle(new CreatePaymentCommand(order(companyId, 1L), companyId, 50.0,
+                PaymentMethod.CASH, number)))).isEqualTo("PAYMENT_CONFLICT");
+        assertThat(code(paymentCommandService.handle(new CreatePaymentCommand(order(companyId, 1L), companyId, 50.0,
+                PaymentMethod.CASH, "ab-1")))).isEqualTo("VALIDATION_ERROR");
+    }
+
+    @Test
+    void completingTwiceIsRejectedAndPublishesTheEventOnce() {
+        long companyId = 830L + SEQUENCE.incrementAndGet();
+        long paymentId = pendingPayment(companyId, null);
+        assertThat(paymentCommandService.handle(new CompletePaymentCommand(paymentId, "r1")).isSuccess()).isTrue();
+        assertThat(paymentCommandService.handle(new CompletePaymentCommand(paymentId, "r2")).isSuccess()).isFalse();
+        assertThat(publicationRepository.findByAggregateTypeAndAggregateIdOrderByIdAsc("Payment",
+                String.valueOf(paymentId))).extracting("eventType").containsOnlyOnce("payment.completed.v1");
+    }
+
+    @Test
+    void aFailedPaymentFreesTheOrderForARetry() {
+        long companyId = 840L + SEQUENCE.incrementAndGet();
+        long orderId = order(companyId, 1L);
+        long failedId = paymentCommandService
+                .handle(new CreatePaymentCommand(orderId, companyId, 50.0, PaymentMethod.CASH))
+                .getOrElse(null).getId();
+        assertThat(paymentCommandService.handle(new FailPaymentCommand(failedId)).getOrElse(null).getStatus())
+                .isEqualTo(PaymentStatus.FAILED);
+        assertThat(paymentCommandService.handle(new FailPaymentCommand(failedId)).isSuccess()).isFalse();
+
+        var retry = paymentCommandService
+                .handle(new CreatePaymentCommand(orderId, companyId, 50.0, PaymentMethod.CASH));
+        assertThat(retry.isSuccess()).isTrue();
+        assertThat(retry.getOrElse(null).getStatus()).isEqualTo(PaymentStatus.PENDING);
     }
 
     @Test
@@ -99,7 +175,7 @@ class PaymentOrderDecouplingTest {
 
         // Creating a payment leaves the order untouched (PENDING) and does not publish anything yet.
         assertThat(created.isSuccess()).isTrue();
-        assertThat(fuelOrderRepository.findById(orderId).orElseThrow().getStatus().name()).isEqualTo("PENDING");
+        assertThat(fuelOrderRepository.findById(orderId).orElseThrow().getStatus().name()).isEqualTo("PENDING_PAYMENT");
         assertThat(publicationRepository.findByAggregateTypeAndAggregateIdOrderByIdAsc(
                 "Payment", String.valueOf(created.getOrElse(null).getId()))).isEmpty();
     }

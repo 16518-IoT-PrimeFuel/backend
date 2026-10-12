@@ -10,6 +10,6 @@ public final class CreatePaymentCommandFromResourceAssembler {
 
     public static CreatePaymentCommand toCommandFromResource(CreatePaymentResource resource) {
         return new CreatePaymentCommand(resource.orderId(), resource.companyId(),
-                resource.amount(), resource.paymentMethod());
+                resource.amount(), resource.paymentMethod(), resource.operationNumber());
     }
 }

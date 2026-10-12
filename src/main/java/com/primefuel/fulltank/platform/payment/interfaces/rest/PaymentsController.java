@@ -3,6 +3,7 @@ package com.primefuel.fulltank.platform.payment.interfaces.rest;
 import com.primefuel.fulltank.platform.payment.application.commandservices.PaymentCommandService;
 import com.primefuel.fulltank.platform.payment.application.queryservices.PaymentQueryService;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.CompletePaymentCommand;
+import com.primefuel.fulltank.platform.payment.domain.model.commands.FailPaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.RefundPaymentCommand;
 import com.primefuel.fulltank.platform.payment.domain.model.queries.GetAllPaymentsQuery;
 import com.primefuel.fulltank.platform.payment.domain.model.queries.GetPaymentsByProviderIdQuery;
@@ -63,33 +64,40 @@ public class PaymentsController {
     /**
      * Registra un pago para una orden de la empresa compradora autenticada.
      *
-     * <p>La empresa del cuerpo debe pertenecer al usuario y coincidir con la de la orden. El importe debe
-     * igualar el total de la orden y solo se permite un pago por orden.</p>
+     * <p>El importe se toma siempre del total de la orden (el {@code amount} del cuerpo se ignora) y la empresa
+     * se deriva de la orden ({@code companyId} es opcional; si se envía debe ser la de la orden y del usuario).
+     * La orden debe estar en PENDING_PAYMENT, solo se permite un pago vigente (no FAILED) por orden y el
+     * {@code operationNumber} opcional (6 a 20 caracteres alfanuméricos) no puede repetirse.</p>
      */
     @Operation(summary = "Registrar pago",
-            description = "Registra el pago de una orden después de verificar la empresa propietaria, la existencia de la orden y la coincidencia del importe total.")
+            description = "Registra el pago de una orden en PENDING_PAYMENT por el total de la orden. companyId y amount se ignoran/derivan de la orden. operationNumber opcional: 6 a 20 caracteres alfanuméricos, único.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Pago registrado."),
-            @ApiResponse(responseCode = "400", description = "Falta la orden o la empresa, o el importe no coincide con el total de la orden."),
+            @ApiResponse(responseCode = "400", description = "Falta la orden, o el operationNumber no cumple 6-20 alfanuméricos."),
             @ApiResponse(responseCode = "403", description = "La empresa compradora indicada no pertenece al usuario autenticado."),
             @ApiResponse(responseCode = "404", description = "La orden no existe o no pertenece a la empresa indicada."),
-            @ApiResponse(responseCode = "409", description = "La orden ya tiene un pago registrado.")
+            @ApiResponse(responseCode = "409", description = "La orden no está en PENDING_PAYMENT, ya tiene un pago vigente o el operationNumber ya existe.")
     })
     @PostMapping
     public ResponseEntity<?> createPayment(@RequestBody CreatePaymentResource resource) {
-        // T23-B (fixes T23-A finding F1): the presence checks run BEFORE authorization, so a null
-        // order/company answers the documented 400 instead of the previous 403; ownership of the declared
-        // company is then enforced explicitly (403). The remaining invariants (order exists + belongs to the
-        // company, amount positive and matching the order snapshot, one payment per order) live in the
-        // application layer (PaymentCommandServiceImpl).
-        if (resource.orderId() == null || resource.companyId() == null) {
+        // The presence check runs BEFORE authorization (400, not 403). The company is the order's own;
+        // a client-sent companyId is only an optional assertion that must match and be owned by the user.
+        if (resource.orderId() == null) {
             return ErrorResponseAssembler.toErrorResponseFromApplicationError(
-                    ApplicationError.validationError("payment", "Order and buyer company are required"));
+                    ApplicationError.validationError("payment", "Order is required"));
         }
-        if (!tenantAccess.ownsCompany(resource.companyId())) {
+        var companyId = resource.companyId() != null ? resource.companyId()
+                : orderLookup.findById(resource.orderId()).map(OrderLookup.OrderSnapshot::companyId).orElse(null);
+        if (companyId == null) {
+            return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                    ApplicationError.notFound("FuelOrder", resource.orderId().toString()));
+        }
+        if (!tenantAccess.ownsCompany(companyId)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        var command = CreatePaymentCommandFromResourceAssembler.toCommandFromResource(resource);
+        var command = CreatePaymentCommandFromResourceAssembler.toCommandFromResource(
+                new CreatePaymentResource(resource.orderId(), companyId, resource.amount(),
+                        resource.paymentMethod(), resource.operationNumber()));
         var result = paymentCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
@@ -108,6 +116,7 @@ public class PaymentsController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Pago completado y orden marcada como pagada."),
             @ApiResponse(responseCode = "404", description = "El pago o su orden no existe, o el usuario no puede consultarlo."),
+            @ApiResponse(responseCode = "409", description = "El pago no está PENDING (ya completado, fallido o reembolsado)."),
             @ApiResponse(responseCode = "500", description = "La orden no puede marcarse como pagada, por ejemplo, porque fue cancelada.")
     })
     @PostMapping("/{paymentId}/complete")
@@ -115,6 +124,26 @@ public class PaymentsController {
                                              @RequestBody CompletePaymentResource resource) {
         if (!ownsPayment(paymentId)) return ResponseEntity.notFound().build();
         var result = paymentCommandService.handle(new CompletePaymentCommand(paymentId, resource.transactionReference()));
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                result,
+                PaymentResourceFromEntityAssembler::toResourceFromEntity,
+                HttpStatus.OK);
+    }
+
+    /**
+     * Marca un pago PENDING como FAILED (rechazo o error de cobro); la orden queda libre para un nuevo pago.
+     */
+    @Operation(summary = "Marcar pago como fallido",
+            description = "Pasa un pago PENDING a FAILED; la orden admite entonces un nuevo pago.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pago marcado como FAILED."),
+            @ApiResponse(responseCode = "404", description = "El pago no existe o el usuario no puede consultarlo."),
+            @ApiResponse(responseCode = "409", description = "El pago no está PENDING.")
+    })
+    @PostMapping("/{paymentId}/fail")
+    public ResponseEntity<?> failPayment(@PathVariable Long paymentId) {
+        if (!ownsPayment(paymentId)) return ResponseEntity.notFound().build();
+        var result = paymentCommandService.handle(new FailPaymentCommand(paymentId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
                 PaymentResourceFromEntityAssembler::toResourceFromEntity,

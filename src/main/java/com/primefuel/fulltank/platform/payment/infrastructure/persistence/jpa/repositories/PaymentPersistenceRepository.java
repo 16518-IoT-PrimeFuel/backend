@@ -32,6 +32,8 @@ public interface PaymentPersistenceRepository extends JpaRepository<PaymentPersi
             @Param("fromDate") Timestamp from,
             @Param("toDate") Timestamp to);
 
-    Optional<PaymentPersistenceEntity> findByOrderId(Long orderId);
+    /** Latest payment of the order (a FAILED one may be followed by a retry). */
+    Optional<PaymentPersistenceEntity> findFirstByOrderIdOrderByIdDesc(Long orderId);
+    boolean existsByOperationNumber(String operationNumber);
     List<PaymentPersistenceEntity> findByCompanyId(Long companyId);
 }

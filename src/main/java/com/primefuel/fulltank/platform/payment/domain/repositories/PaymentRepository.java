@@ -12,6 +12,7 @@ public interface PaymentRepository {
 
     Optional<Payment> findById(Long id);
     Optional<Payment> findByOrderId(Long orderId);
+    boolean existsByOperationNumber(String operationNumber);
     List<Payment> findAll();
     List<Payment> findByCompanyId(Long companyId);
     Payment save(Payment payment);

@@ -54,8 +54,13 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 
     @Override
     public Optional<Payment> findByOrderId(Long orderId) {
-        return paymentPersistenceRepository.findByOrderId(orderId)
+        return paymentPersistenceRepository.findFirstByOrderIdOrderByIdDesc(orderId)
                 .map(PaymentPersistenceAssembler::toDomainFromPersistence);
+    }
+
+    @Override
+    public boolean existsByOperationNumber(String operationNumber) {
+        return paymentPersistenceRepository.existsByOperationNumber(operationNumber);
     }
 
     @Override

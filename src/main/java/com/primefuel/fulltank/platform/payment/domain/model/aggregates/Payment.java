@@ -23,8 +23,11 @@ public class Payment extends AbstractDomainAggregateRoot<Payment> {
     private PaymentMethod paymentMethod;
     private String transactionReference;
     private LocalDateTime paidAt;
+    private String operationNumber;
+    private String currency = "PEN";
 
     public Payment(CreatePaymentCommand command) {
+        this.operationNumber = command.operationNumber();
         this.orderId = command.orderId();
         this.companyId = command.companyId();
         this.amount = command.amount();

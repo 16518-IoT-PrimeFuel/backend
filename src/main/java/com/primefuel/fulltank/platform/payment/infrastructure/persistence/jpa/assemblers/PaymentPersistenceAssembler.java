@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.payment.infrastructure.persistence.jpa.assemblers;
 
 import com.primefuel.fulltank.platform.payment.domain.model.aggregates.Payment;
+import com.primefuel.fulltank.platform.payment.domain.model.valueobjects.PaymentStatus;
 import com.primefuel.fulltank.platform.payment.infrastructure.persistence.jpa.entities.PaymentPersistenceEntity;
 
 public final class PaymentPersistenceAssembler {
@@ -19,6 +20,8 @@ public final class PaymentPersistenceAssembler {
         domain.setPaymentMethod(entity.getPaymentMethod());
         domain.setTransactionReference(entity.getTransactionReference());
         domain.setPaidAt(entity.getPaidAt());
+        domain.setOperationNumber(entity.getOperationNumber());
+        domain.setCurrency(entity.getCurrency());
         return domain;
     }
 
@@ -35,6 +38,9 @@ public final class PaymentPersistenceAssembler {
         entity.setPaymentMethod(domain.getPaymentMethod());
         entity.setTransactionReference(domain.getTransactionReference());
         entity.setPaidAt(domain.getPaidAt());
+        entity.setOperationNumber(domain.getOperationNumber());
+        entity.setCurrency(domain.getCurrency());
+        entity.setActiveOrderId(domain.getStatus() == PaymentStatus.FAILED ? null : domain.getOrderId());
         return entity;
     }
 }

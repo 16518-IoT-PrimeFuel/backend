@@ -47,6 +47,18 @@ class PaymentCharacterizationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired private com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository fuelOrderRepository;
+
+    private void awaitPayment(long orderId) {
+        setOrderStatus(orderId, com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus.PENDING_PAYMENT);
+    }
+
+    private void setOrderStatus(long orderId, com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus status) {
+        var order = fuelOrderRepository.findById(orderId).orElseThrow();
+        order.setStatus(status);
+        fuelOrderRepository.save(order);
+    }
+
     @MockitoBean
     private JavaMailSender mailSender;
 
@@ -70,11 +82,13 @@ class PaymentCharacterizationTest {
     }
 
     @Test
-    void createRejectsAnAmountThatDoesNotMatchTheOrderTotal() throws Exception {
+    void createIgnoresTheClientAmountAndChargesTheOrderTotal() throws Exception {
         var f = new Fixture("pay-amount");
         mockMvc.perform(post("/api/payments").with(f.buyer).contentType("application/json")
-                        .content(f.paymentBody(49.99, "CASH")))
-                .andExpect(status().isBadRequest());
+                        .content(f.paymentBody(0.01, "CASH")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.amount").value(50.0))
+                .andExpect(jsonPath("$.currency").value("PEN"));
     }
 
     @Test
@@ -105,7 +119,7 @@ class PaymentCharacterizationTest {
     }
 
     @Test
-    void createWithANullCompanyIdIsBadRequestAfterT23B() throws Exception {
+    void createWithoutCompanyIdDerivesItFromTheOrder() throws Exception {
         // T23-A finding F1 characterized this as 403 (the @PreAuthorize ownsCompany(null) ran before the
         // manual null-check). T23-B fixed it: the presence checks now run before authorization, so a null
         // companyId answers the documented 400.
@@ -114,22 +128,23 @@ class PaymentCharacterizationTest {
                         .content("""
                                 {"orderId":%d,"amount":50.0,"paymentMethod":"CASH"}
                                 """.formatted(f.orderId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.companyId").value(f.buyerCompanyId));
+        mockMvc.perform(post("/api/payments").with(f.buyer).contentType("application/json")
+                        .content("{\"paymentMethod\":\"CASH\"}"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void createIsAllowedAgainstACancelledOrder() throws Exception {
+    void createIsRejectedWhenTheOrderIsNotAwaitingPayment() throws Exception {
         // current-behavior (finding F2 / T01-A row 68): createPayment never checks order.status, so a payment
         // can be registered for a cancelled order.
         var f = new Fixture("pay-cancelled");
-        mockMvc.perform(post("/api/fuel-orders/{id}/cancel", f.orderId).with(f.buyer))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CANCELLED"));
+        setOrderStatus(f.orderId, com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus.CANCELLED);
 
-        long paymentId = f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(get("/api/payments/{id}", paymentId).with(f.buyer))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PENDING"));
+        mockMvc.perform(post("/api/payments").with(f.buyer).contentType("application/json")
+                        .content(f.paymentBody(50.0, "CASH")))
+                .andExpect(status().isConflict());
     }
 
     // ---- complete ----------------------------------------------------------------------------
@@ -151,7 +166,7 @@ class PaymentCharacterizationTest {
     }
 
     @Test
-    void completeIsNotAFullNoOpOnRetryAndOverwritesTheReference() throws Exception {
+    void completeOnAnAlreadyCompletedPaymentIsRejectedAndKeepsTheReference() throws Exception {
         // current-behavior (finding F5): no state guard and no idempotency key. Repeating complete leaves the
         // status COMPLETED (state-idempotent) but overwrites transactionReference/paidAt — so it is not a
         // strict no-op, and the order#markPaid() guard is the only thing that can reject a retry.
@@ -162,13 +177,13 @@ class PaymentCharacterizationTest {
                 .andExpect(status().isOk());
         mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
                         .contentType("application/json").content("{\"transactionReference\":\"second\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"))
-                .andExpect(jsonPath("$.transactionReference").value("second"));
+                .andExpect(status().isConflict());
+        mockMvc.perform(get("/api/payments/{id}", paymentId).with(f.buyer))
+                .andExpect(jsonPath("$.transactionReference").value("first"));
     }
 
     @Test
-    void completeAfterRefundIsAccepted() throws Exception {
+    void completeAfterRefundIsRejected() throws Exception {
         // current-behavior (finding F5): complete() has no guard, so a REFUNDED payment can be completed again
         // (order#markPaid only refuses a CANCELLED order). refund() now requires COMPLETED first.
         var f = new Fixture("pay-complete-after-refund");
@@ -181,8 +196,7 @@ class PaymentCharacterizationTest {
                 .andExpect(jsonPath("$.status").value("REFUNDED"));
         mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
                         .contentType("application/json").content("{\"transactionReference\":\"late\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"));
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -204,8 +218,7 @@ class PaymentCharacterizationTest {
         // falls to the generic RuntimeException handler -> 500 (not a 409).
         var f = new Fixture("pay-complete-cancelled");
         long paymentId = f.createPayment(f.orderId, 50.0);
-        mockMvc.perform(post("/api/fuel-orders/{id}/cancel", f.orderId).with(f.buyer))
-                .andExpect(status().isOk());
+        setOrderStatus(f.orderId, com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus.CANCELLED);
         mockMvc.perform(post("/api/payments/{id}/complete", paymentId).with(f.buyer)
                         .contentType("application/json").content("{\"transactionReference\":\"ref\"}"))
                 .andExpect(status().isInternalServerError());
@@ -328,6 +341,7 @@ class PaymentCharacterizationTest {
             this.provider = authFor(null, providerId, "ROLE_PROVIDER");
             this.fuelProductId = createFuelProduct();
             this.orderId = createOrder();
+            awaitPayment(orderId);
         }
 
         String paymentBody(double amount, String method) {
