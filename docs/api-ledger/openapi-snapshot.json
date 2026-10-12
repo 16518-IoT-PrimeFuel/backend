@@ -345,6 +345,9 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "operationNumber" : {
+            "type" : "string"
+          },
           "orderId" : {
             "format" : "int64",
             "type" : "integer"
@@ -1102,9 +1105,15 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "currency" : {
+            "type" : "string"
+          },
           "id" : {
             "format" : "int64",
             "type" : "integer"
+          },
+          "operationNumber" : {
+            "type" : "string"
           },
           "orderId" : {
             "format" : "int64",
@@ -1397,7 +1406,7 @@
           },
           "currency" : {
             "description" : "Moneda no persistida actualmente; null, nunca inferida",
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "id" : {
             "format" : "int64",
@@ -2704,20 +2713,26 @@
                 }
               }
             },
-            "description" : "El nombre de usuario o la contraseña son incorrectos."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "No existe una cuenta con ese nombre de usuario."
+            "description" : "El nombre de usuario o la contraseña son incorrectos (misma respuesta si la cuenta no existe)."
           }
         },
         "summary" : "Iniciar sesión",
+        "tags" : [ "Autenticación" ]
+      }
+    },
+    "/api/authentication/sign-out" : {
+      "post" : {
+        "description" : "Revoca los tokens emitidos al usuario autenticado; el token usado deja de ser válido.",
+        "operationId" : "signOut",
+        "responses" : {
+          "204" : {
+            "description" : "Sesión cerrada y tokens revocados."
+          },
+          "401" : {
+            "description" : "Falta un token válido."
+          }
+        },
+        "summary" : "Cerrar sesión",
         "tags" : [ "Autenticación" ]
       }
     },
@@ -5946,7 +5961,7 @@
         "tags" : [ "Pagos" ]
       },
       "post" : {
-        "description" : "Registra el pago de una orden después de verificar la empresa propietaria, la existencia de la orden y la coincidencia del importe total.",
+        "description" : "Registra el pago de una orden en PENDING_PAYMENT por el total de la orden. companyId y amount se ignoran/derivan de la orden. operationNumber opcional: 6 a 20 caracteres alfanuméricos, único.",
         "operationId" : "createPayment",
         "requestBody" : {
           "content" : {
@@ -5977,7 +5992,7 @@
                 }
               }
             },
-            "description" : "Falta la orden o la empresa, o el importe no coincide con el total de la orden."
+            "description" : "Falta la orden, o el operationNumber no cumple 6-20 alfanuméricos."
           },
           "403" : {
             "content" : {
@@ -6007,7 +6022,7 @@
                 }
               }
             },
-            "description" : "La orden ya tiene un pago registrado."
+            "description" : "La orden no está en PENDING_PAYMENT, ya tiene un pago vigente o el operationNumber ya existe."
           }
         },
         "summary" : "Registrar pago",
@@ -6100,14 +6115,15 @@
     },
     "/api/payments/provider/{providerId}" : {
       "get" : {
+        "description" : "Solo el proveedor autenticado propietario. Una consulta por proveedor, con comprador y orden. status es PaymentStatus; from/to son instantes ISO inclusivos sobre createdAt. Orden descendente por fecha e id. Moneda null porque no se persiste en pagos ni órdenes.",
         "operationId" : "getPaymentsByProvider",
         "parameters" : [ {
           "in" : "path",
           "name" : "providerId",
           "required" : true,
           "schema" : {
+            "exclusiveMinimum" : 0,
             "format" : "int64",
-            "minimum" : 1,
             "type" : "integer"
           }
         }, {
@@ -6147,12 +6163,32 @@
                 }
               }
             },
-            "description" : "Listar pagos del distribuidor"
+            "description" : "Pagos propios o []"
           },
           "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderPaymentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
             "description" : "Id, estado, fecha o período inválido"
           },
           "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderPaymentResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
             "description" : "Sin rol proveedor o proveedor ajeno"
           }
         },
@@ -6243,6 +6279,16 @@
             },
             "description" : "El pago o su orden no existe, o el usuario no puede consultarlo."
           },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El pago no está PENDING (ya completado, fallido o reembolsado)."
+          },
           "500" : {
             "content" : {
               "application/json" : {
@@ -6255,6 +6301,55 @@
           }
         },
         "summary" : "Completar pago",
+        "tags" : [ "Pagos" ]
+      }
+    },
+    "/api/payments/{paymentId}/fail" : {
+      "post" : {
+        "description" : "Pasa un pago PENDING a FAILED; la orden admite entonces un nuevo pago.",
+        "operationId" : "failPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "paymentId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Pago marcado como FAILED."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El pago no existe o el usuario no puede consultarlo."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El pago no está PENDING."
+          }
+        },
+        "summary" : "Marcar pago como fallido",
         "tags" : [ "Pagos" ]
       }
     },
@@ -6593,6 +6688,7 @@
     },
     "/api/provider/buyer-companies/lookup" : {
       "get" : {
+        "description" : "Solo identidad mínima, incluso antes del vínculo. RUC de once dígitos, sin búsqueda parcial ni listados. Diez consultas por minuto por proveedor y por instancia; aciertos y RUC inexistentes cuentan. No concede acceso a tanques, contactos ni pedidos. Vincular después con POST {buyerCompanyId}.",
         "operationId" : "lookupProviderBuyerCompany",
         "parameters" : [ {
           "in" : "query",
@@ -6612,18 +6708,46 @@
                 }
               }
             },
-            "description" : "Buscar comprador por RUC exacto para vincular"
+            "description" : "Identidad mínima"
           },
           "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
             "description" : "RUC ausente o inválido"
           },
           "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
             "description" : "Sin proveedor autenticado"
           },
           "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
             "description" : "RUC no registrado"
           },
           "429" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
             "description" : "LOOKUP_RATE_LIMITED; reintentar en 60 segundos"
           }
         },
@@ -6764,14 +6888,15 @@
     },
     "/api/provider/tanks/{tankId}" : {
       "get" : {
+        "description" : "Mismo recurso que el listado. Solo tanques activos de compradores con vínculo explícito, pedidos o solicitudes del proveedor autenticado.",
         "operationId" : "getProviderTank",
         "parameters" : [ {
           "in" : "path",
           "name" : "tankId",
           "required" : true,
           "schema" : {
+            "exclusiveMinimum" : 0,
             "format" : "int64",
-            "minimum" : 1,
             "type" : "integer"
           }
         } ],
@@ -6784,15 +6909,36 @@
                 }
               }
             },
-            "description" : "Consultar tanque vinculado"
+            "description" : "Detalle del tanque"
           },
           "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
             "description" : "Id inválido"
           },
           "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
             "description" : "Sin proveedor autenticado"
           },
           "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
             "description" : "Tanque inexistente, inactivo o ajeno"
           }
         },
