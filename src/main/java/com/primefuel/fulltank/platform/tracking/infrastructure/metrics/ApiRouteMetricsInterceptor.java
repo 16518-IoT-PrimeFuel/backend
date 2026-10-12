@@ -48,14 +48,13 @@ public class ApiRouteMetricsInterceptor implements HandlerInterceptor {
     }
 
     private String callerKey() {
-        var organization = membershipAccess.currentOrganizationId();
-        if (organization.isPresent()) return "organization:" + organization.get();
+        // Principal first: no DB read per request (a membership lookup here added a query to every endpoint).
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()
                 && authentication.getPrincipal() instanceof UserDetailsImpl principal) {
             if (principal.getCompanyId() != null) return "company:" + principal.getCompanyId();
             if (principal.getProviderId() != null) return "provider:" + principal.getProviderId();
         }
-        return "anonymous";
+        return membershipAccess.currentOrganizationId().map(id -> "organization:" + id).orElse("anonymous");
     }
 }
