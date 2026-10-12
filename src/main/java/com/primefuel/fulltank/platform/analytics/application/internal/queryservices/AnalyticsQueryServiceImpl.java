@@ -21,6 +21,7 @@ import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -28,8 +29,8 @@ import java.util.stream.Collectors;
 @Service
 public class AnalyticsQueryServiceImpl implements AnalyticsQueryService {
 
-    private static final String CONFIRMED = "CONFIRMED";
-    private static final String DELIVERED = "DELIVERED";
+    private static final Set<String> CONFIRMED =
+            Set.of("CONFIRMED", "DISPATCHED", "PENDING_PAYMENT", "PAID");
     private static final String CANCELLED = "CANCELLED";
     private static final String PENDING = "PENDING";
     private static final String COMPLETED = "COMPLETED";
@@ -53,7 +54,7 @@ public class AnalyticsQueryServiceImpl implements AnalyticsQueryService {
         var orders = allOrders.stream().filter(o -> inPeriod(o.createdAt(), query)).toList();
         long confirmed =
                 orders.stream()
-                        .filter(o -> CONFIRMED.equals(o.status()) || DELIVERED.equals(o.status()))
+                        .filter(o -> CONFIRMED.contains(o.status()))
                         .count();
         long cancelled = orders.stream().filter(o -> CANCELLED.equals(o.status())).count();
         long pending = orders.stream().filter(o -> PENDING.equals(o.status())).count();
@@ -153,7 +154,7 @@ public class AnalyticsQueryServiceImpl implements AnalyticsQueryService {
         long totalOrders = orders.size();
         long pendingOrders = orders.stream().filter(o -> PENDING.equals(o.status())).count();
         long totalDeliveries = deliveries.size();
-        long completedDeliveries = deliveries.stream().filter(DELIVERED::equals).count();
+        long completedDeliveries = deliveries.stream().filter("DELIVERED"::equals).count();
         long totalPayments = payments.size();
         double totalRevenue =
                 payments.stream()

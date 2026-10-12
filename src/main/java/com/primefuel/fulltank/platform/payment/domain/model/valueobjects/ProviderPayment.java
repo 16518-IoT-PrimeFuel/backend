@@ -1,7 +1,6 @@
 package com.primefuel.fulltank.platform.payment.domain.model.valueobjects;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 public record ProviderPayment(
         Long id,
@@ -14,4 +13,4 @@ public record ProviderPayment(
         PaymentMethod paymentMethod,
         Instant createdAt,
         Instant updatedAt,
-        LocalDateTime paidAt) {}
+        Instant paidAt) {}

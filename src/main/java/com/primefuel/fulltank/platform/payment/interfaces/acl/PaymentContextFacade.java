@@ -7,6 +7,7 @@ import com.primefuel.fulltank.platform.payment.domain.model.queries.GetPaymentsB
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -33,11 +34,17 @@ public class PaymentContextFacade {
         return toSummaries(paymentQueryService.handle(new GetPaymentsByCompanyIdQuery(companyId)));
     }
 
+    // Analytics still reads wall-clock LocalDateTime (its period filters are unchanged), so the instant is
+    // rendered in the server zone, as the old LocalDateTime.now() values were.
+    private static LocalDateTime toLocal(java.time.Instant instant) {
+        return instant == null ? null : LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
+
     private static List<PaymentSummary> toSummaries(List<Payment> payments) {
         return payments.stream()
                 .map(payment -> new PaymentSummary(payment.getOrderId(),
                         payment.getStatus() != null ? payment.getStatus().name() : null,
-                        payment.getAmount(), payment.getPaidAt()))
+                        payment.getAmount(), toLocal(payment.getPaidAt())))
                 .toList();
     }
 }

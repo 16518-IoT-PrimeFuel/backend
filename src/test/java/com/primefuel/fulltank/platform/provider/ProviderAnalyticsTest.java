@@ -54,7 +54,7 @@ class ProviderAnalyticsTest extends ProviderReadTestSupport {
                         new CreatePaymentCommand(
                                 order.getId(), f.company(), 200.0, PaymentMethod.BANK_TRANSFER));
         p.complete("one");
-        p.setPaidAt(LocalDateTime.of(2026, 9, 15, 10, 0));
+        p.setPaidAt(LocalDateTime.of(2026, 9, 15, 10, 0).atZone(java.time.ZoneId.systemDefault()).toInstant());
         payments.save(p);
         var installment =
                 new Payment(

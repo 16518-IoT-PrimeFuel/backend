@@ -1,4 +1,5 @@
 package com.primefuel.fulltank.platform.provider;
+import com.primefuel.fulltank.platform.RucFixtures;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 
@@ -76,7 +77,7 @@ abstract class ProviderReadTestSupport {
 
     Fixture fixture(boolean withOrder, boolean withRequest) {
         long provider = IDS.incrementAndGet();
-        String ruc = "20" + String.format("%09d", provider);
+        String ruc = RucFixtures.sequenced("20", provider);
         var companyEntity =
                 buyerCompanies.save(
                         new BuyerCompany(

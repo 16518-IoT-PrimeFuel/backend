@@ -1,6 +1,6 @@
 package com.primefuel.fulltank.platform.payment.infrastructure.persistence.jpa.repositories;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Date;
 
 public interface ProviderPaymentProjection {
@@ -22,5 +22,7 @@ public interface ProviderPaymentProjection {
 
     Date getUpdatedAt();
 
-    LocalDateTime getPaidAt();
+    Instant getPaidAt();
+
+    String getCurrency();
 }

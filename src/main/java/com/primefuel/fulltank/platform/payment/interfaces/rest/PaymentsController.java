@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.payment.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.payment.application.commandservices.PaymentCommandService;
 import com.primefuel.fulltank.platform.payment.application.queryservices.PaymentQueryService;
 import com.primefuel.fulltank.platform.payment.domain.model.commands.CompletePaymentCommand;
@@ -93,7 +94,7 @@ public class PaymentsController {
                     ApplicationError.notFound("FuelOrder", resource.orderId().toString()));
         }
         if (!tenantAccess.ownsCompany(companyId)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var command = CreatePaymentCommandFromResourceAssembler.toCommandFromResource(
                 new CreatePaymentResource(resource.orderId(), companyId, resource.amount(),
@@ -122,7 +123,7 @@ public class PaymentsController {
     @PostMapping("/{paymentId}/complete")
     public ResponseEntity<?> completePayment(@PathVariable Long paymentId,
                                              @RequestBody CompletePaymentResource resource) {
-        if (!ownsPayment(paymentId)) return ResponseEntity.notFound().build();
+        if (!ownsPayment(paymentId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var result = paymentCommandService.handle(new CompletePaymentCommand(paymentId, resource.transactionReference()));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
@@ -142,7 +143,7 @@ public class PaymentsController {
     })
     @PostMapping("/{paymentId}/fail")
     public ResponseEntity<?> failPayment(@PathVariable Long paymentId) {
-        if (!ownsPayment(paymentId)) return ResponseEntity.notFound().build();
+        if (!ownsPayment(paymentId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var result = paymentCommandService.handle(new FailPaymentCommand(paymentId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
@@ -164,7 +165,7 @@ public class PaymentsController {
     })
     @PostMapping("/{paymentId}/refund")
     public ResponseEntity<?> refundPayment(@PathVariable Long paymentId) {
-        if (!ownsPayment(paymentId)) return ResponseEntity.notFound().build();
+        if (!ownsPayment(paymentId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var result = paymentCommandService.handle(new RefundPaymentCommand(paymentId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
@@ -209,7 +210,7 @@ public class PaymentsController {
                         || ownsOrderAsProvider(payment.getOrderId()));
         return result.map(p -> new ResponseEntity<>(
                         PaymentResourceFromEntityAssembler.toResourceFromEntity(p), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -230,7 +231,7 @@ public class PaymentsController {
                         || ownsOrderAsProvider(orderId));
         return result.map(p -> new ResponseEntity<>(
                         PaymentResourceFromEntityAssembler.toResourceFromEntity(p), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**

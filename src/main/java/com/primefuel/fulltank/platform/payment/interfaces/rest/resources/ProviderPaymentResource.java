@@ -6,7 +6,6 @@ import com.primefuel.fulltank.platform.payment.domain.model.valueobjects.Payment
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 public record ProviderPaymentResource(
         Long id,
@@ -14,10 +13,10 @@ public record ProviderPaymentResource(
         Long buyerCompanyId,
         String buyerName,
         Double amount,
-        @Schema(description = "Moneda no persistida actualmente; null, nunca inferida", nullable = true)
+        @Schema(description = "Moneda ISO 4217 del pago; PEN por defecto")
         String currency,
         PaymentStatus status,
         PaymentMethod paymentMethod,
         Instant createdAt,
         Instant updatedAt,
-        LocalDateTime paidAt) {}
+        Instant paidAt) {}

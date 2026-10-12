@@ -37,7 +37,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
                         row.getBuyerCompanyId(),
                         row.getBuyerName(),
                         row.getAmount(),
-                        null,
+                        row.getCurrency(),
                         PaymentStatus.valueOf(row.getStatus()),
                         PaymentMethod.valueOf(row.getPaymentMethod()),
                         row.getCreatedAt().toInstant(),

@@ -49,7 +49,7 @@ class ProviderPaymentsTest extends ProviderReadTestSupport {
                     .andExpect(jsonPath("$[0].status").value("PENDING"))
                     .andExpect(jsonPath("$[0].paymentMethod").value("BANK_TRANSFER"))
                     .andExpect(jsonPath("$[0].createdAt").exists())
-                    .andExpect(jsonPath("$[0].currency").isEmpty());
+                    .andExpect(jsonPath("$[0].currency").value("PEN"));
             assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
         } finally {
             statistics.setStatisticsEnabled(enabled);

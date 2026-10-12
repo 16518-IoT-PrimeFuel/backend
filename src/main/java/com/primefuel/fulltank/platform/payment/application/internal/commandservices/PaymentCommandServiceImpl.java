@@ -126,7 +126,13 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
                     "Only PENDING payments can be failed; current status is " + payment.getStatus()));
         }
         payment.fail();
-        return Result.success(paymentRepository.save(payment));
+        var saved = paymentRepository.save(payment);
+        publicationRegistry.publish("payment.failed.v1", AGGREGATE_TYPE, String.valueOf(saved.getId()),
+                organizationOf(saved), 1L,
+                "{\"paymentId\":" + saved.getId()
+                        + ",\"orderId\":" + saved.getOrderId()
+                        + ",\"amount\":" + saved.getAmount() + "}");
+        return Result.success(saved);
     }
 
     /**

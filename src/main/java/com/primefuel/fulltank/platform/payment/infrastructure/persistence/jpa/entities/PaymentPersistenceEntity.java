@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "payments", uniqueConstraints = {
@@ -38,7 +38,7 @@ public class PaymentPersistenceEntity extends AuditableAbstractPersistenceEntity
 
     private String transactionReference;
 
-    private LocalDateTime paidAt;
+    private Instant paidAt;
 
     @Column(length = 20)
     private String operationNumber;

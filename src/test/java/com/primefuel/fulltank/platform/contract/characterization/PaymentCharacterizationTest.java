@@ -1,4 +1,5 @@
 package com.primefuel.fulltank.platform.contract.characterization;
+import com.primefuel.fulltank.platform.RucFixtures;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import tools.jackson.databind.JsonNode;
@@ -57,7 +58,7 @@ class PaymentCharacterizationTest {
         var order = fuelOrderRepository.findById(orderId).orElseThrow();
         order.setStatus(status);
         fuelOrderRepository.save(order);
-    }
+    }
 
     @MockitoBean
     private JavaMailSender mailSender;
@@ -322,7 +323,7 @@ class PaymentCharacterizationTest {
     private static final AtomicInteger USER_ID_SEQUENCE = new AtomicInteger(70_000);
 
     private static String nextRuc() {
-        return "239%08d".formatted(RUC_SEQUENCE.incrementAndGet());
+        return RucFixtures.sequenced("239", RUC_SEQUENCE.incrementAndGet());
     }
 
     /** A buyer company + a provider company + product/driver/vehicle + one direct order (total 50.0). */
@@ -341,7 +342,7 @@ class PaymentCharacterizationTest {
             this.provider = authFor(null, providerId, "ROLE_PROVIDER");
             this.fuelProductId = createFuelProduct();
             this.orderId = createOrder();
-            awaitPayment(orderId);
+            awaitPayment(orderId);
         }
 
         String paymentBody(double amount, String method) {

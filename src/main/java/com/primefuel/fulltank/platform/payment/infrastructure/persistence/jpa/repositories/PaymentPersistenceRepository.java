@@ -16,7 +16,8 @@ public interface PaymentPersistenceRepository extends JpaRepository<PaymentPersi
             SELECT p.id AS id, p.order_id AS orderId, p.company_id AS buyerCompanyId,
                    b.name AS buyerName, p.amount AS amount, p.status AS status,
                    p.payment_method AS paymentMethod, p.created_at AS createdAt,
-                   p.updated_at AS updatedAt, p.paid_at AS paidAt
+                   p.updated_at AS updatedAt, p.paid_at AS paidAt,
+                   COALESCE(p.currency, 'PEN') AS currency
             FROM payments p
             JOIN fuel_orders o ON o.id = p.order_id AND o.company_id = p.company_id
             JOIN buyer_companies b ON b.id = p.company_id

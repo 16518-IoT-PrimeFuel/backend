@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -22,7 +22,7 @@ public class Payment extends AbstractDomainAggregateRoot<Payment> {
     private PaymentStatus status;
     private PaymentMethod paymentMethod;
     private String transactionReference;
-    private LocalDateTime paidAt;
+    private Instant paidAt;
     private String operationNumber;
     private String currency = "PEN";
 
@@ -38,7 +38,7 @@ public class Payment extends AbstractDomainAggregateRoot<Payment> {
     public void complete(String transactionReference) {
         this.status = PaymentStatus.COMPLETED;
         this.transactionReference = transactionReference;
-        this.paidAt = LocalDateTime.now();
+        this.paidAt = Instant.now();
     }
 
     public void refund() {
