@@ -39,6 +39,7 @@ public class FuelOrder extends AbstractDomainAggregateRoot<FuelOrder> {
         this.status = OrderStatus.PENDING;
         this.deliveryAddress = command.deliveryAddress();
         this.scheduledDate = command.scheduledDate();
+        this.requestId = command.requestId();
     }
 
     /** The buyer confirms before dispatch; confirming again is a no-op. */
@@ -64,6 +65,13 @@ public class FuelOrder extends AbstractDomainAggregateRoot<FuelOrder> {
             throw new IllegalStateException("Order is not pending assignment");
         }
         this.status = OrderStatus.DISPATCHED;
+    }
+
+    /** A failed/cancelled delivery gives a dispatched order back, so it can be assigned again. */
+    public void reopen() {
+        if (status != OrderStatus.DISPATCHED)
+            throw new IllegalStateException("Order is not dispatched");
+        this.status = OrderStatus.CONFIRMED;
     }
 
     public void receive() {

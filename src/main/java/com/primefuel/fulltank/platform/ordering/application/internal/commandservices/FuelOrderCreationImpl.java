@@ -20,7 +20,7 @@ public class FuelOrderCreationImpl implements FuelOrderCreation {
     public Result<Long, ApplicationError> create(Command command) {
         return commands.handle(new CreateFuelOrderCommand(command.companyId(), command.providerId(),
                         command.fuelProductId(), command.equipmentId(), command.quantity(),
-                        command.deliveryAddress(), command.deliveryDate()))
+                        command.deliveryAddress(), command.deliveryDate(), command.requestId()))
                 .map(order -> order.getId());
     }
 }

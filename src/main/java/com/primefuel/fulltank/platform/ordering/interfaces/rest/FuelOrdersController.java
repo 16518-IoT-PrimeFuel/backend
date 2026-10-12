@@ -2,6 +2,7 @@ package com.primefuel.fulltank.platform.ordering.interfaces.rest;
 
 import com.primefuel.fulltank.platform.ordering.application.commandservices.FuelOrderCommandService;
 import com.primefuel.fulltank.platform.ordering.application.queryservices.FuelOrderQueryService;
+import com.primefuel.fulltank.platform.ordering.domain.model.aggregates.FuelOrder;
 import com.primefuel.fulltank.platform.ordering.domain.model.commands.CancelFuelOrderCommand;
 import com.primefuel.fulltank.platform.ordering.domain.model.commands.ConfirmFuelOrderCommand;
 import com.primefuel.fulltank.platform.ordering.domain.model.queries.GetAllFuelOrdersQuery;
@@ -43,6 +44,10 @@ public class FuelOrdersController {
         this.currentUserAccess = currentUserAccess;
     }
 
+    private FuelOrderResource toResource(FuelOrder order) {
+        return FuelOrderResourceFromEntityAssembler.toResourceFromEntity(order, order.getRequestId());
+    }
+
     /**
      * Crea una orden de combustible para la empresa compradora autenticada.
      *
@@ -62,7 +67,7 @@ public class FuelOrdersController {
         var result = fuelOrderCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
-                FuelOrderResourceFromEntityAssembler::toResourceFromEntity,
+                this::toResource,
                 HttpStatus.CREATED);
     }
 
@@ -83,7 +88,7 @@ public class FuelOrdersController {
         var result = fuelOrderCommandService.handle(new ConfirmFuelOrderCommand(orderId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
-                FuelOrderResourceFromEntityAssembler::toResourceFromEntity,
+                this::toResource,
                 HttpStatus.OK);
     }
 
@@ -105,7 +110,7 @@ public class FuelOrdersController {
         var result = fuelOrderCommandService.handle(new CancelFuelOrderCommand(orderId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
-                FuelOrderResourceFromEntityAssembler::toResourceFromEntity,
+                this::toResource,
                 HttpStatus.OK);
     }
 
@@ -124,7 +129,7 @@ public class FuelOrdersController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<FuelOrderResource>> getAllOrders() {
         var orders = fuelOrderQueryService.handle(new GetAllFuelOrdersQuery());
-        var resources = orders.stream().map(FuelOrderResourceFromEntityAssembler::toResourceFromEntity).toList();
+        var resources = orders.stream().map(this::toResource).toList();
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
@@ -144,7 +149,7 @@ public class FuelOrdersController {
         var result = fuelOrderQueryService.handle(new GetFuelOrderByIdQuery(orderId))
                 .filter(order -> currentUserAccess.ownsCompanyOrProvider(order.getCompanyId(), order.getProviderId()));
         return result.map(o -> new ResponseEntity<>(
-                        FuelOrderResourceFromEntityAssembler.toResourceFromEntity(o), HttpStatus.OK))
+                        toResource(o), HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
@@ -163,7 +168,7 @@ public class FuelOrdersController {
     @PreAuthorize("@currentUserAccess.ownsCompany(#companyId)")
     public ResponseEntity<List<FuelOrderResource>> getOrdersByCompany(@PathVariable Long companyId) {
         var orders = fuelOrderQueryService.handle(new GetFuelOrdersByCompanyIdQuery(companyId));
-        var resources = orders.stream().map(FuelOrderResourceFromEntityAssembler::toResourceFromEntity).toList();
+        var resources = orders.stream().map(this::toResource).toList();
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
@@ -182,7 +187,7 @@ public class FuelOrdersController {
     @PreAuthorize("@currentUserAccess.ownsProvider(#providerId)")
     public ResponseEntity<List<FuelOrderResource>> getOrdersByProvider(@PathVariable Long providerId) {
         var orders = fuelOrderQueryService.handle(new GetFuelOrdersByProviderIdQuery(providerId));
-        var resources = orders.stream().map(FuelOrderResourceFromEntityAssembler::toResourceFromEntity).toList();
+        var resources = orders.stream().map(this::toResource).toList();
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 

@@ -9,5 +9,6 @@ public record CreateFuelOrderCommand(
         Long equipmentId,
         Double requestedQuantity,
         String deliveryAddress,
-        LocalDate scheduledDate) {
+        LocalDate scheduledDate,
+        Long requestId) {
 }

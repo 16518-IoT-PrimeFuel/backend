@@ -11,6 +11,6 @@ public final class CreateFuelOrderCommandFromResourceAssembler {
     public static CreateFuelOrderCommand toCommandFromResource(CreateFuelOrderResource resource) {
         return new CreateFuelOrderCommand(resource.companyId(), resource.providerId(),
                 resource.fuelProductId(), resource.equipmentId(), resource.requestedQuantity(),
-                resource.deliveryAddress(), resource.scheduledDate());
+                resource.deliveryAddress(), resource.scheduledDate(), null);
     }
 }

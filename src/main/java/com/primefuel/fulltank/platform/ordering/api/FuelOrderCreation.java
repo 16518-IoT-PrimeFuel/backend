@@ -11,6 +11,6 @@ public interface FuelOrderCreation {
     Result<Long, ApplicationError> create(Command command);
 
     record Command(Long companyId, Long providerId, Long fuelProductId, Long equipmentId,
-                   Double quantity, String deliveryAddress, LocalDate deliveryDate) {
+                   Double quantity, String deliveryAddress, LocalDate deliveryDate, Long requestId) {
     }
 }

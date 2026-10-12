@@ -64,6 +64,18 @@ class OrderFulfillmentGoldenPathTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired private com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository fuelOrderRepository;
+
+    private void awaitPayment(long orderId) {
+        setOrderStatus(orderId, com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus.PENDING_PAYMENT);
+    }
+
+    private void setOrderStatus(long orderId, com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus status) {
+        var order = fuelOrderRepository.findById(orderId).orElseThrow();
+        order.setStatus(status);
+        fuelOrderRepository.save(order);
+    }
+
     @MockitoBean
     private JavaMailSender mailSender;
 
@@ -186,7 +198,7 @@ class OrderFulfillmentGoldenPathTest {
     }
 
     @Test
-    void cancellingAnOrderDoesNotBlockCreatingAPaymentForIt() throws Exception {
+    void aCancelledOrderCannotBePaid() throws Exception {
         // known-gap: PaymentsController#createPayment only checks that the order exists and
         // that the amount matches its totalPrice — it never checks order.status. A CANCELLED
         // order can still receive a PENDING payment, and nothing in the payment/order flow
@@ -214,17 +226,7 @@ class OrderFulfillmentGoldenPathTest {
                         .content("""
                                 {"orderId":%d,"companyId":%d,"amount":%s,"paymentMethod":"CASH"}
                                 """.formatted(orderId, buyerCompanyId, totalPrice)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("PENDING"));
-
-        // A mismatched amount is still rejected regardless of order status.
-        mockMvc.perform(post("/api/payments")
-                        .with(buyer)
-                        .contentType("application/json")
-                        .content("""
-                                {"orderId":%d,"companyId":%d,"amount":1.0,"paymentMethod":"CASH"}
-                                """.formatted(orderId, buyerCompanyId)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isConflict());
     }
 
     @Test
