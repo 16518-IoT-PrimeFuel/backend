@@ -83,6 +83,7 @@ public class PasswordResetService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Invalid or expired reset request"));
         user.setPassword(hashing.encode(newPassword));
+        user.revokeIssuedTokens(); // a reset must invalidate every session issued before it
         users.save(user);
         tokens.delete(entity);
     }

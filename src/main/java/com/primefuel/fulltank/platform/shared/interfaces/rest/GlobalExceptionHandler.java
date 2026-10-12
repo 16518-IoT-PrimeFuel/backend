@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataIntegrityViolationException;
+import com.primefuel.fulltank.platform.shared.interfaces.rest.resources.ErrorResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -64,6 +66,14 @@ public class GlobalExceptionHandler {
                 || uri.equals("/api/deliveries")
                 || uri.equals("/api/deliveries/recommendation")
                 || uri.matches("/api/deliveries/[^/]+/valve-observations");
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResource> handleRateLimit(RateLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(new ErrorResource("RATE_LIMITED",
+                        "Too many attempts. Try again in " + ex.getRetryAfterSeconds() + " seconds."));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

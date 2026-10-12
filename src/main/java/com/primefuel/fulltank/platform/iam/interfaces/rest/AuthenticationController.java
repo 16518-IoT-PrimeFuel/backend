@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -36,12 +37,14 @@ public class AuthenticationController {
     private final UserCommandService userCommandService;
     private final PasswordResetService passwordResetService;
     private final MembershipQueryService membershipQueryService;
+    private final AuthRateLimiter rateLimiter;
 
     public AuthenticationController(UserCommandService userCommandService, PasswordResetService passwordResetService,
-                                    MembershipQueryService membershipQueryService) {
+                                    MembershipQueryService membershipQueryService, AuthRateLimiter rateLimiter) {
         this.userCommandService = userCommandService;
         this.passwordResetService = passwordResetService;
         this.membershipQueryService = membershipQueryService;
+        this.rateLimiter = rateLimiter;
     }
 
     /**
@@ -69,7 +72,8 @@ public class AuthenticationController {
             @ApiResponse(responseCode = "500", description = "Ocurrió un error al crear la organización o su membresía.")
     })
     @PostMapping("/sign-up")
-    public ResponseEntity<?> signUp(@Valid @RequestBody SignUpResource resource) {
+    public ResponseEntity<?> signUp(@Valid @RequestBody SignUpResource resource, HttpServletRequest request) {
+        rateLimiter.signUp(request);
         var command = SignUpCommandFromResourceAssembler.toCommandFromResource(resource);
         var result = userCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
@@ -91,7 +95,8 @@ public class AuthenticationController {
             @ApiResponse(responseCode = "400", description = "El nombre de usuario o la contraseña son incorrectos (misma respuesta si la cuenta no existe).")
     })
     @PostMapping("/sign-in")
-    public ResponseEntity<?> signIn(@RequestBody SignInResource resource) {
+    public ResponseEntity<?> signIn(@RequestBody SignInResource resource, HttpServletRequest request) {
+        rateLimiter.signIn(request, resource.username());
         var command = SignInCommandFromResourceAssembler.toCommandFromResource(resource);
         var result = userCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
@@ -138,7 +143,9 @@ public class AuthenticationController {
             @ApiResponse(responseCode = "400", description = "El correo no cumple la validación requerida.")
     })
     @PostMapping("/password-reset/request")
-    public ResponseEntity<?> requestPasswordReset(@Valid @RequestBody PasswordResetRequestResource resource) {
+    public ResponseEntity<?> requestPasswordReset(@Valid @RequestBody PasswordResetRequestResource resource,
+                                                  HttpServletRequest request) {
+        rateLimiter.passwordResetRequest(request, resource.email());
         passwordResetService.request(resource.email());
         return ResponseEntity.accepted().body(java.util.Map.of(
                 "message", "If the account exists, password reset instructions have been sent."));
@@ -157,7 +164,9 @@ public class AuthenticationController {
             @ApiResponse(responseCode = "400", description = "El token falta, venció o ya se usó, o la nueva contraseña no es válida.")
     })
     @PostMapping("/password-reset/confirm")
-    public ResponseEntity<?> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmResource resource) {
+    public ResponseEntity<?> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmResource resource,
+                                                  HttpServletRequest request) {
+        rateLimiter.passwordResetConfirm(request);
         passwordResetService.confirm(resource.token(), resource.newPassword());
         return ResponseEntity.noContent().build();
     }
