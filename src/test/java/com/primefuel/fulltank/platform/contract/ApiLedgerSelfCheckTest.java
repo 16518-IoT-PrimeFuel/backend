@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
         })
 class ApiLedgerSelfCheckTest {
 
-    private static final int EXPECTED_OPERATION_COUNT = 115;
+    private static final int EXPECTED_OPERATION_COUNT = 126;
     private static final Pattern LEDGER_ROW =
             Pattern.compile(
                     "^\\|\\s*\\d+\\s*\\|\\s*(GET|POST|PUT|PATCH|DELETE)\\s*\\|\\s*(`[^`]+`)\\s*\\|");
@@ -50,19 +50,19 @@ class ApiLedgerSelfCheckTest {
     @MockitoBean private JavaMailSender mailSender;
 
     @Test
-    void ledgerHas115RowsMatchingTheLiveApiRequestMappings() throws IOException {
+    void ledgerHas122RowsMatchingTheLiveApiRequestMappings() throws IOException {
         Set<String> runtimeOperations = collectRuntimeApiOperations();
         assertEquals(
                 EXPECTED_OPERATION_COUNT,
                 runtimeOperations.size(),
-                "Runtime /api/** mapping count drifted from the T01-A baseline of 115. Update"
+                "Runtime /api/** mapping count drifted from the T01-A baseline of 123. Update"
                     + " docs/api-ledger/T01-A-rest-ledger.md if this is an intentional change.");
 
         Set<String> ledgerOperations = collectLedgerOperations();
         assertEquals(
                 EXPECTED_OPERATION_COUNT,
                 ledgerOperations.size(),
-                "docs/api-ledger/T01-A-rest-ledger.md must list exactly 115 operations.");
+                "docs/api-ledger/T01-A-rest-ledger.md must list exactly 123 operations.");
 
         assertEquals(
                 runtimeOperations,

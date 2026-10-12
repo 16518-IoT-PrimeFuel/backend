@@ -1,4 +1,5 @@
 package com.primefuel.fulltank.platform.contract;
+import com.primefuel.fulltank.platform.RucFixtures;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
@@ -59,7 +60,7 @@ class AuthorizationContractTest {
         var order = fuelOrderRepository.findById(orderId).orElseThrow();
         order.setStatus(status);
         fuelOrderRepository.save(order);
-    }
+    }
 
     @Autowired private CustomerCommandService customerCommandService;
     @Autowired private EquipmentCommandService equipmentCommandService;
@@ -222,7 +223,7 @@ class AuthorizationContractTest {
                 .andReturn().getResponse().getContentAsString();
         long orderId = objectMapper.readTree(acceptResponse).get("orderId").asLong();
 
-        awaitPayment(orderId);
+        awaitPayment(orderId);
         mockMvc.perform(post("/api/payments")
                         .with(buyer)
                         .contentType("application/json")
@@ -261,7 +262,7 @@ class AuthorizationContractTest {
     private static final AtomicInteger RUC_SEQUENCE = new AtomicInteger();
 
     private static String nextRuc() {
-        return "219%08d".formatted(RUC_SEQUENCE.incrementAndGet());
+        return RucFixtures.sequenced("219", RUC_SEQUENCE.incrementAndGet());
     }
 
     private long signUpBuyer(String username) throws Exception {

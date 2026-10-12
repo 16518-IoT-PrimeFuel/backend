@@ -8,6 +8,7 @@ import com.primefuel.fulltank.platform.analytics.domain.model.queries.GetBuyerAn
 import com.primefuel.fulltank.platform.analytics.domain.model.queries.GetPlatformSummaryQuery;
 import com.primefuel.fulltank.platform.analytics.domain.model.queries.GetProviderAnalyticsQuery;
 import com.primefuel.fulltank.platform.analytics.domain.model.valueobjects.BuyerAnalytics;
+import com.primefuel.fulltank.platform.analytics.domain.model.valueobjects.DailyAmount;
 import com.primefuel.fulltank.platform.analytics.domain.model.valueobjects.MonthlyAmount;
 import com.primefuel.fulltank.platform.analytics.domain.model.valueobjects.PlatformSummary;
 import com.primefuel.fulltank.platform.analytics.domain.model.valueobjects.ProviderAnalytics;
@@ -132,6 +133,15 @@ public class AnalyticsQueryServiceImpl implements AnalyticsQueryService {
         long completedPayments =
                 payments.stream().filter(p -> COMPLETED.equals(p.status())).count();
         long pendingPayments = payments.stream().filter(p -> PENDING.equals(p.status())).count();
+        Map<LocalDate, Double> spending = new TreeMap<>();
+        payments.stream()
+                .filter(p -> COMPLETED.equals(p.status()) && p.paidAt() != null)
+                .forEach(
+                        p ->
+                                spending.merge(
+                                        p.paidAt().toLocalDate(),
+                                        p.amount() != null ? p.amount() : 0.0,
+                                        Double::sum));
         return new BuyerAnalytics(
                 query.companyId(),
                 totalOrders,
@@ -143,7 +153,10 @@ public class AnalyticsQueryServiceImpl implements AnalyticsQueryService {
                                 .filter(payment -> COMPLETED.equals(payment.status()))
                                 .toList(),
                         ExternalPaymentService.PaymentData::paidAt,
-                        ExternalPaymentService.PaymentData::amount));
+                        ExternalPaymentService.PaymentData::amount),
+                spending.entrySet().stream()
+                        .map(e -> new DailyAmount(e.getKey(), e.getValue()))
+                        .toList());
     }
 
     @Override
