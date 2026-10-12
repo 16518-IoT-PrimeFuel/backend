@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.telemetry.application.internal.commandservices;
 
 import com.primefuel.fulltank.platform.equipment.api.DeviceAuthentication;
+import com.primefuel.fulltank.platform.equipment.api.TankAssets;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
 import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Unit;
@@ -27,17 +28,21 @@ public class TelemetryIngestServiceImpl {
     public record IngestResult(Long readingId, String quality, Long tankId, boolean duplicate) { }
 
     public static final int SUPPORTED_SCHEMA_VERSION = 1;
+    static final String LEVEL_EXCEEDS_CAPACITY = "LEVEL_EXCEEDS_CAPACITY";
 
     private final TelemetryReadingRepository repository;
     private final DeviceAuthentication deviceAuthentication;
     private final ApplicationEventPublisher events;
+    private final TankAssets tanks;
 
     public TelemetryIngestServiceImpl(TelemetryReadingRepository repository,
                                       DeviceAuthentication deviceAuthentication,
-                                      ApplicationEventPublisher events) {
+                                      ApplicationEventPublisher events,
+                                      TankAssets tanks) {
         this.repository = repository;
         this.deviceAuthentication = deviceAuthentication;
         this.events = events;
+        this.tanks = tanks;
     }
     @Transactional
     public Result<IngestResult, ApplicationError> handle(IngestTelemetryCommand command) {
@@ -78,8 +83,12 @@ public class TelemetryIngestServiceImpl {
             return Result.failure(ApplicationError.validationError("level", exception.getMessage()));
         }
 
-        var quarantineReason = decision.authenticated() ? null : decision.outcome();
-        var quality = decision.authenticated() ? ReadingQuality.ACCEPTED : ReadingQuality.QUARANTINED;
+        // A level above the tank capacity cannot be applied: quarantine it here, so the consumer never fails the
+        // transaction and the device's retries do not loop on a rollback.
+        var overCapacity = decision.authenticated() && exceedsCapacity(decision.tankId(), level);
+        var quarantineReason = !decision.authenticated() ? decision.outcome()
+                : overCapacity ? LEVEL_EXCEEDS_CAPACITY : null;
+        var quality = decision.authenticated() && !overCapacity ? ReadingQuality.ACCEPTED : ReadingQuality.QUARANTINED;
 
         TelemetryReading reading;
         try {
@@ -108,5 +117,11 @@ public class TelemetryIngestServiceImpl {
             // Concurrent replay: the unique (device, channel, sequence) won the race, nothing duplicated.
             return Result.success(new IngestResult(null, ReadingQuality.QUARANTINED.name(), null, true));
         }
+    }
+
+    private boolean exceedsCapacity(Long tankId, Volume level) {
+        return tanks.findById(tankId)
+                .map(tank -> level.exceeds(Volume.of(tank.capacity(), Unit.fromCode(tank.unit()))))
+                .orElse(false);
     }
 }

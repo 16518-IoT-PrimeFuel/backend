@@ -1,5 +1,7 @@
 package com.primefuel.fulltank.platform.telemetry.interfaces.rest;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import com.primefuel.fulltank.platform.telemetry.application.queryservices.TankReadingsQueryService;
@@ -48,7 +50,7 @@ public class TankReadingsController {
             @RequestParam(required = false) Instant from,
             @RequestParam(required = false) Instant to) {
         var organizationId = membershipAccess.currentOrganizationId();
-        if (organizationId.isEmpty()) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        if (organizationId.isEmpty()) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 queries.handle(new GetTankReadingsQuery(organizationId.get(), tankId, from, to)),
                 rows ->

@@ -63,7 +63,7 @@ class TankReadingIntegrationTest {
 
     @Test
     void appliesReadingsOnceAndNeverRegressesOnReplayOrOutOfOrder() {
-        var tankId = aTank("20777777771");
+        var tankId = aTank("20960000073");
 
         consumer.on(eventFor(tankId, 1L, 250.0, T1));
         assertThat(tankRepository.findById(tankId).orElseThrow().getCurrentLevel().amount()).isEqualTo(250.0);
@@ -85,7 +85,7 @@ class TankReadingIntegrationTest {
 
     @Test
     void aFailedApplicationIsNotMarkedAsConsumedSoItCanBeRetried() {
-        var tankId = aTank("20777777772");
+        var tankId = aTank("20960000081");
 
         // A level above the tank capacity must fail and roll the whole consumption back.
         assertThatThrownBy(() -> consumer.on(eventFor(tankId, 10L, 9999.0, T1)))

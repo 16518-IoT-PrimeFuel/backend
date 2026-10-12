@@ -1,5 +1,10 @@
 package com.primefuel.fulltank.platform.telemetry;
 
+import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerCommandService;
+import com.primefuel.fulltank.platform.equipment.application.commandservices.TankCommandService;
+import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterCustomerCommand;
+import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterTankCommand;
+import com.primefuel.fulltank.platform.equipment.domain.repositories.TankRepository;
 import com.primefuel.fulltank.platform.equipment.devicebinding.application.commandservices.DeviceBindingCommandService;
 import com.primefuel.fulltank.platform.equipment.devicebinding.application.internal.commandservices.DeviceCredentialServiceImpl;
 import com.primefuel.fulltank.platform.equipment.devicebinding.domain.model.commands.BindDeviceCommand;
@@ -48,6 +53,15 @@ class TelemetryIngestTest {
 
     @Autowired
     private TelemetryReadingRepository repository;
+
+    @Autowired
+    private CustomerCommandService customerCommandService;
+
+    @Autowired
+    private TankCommandService tankCommandService;
+
+    @Autowired
+    private TankRepository tankRepository;
 
     @Autowired
     private ApplicationEvents applicationEvents;
@@ -119,6 +133,32 @@ class TelemetryIngestTest {
         assertThat(stored.getLevel().amount()).isEqualTo(250.0);
         assertThat(stored.getQuarantineReason()).isNull();
         assertThat(applicationEvents.stream(ValidatedTankReadingEvent.class)).hasSize(1);
+    }
+
+    @Test
+    void aLevelAboveTheTankCapacityIsQuarantinedWithoutFailingOrTouchingTheTank() {
+        var customer = customerCommandService.handle(
+                new RegisterCustomerCommand(1L, "Cliente capacidad", "20970000073", null, null, null, null));
+        var tankId = tankCommandService.handle(new RegisterTankCommand(
+                1L, customer.getOrElse(null).getId(), null, "Tanque capacidad", "DIESEL", 500.0, "LITRE", 100.0,
+                null)).getOrElse(null).getId();
+        var token = provisionAndBind(tankId);
+
+        var first = ingestService.handle(new IngestTelemetryCommand(
+                1, DEVICE, CHANNEL, 30L, CAPTURED, 9999.0, "LITRE", token));
+        assertThat(first.isSuccess()).isTrue();
+        assertThat(first.getOrElse(null).quality()).isEqualTo(ReadingQuality.QUARANTINED.name());
+        assertThat(repository.findByDeviceChannelAndSequence(DEVICE, CHANNEL, 30L).orElseThrow()
+                .getQuarantineReason()).isEqualTo("LEVEL_EXCEEDS_CAPACITY");
+        assertThat(applicationEvents.stream(ValidatedTankReadingEvent.class)).isEmpty();
+        assertThat(tankRepository.findById(tankId).orElseThrow().getCurrentLevel().amount()).isEqualTo(100.0);
+
+        // The device retries the same sequence: still a 2xx-style result, no exception, no event.
+        var retry = ingestService.handle(new IngestTelemetryCommand(
+                1, DEVICE, CHANNEL, 30L, CAPTURED, 9999.0, "LITRE", token));
+        assertThat(retry.isSuccess()).isTrue();
+        assertThat(retry.getOrElse(null).quality()).isEqualTo(ReadingQuality.QUARANTINED.name());
+        assertThat(applicationEvents.stream(ValidatedTankReadingEvent.class)).isEmpty();
     }
 
     @Test

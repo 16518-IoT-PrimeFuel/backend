@@ -15,7 +15,16 @@ import java.time.Instant;
 
 @Service
 public class DeviceCredentialServiceImpl {
-    public record ProvisionedCredential(Long credentialId, String deviceId, String channel, int tokenVersion, String rawToken) { }
+    /** The raw token is returned once; its toString never prints it, so logs cannot leak it. */
+    public record ProvisionedCredential(Long credentialId, String deviceId, String channel, int tokenVersion,
+                                        String rawToken, Instant issuedAt) {
+        @Override
+        public String toString() {
+            return "ProvisionedCredential[credentialId=" + credentialId + ", deviceId=" + deviceId
+                    + ", channel=" + channel + ", tokenVersion=" + tokenVersion + ", rawToken=****, issuedAt="
+                    + issuedAt + "]";
+        }
+    }
 
     private final DeviceCredentialRepository repository;
 
@@ -65,7 +74,8 @@ public class DeviceCredentialServiceImpl {
             var saved = repository.save(new DeviceCredential(
                     deviceId, channel, DeviceTokenHasher.hash(rawToken), nextVersion, Instant.now()));
             return Result.success(new ProvisionedCredential(
-                    saved.getId(), saved.getDeviceId(), saved.getChannel(), saved.getTokenVersion(), rawToken));
+                    saved.getId(), saved.getDeviceId(), saved.getChannel(), saved.getTokenVersion(), rawToken,
+                    saved.getCreatedAt()));
         } catch (IllegalArgumentException exception) {
             return Result.failure(ApplicationError.validationError("credential", exception.getMessage()));
         }
