@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.iam.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.iam.application.queryservices.MembershipQueryService;
 import com.primefuel.fulltank.platform.iam.application.queryservices.OrganizationQueryService;
@@ -55,7 +56,7 @@ public class MyOrganizationsController {
     public ResponseEntity<List<OrganizationResource>> getMyOrganizations() {
         var userId = membershipAccess.currentUserId();
         if (userId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var resources = membershipQueryService.handle(new GetMembershipsByUserIdQuery(userId.get())).stream()
                 .filter(Membership::isActive)

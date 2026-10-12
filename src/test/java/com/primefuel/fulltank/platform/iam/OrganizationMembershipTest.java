@@ -37,7 +37,7 @@ class OrganizationMembershipTest {
     @Test
     void createsAnOrganizationAndManagesItsMemberships() {
         var organization = organizationCommandService.handle(
-                new CreateOrganizationCommand("Acme Fuel", "20123456789", OrganizationType.DISTRIBUTOR));
+                new CreateOrganizationCommand("Acme Fuel", "20960000031", OrganizationType.DISTRIBUTOR));
         assertThat(organization.isSuccess()).isTrue();
         var organizationId = organization.getOrElse(null).getId();
         assertThat(organizationId).isNotNull();

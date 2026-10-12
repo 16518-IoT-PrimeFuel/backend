@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.iam.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.iam.application.commandservices.ProviderCompanyCommandService;
 import com.primefuel.fulltank.platform.iam.application.queryservices.ProviderCompanyQueryService;
 import com.primefuel.fulltank.platform.iam.domain.model.queries.GetAllProviderCompaniesQuery;
@@ -45,8 +46,9 @@ public class ProviderCompaniesController {
      * <p>Es una operación pública de autoservicio: no requiere autenticación ni crea una cuenta de usuario o membresía.
      * Los fallos de persistencia se responden como error del servidor.</p>
      */
-    @Operation(summary = "Registrar distribuidor",
-            description = "Persiste un nuevo perfil de distribuidor. La ruta está disponible sin autenticación y no crea usuarios ni membresías.")
+    @Deprecated
+    @Operation(summary = "Registrar distribuidor", deprecated = true,
+            description = "Deprecado: se mantiene solo por compatibilidad con clientes existentes. Persiste un nuevo perfil de distribuidor. La ruta está disponible sin autenticación y no crea usuarios ni membresías.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Perfil de distribuidor creado."),
             @ApiResponse(responseCode = "500", description = "Se produjo un error inesperado al guardar el perfil.")
@@ -98,7 +100,7 @@ public class ProviderCompaniesController {
         var result = providerCompanyQueryService.handle(new GetProviderCompanyByIdQuery(providerId));
         return result.map(company -> new ResponseEntity<>(
                         ProviderCompanyResourceFromEntityAssembler.toResourceFromEntity(company), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -118,7 +120,7 @@ public class ProviderCompaniesController {
     public ResponseEntity<ProviderCompanyResource> updateProviderCompany(@PathVariable Long providerId,
                                                                          @RequestBody CreateProviderCompanyResource resource) {
         var result = providerCompanyRepository.findById(providerId);
-        if (result.isEmpty()) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (result.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var provider = result.get();
         provider.setName(resource.name());
         provider.setRuc(resource.ruc());

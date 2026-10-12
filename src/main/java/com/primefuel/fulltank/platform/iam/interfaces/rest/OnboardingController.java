@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.iam.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.iam.application.commandservices.OnboardingCommandService;
 import com.primefuel.fulltank.platform.iam.domain.model.commands.OnboardOrganizationCommand;
@@ -54,7 +55,7 @@ public class OnboardingController {
     public ResponseEntity<?> onboard(@Valid @RequestBody OnboardOrganizationResource resource) {
         var ownerUserId = membershipAccess.currentUserId();
         if (ownerUserId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         OrganizationType type;
         try {

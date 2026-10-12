@@ -1,6 +1,7 @@
 package com.primefuel.fulltank.platform.iam.domain.model.aggregates;
 
 import com.primefuel.fulltank.platform.iam.domain.model.entities.Role;
+import com.primefuel.fulltank.platform.iam.domain.model.valueobjects.Roles;
 import com.primefuel.fulltank.platform.shared.domain.model.aggregates.AbstractDomainAggregateRoot;
 import lombok.Getter;
 import lombok.Setter;
@@ -46,6 +47,11 @@ public class User extends AbstractDomainAggregateRoot<User> {
 
     public User addRole(Role role) {
         this.roles.add(role);
+        return this;
+    }
+
+    public User removeRole(Roles name) {
+        this.roles.removeIf(role -> role.getName() == name);
         return this;
     }
 

@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.iam.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.iam.application.commandservices.InvitationCommandService;
 import com.primefuel.fulltank.platform.iam.application.queryservices.InvitationQueryService;
@@ -94,7 +95,7 @@ public class InvitationsController {
     public ResponseEntity<?> accept(@PathVariable String token) {
         var userId = membershipAccess.currentUserId();
         if (userId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = invitationCommandService.handle(new AcceptInvitationCommand(token, userId.get()));
         return ResponseEntityAssembler.toResponseEntityFromResult(
@@ -118,10 +119,10 @@ public class InvitationsController {
     public ResponseEntity<?> revoke(@PathVariable Long invitationId) {
         var existing = invitationQueryService.handle(new GetInvitationByIdQuery(invitationId));
         if (existing.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         if (!membershipAccess.canManageOrganization(existing.get().getOrganizationId())) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = invitationCommandService.handle(new RevokeInvitationCommand(invitationId));
         return ResponseEntityAssembler.toResponseEntityFromResult(

@@ -65,7 +65,7 @@ public class UserCommandServiceImpl implements UserCommandService {
         if (user.isEmpty() || !passwordMatches) {
             return Result.failure(ApplicationError.validationError("credentials", "Invalid username or password"));
         }
-        var token = tokenService.generateToken(user.get().getUsername());
+        var token = tokenService.generateToken(user.get().getUsername(), command.persistentSession());
         return Result.success(new UserCommandService.SignInResult(user.get(), token));
     }
 

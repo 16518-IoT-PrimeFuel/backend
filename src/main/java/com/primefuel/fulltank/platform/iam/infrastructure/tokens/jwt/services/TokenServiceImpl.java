@@ -30,19 +30,31 @@ public class TokenServiceImpl implements BearerTokenService {
     @Value("${authorization.jwt.expiration.days}")
     private int expirationDays;
 
+    /** Lifetime of tokens issued without "stay signed in" (the browser also drops them on close). */
+    @Value("${authorization.jwt.session.expiration.hours:12}")
+    private int sessionHours;
+
     @Override
     public String generateToken(Authentication authentication) {
-        return buildToken(authentication.getName());
+        return buildToken(authentication.getName(), true);
     }
 
     @Override
     public String generateToken(String username) {
-        return buildToken(username);
+        return buildToken(username, true);
     }
 
-    private String buildToken(String username) {
+    @Override
+    public String generateToken(String username, boolean persistent) {
+        return buildToken(username, persistent);
+    }
+
+    private String buildToken(String username, boolean persistent) {
         var issuedAt = new Date();
-        var expiration = new Date(issuedAt.getTime() + (long) expirationDays * 24 * 60 * 60 * 1000);
+        long lifetimeMillis = persistent
+                ? (long) expirationDays * 24 * 60 * 60 * 1000
+                : (long) sessionHours * 60 * 60 * 1000;
+        var expiration = new Date(issuedAt.getTime() + lifetimeMillis);
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(issuedAt)

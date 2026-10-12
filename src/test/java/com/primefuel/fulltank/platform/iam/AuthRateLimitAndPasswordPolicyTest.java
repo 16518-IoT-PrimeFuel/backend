@@ -1,4 +1,5 @@
 package com.primefuel.fulltank.platform.iam;
+import com.primefuel.fulltank.platform.RucFixtures;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
@@ -54,7 +55,7 @@ class AuthRateLimitAndPasswordPolicyTest {
 
     private void signUp(String username, String password) throws Exception {
         mvc.perform(post("/api/authentication/sign-up").contentType("application/json")
-                        .content(signUpBody(username, password, "2077700%04d".formatted(++seq))))
+                        .content(signUpBody(username, password, RucFixtures.sequenced("2077700", ++seq))))
                 .andExpect(status().isCreated());
     }
 
@@ -79,7 +80,7 @@ class AuthRateLimitAndPasswordPolicyTest {
     void weakPasswordsAreRejectedOnSignUp() throws Exception {
         for (String weak : new String[] {"onlyletters", "12345678", "Ab1"}) {
             mvc.perform(post("/api/authentication/sign-up").contentType("application/json")
-                            .content(signUpBody("weak@example.test", weak, "2077700%04d".formatted(++seq))))
+                            .content(signUpBody("weak@example.test", weak, RucFixtures.sequenced("2077700", ++seq))))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
         }
@@ -117,5 +118,39 @@ class AuthRateLimitAndPasswordPolicyTest {
         mvc.perform(post("/api/authentication/sign-in").contentType("application/json")
                         .content("{\"username\":\"revoked@example.test\",\"password\":\"NewPass123!\"}"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void spoofingXForwardedForDoesNotDodgeTheLimit() throws Exception {
+        String body = "{\"username\":\"spoof@example.test\",\"password\":\"WrongPass1!\"}";
+        for (int i = 0; i < 3; i++) {
+            mvc.perform(post("/api/authentication/sign-in").contentType("application/json").content(body)
+                            .header("X-Forwarded-For", "10.0.0." + i))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(post("/api/authentication/sign-in").contentType("application/json").content(body)
+                        .header("X-Forwarded-For", "10.0.0.99"))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void rememberMeSelectsTheTokenLifetime() throws Exception {
+        signUp("remember@example.test", "OldPass123!");
+        long persistent = lifetimeSeconds("{\"username\":\"remember@example.test\",\"password\":\"OldPass123!\"}");
+        long persistentTrue = lifetimeSeconds(
+                "{\"username\":\"remember@example.test\",\"password\":\"OldPass123!\",\"rememberMe\":true}");
+        long session = lifetimeSeconds(
+                "{\"username\":\"remember@example.test\",\"password\":\"OldPass123!\",\"rememberMe\":false}");
+        assertTrue(persistent >= 7 * 24 * 3600 - 5, "default keeps the 7-day token");
+        assertTrue(persistentTrue >= 7 * 24 * 3600 - 5);
+        assertTrue(session <= 12 * 3600 + 5, "rememberMe=false issues a short-lived token");
+    }
+
+    private long lifetimeSeconds(String body) throws Exception {
+        var response = mvc.perform(post("/api/authentication/sign-in").contentType("application/json").content(body))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String token = json.readTree(response).get("token").asString();
+        var payload = json.readTree(java.util.Base64.getUrlDecoder().decode(token.split("[.]")[1]));
+        return payload.get("exp").asLong() - payload.get("iat").asLong();
     }
 }

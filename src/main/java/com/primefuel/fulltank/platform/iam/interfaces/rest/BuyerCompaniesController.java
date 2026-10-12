@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.iam.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.iam.application.commandservices.BuyerCompanyCommandService;
 import com.primefuel.fulltank.platform.iam.application.queryservices.BuyerCompanyQueryService;
 import com.primefuel.fulltank.platform.iam.domain.model.queries.GetAllBuyerCompaniesQuery;
@@ -45,8 +46,9 @@ public class BuyerCompaniesController {
      * <p>Es una operación pública de autoservicio: no requiere autenticación ni crea una cuenta de usuario o membresía.
      * Los fallos de persistencia se responden como error del servidor.</p>
      */
-    @Operation(summary = "Registrar empresa compradora",
-            description = "Persiste un nuevo perfil de empresa compradora. La ruta está disponible sin autenticación y no crea usuarios ni membresías.")
+    @Deprecated
+    @Operation(summary = "Registrar empresa compradora", deprecated = true,
+            description = "Deprecado: se mantiene solo por compatibilidad con clientes existentes. Persiste un nuevo perfil de empresa compradora. La ruta está disponible sin autenticación y no crea usuarios ni membresías.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Perfil de empresa compradora creado."),
             @ApiResponse(responseCode = "500", description = "Se produjo un error inesperado al guardar el perfil.")
@@ -98,7 +100,7 @@ public class BuyerCompaniesController {
         var result = buyerCompanyQueryService.handle(new GetBuyerCompanyByIdQuery(companyId));
         return result.map(company -> new ResponseEntity<>(
                         BuyerCompanyResourceFromEntityAssembler.toResourceFromEntity(company), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -118,7 +120,7 @@ public class BuyerCompaniesController {
     public ResponseEntity<BuyerCompanyResource> updateBuyerCompany(@PathVariable Long companyId,
                                                                    @RequestBody CreateBuyerCompanyResource resource) {
         var result = buyerCompanyRepository.findById(companyId);
-        if (result.isEmpty()) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (result.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var company = result.get();
         company.setName(resource.name());
         company.setRuc(resource.ruc());

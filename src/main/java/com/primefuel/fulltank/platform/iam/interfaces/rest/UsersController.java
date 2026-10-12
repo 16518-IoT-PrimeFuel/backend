@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.iam.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.iam.application.queryservices.UserQueryService;
 import com.primefuel.fulltank.platform.iam.domain.model.queries.GetAllUsersQuery;
 import com.primefuel.fulltank.platform.iam.domain.model.queries.GetUserByIdQuery;
@@ -68,6 +69,6 @@ public class UsersController {
         var result = userQueryService.handle(new GetUserByIdQuery(userId));
         return result.map(user -> new ResponseEntity<>(
                         UserResourceFromEntityAssembler.toResourceFromEntity(user), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 }

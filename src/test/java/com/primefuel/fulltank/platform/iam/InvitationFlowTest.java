@@ -47,7 +47,7 @@ class InvitationFlowTest {
     @Test
     void invitationLifecycleEnforcesExpiryDuplicateAndRevocation() {
         var organization = organizationCommandService.handle(
-                new CreateOrganizationCommand("Invite Co", "20111111111", OrganizationType.DISTRIBUTOR));
+                new CreateOrganizationCommand("Invite Co", "20960000022", OrganizationType.DISTRIBUTOR));
         assertThat(organization.isSuccess()).isTrue();
         var organizationId = organization.getOrElse(null).getId();
 

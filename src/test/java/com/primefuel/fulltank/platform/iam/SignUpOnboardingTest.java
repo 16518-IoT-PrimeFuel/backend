@@ -58,7 +58,7 @@ class SignUpOnboardingTest {
                 "newbuyer@example.com",
                 "password123",
                 List.of(new Role(Roles.ROLE_BUYER)),
-                new CreateBuyerCompanyCommand("New Buyer", "20999999999", "retail",
+                new CreateBuyerCompanyCommand("New Buyer", "20960000243", "retail",
                         "Av. Siempre Viva 123", "newbuyer@example.com", "999888777"),
                 null);
 
@@ -66,7 +66,7 @@ class SignUpOnboardingTest {
         assertThat(result.isSuccess()).isTrue();
         var user = result.getOrElse(null);
 
-        var organization = organizationRepository.findByRuc("20999999999");
+        var organization = organizationRepository.findByRuc("20960000243");
         assertThat(organization).isPresent();
         assertThat(organization.get().getType()).isEqualTo(OrganizationType.CUSTOMER);
 

@@ -16,8 +16,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>Security note: state lives in this JVM's memory, so limits are per instance. With several
  * instances (e.g. more than one Render instance) the effective limit is multiplied and the state is
  * lost on restart; move the counters to a shared store (Redis/DB) in that case. The client IP is
- * the first X-Forwarded-For entry when present (needed behind Render's proxy), which a client can
- * spoof; trust only the proxy-appended entry once the deployment topology is fixed.</p>
+ * {@code getRemoteAddr()} only: behind a proxy, configure {@code server.forward-headers-strategy=native}
+ * so the container resolves it from X-Forwarded-For sent by trusted proxies. The header is never read
+ * here, so a client cannot dodge the limit by spoofing it; the per-username bucket bounds brute
+ * force on one account regardless of source IP.</p>
  */
 @Component
 public class AuthRateLimiter {
@@ -50,6 +52,7 @@ public class AuthRateLimiter {
         String ip = clientIp(request);
         hit("sign-in:" + ip + "|" + normalize(username), signIn);
         hit("sign-in-ip:" + ip, signIn * 5); // many usernames from one address
+        hit("sign-in-user:" + normalize(username), signIn * 3); // one account from many addresses
     }
 
     public void signUp(HttpServletRequest request) {
@@ -90,8 +93,6 @@ public class AuthRateLimiter {
     }
 
     private static String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) return forwarded.split(",")[0].trim();
         return request.getRemoteAddr();
     }
 }
