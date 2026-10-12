@@ -1074,6 +1074,7 @@
           "newPassword" : {
             "maxLength" : 120,
             "minLength" : 8,
+            "pattern" : "^(?=.*[A-Za-z])(?=.*\\d).*$",
             "type" : "string"
           },
           "token" : {
@@ -1917,6 +1918,7 @@
           "password" : {
             "maxLength" : 120,
             "minLength" : 8,
+            "pattern" : "^(?=.*[A-Za-z])(?=.*\\d).*$",
             "type" : "string"
           },
           "providerCompany" : {
@@ -3343,7 +3345,7 @@
     "/api/deliveries/recommendation" : {
       "get" : {
         "description" : "Solo orden propia respaldada por solicitud aceptada sin asignar. Reutiliza elegibilidad y descarta reservas activas superpuestas. Cisterna de menor capacidad suficiente en litros; empates por id; conductor de menor id. windowStart/windowEnd ISO UTC opcionales juntos; sin ellos se usa todo el día programado UTC. No reserva ni asigna. El modelo no permite optimizar ruta ni compatibilidad específica de cisterna/producto.",
-        "operationId" : "get_8",
+        "operationId" : "get_9",
         "parameters" : [ {
           "in" : "query",
           "name" : "orderId",
@@ -3429,7 +3431,7 @@
     "/api/deliveries/{deliveryId}" : {
       "get" : {
         "description" : "Devuelve una entrega propia con su estado heredado y su estado físico vigente.",
-        "operationId" : "get_6",
+        "operationId" : "get_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "deliveryId",
@@ -3891,7 +3893,7 @@
     "/api/deliveries/{deliveryId}/timeline" : {
       "get" : {
         "description" : "Combina cambios de estado, decisiones de seguridad, eventos de válvula y registros de carga retenidos; las muestras GPS eliminadas no se incluyen.",
-        "operationId" : "get_7",
+        "operationId" : "get_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "deliveryId",
@@ -7027,7 +7029,7 @@
     "/api/provider/tanks/{tankId}/readings" : {
       "get" : {
         "description" : "Solo lecturas ACCEPTED atribuidas al tanque y comprador al capturarse. from/to son timestamps ISO UTC inclusivos, filtran capturedAt. Orden ascendente. Conserva historia de dispositivos reemplazados y excluye cuarentena. capturedAt/receivedAt permiten mostrar antigüedad.",
-        "operationId" : "get_5",
+        "operationId" : "get_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "tankId",
@@ -7295,7 +7297,7 @@
     "/api/replenishment-requests/{requestId}" : {
       "get" : {
         "description" : "Devuelve la solicitud indicada si pertenece a la organización activa del usuario o si el usuario es el distribuidor destinatario.",
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "requestId",
@@ -8032,6 +8034,82 @@
         },
         "summary" : "Consultar tanque por identificador",
         "tags" : [ "Tanques" ]
+      }
+    },
+    "/api/tanks/{tankId}/readings" : {
+      "get" : {
+        "description" : "Lecturas ACCEPTED del tanque cuando pertenece a la organización activa del usuario. from/to son timestamps ISO UTC inclusivos sobre capturedAt. Orden ascendente.",
+        "operationId" : "get_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Lecturas aceptadas o []"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Id, timestamp o período inválido"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin organización activa"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanque ajeno o inexistente"
+          }
+        },
+        "summary" : "Consultar lecturas IoT de un tanque propio",
+        "tags" : [ "Telemetría" ]
       }
     },
     "/api/tanks/{tankId}/refill-episodes" : {
