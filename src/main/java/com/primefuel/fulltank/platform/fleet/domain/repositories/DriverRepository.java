@@ -8,5 +8,6 @@ import java.util.Optional;
 public interface DriverRepository {
     Optional<Driver> findById(Long id);
     List<Driver> findByProviderId(Long providerId);
+    Optional<Driver> findByLicenseNumber(String licenseNumber);
     Driver save(Driver driver);
 }

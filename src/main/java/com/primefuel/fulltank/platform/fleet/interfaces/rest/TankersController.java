@@ -1,5 +1,7 @@
 package com.primefuel.fulltank.platform.fleet.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
+import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Unit;
 import com.primefuel.fulltank.platform.fleet.api.EligibilityQuery;
 import com.primefuel.fulltank.platform.fleet.api.FleetCatalog;
 import com.primefuel.fulltank.platform.fleet.api.FleetRegistry;
@@ -61,7 +63,7 @@ public class TankersController {
     public ResponseEntity<?> register(@Valid @RequestBody TankerInputResource resource) {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = fleetRegistry.registerTanker(new RegisterTankerCommand(
                 providerId.get(), resource.licensePlate(), resource.brand(), resource.model(),
@@ -85,7 +87,7 @@ public class TankersController {
     public ResponseEntity<List<TankerResource>> list() {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(fleetCatalog.listTankers(providerId.get()).stream()
                 .map(TankersController::toResource).toList(), HttpStatus.OK);
@@ -107,12 +109,12 @@ public class TankersController {
     public ResponseEntity<TankerResource> get(@PathVariable Long tankerId) {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return fleetCatalog.findTanker(tankerId)
                 .filter(tanker -> providerId.get().equals(tanker.providerId()))
                 .map(tanker -> new ResponseEntity<>(toResource(tanker), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -131,7 +133,7 @@ public class TankersController {
     public ResponseEntity<?> update(@PathVariable Long tankerId,
                                     @Valid @RequestBody TankerInputResource resource) {
         if (!owns(tankerId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var result = fleetRegistry.updateTanker(new UpdateTankerCommand(
                 tankerId, resource.licensePlate(), resource.brand(), resource.model(),
@@ -154,7 +156,7 @@ public class TankersController {
     @PostMapping("/{tankerId}/deactivate")
     public ResponseEntity<?> deactivate(@PathVariable Long tankerId) {
         if (!owns(tankerId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 fleetRegistry.deactivateTanker(tankerId), TankersController::toResource, HttpStatus.OK);
@@ -174,7 +176,7 @@ public class TankersController {
     @PostMapping("/{tankerId}/activate")
     public ResponseEntity<?> activate(@PathVariable Long tankerId) {
         if (!owns(tankerId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 fleetRegistry.activateTanker(tankerId), TankersController::toResource, HttpStatus.OK);
@@ -195,7 +197,7 @@ public class TankersController {
     public ResponseEntity<List<TankerResource>> listEligible() {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(eligibilityQuery.eligibleTankers(providerId.get()).stream()
                 .map(TankersController::toResource).toList(), HttpStatus.OK);
@@ -217,12 +219,12 @@ public class TankersController {
     public ResponseEntity<EligibilityResource> eligibility(@PathVariable Long tankerId) {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return eligibilityQuery.assessTanker(providerId.get(), tankerId)
                 .map(assessment -> new ResponseEntity<>(
                         new EligibilityResource(assessment.outcome().name(), assessment.reason()), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     private boolean owns(Long tankerId) {
@@ -235,6 +237,6 @@ public class TankersController {
 
     private static TankerResource toResource(FleetCatalog.TankerSnapshot tanker) {
         return new TankerResource(tanker.id(), tanker.providerId(), tanker.licensePlate(), tanker.brand(),
-                tanker.model(), tanker.capacity(), tanker.unit(), tanker.status(), tanker.active());
+                tanker.model(), tanker.capacity(), Unit.fromCode(tanker.unit()).name(), tanker.status(), tanker.active());
     }
 }

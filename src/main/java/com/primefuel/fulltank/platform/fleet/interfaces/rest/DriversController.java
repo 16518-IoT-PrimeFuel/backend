@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.fleet.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.fleet.api.EligibilityQuery;
 import com.primefuel.fulltank.platform.fleet.api.FleetCatalog;
 import com.primefuel.fulltank.platform.fleet.api.FleetRegistry;
@@ -9,6 +10,7 @@ import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.DriverInp
 import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.DriverResource;
 import com.primefuel.fulltank.platform.fleet.interfaces.rest.resources.EligibilityResource;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
+import com.primefuel.fulltank.platform.iam.api.UserProviderDirectory;
 import com.primefuel.fulltank.platform.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,15 +37,18 @@ public class DriversController {
     private final FleetRegistry fleetRegistry;
     private final EligibilityQuery eligibilityQuery;
     private final TenantAccess tenantAccess;
+    private final UserProviderDirectory userProviderDirectory;
 
     public DriversController(FleetCatalog fleetCatalog,
                                FleetRegistry fleetRegistry,
                                EligibilityQuery eligibilityQuery,
-                               TenantAccess tenantAccess) {
+                               TenantAccess tenantAccess,
+                               UserProviderDirectory userProviderDirectory) {
         this.fleetCatalog = fleetCatalog;
         this.fleetRegistry = fleetRegistry;
         this.eligibilityQuery = eligibilityQuery;
         this.tenantAccess = tenantAccess;
+        this.userProviderDirectory = userProviderDirectory;
     }
 
     /**
@@ -62,7 +67,10 @@ public class DriversController {
     public ResponseEntity<?> register(@Valid @RequestBody DriverInputResource resource) {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        if (resource.userId() != null && !userProviderDirectory.belongsToProvider(resource.userId(), providerId.get())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var result = fleetRegistry.registerDriver(new RegisterDriverCommand(
                 providerId.get(), resource.userId(), resource.firstName(), resource.lastName(),
@@ -86,7 +94,7 @@ public class DriversController {
     public ResponseEntity<List<DriverResource>> list() {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(fleetCatalog.listDrivers(providerId.get()).stream()
                 .map(DriversController::toResource).toList(), HttpStatus.OK);
@@ -108,12 +116,12 @@ public class DriversController {
     public ResponseEntity<DriverResource> get(@PathVariable Long driverId) {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return fleetCatalog.findDriver(driverId)
                 .filter(driver -> providerId.get().equals(driver.providerId()))
                 .map(driver -> new ResponseEntity<>(toResource(driver), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -132,7 +140,7 @@ public class DriversController {
     public ResponseEntity<?> update(@PathVariable Long driverId,
                                     @Valid @RequestBody DriverInputResource resource) {
         if (!owns(driverId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var result = fleetRegistry.updateDriver(new UpdateDriverCommand(
                 driverId, resource.firstName(), resource.lastName(), resource.licenseNumber(),
@@ -155,7 +163,7 @@ public class DriversController {
     @PostMapping("/{driverId}/deactivate")
     public ResponseEntity<?> deactivate(@PathVariable Long driverId) {
         if (!owns(driverId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 fleetRegistry.deactivateDriver(driverId), DriversController::toResource, HttpStatus.OK);
@@ -175,7 +183,7 @@ public class DriversController {
     @PostMapping("/{driverId}/activate")
     public ResponseEntity<?> activate(@PathVariable Long driverId) {
         if (!owns(driverId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 fleetRegistry.activateDriver(driverId), DriversController::toResource, HttpStatus.OK);
@@ -196,7 +204,7 @@ public class DriversController {
     public ResponseEntity<List<DriverResource>> listEligible() {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(eligibilityQuery.eligibleDrivers(providerId.get()).stream()
                 .map(DriversController::toResource).toList(), HttpStatus.OK);
@@ -218,12 +226,12 @@ public class DriversController {
     public ResponseEntity<EligibilityResource> eligibility(@PathVariable Long driverId) {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return eligibilityQuery.assessDriver(providerId.get(), driverId)
                 .map(assessment -> new ResponseEntity<>(
                         new EligibilityResource(assessment.outcome().name(), assessment.reason()), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     private boolean owns(Long driverId) {

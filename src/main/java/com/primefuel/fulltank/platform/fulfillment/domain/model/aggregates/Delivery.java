@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * A delivery. Alongside the legacy {@link DeliveryStatus} (kept for legacy readers such as analytics) it now tracks the
@@ -31,14 +31,14 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
     private Long vehicleId;
     private DeliveryStatus status;
     private String scheduledDate;
-    private LocalDateTime dispatchedAt;
-    private LocalDateTime deliveredAt;
+    private Instant dispatchedAt;
+    private Instant deliveredAt;
     private String notes;
 
     private DeliveryPhysicalState physicalState;
-    private LocalDateTime startedAt;
-    private LocalDateTime arrivedAt;
-    private LocalDateTime deliveringAt;
+    private Instant startedAt;
+    private Instant arrivedAt;
+    private Instant deliveringAt;
     private Double requestedVolume;
     private Double deliveredVolume;
     private int version;
@@ -62,7 +62,7 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
 
     public void dispatch() {
         this.status = DeliveryStatus.DISPATCHED;
-        this.dispatchedAt = LocalDateTime.now();
+        this.dispatchedAt = Instant.now();
     }
 
     /** The physical state, derived from the legacy status when the row has not entered the machine yet. */
@@ -82,22 +82,24 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
             throw new IllegalStateException("Illegal delivery transition: " + physicalState + " -> ASSIGNED");
         }
         materialize(DeliveryPhysicalState.ASSIGNED);
+        // ASSIGNED maps to the legacy DISPATCHED status, so the dispatch instant is set together with it.
+        this.dispatchedAt = Instant.now();
         return true;
     }
 
     public void start() {
         transitionTo(DeliveryPhysicalState.STARTED);
-        this.startedAt = LocalDateTime.now();
+        this.startedAt = Instant.now();
     }
 
     public void arrive() {
         transitionTo(DeliveryPhysicalState.ARRIVED);
-        this.arrivedAt = LocalDateTime.now();
+        this.arrivedAt = Instant.now();
     }
 
     public void beginDelivering() {
         transitionTo(DeliveryPhysicalState.DELIVERING);
-        this.deliveringAt = LocalDateTime.now();
+        this.deliveringAt = Instant.now();
     }
 
     /**
@@ -111,7 +113,7 @@ public class Delivery extends AbstractDomainAggregateRoot<Delivery> {
         transitionTo(DeliveryPhysicalState.COMPLETED);
         this.requestedVolume = requestedVolume;
         this.deliveredVolume = deliveredVolume;
-        this.deliveredAt = LocalDateTime.now();
+        this.deliveredAt = Instant.now();
     }
 
     /**

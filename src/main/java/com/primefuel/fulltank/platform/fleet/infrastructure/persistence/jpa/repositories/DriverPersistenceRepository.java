@@ -14,6 +14,8 @@ public interface DriverPersistenceRepository extends JpaRepository<DriverPersist
 
     List<DriverPersistenceEntity> findByProviderId(Long providerId);
 
+    Optional<DriverPersistenceEntity> findByLicenseNumber(String licenseNumber);
+
     /**
      * Takes a {@code PESSIMISTIC_WRITE} lock on the driver row (U06: lock the reserved resource, not a global
      * lock). Returns empty when the row does not exist, so the caller can answer 404.

@@ -2,8 +2,6 @@ package com.primefuel.fulltank.platform.applicationflows;
 
 import com.primefuel.fulltank.platform.equipment.domain.repositories.EquipmentRepository;
 import com.primefuel.fulltank.platform.fleet.api.FleetReservations;
-import com.primefuel.fulltank.platform.fleet.domain.repositories.DriverRepository;
-import com.primefuel.fulltank.platform.fleet.domain.repositories.TankerRepository;
 import com.primefuel.fulltank.platform.fulfillment.api.DeliveryIntegration;
 import com.primefuel.fulltank.platform.iam.api.LegacyCompanyDirectory;
 import com.primefuel.fulltank.platform.inventory.domain.repositories.FuelProductRepository;
@@ -13,8 +11,6 @@ import com.primefuel.fulltank.platform.replenishment.api.ReplenishmentLookup;
 import com.primefuel.fulltank.platform.supply.api.SupplyReservations;
 import org.springframework.stereotype.Component;
 
-import java.util.Set;
-
 /**
  * Adapter for the fulfillment-owned {@link DeliveryIntegration} port, implemented in the composition root so
  * {@code fulfillment} applies the delivery side effects without importing any foreign repository. Runs in
@@ -23,13 +19,8 @@ import java.util.Set;
 @Component("deliveryIntegration")
 public class DeliveryIntegrationAdapter implements DeliveryIntegration {
 
-    /** The statuses the retired direct-create flow wrote; anything else (e.g. SUSPENDED) was set by an admin. */
-    private static final Set<String> BUSY = Set.of("ASSIGNED", "IN_ROUTE");
-
     private final FleetReservations fleetReservations;
     private final SupplyReservations supplyReservations;
-    private final DriverRepository driverRepository;
-    private final TankerRepository tankerRepository;
     private final FuelProductRepository productRepository;
     private final FuelOrderRepository orderRepository;
     private final EquipmentRepository equipmentRepository;
@@ -38,8 +29,6 @@ public class DeliveryIntegrationAdapter implements DeliveryIntegration {
 
     public DeliveryIntegrationAdapter(FleetReservations fleetReservations,
                                      SupplyReservations supplyReservations,
-                                     DriverRepository driverRepository,
-                                     TankerRepository tankerRepository,
                                      FuelProductRepository productRepository,
                                      FuelOrderRepository orderRepository,
                                      EquipmentRepository equipmentRepository,
@@ -47,8 +36,6 @@ public class DeliveryIntegrationAdapter implements DeliveryIntegration {
                                      LegacyCompanyDirectory companyDirectory) {
         this.fleetReservations = fleetReservations;
         this.supplyReservations = supplyReservations;
-        this.driverRepository = driverRepository;
-        this.tankerRepository = tankerRepository;
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.equipmentRepository = equipmentRepository;
@@ -58,7 +45,6 @@ public class DeliveryIntegrationAdapter implements DeliveryIntegration {
 
     @Override
     public void applyCompletionEffects(CompletionEffectsCommand command) {
-        freeLegacyFleetStatus(command.driverId(), command.vehicleId());
         var reference = command.assignmentReference();
         if (reference != null) {
             fleetReservations.release(reference);
@@ -100,7 +86,6 @@ public class DeliveryIntegrationAdapter implements DeliveryIntegration {
 
     @Override
     public void reopenOrder(Long orderId, Long driverId, Long vehicleId) {
-        freeLegacyFleetStatus(driverId, vehicleId);
         orderRepository.findById(orderId).filter(order -> order.getStatus() == OrderStatus.DISPATCHED)
                 .ifPresent(order -> {
                     order.reopen();
@@ -117,16 +102,5 @@ public class DeliveryIntegrationAdapter implements DeliveryIntegration {
     @Override
     public java.util.Optional<Long> providerOrganizationId(Long providerId) {
         return companyDirectory.organizationIdForProvider(providerId);
-    }
-
-    private void freeLegacyFleetStatus(Long driverId, Long vehicleId) {
-        driverRepository.findById(driverId).filter(driver -> BUSY.contains(driver.getStatus())).ifPresent(driver -> {
-            driver.setStatus("AVAILABLE");
-            driverRepository.save(driver);
-        });
-        tankerRepository.findById(vehicleId).filter(tanker -> BUSY.contains(tanker.getStatus())).ifPresent(tanker -> {
-            tanker.setStatus("AVAILABLE");
-            tankerRepository.save(tanker);
-        });
     }
 }

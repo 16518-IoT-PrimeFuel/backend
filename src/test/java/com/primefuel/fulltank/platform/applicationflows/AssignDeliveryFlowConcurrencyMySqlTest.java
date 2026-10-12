@@ -134,7 +134,7 @@ class AssignDeliveryFlowConcurrencyMySqlTest {
 
     private long acceptedRequest(long providerId, long productId, long orderId) {
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
-                950L + SEQUENCE.incrementAndGet(), null, null, providerId, productId, 100.0, "LITRE",
+                950L + SEQUENCE.incrementAndGet(), null, 1L, providerId, productId, 100.0, "LITRE",
                 ReplenishmentSource.MANUAL, "assign-mysql-" + RUN + "-" + SEQUENCE.incrementAndGet(),
                 "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();

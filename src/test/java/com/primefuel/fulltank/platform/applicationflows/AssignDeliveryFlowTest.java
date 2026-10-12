@@ -121,7 +121,7 @@ class AssignDeliveryFlowTest {
     /** Creates an accepted replenishment request (attached to {@code orderId}) for the given provider/product. */
     private long acceptedRequest(long providerId, long productId, double quantity, String unit, long orderId) {
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
-                900L + SEQUENCE.incrementAndGet(), null, null, providerId, productId, quantity, unit,
+                900L + SEQUENCE.incrementAndGet(), null, 700000L + SEQUENCE.get(), providerId, productId, quantity, unit,
                 ReplenishmentSource.MANUAL, "assign-flow-" + SEQUENCE.incrementAndGet(), "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
         var requestId = created.getOrElse(null).getId();
@@ -222,7 +222,7 @@ class AssignDeliveryFlowTest {
         // A pending request is never correlated to an order (only acceptance attaches one), so the order has
         // no accepted request behind it and cannot enter the assignment flow.
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
-                900L + SEQUENCE.incrementAndGet(), null, null, providerId, productId, 100.0, "LITRE",
+                900L + SEQUENCE.incrementAndGet(), null, 700000L + SEQUENCE.get(), providerId, productId, 100.0, "LITRE",
                 ReplenishmentSource.MANUAL, "assign-flow-" + SEQUENCE.incrementAndGet(), "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
         var requestId = created.getOrElse(null).getId();

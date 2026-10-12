@@ -42,6 +42,9 @@ public class FleetRegistryImpl implements FleetRegistry {
     @Override
     @Transactional
     public Result<FleetCatalog.DriverSnapshot, ApplicationError> registerDriver(RegisterDriverCommand command) {
+        if (driverRepository.findByLicenseNumber(command.licenseNumber()).isPresent()) {
+            return Result.failure(ApplicationError.conflict("Driver", "License number already registered"));
+        }
         try {
             var driver = driverRepository.save(new Driver(command));
             return Result.success(FleetCatalogImpl.toSnapshot(driver));
@@ -56,6 +59,10 @@ public class FleetRegistryImpl implements FleetRegistry {
         var existing = driverRepository.findById(command.driverId());
         if (existing.isEmpty()) {
             return Result.failure(ApplicationError.notFound("Driver", String.valueOf(command.driverId())));
+        }
+        var sameLicense = driverRepository.findByLicenseNumber(command.licenseNumber());
+        if (sameLicense.isPresent() && !sameLicense.get().getId().equals(command.driverId())) {
+            return Result.failure(ApplicationError.conflict("Driver", "License number already registered"));
         }
         var driver = existing.get();
         try {

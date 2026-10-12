@@ -30,6 +30,11 @@ public class DriverRepositoryImpl implements DriverRepository {
     }
 
     @Override
+    public Optional<Driver> findByLicenseNumber(String licenseNumber) {
+        return persistenceRepository.findByLicenseNumber(licenseNumber).map(DriverPersistenceAssembler::toDomain);
+    }
+
+    @Override
     public Driver save(Driver driver) {
         return DriverPersistenceAssembler.toDomain(
                 persistenceRepository.save(DriverPersistenceAssembler.toPersistence(driver)));

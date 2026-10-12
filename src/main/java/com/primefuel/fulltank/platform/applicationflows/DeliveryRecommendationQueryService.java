@@ -12,12 +12,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.Comparator;
 
 @Service
 @Transactional(readOnly = true)
 public class DeliveryRecommendationQueryService {
+    // Delivery days are business days in Lima; a date-only order window starts at local midnight there.
+    static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Lima");
+
     private final OrderLookup orders;
     private final ReplenishmentLookup requests;
     private final EligibilityQuery eligibility;
@@ -68,11 +71,11 @@ public class DeliveryRecommendationQueryService {
         var start =
                 q.windowStart() != null
                         ? q.windowStart()
-                        : date.atStartOfDay().toInstant(ZoneOffset.UTC);
+                        : date.atStartOfDay(BUSINESS_ZONE).toInstant();
         var end =
                 q.windowEnd() != null
                         ? q.windowEnd()
-                        : date.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+                        : date.plusDays(1).atStartOfDay(BUSINESS_ZONE).toInstant();
         if (!start.isBefore(end))
             return Result.failure(
                     ApplicationError.validationError(

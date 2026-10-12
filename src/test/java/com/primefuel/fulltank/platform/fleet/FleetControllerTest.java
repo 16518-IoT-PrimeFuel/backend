@@ -1,4 +1,5 @@
 package com.primefuel.fulltank.platform.fleet;
+import com.primefuel.fulltank.platform.RucFixtures;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import tools.jackson.databind.JsonNode;
@@ -96,6 +97,29 @@ class FleetControllerTest {
     }
 
     @Test
+    void aDuplicateLicenseNumberIsAConflictAndAForeignUserIdIsNotFound() throws Exception {
+        long providerId = signUpProvider();
+        var provider = authFor(providerId);
+        createDriver(provider, "REST-DUP-1", "AVAILABLE");
+
+        mockMvc.perform(post("/api/drivers").with(provider)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"firstName":"Otro","lastName":"Conductor","licenseNumber":"REST-DUP-1",
+                                 "phoneNumber":"999000112","email":"otro-driver@example.test","status":"AVAILABLE"}
+                                """))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(post("/api/drivers").with(provider)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"userId":999999,"firstName":"Ajeno","lastName":"Usuario","licenseNumber":"REST-DUP-2",
+                                 "phoneNumber":"999000113","email":"ajeno-driver@example.test","status":"AVAILABLE"}
+                                """))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void aTankerCanBeDisabledAndReenabledOverHttp() throws Exception {
         long providerId = signUpProvider();
         var provider = authFor(providerId);
@@ -147,9 +171,9 @@ class FleetControllerTest {
                         .content("""
                                 {"username":"fleet-rest-%d@example.test","password":"StrongPass1!",
                                  "roles":["ROLE_PROVIDER"],
-                                 "providerCompany":{"name":"Fleet REST SAC","ruc":"209%08d",
+                                 "providerCompany":{"name":"Fleet REST SAC","ruc":"%s",
                                  "address":"Lima","phone":"999111224","fuelTypesOffered":["DIESEL"]}}
-                                """.formatted(sequence, sequence)))
+                                """.formatted(sequence, RucFixtures.sequenced("209", sequence))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(response).get("providerId").asLong();

@@ -245,6 +245,14 @@ public class DeliveryLifecycleServiceImpl {
         var provider = deliveryIntegration.providerOrganizationId(saved.getProviderId())
                 .orElse(saved.getProviderId());
         publish(eventType, saved, provider, payload);
+        if ("delivery.assigned.v1".equals(eventType) || "delivery.started.v1".equals(eventType)) {
+            // US-30: the buyer is told its order is on the way. This is a separate, buyer-scoped event so the
+            // distributor's own envelope above keeps its contract. The notification fanout maps it to
+            // ORDER_DISPATCHED. With no resolvable buyer nothing is sent, so the buyer-facing type never reaches
+            // the distributor.
+            deliveryIntegration.buyerOrganizationId(saved.getOrderId())
+                    .ifPresent(buyer -> publish("order.dispatched.v1", saved, buyer, payload));
+        }
         if ("delivery.completed.v1".equals(eventType) || "delivery.failed.v1".equals(eventType)) {
             deliveryIntegration.buyerOrganizationId(saved.getOrderId())
                     .filter(buyer -> !buyer.equals(provider))

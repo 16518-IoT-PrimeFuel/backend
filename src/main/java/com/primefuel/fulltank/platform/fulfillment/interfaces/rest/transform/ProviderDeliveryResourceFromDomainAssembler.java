@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.fulfillment.interfaces.rest.transform;
 
+import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Unit;
 import com.primefuel.fulltank.platform.equipment.api.TankAssets;
 import com.primefuel.fulltank.platform.fleet.api.FleetCatalog;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
@@ -109,7 +110,7 @@ public class ProviderDeliveryResourceFromDomainAssembler {
                         : request != null
                                 ? Double.valueOf(request.quantity())
                                 : order == null ? null : order.requestedQuantity(),
-                unit,
+                unit == null ? null : Unit.fromCode(unit).name(),
                 d.getDeliveredVolume());
     }
 }

@@ -90,7 +90,7 @@ class DeliveryFailureReassignmentTest {
         long orderId = orderRepository.save(new FuelOrder(new CreateFuelOrderCommand(organizationId, providerId,
                 productId, null, 100.0, "Av. Prueba", LocalDate.parse("2099-10-15"), null), 1000.0)).getId();
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
-                organizationId, null, null, providerId, productId, 100.0, "LITRE", ReplenishmentSource.MANUAL,
+                organizationId, null, 1L, providerId, productId, 100.0, "LITRE", ReplenishmentSource.MANUAL,
                 "failure-" + SEQUENCE.incrementAndGet(), "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
         long requestId = created.getOrElse(null).getId();

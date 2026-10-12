@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.fulfillment.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.fleet.api.FleetCatalog;
 import com.primefuel.fulltank.platform.fulfillment.api.DeliveryTrackingLookup;
 import com.primefuel.fulltank.platform.fulfillment.domain.repositories.DeliveryStateTransitionRepository;
@@ -49,21 +50,21 @@ public class DeliveryTimelineController {
     @GetMapping("/{deliveryId}/timeline")
     public ResponseEntity<List<DeliveryTimelineItemResource>> get(@PathVariable Long deliveryId) {
         var assignment = deliveries.findAssignedDelivery(deliveryId);
-        if (assignment.isEmpty()) return ResponseEntity.notFound().build();
+        if (assignment.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         boolean allowed = tenants.ownsProvider(assignment.get().providerId());
         if (!allowed) {
             var userId = membership.currentUserId();
             var driver = fleet.findDriver(assignment.get().driverId());
-            if (driver.isEmpty()) return ResponseEntity.notFound().build();
-            if (!assignment.get().providerId().equals(driver.get().providerId())) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            if (driver.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            if (!assignment.get().providerId().equals(driver.get().providerId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             allowed = userId.isPresent() && userId.get().equals(driver.get().userId());
         }
-        if (!allowed) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (!allowed) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
         var items = new ArrayList<DeliveryTimelineItemResource>();
         var stateTransitions = transitions.findByDeliveryId(deliveryId);
         stateTransitions.forEach(t -> items.add(new DeliveryTimelineItemResource(t.occurredAt(), "STATE_TRANSITION",
-                (t.fromState() == null ? "LEGACY" : t.fromState().name()) + " → " + t.toState().name(), String.valueOf(t.id()))));
+                (t.fromState() == null ? "CREATED" : t.fromState().name()) + " → " + t.toState().name(), String.valueOf(t.id()))));
         if (stateTransitions.stream().noneMatch(t -> "ASSIGNED".equals(t.toState().name()))) {
             items.add(new DeliveryTimelineItemResource(stateTransitions.isEmpty()
                     ? java.time.Instant.EPOCH : stateTransitions.getFirst().occurredAt(), "LEGACY_GAP",

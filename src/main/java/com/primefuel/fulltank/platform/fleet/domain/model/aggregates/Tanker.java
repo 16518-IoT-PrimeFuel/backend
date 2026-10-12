@@ -64,7 +64,7 @@ public class Tanker extends AbstractDomainAggregateRoot<Tanker> {
             throw new IllegalArgumentException("Tanker capacity must be positive");
         }
         this.capacity = capacity;
-        this.unit = unit == null || unit.isBlank() ? "LITERS" : unit;
+        this.unit = unit == null || unit.isBlank() ? "LITRE" : unit;
         this.status = TankerStatus.fromCode(status).name();
     }
 

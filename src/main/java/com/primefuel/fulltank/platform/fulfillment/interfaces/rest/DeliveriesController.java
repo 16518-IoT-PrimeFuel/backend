@@ -1,10 +1,10 @@
 package com.primefuel.fulltank.platform.fulfillment.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.fulfillment.application.internal.commandservices.DeliveryLifecycleServiceImpl;
 import com.primefuel.fulltank.platform.fulfillment.application.queryservices.DeliveryQueryService;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.aggregates.Delivery;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.ArriveDeliveryCommand;
-import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.AssignDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CancelDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.CompletePhysicalDeliveryCommand;
 import com.primefuel.fulltank.platform.fulfillment.domain.model.commands.FailDeliveryCommand;
@@ -54,23 +54,6 @@ public class DeliveriesController {
         this.deliveryQueryService = deliveryQueryService;
         this.transitionRepository = transitionRepository;
         this.tenantAccess = tenantAccess;
-    }
-
-    /**
-     * Asigna una entrega a su conductor y cisterna.
-     *
-     * <p>Solo opera sobre entregas del distribuidor autenticado; las ajenas responden como no encontradas. Repetir la asignación no duplica el historial ni los eventos.</p>
-     */
-    @Operation(summary = "Asignar entrega",
-            description = "Avanza a asignada una entrega propia del distribuidor autenticado. Repetir la operación en ese estado no genera efectos duplicados.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Entrega asignada o ya se encontraba asignada."),
-            @ApiResponse(responseCode = "404", description = "La entrega no existe o pertenece a otro distribuidor."),
-            @ApiResponse(responseCode = "409", description = "El estado físico actual no permite asignar la entrega.")
-    })
-    @PostMapping("/{deliveryId}/assign")
-    public ResponseEntity<?> assign(@PathVariable Long deliveryId) {
-        return advance(deliveryId, () -> deliveryLifecycleService.handle(new AssignDeliveryCommand(deliveryId)));
     }
 
     /**
@@ -180,11 +163,11 @@ public class DeliveriesController {
     @GetMapping("/{deliveryId}")
     public ResponseEntity<DeliveryResource> get(@PathVariable Long deliveryId) {
         if (!owns(deliveryId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         return deliveryQueryService.handle(new GetDeliveryByIdQuery(deliveryId))
                 .map(delivery -> new ResponseEntity<>(toResource(delivery), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -201,7 +184,7 @@ public class DeliveriesController {
     @GetMapping("/{deliveryId}/transitions")
     public ResponseEntity<List<DeliveryTransitionResource>> transitions(@PathVariable Long deliveryId) {
         if (!owns(deliveryId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var resources = transitionRepository.findByDeliveryId(deliveryId).stream()
                 .map(transition -> new DeliveryTransitionResource(transition.id(), transition.fromState(),
@@ -212,7 +195,7 @@ public class DeliveriesController {
 
     private ResponseEntity<?> advance(Long deliveryId, Supplier<Result<Delivery, ApplicationError>> action) {
         if (!owns(deliveryId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 action.get(), DeliveriesController::toResource, HttpStatus.OK);

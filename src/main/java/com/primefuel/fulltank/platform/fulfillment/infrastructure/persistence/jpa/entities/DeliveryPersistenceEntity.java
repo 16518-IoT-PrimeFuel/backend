@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(
@@ -45,9 +45,9 @@ public class DeliveryPersistenceEntity extends AuditableAbstractPersistenceEntit
     @Column(nullable = false)
     private DeliveryStatus status;
 
-    private LocalDateTime dispatchedAt;
+    private Instant dispatchedAt;
 
-    private LocalDateTime deliveredAt;
+    private Instant deliveredAt;
 
     private String scheduledDate;
 
@@ -58,11 +58,11 @@ public class DeliveryPersistenceEntity extends AuditableAbstractPersistenceEntit
     @Column(name = "physical_state", length = 30)
     private DeliveryPhysicalState physicalState;
 
-    private LocalDateTime startedAt;
+    private Instant startedAt;
 
-    private LocalDateTime arrivedAt;
+    private Instant arrivedAt;
 
-    private LocalDateTime deliveringAt;
+    private Instant deliveringAt;
 
     private Double requestedVolume;
 

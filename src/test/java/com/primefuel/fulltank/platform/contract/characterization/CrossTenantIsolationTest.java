@@ -1,4 +1,5 @@
 package com.primefuel.fulltank.platform.contract.characterization;
+import com.primefuel.fulltank.platform.RucFixtures;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
@@ -64,7 +65,7 @@ class CrossTenantIsolationTest {
         var order = fuelOrderRepository.findById(orderId).orElseThrow();
         order.setStatus(status);
         fuelOrderRepository.save(order);
-    }
+    }
 
     @Autowired private CustomerCommandService customerCommandService;
     @Autowired private EquipmentCommandService equipmentCommandService;
@@ -180,7 +181,7 @@ class CrossTenantIsolationTest {
     private static final AtomicInteger RUC_SEQUENCE = new AtomicInteger();
 
     private static String nextRuc() {
-        return "239%08d".formatted(RUC_SEQUENCE.incrementAndGet());
+        return RucFixtures.sequenced("239", RUC_SEQUENCE.incrementAndGet());
     }
 
     private static final AtomicInteger USER_ID_SEQUENCE = new AtomicInteger(50_000);
@@ -242,7 +243,7 @@ class CrossTenantIsolationTest {
         }
 
         long createPayment(long orderId, double totalPrice) throws Exception {
-            awaitPayment(orderId);
+            awaitPayment(orderId);
             var response = mockMvc.perform(post("/api/payments")
                             .with(buyer)
                             .contentType("application/json")
