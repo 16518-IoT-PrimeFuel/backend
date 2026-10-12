@@ -11,6 +11,6 @@ public final class BuyerAnalyticsResourceFromValueObjectAssembler {
     public static BuyerAnalyticsResource toResourceFromValueObject(BuyerAnalytics analytics) {
         return new BuyerAnalyticsResource(analytics.companyId(), analytics.totalOrders(),
                 analytics.totalSpent(), analytics.completedPayments(), analytics.pendingPayments(),
-                analytics.monthlySpending());
+                analytics.monthlySpending(), analytics.spendingTrend());
     }
 }
