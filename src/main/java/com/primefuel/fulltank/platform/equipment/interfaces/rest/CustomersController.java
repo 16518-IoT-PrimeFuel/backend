@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.equipment.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.equipment.application.commandservices.CustomerCommandService;
 import com.primefuel.fulltank.platform.equipment.application.queryservices.CustomerQueryService;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterCustomerCommand;
@@ -66,11 +67,11 @@ public class CustomersController {
     public ResponseEntity<?> registerCustomer(@Valid @RequestBody CreateCustomerResource resource) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         // The legacy company decides who is billed for the orders: only the caller's own company may be mapped.
         if (resource.legacyCompanyId() != null && !tenantAccess.ownsCompany(resource.legacyCompanyId())) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = customerCommandService.handle(new RegisterCustomerCommand(
                 organizationId.get(), resource.name(), resource.ruc(), resource.address(),
@@ -94,7 +95,7 @@ public class CustomersController {
     public ResponseEntity<List<CustomerResource>> listCustomers() {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var customers = customerQueryService.handle(new GetCustomersByOrganizationQuery(organizationId.get()));
         return new ResponseEntity<>(
@@ -120,10 +121,11 @@ public class CustomersController {
                                           @Valid @RequestBody CreateSiteResource resource) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = customerCommandService.handle(new RegisterSiteCommand(
-                organizationId.get(), customerId, resource.name(), resource.address()));
+                organizationId.get(), customerId, resource.name(), resource.address(),
+                resource.latitude(), resource.longitude(), resource.siteType()));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result, SiteResourceFromDomainAssembler::toResourceFromDomain, HttpStatus.CREATED);
     }
@@ -144,11 +146,11 @@ public class CustomersController {
     public ResponseEntity<List<SiteResource>> listSites(@PathVariable Long customerId) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var customer = customerQueryService.handle(new GetCustomerByIdQuery(customerId));
         if (customer.isEmpty() || !customer.get().getOrganizationId().equals(organizationId.get())) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var sites = customerQueryService.handle(new GetSitesByCustomerQuery(customerId));
         return new ResponseEntity<>(

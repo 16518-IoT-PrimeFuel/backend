@@ -16,6 +16,9 @@ public final class CustomerSitePersistenceAssembler {
         domain.setCustomerAccountId(entity.getCustomerAccountId());
         domain.setName(entity.getName());
         domain.setAddress(entity.getAddress());
+        domain.setLatitude(entity.getLatitude());
+        domain.setLongitude(entity.getLongitude());
+        domain.setSiteType(entity.getSiteType());
         domain.setActive(entity.isActive());
         return domain;
     }
@@ -30,6 +33,9 @@ public final class CustomerSitePersistenceAssembler {
         entity.setCustomerAccountId(domain.getCustomerAccountId());
         entity.setName(domain.getName());
         entity.setAddress(domain.getAddress());
+        entity.setLatitude(domain.getLatitude());
+        entity.setLongitude(domain.getLongitude());
+        entity.setSiteType(domain.getSiteType());
         entity.setActive(domain.isActive());
         return entity;
     }

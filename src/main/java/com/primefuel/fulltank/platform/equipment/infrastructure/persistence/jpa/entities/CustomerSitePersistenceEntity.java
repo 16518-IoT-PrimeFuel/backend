@@ -2,6 +2,7 @@ package com.primefuel.fulltank.platform.equipment.infrastructure.persistence.jpa
 
 import com.primefuel.fulltank.platform.shared.infrastructure.persistence.jpa.entities.AuditableAbstractPersistenceEntity;
 import jakarta.persistence.*;
+import com.primefuel.fulltank.platform.equipment.domain.model.valueobjects.SiteType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,6 +24,11 @@ public class CustomerSitePersistenceEntity extends AuditableAbstractPersistenceE
     private String name;
 
     private String address;
+    private Double latitude;
+    private Double longitude;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "site_type", length = 30)
+    private SiteType siteType;
 
     @Column(nullable = false)
     private boolean active;

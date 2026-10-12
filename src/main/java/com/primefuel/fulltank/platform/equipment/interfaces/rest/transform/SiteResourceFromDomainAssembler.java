@@ -15,6 +15,6 @@ public final class SiteResourceFromDomainAssembler {
                 site.getCustomerAccountId(),
                 site.getName(),
                 site.getAddress(),
-                site.isActive());
+                site.isActive(), site.getLatitude(), site.getLongitude(), site.getSiteType());
     }
 }

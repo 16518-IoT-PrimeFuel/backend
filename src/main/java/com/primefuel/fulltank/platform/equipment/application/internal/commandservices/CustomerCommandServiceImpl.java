@@ -45,6 +45,13 @@ public class CustomerCommandServiceImpl implements CustomerCommandService {
     @Override
     @Transactional
     public Result<CustomerSite, ApplicationError> handle(RegisterSiteCommand command) {
+        var lat = command.latitude();
+        var lng = command.longitude();
+        if ((lat == null) != (lng == null)
+                || (lat != null && (!Double.isFinite(lat) || !Double.isFinite(lng)
+                || Math.abs(lat) > 90 || Math.abs(lng) > 180 || command.siteType() == null))) {
+            return Result.failure(ApplicationError.validationError("location", "Provide valid latitude, longitude and site type together"));
+        }
         var customer = customerAccountRepository.findById(command.customerAccountId());
         if (customer.isEmpty()) {
             return Result.failure(ApplicationError.notFound("CustomerAccount", command.customerAccountId().toString()));
