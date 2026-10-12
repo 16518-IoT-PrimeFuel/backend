@@ -3,5 +3,6 @@ package com.primefuel.fulltank.platform.iam.application.internal.outboundservice
 public interface TokenService {
     String generateToken(String username);
     String getUsernameFromToken(String token);
+    java.time.Instant getIssuedAtFromToken(String token);
     boolean validateToken(String token);
 }

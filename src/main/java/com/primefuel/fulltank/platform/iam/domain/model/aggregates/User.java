@@ -5,6 +5,8 @@ import com.primefuel.fulltank.platform.shared.domain.model.aggregates.AbstractDo
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +20,7 @@ public class User extends AbstractDomainAggregateRoot<User> {
     @Setter private Set<Role> roles;
     @Setter private Long companyId;
     @Setter private Long providerId;
+    @Setter private Instant tokenValidAfter;
 
     public User() {
         this.roles = new HashSet<>();
@@ -34,6 +37,11 @@ public class User extends AbstractDomainAggregateRoot<User> {
         addRoles(roles);
         this.companyId = companyId;
         this.providerId = providerId;
+    }
+
+    /** Invalidates every token issued so far (JWT iat has second precision, hence the truncation). */
+    public void revokeIssuedTokens() {
+        this.tokenValidAfter = Instant.now().truncatedTo(ChronoUnit.SECONDS);
     }
 
     public User addRole(Role role) {

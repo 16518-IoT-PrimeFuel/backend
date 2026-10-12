@@ -19,6 +19,7 @@ public final class UserPersistenceAssembler {
         domain.setPassword(entity.getPassword());
         domain.setCompanyId(entity.getCompanyId());
         domain.setProviderId(entity.getProviderId());
+        domain.setTokenValidAfter(entity.getTokenValidAfter());
         domain.setRoles(entity.getRoles().stream()
                 .map(RolePersistenceAssembler::toDomainFromPersistence)
                 .collect(Collectors.toSet()));
@@ -35,6 +36,7 @@ public final class UserPersistenceAssembler {
         entity.setPassword(user.getPassword());
         entity.setCompanyId(user.getCompanyId());
         entity.setProviderId(user.getProviderId());
+        entity.setTokenValidAfter(user.getTokenValidAfter());
         entity.setRoles(user.getRoles() == null ? new HashSet<>()
                 : user.getRoles().stream()
                         .map(RolePersistenceAssembler::toPersistenceFromDomain)

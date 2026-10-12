@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,6 +28,10 @@ public class UserPersistenceEntity extends AuditableAbstractPersistenceEntity {
 
     @Column
     private Long providerId;
+
+    /** Bearer tokens issued at or before this instant are rejected (sign-out). */
+    @Column(name = "token_valid_after")
+    private Instant tokenValidAfter;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",

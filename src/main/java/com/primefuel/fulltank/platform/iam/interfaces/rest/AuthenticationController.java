@@ -20,6 +20,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -86,8 +88,7 @@ public class AuthenticationController {
             description = "Verifica las credenciales y devuelve el perfil autenticado, sus membresías y un token JWT.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Credenciales aceptadas y token emitido."),
-            @ApiResponse(responseCode = "400", description = "El nombre de usuario o la contraseña son incorrectos."),
-            @ApiResponse(responseCode = "404", description = "No existe una cuenta con ese nombre de usuario.")
+            @ApiResponse(responseCode = "400", description = "El nombre de usuario o la contraseña son incorrectos (misma respuesta si la cuenta no existe).")
     })
     @PostMapping("/sign-in")
     public ResponseEntity<?> signIn(@RequestBody SignInResource resource) {
@@ -99,6 +100,28 @@ public class AuthenticationController {
                         signIn.user(), signIn.token(),
                         membershipQueryService.handle(new GetMembershipsByUserIdQuery(signIn.user().getId()))),
                 HttpStatus.OK);
+    }
+
+    /**
+     * Closes the caller's session by revoking every token issued to them so far.
+     *
+     * <p>The route is under the public authentication prefix, so the bearer token is checked here:
+     * without a valid one the response is 401.</p>
+     */
+    @Operation(summary = "Cerrar sesión",
+            description = "Revoca los tokens emitidos al usuario autenticado; el token usado deja de ser válido.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Sesión cerrada y tokens revocados."),
+            @ApiResponse(responseCode = "401", description = "Falta un token válido.")
+    })
+    @PostMapping("/sign-out")
+    public ResponseEntity<Void> signOut() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails principal)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        userCommandService.signOut(principal.getUsername());
+        return ResponseEntity.noContent().build();
     }
 
     /**

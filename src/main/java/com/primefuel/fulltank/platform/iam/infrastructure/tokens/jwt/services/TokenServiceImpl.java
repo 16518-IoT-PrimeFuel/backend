@@ -57,6 +57,11 @@ public class TokenServiceImpl implements BearerTokenService {
     }
 
     @Override
+    public java.time.Instant getIssuedAtFromToken(String token) {
+        return extractClaim(token, claims -> claims.getIssuedAt().toInstant());
+    }
+
+    @Override
     public boolean validateToken(String token) {
         try {
             Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);

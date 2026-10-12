@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -26,10 +27,20 @@ public class UserDetailsImpl implements UserDetails {
     private final boolean credentialsNonExpired;
     private final boolean enabled;
     private final Collection<? extends GrantedAuthority> authorities;
+    @JsonIgnore
+    private final Instant tokenValidAfter;
 
     public UserDetailsImpl(Long userId, String username, String password,
                            Long companyId, Long providerId,
                            Collection<? extends GrantedAuthority> authorities) {
+        this(userId, username, password, companyId, providerId, authorities, null);
+    }
+
+    public UserDetailsImpl(Long userId, String username, String password,
+                           Long companyId, Long providerId,
+                           Collection<? extends GrantedAuthority> authorities,
+                           Instant tokenValidAfter) {
+        this.tokenValidAfter = tokenValidAfter;
         this.userId = userId;
         this.username = username;
         this.password = password;
@@ -48,6 +59,6 @@ public class UserDetailsImpl implements UserDetails {
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
         return new UserDetailsImpl(user.getId(), user.getUsername(), user.getPassword(),
-                user.getCompanyId(), user.getProviderId(), authorities);
+                user.getCompanyId(), user.getProviderId(), authorities, user.getTokenValidAfter());
     }
 }

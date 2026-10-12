@@ -37,6 +37,7 @@ public class UserCommandServiceImpl implements UserCommandService {
     private final ProviderCompanyRepository providerCompanyRepository;
     private final OrganizationCommandService organizationCommandService;
     private final MembershipCommandService membershipCommandService;
+    private final String dummyHash;
 
     public UserCommandServiceImpl(UserRepository userRepository, HashingService hashingService,
             TokenService tokenService, RoleRepository roleRepository,
@@ -52,19 +53,29 @@ public class UserCommandServiceImpl implements UserCommandService {
         this.providerCompanyRepository = providerCompanyRepository;
         this.organizationCommandService = organizationCommandService;
         this.membershipCommandService = membershipCommandService;
+        this.dummyHash = hashingService.encode("timing-equalizer");
     }
 
     @Override
     public Result<UserCommandService.SignInResult, ApplicationError> handle(SignInCommand command) {
         var user = userRepository.findByUsername(command.username());
-        if (user.isEmpty()) {
-            return Result.failure(ApplicationError.notFound("User", command.username()));
-        }
-        if (!hashingService.matches(command.password(), user.get().getPassword())) {
+        // Unknown user and wrong password are indistinguishable (same error, same hashing cost).
+        var storedHash = user.map(User::getPassword).orElse(dummyHash);
+        var passwordMatches = hashingService.matches(command.password(), storedHash);
+        if (user.isEmpty() || !passwordMatches) {
             return Result.failure(ApplicationError.validationError("credentials", "Invalid username or password"));
         }
         var token = tokenService.generateToken(user.get().getUsername());
         return Result.success(new UserCommandService.SignInResult(user.get(), token));
+    }
+
+    @Override
+    @Transactional
+    public void signOut(String username) {
+        userRepository.findByUsername(username).ifPresent(user -> {
+            user.revokeIssuedTokens();
+            userRepository.save(user);
+        });
     }
 
     @Override

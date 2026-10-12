@@ -9,5 +9,8 @@ public interface UserCommandService {
     Result<SignInResult, ApplicationError> handle(SignInCommand command);
     Result<User, ApplicationError> handle(SignUpCommand command);
 
+    /** Revokes every bearer token issued to the user so far. */
+    void signOut(String username);
+
     record SignInResult(User user, String token) { }
 }

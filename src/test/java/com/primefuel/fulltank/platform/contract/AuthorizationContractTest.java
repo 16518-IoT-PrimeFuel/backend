@@ -49,6 +49,18 @@ class AuthorizationContractTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired private com.primefuel.fulltank.platform.ordering.domain.repositories.FuelOrderRepository fuelOrderRepository;
+
+    private void awaitPayment(long orderId) {
+        setOrderStatus(orderId, com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus.PENDING_PAYMENT);
+    }
+
+    private void setOrderStatus(long orderId, com.primefuel.fulltank.platform.ordering.domain.model.valueobjects.OrderStatus status) {
+        var order = fuelOrderRepository.findById(orderId).orElseThrow();
+        order.setStatus(status);
+        fuelOrderRepository.save(order);
+    }
+
     @Autowired private CustomerCommandService customerCommandService;
     @Autowired private EquipmentCommandService equipmentCommandService;
     @Autowired private TankCommandService tankCommandService;
@@ -66,10 +78,9 @@ class AuthorizationContractTest {
     }
 
     @Test
-    void signInWithWrongCredentialsRespondsWithMismatchedStatusesForBadPasswordVsUnknownUser() throws Exception {
-        // known-gap: wrong password returns 400 (VALIDATION_ERROR) instead of 401, and an
-        // unknown username returns 404 instead of a uniform "invalid credentials" response —
-        // unlike /password-reset/request, sign-in leaks whether a username is registered.
+    void signInWithWrongPasswordAndUnknownUserRespondWithTheSameBadRequest() throws Exception {
+        // Both failures are a uniform 400 "invalid credentials": sign-in never reveals whether a
+        // username is registered.
         mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
@@ -87,7 +98,33 @@ class AuthorizationContractTest {
         mockMvc.perform(post("/api/authentication/sign-in")
                         .contentType("application/json")
                         .content("{\"username\":\"never-registered@example.test\",\"password\":\"WrongPass1!\"}"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void signOutRevokesTheTokenThatWasUsed() throws Exception {
+        mockMvc.perform(post("/api/authentication/sign-up")
+                        .contentType("application/json")
+                        .content("""
+                                {"username":"signout@example.test","password":"StrongPass1!","roles":["ROLE_BUYER"],
+                                 "buyerCompany":{"name":"Signout LLC","ruc":"%s","sector":"Fuel",
+                                 "address":"Lima","contactEmail":"signout@example.test","phone":"999111222"}}
+                                """.formatted(nextRuc())))
+                .andExpect(status().isCreated());
+        var signIn = mockMvc.perform(post("/api/authentication/sign-in")
+                        .contentType("application/json")
+                        .content("{\"username\":\"signout@example.test\",\"password\":\"StrongPass1!\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        var bearer = "Bearer " + objectMapper.readTree(signIn).get("token").asString();
+
+        mockMvc.perform(get("/api/fuel-orders").header("Authorization", bearer))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/authentication/sign-out").header("Authorization", bearer))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/fuel-orders").header("Authorization", bearer))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/authentication/sign-out")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -148,7 +185,7 @@ class AuthorizationContractTest {
     }
 
     @Test
-    void paymentCreationRejectsAnAmountThatDoesNotMatchTheOrderTotal() throws Exception {
+    void paymentCreationIgnoresTheClientAmount() throws Exception {
         long buyerCompanyId = signUpBuyer("neg-payment-buyer@example.test");
         long providerId = signUpProvider("neg-payment-provider@example.test");
         var buyer = authFor(305L, buyerCompanyId, null, "ROLE_BUYER");
@@ -185,13 +222,16 @@ class AuthorizationContractTest {
                 .andReturn().getResponse().getContentAsString();
         long orderId = objectMapper.readTree(acceptResponse).get("orderId").asLong();
 
+        awaitPayment(orderId);
         mockMvc.perform(post("/api/payments")
                         .with(buyer)
                         .contentType("application/json")
                         .content("""
                                 {"orderId":%d,"companyId":%d,"amount":0.01,"paymentMethod":"CASH"}
                                 """.formatted(orderId, buyerCompanyId)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isCreated())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.amount").value(org.hamcrest.Matchers.not(0.01)));
     }
 
     @Test
