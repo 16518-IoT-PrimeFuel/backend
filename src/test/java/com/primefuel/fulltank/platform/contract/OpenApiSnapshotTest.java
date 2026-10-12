@@ -69,9 +69,9 @@ class OpenApiSnapshotTest {
             operationCount += paths.get(pathName).size();
         }
         assertEquals(
-                121,
+                125,
                 operationCount,
-                "springdoc's /api-docs no longer describes 121 operations under /api/**. "
+                "springdoc's /api-docs no longer describes 125 operations under /api/**. "
                         + "Update docs/api-ledger/T01-A-rest-ledger.md if this is intentional.");
 
         String deterministicJson =

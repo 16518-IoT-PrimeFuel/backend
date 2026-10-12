@@ -194,6 +194,7 @@
           "ruc" : {
             "maxLength" : 11,
             "minLength" : 0,
+            "pattern" : "[0-9]{11}",
             "type" : "string"
           }
         },
@@ -449,11 +450,29 @@
       "CreateSiteResource" : {
         "properties" : {
           "address" : {
+            "maxLength" : 255,
+            "minLength" : 0,
             "type" : "string"
+          },
+          "latitude" : {
+            "format" : "double",
+            "maximum" : 90,
+            "minimum" : -90,
+            "type" : "number"
+          },
+          "longitude" : {
+            "format" : "double",
+            "maximum" : 180,
+            "minimum" : -180,
+            "type" : "number"
           },
           "name" : {
             "maxLength" : 150,
             "minLength" : 0,
+            "type" : "string"
+          },
+          "siteType" : {
+            "enum" : [ "STATION", "TANK_LOCATION" ],
             "type" : "string"
           }
         },
@@ -1041,6 +1060,7 @@
           "ruc" : {
             "maxLength" : 11,
             "minLength" : 0,
+            "pattern" : "[0-9]{11}",
             "type" : "string"
           },
           "type" : {
@@ -1406,8 +1426,8 @@
             "type" : "string"
           },
           "currency" : {
-            "description" : "Moneda no persistida actualmente; null, nunca inferida",
-            "type" : [ "string", "null" ]
+            "description" : "Moneda ISO 4217 del pago; PEN por defecto",
+            "type" : "string"
           },
           "id" : {
             "format" : "int64",
@@ -1903,6 +1923,9 @@
         "properties" : {
           "password" : {
             "type" : "string"
+          },
+          "rememberMe" : {
+            "type" : "boolean"
           },
           "username" : {
             "type" : "string"
@@ -2426,6 +2449,65 @@
         },
         "summary" : "Exportar evidencias de transporte",
         "tags" : [ "Retención de evidencias de transporte" ]
+      }
+    },
+    "/api/admin/users/{userId}/demote" : {
+      "post" : {
+        "description" : "Quita ROLE_ADMIN a la cuenta sin tocar los demás roles. No se puede retirar al último administrador.",
+        "operationId" : "demote",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "userId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PromotedUser"
+                }
+              }
+            },
+            "description" : "La cuenta ya no tiene el rol ROLE_ADMIN."
+          },
+          "403" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PromotedUser"
+                }
+              }
+            },
+            "description" : "El usuario no tiene autoridad de administrador de plataforma."
+          },
+          "404" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PromotedUser"
+                }
+              }
+            },
+            "description" : "La cuenta no existe."
+          },
+          "409" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PromotedUser"
+                }
+              }
+            },
+            "description" : "La cuenta es el último administrador de plataforma."
+          }
+        },
+        "summary" : "Retirar rol de administrador de plataforma",
+        "tags" : [ "Administración de plataforma" ]
       }
     },
     "/api/admin/users/{userId}/promote" : {
@@ -5181,6 +5263,55 @@
         "tags" : [ "Órdenes de combustible" ]
       }
     },
+    "/api/fuel-orders/{orderId}/receive" : {
+      "post" : {
+        "description" : "Lo llama la empresa compradora propietaria cuando recibe el combustible. Despachada pasa a pendiente de pago; si ya estaba en pendiente de pago o pagada, no cambia nada.",
+        "operationId" : "receiveOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Orden de combustible recibida (o ya liquidada/pagada)."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La orden no existe o pertenece a otra empresa compradora."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "La orden no está despachada, ni pendiente de pago ni pagada."
+          }
+        },
+        "summary" : "Registrar recepción de la orden de combustible",
+        "tags" : [ "Órdenes de combustible" ]
+      }
+    },
     "/api/fuel-products" : {
       "get" : {
         "description" : "Devuelve los productos registrados en la plataforma para consulta de compradores.",
@@ -5507,7 +5638,7 @@
     "/api/invitations/{invitationId}" : {
       "delete" : {
         "description" : "Revoca una invitación pendiente de una organización a la que pertenece el usuario autenticado.",
-        "operationId" : "revoke",
+        "operationId" : "revoke_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "invitationId",
@@ -7023,6 +7154,217 @@
           }
         },
         "summary" : "Editar política, producto o dispositivo del tanque",
+        "tags" : [ "Tanques del distribuidor" ]
+      }
+    },
+    "/api/provider/tanks/{tankId}/device-credential" : {
+      "post" : {
+        "description" : "Emite el token técnico del canal IoT abierto del tanque. El token en claro se devuelve una sola vez; el servidor solo guarda su hash. Si el canal ya tiene credencial activa, responde 409: usar rotate.",
+        "operationId" : "issue",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "channel",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Credencial emitida; token presente una única vez."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El tanque tiene varios canales; indicar channel."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin proveedor autenticado o rol insuficiente."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanque ajeno o sin vínculo IoT abierto."
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El canal ya tiene una credencial activa."
+          }
+        },
+        "summary" : "Emitir credencial del dispositivo",
+        "tags" : [ "Tanques del distribuidor" ]
+      }
+    },
+    "/api/provider/tanks/{tankId}/device-credential/revoke" : {
+      "post" : {
+        "description" : "Revoca la credencial activa del canal. Las lecturas posteriores con ese token quedan en cuarentena (202 en la ingesta).",
+        "operationId" : "revoke",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "channel",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Credencial revocada."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El tanque tiene varios canales; indicar channel."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin proveedor autenticado o rol insuficiente."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanque ajeno, sin vínculo IoT abierto o sin credencial activa."
+          }
+        },
+        "summary" : "Revocar credencial del dispositivo",
+        "tags" : [ "Tanques del distribuidor" ]
+      }
+    },
+    "/api/provider/tanks/{tankId}/device-credential/rotate" : {
+      "post" : {
+        "description" : "Revoca la credencial activa del canal y emite una nueva. El token anterior deja de autenticar de inmediato. El nuevo token en claro se devuelve una sola vez.",
+        "operationId" : "rotate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "tankId",
+          "required" : true,
+          "schema" : {
+            "exclusiveMinimum" : 0,
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "channel",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Credencial rotada; token nuevo presente una única vez."
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "El tanque tiene varios canales; indicar channel."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Sin proveedor autenticado o rol insuficiente."
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Tanque ajeno o sin vínculo IoT abierto."
+          }
+        },
+        "summary" : "Rotar credencial del dispositivo",
         "tags" : [ "Tanques del distribuidor" ]
       }
     },
