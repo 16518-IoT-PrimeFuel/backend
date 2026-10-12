@@ -87,6 +87,18 @@ public class RefillEpisode extends AbstractDomainAggregateRoot<RefillEpisode> {
         this.requestId = requestId;
     }
 
+    /**
+     * The request this episode produced was rejected or cancelled (US-17): the episode closes without a recovery,
+     * so it stops suppressing new readings and the tank can ask again on its next low reading.
+     */
+    public void closeByRequest(Instant closedAt) {
+        if (!isOpen()) {
+            throw new IllegalStateException("Only an open episode can be closed");
+        }
+        this.status = RefillEpisodeStatus.CLOSED;
+        this.closedAt = closedAt;
+    }
+
     /** Recovery past the hysteresis band: the episode closes and the policy becomes armed again. */
     public void rearm(double closedLevelPercent, Instant closedAt) {
         if (!isOpen()) {

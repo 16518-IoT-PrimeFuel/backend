@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.replenishment.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.equipment.api.TankAssets;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.replenishment.application.commandservices.RefillPolicyCommandService;
@@ -65,7 +66,7 @@ public class RefillPoliciesController {
                                        @Valid @RequestBody ConfigureRefillPolicyResource resource) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty() || !ownsTank(tankId, organizationId.get())) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = commandService.handle(new ConfigureRefillPolicyCommand(
                 tankId, organizationId.get(), resource.lowLevelPercent(), resource.hysteresisPercent(),
@@ -91,12 +92,12 @@ public class RefillPoliciesController {
     public ResponseEntity<RefillPolicyResource> get(@PathVariable Long tankId) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty() || !ownsTank(tankId, organizationId.get())) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return queryService.handle(new GetRefillPolicyByTankQuery(tankId))
                 .map(policy -> new ResponseEntity<>(
                         RefillPolicyResourceFromDomainAssembler.toResourceFromDomain(policy), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -114,7 +115,7 @@ public class RefillPoliciesController {
     public ResponseEntity<List<RefillEpisodeResource>> episodes(@PathVariable Long tankId) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty() || !ownsTank(tankId, organizationId.get())) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var episodes = queryService.handle(new GetRefillEpisodesByTankQuery(tankId));
         return new ResponseEntity<>(episodes.stream()

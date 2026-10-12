@@ -103,7 +103,11 @@ public class NotificationFanoutListener {
         DELIVERY_COMPLETED("delivery.completed.v1", NotificationType.DELIVERY_COMPLETED,
                 "Entrega completada", "La entrega de tu pedido fue completada."),
         DELIVERY_FAILED("delivery.failed.v1", NotificationType.DELIVERY_FAILED,
-                "Entrega fallida", "La entrega de tu pedido no pudo completarse.");
+                "Entrega fallida", "La entrega de tu pedido no pudo completarse."),
+        ORDER_DISPATCHED("order.dispatched.v1", NotificationType.ORDER_DISPATCHED,
+                "Pedido despachado", "Tu pedido fue asignado a un repartidor o está en camino."),
+        REQUEST_CREATED("replenishment.requested.v1", NotificationType.NEW_REQUEST,
+                "Nueva solicitud de abastecimiento", "Un cliente solicitó abastecimiento de combustible.");
 
         private final String eventType;
         private final NotificationType type;

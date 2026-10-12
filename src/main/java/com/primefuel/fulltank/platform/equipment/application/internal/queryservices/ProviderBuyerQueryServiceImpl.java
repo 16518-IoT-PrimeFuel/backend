@@ -107,7 +107,6 @@ public class ProviderBuyerQueryServiceImpl
                                                                             "PENDING",
                                                                             "CONFIRMED",
                                                                             "DISPATCHED",
-                                                                            "IN_PROGRESS",
                                                                             "PENDING_PAYMENT")
                                                                     .contains(o.status()))
                                             .count();

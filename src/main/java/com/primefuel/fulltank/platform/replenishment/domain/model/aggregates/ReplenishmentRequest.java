@@ -83,6 +83,15 @@ public class ReplenishmentRequest extends AbstractDomainAggregateRoot<Replenishm
         this.status = ReplenishmentStatus.CANCELLED;
     }
 
+    /** The order behind an accepted request was cancelled: close the request. False if nothing to do. */
+    public boolean cancelForOrder() {
+        if (status != ReplenishmentStatus.ACCEPTED) {
+            return false;
+        }
+        this.status = ReplenishmentStatus.CANCELLED;
+        return true;
+    }
+
     /** Records the downstream order created from an accepted request (legacy correlation). */
     public void attachOrder(Long orderId) {
         if (status != ReplenishmentStatus.ACCEPTED) {

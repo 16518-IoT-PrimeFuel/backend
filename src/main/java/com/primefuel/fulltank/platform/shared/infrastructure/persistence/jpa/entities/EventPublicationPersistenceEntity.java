@@ -9,6 +9,11 @@ import lombok.Setter;
 
 import java.time.Instant;
 
+/**
+ * Bitácora (outbox) de eventos publicados por {@code JpaEventPublicationRegistry}: una fila por evento, escrita
+ * en la misma transacción que el cambio de estado. No hay despachador asíncrono que la consuma: los listeners
+ * reciben el evento en proceso. {@code completedAt} está reservado y nunca se escribe.
+ */
 @Entity
 @Table(name = "event_publications")
 @Getter

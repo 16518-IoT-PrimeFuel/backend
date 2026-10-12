@@ -28,6 +28,7 @@ public class FuelOrder extends AbstractDomainAggregateRoot<FuelOrder> {
     private OrderStatus status;
     private String deliveryAddress;
     private LocalDate scheduledDate;
+    private Long version;
 
     public FuelOrder(CreateFuelOrderCommand command, Double totalPrice) {
         this.companyId = command.companyId();
@@ -74,7 +75,15 @@ public class FuelOrder extends AbstractDomainAggregateRoot<FuelOrder> {
         this.status = OrderStatus.CONFIRMED;
     }
 
+    /**
+     * US-07: the buyer confirms it received the fuel. DISPATCHED becomes PENDING_PAYMENT, the same settlement
+     * a physical close applies ({@code DeliveryIntegrationAdapter}). If the close already settled the order, or
+     * it was paid, this is a no-op, so repeating the call is safe. A physical close that arrives later finds the
+     * order already in PENDING_PAYMENT and changes nothing. Any other status is rejected.
+     */
     public void receive() {
+        if (status == OrderStatus.PENDING_PAYMENT || status == OrderStatus.PAID)
+            return;
         if (status != OrderStatus.DISPATCHED)
             throw new IllegalStateException("Order is not dispatched");
         this.status = OrderStatus.PENDING_PAYMENT;

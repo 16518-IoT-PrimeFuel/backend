@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.replenishment.infrastructure.persistence.jpa.repositories;
 
+import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.ReplenishmentSource;
 import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.ReplenishmentStatus;
 import com.primefuel.fulltank.platform.replenishment.infrastructure.persistence.jpa.entities.ReplenishmentRequestPersistenceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,4 +19,6 @@ public interface ReplenishmentRequestPersistenceRepository
     Optional<ReplenishmentRequestPersistenceEntity> findByOrderId(Long orderId);
     Optional<ReplenishmentRequestPersistenceEntity> findFirstByTankIdAndStatus(
             Long tankId, ReplenishmentStatus status);
+    Optional<ReplenishmentRequestPersistenceEntity> findFirstByTankIdAndStatusAndSource(
+            Long tankId, ReplenishmentStatus status, ReplenishmentSource source);
 }

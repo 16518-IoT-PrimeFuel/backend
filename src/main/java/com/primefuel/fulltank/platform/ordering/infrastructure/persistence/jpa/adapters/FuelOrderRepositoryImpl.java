@@ -49,6 +49,6 @@ public class FuelOrderRepositoryImpl implements FuelOrderRepository {
     public FuelOrder save(FuelOrder fuelOrder) {
         var entity = FuelOrderPersistenceAssembler.toPersistenceFromDomain(fuelOrder);
         return FuelOrderPersistenceAssembler.toDomainFromPersistence(
-                fuelOrderPersistenceRepository.save(entity));
+                fuelOrderPersistenceRepository.saveAndFlush(entity));
     }
 }

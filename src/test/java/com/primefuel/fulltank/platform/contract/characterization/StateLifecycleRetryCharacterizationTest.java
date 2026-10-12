@@ -1,4 +1,5 @@
 package com.primefuel.fulltank.platform.contract.characterization;
+import com.primefuel.fulltank.platform.RucFixtures;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
@@ -62,7 +63,7 @@ class StateLifecycleRetryCharacterizationTest {
         var order = fuelOrderRepository.findById(orderId).orElseThrow();
         order.setStatus(status);
         fuelOrderRepository.save(order);
-    }
+    }
 
     @Autowired private CustomerCommandService customerCommandService;
     @Autowired private EquipmentCommandService equipmentCommandService;
@@ -153,7 +154,7 @@ class StateLifecycleRetryCharacterizationTest {
     private static final AtomicInteger RUC_SEQUENCE = new AtomicInteger();
 
     private static String nextRuc() {
-        return "229%08d".formatted(RUC_SEQUENCE.incrementAndGet());
+        return RucFixtures.sequenced("229", RUC_SEQUENCE.incrementAndGet());
     }
 
     private static final AtomicInteger USER_ID_SEQUENCE = new AtomicInteger(9_000);
@@ -233,7 +234,7 @@ class StateLifecycleRetryCharacterizationTest {
                             .with(buyer))
                     .andReturn().getResponse().getContentAsString());
             double totalPrice = order.get("totalPrice").asDouble();
-            awaitPayment(orderId);
+            awaitPayment(orderId);
             var response = mockMvc.perform(post("/api/payments")
                             .with(buyer)
                             .contentType("application/json")

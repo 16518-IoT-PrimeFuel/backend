@@ -1,5 +1,7 @@
 package com.primefuel.fulltank.platform.replenishment.interfaces.rest;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.equipment.api.ProviderBuyerAccess;
 import com.primefuel.fulltank.platform.equipment.api.TankAssets;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
@@ -63,9 +65,9 @@ public class ProviderRefillEpisodesController {
         var provider = access.currentProviderId();
         if (provider.isEmpty())
             throw new AccessDeniedException("Provider identity or ownership required");
-        if (!buyers.canReadTank(provider.get(), tankId)) return ResponseEntity.notFound().build();
+        if (!buyers.canReadTank(provider.get(), tankId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var tank = tanks.findById(tankId);
-        if (tank.isEmpty()) return ResponseEntity.notFound().build();
+        if (tank.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         return ResponseEntity.ok(
                 queries.handle(new GetRefillEpisodesByTankQuery(tankId)).stream()
                         .filter(e -> tank.get().organizationId().equals(e.getOrganizationId()))

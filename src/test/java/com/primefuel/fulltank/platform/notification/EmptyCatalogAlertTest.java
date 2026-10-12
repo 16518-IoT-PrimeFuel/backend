@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 class EmptyCatalogAlertTest {
@@ -73,13 +74,13 @@ class EmptyCatalogAlertTest {
         var product = mock(FuelProduct.class);
         when(product.getActive()).thenReturn(true);
         when(query.handle(new GetFuelProductsByProviderIdQuery(2L))).thenReturn(List.of(product));
-        assertThat(controller.alertEmptyCatalog(2L).getStatusCode().value()).isEqualTo(409);
+        assertThatThrownBy(() -> controller.alertEmptyCatalog(2L)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class).extracting(e -> ((org.springframework.web.server.ResponseStatusException) e).getStatusCode().value()).isEqualTo(409);
         verifyNoInteractions(events);
         when(product.getActive()).thenReturn(false);
         assertThat(controller.alertEmptyCatalog(2L).getStatusCode().value()).isEqualTo(204);
         clearInvocations(events);
         when(companies.organizationIdForProvider(2L)).thenReturn(Optional.empty());
-        assertThat(controller.alertEmptyCatalog(2L).getStatusCode().value()).isEqualTo(404);
+        assertThatThrownBy(() -> controller.alertEmptyCatalog(2L)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class).extracting(e -> ((org.springframework.web.server.ResponseStatusException) e).getStatusCode().value()).isEqualTo(404);
         verifyNoInteractions(events);
     }
 }

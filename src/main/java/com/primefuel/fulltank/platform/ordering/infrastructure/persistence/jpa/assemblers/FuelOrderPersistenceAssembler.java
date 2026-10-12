@@ -29,6 +29,7 @@ public final class FuelOrderPersistenceAssembler {
         domain.setStatus(entity.getStatus());
         domain.setDeliveryAddress(entity.getDeliveryAddress());
         domain.setScheduledDate(entity.getScheduledDate());
+        domain.setVersion(entity.getVersion());
         return domain;
     }
 
@@ -48,6 +49,7 @@ public final class FuelOrderPersistenceAssembler {
         entity.setStatus(domain.getStatus());
         entity.setDeliveryAddress(domain.getDeliveryAddress());
         entity.setScheduledDate(domain.getScheduledDate());
+        entity.setVersion(domain.getVersion());
         return entity;
     }
 }

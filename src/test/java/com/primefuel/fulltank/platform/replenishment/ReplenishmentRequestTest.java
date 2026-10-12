@@ -53,7 +53,7 @@ class ReplenishmentRequestTest {
         var productId = aProduct();
 
         var created = commandService.handle(new CreateReplenishmentRequestCommand(
-                1L, null, null, 7L, productId, 50.0, "GAL", null, null, "Av. Prueba", null));
+                1L, null, 560L, 7L, productId, 50.0, "GAL", null, null, "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
         var request = created.getOrElse(null);
         assertThat(request.getStatus()).isEqualTo(ReplenishmentStatus.PENDING);
@@ -74,17 +74,17 @@ class ReplenishmentRequestTest {
         assertThat(consumeAgain.getOrElse(true)).isFalse();
 
         var rejected = commandService.handle(new CreateReplenishmentRequestCommand(
-                1L, null, null, 7L, productId, 30.0, "GAL", null, null, "Av. Prueba", null));
+                1L, null, 770L, 7L, productId, 30.0, "GAL", null, null, "Av. Prueba", null));
         assertThat(commandService.handle(new RejectReplenishmentRequestCommand(
                 rejected.getOrElse(null).getId(), "no stock")).isSuccess()).isTrue();
 
         var cancelled = commandService.handle(new CreateReplenishmentRequestCommand(
-                1L, null, null, 7L, productId, 30.0, "GAL", null, null, "Av. Prueba", null));
+                1L, null, 820L, 7L, productId, 30.0, "GAL", null, null, "Av. Prueba", null));
         assertThat(commandService.handle(new CancelReplenishmentRequestCommand(
                 cancelled.getOrElse(null).getId())).isSuccess()).isTrue();
 
         var unknownProduct = commandService.handle(new CreateReplenishmentRequestCommand(
-                1L, null, null, 7L, 999999L, 30.0, "GAL", null, null, "Av. Prueba", null));
+                1L, null, 870L, 7L, 999999L, 30.0, "GAL", null, null, "Av. Prueba", null));
         assertThat(unknownProduct.isFailure()).isTrue();
     }
 
@@ -94,19 +94,38 @@ class ReplenishmentRequestTest {
                 "Diesel off", FuelType.DIESEL, 12.5, "GAL", 1000.0, 1000.0, 7L, false)).getOrElse(null).getId();
 
         var result = commandService.handle(new CreateReplenishmentRequestCommand(
-                1L, null, null, 7L, inactive, 50.0, "GAL", null, null, "Av. Prueba", null));
+                1L, null, 970L, 7L, inactive, 50.0, "GAL", null, null, "Av. Prueba", null));
 
         assertThat(result.isFailure()).isTrue();
         assertThat(((Result.Failure<?, ApplicationError>) result).error().code()).isEqualTo("VALIDATION_ERROR");
     }
 
     @Test
+    void rejectsInvalidQuantitiesUnitsAndMissingTank() {
+        var productId = aProduct();
+        assertThat(codeOf(1L, null, productId, 10.0, "GAL")).isEqualTo("VALIDATION_ERROR");
+        assertThat(codeOf(1L, 1L, productId, null, "GAL")).isEqualTo("VALIDATION_ERROR");
+        assertThat(codeOf(1L, 1L, productId, 0.0, "GAL")).isEqualTo("VALIDATION_ERROR");
+        assertThat(codeOf(1L, 1L, productId, -5.0, "GAL")).isEqualTo("VALIDATION_ERROR");
+        assertThat(codeOf(1L, 1L, productId, 0.5, "GAL")).isEqualTo("VALIDATION_ERROR");
+        assertThat(codeOf(1L, 1L, productId, 10.0, "BARRELS")).isEqualTo("VALIDATION_ERROR");
+        assertThat(codeOf(1L, 1L, productId, 10.0, null)).isEqualTo("VALIDATION_ERROR");
+    }
+
+    private String codeOf(Long org, Long tankId, Long productId, Double quantity, String unit) {
+        var result = commandService.handle(new CreateReplenishmentRequestCommand(
+                org, null, tankId, 7L, productId, quantity, unit, null, null, "Av. Prueba", null));
+        assertThat(result.isFailure()).isTrue();
+        return ((Result.Failure<?, ApplicationError>) result).error().code();
+    }
+
+    @Test
     void episodeKeyMakesCreationIdempotent() {
         var productId = aProduct();
         var first = commandService.handle(new CreateReplenishmentRequestCommand(
-                1L, null, null, 7L, productId, 40.0, "GAL", null, "episode-1", "Av. Prueba", null));
+                1L, null, 1260L, 7L, productId, 40.0, "GAL", null, "episode-1", "Av. Prueba", null));
         var second = commandService.handle(new CreateReplenishmentRequestCommand(
-                1L, null, null, 7L, productId, 40.0, "GAL", null, "episode-1", "Av. Prueba", null));
+                1L, null, 1280L, 7L, productId, 40.0, "GAL", null, "episode-1", "Av. Prueba", null));
         assertThat(first.getOrElse(null).getId()).isEqualTo(second.getOrElse(null).getId());
     }
 
@@ -114,7 +133,7 @@ class ReplenishmentRequestTest {
     void concurrentAcceptAndRejectHaveExactlyOneWinner() throws Exception {
         var productId = aProduct();
         var created = commandService.handle(new CreateReplenishmentRequestCommand(
-                1L, null, null, 7L, productId, 60.0, "GAL", null, null, "Av. Prueba", null));
+                1L, null, 1360L, 7L, productId, 60.0, "GAL", null, null, "Av. Prueba", null));
         var requestId = created.getOrElse(null).getId();
 
         var startGate = new CountDownLatch(1);

@@ -11,6 +11,8 @@ import com.primefuel.fulltank.platform.replenishment.domain.model.commands.Attac
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.ConsumeReplenishmentAcceptanceCommand;
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
+import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Unit;
+import com.primefuel.fulltank.platform.supply.api.SupplyCatalog;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,16 +24,18 @@ public class ReplenishmentAcceptanceExecutor {
     private final CustomerDirectory customers;
     private final TankAssets tanks;
     private final FuelOrderCreation orders;
+    private final SupplyCatalog supplies;
 
     public ReplenishmentAcceptanceExecutor(ReplenishmentLookup requests,
                                            ReplenishmentCommandService replenishmentCommands,
                                            CustomerDirectory customers, TankAssets tanks,
-                                           FuelOrderCreation orders) {
+                                           FuelOrderCreation orders, SupplyCatalog supplies) {
         this.requests = requests;
         this.replenishmentCommands = replenishmentCommands;
         this.customers = customers;
         this.tanks = tanks;
         this.orders = orders;
+        this.supplies = supplies;
     }
 
     @Transactional
@@ -56,8 +60,17 @@ public class ReplenishmentAcceptanceExecutor {
                         "No legacy company mapping exists for customer account " + request.customerAccountId())));
         // The order's equipment is optional: a tank registered through the API has no legacy equipment.
         var equipmentId = tanks.legacyEquipmentIdForTank(request.tankId()).orElse(null);
+        // The order is priced per unit of its fuel product (FuelOrderCommandServiceImpl), so its quantity is
+        // expressed in that unit, not in the unit the buyer asked with.
+        var product = supplies.findForTenant(request.providerId(), request.fuelProductId())
+                .orElseThrow(() -> fail(ApplicationError.notFound("FuelProduct",
+                        String.valueOf(request.fuelProductId()))));
+        var requestUnit = Unit.fromCode(request.unit());
+        var productUnit = Unit.fromCode(product.unit());
+        var quantity = requestUnit == productUnit ? request.quantity()
+                : productUnit.fromLitres(requestUnit.toLitres(request.quantity()));
         var orderId = orders.create(new FuelOrderCreation.Command(companyId, request.providerId(),
-                request.fuelProductId(), equipmentId, request.quantity(), request.deliveryAddress(),
+                request.fuelProductId(), equipmentId, quantity, request.deliveryAddress(),
                 request.deliveryDate(), request.id()));
         if (orderId.isFailure()) throw fail(AssignDeliveryExecutor.errorOf(orderId));
 

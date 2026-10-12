@@ -2,8 +2,12 @@ package com.primefuel.fulltank.platform.replenishment.application.internal.comma
 
 import com.primefuel.fulltank.platform.equipment.api.CustomerDirectory;
 import com.primefuel.fulltank.platform.equipment.api.TankAssets;
+import com.primefuel.fulltank.platform.iam.api.LegacyCompanyDirectory;
 import com.primefuel.fulltank.platform.replenishment.application.commandservices.ReplenishmentCommandService;
+import com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.RefillEpisode;
 import com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.ReplenishmentRequest;
+import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.ReplenishmentSource;
+import com.primefuel.fulltank.platform.replenishment.domain.repositories.RefillEpisodeRepository;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.AcceptReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.AttachReplenishmentOrderCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.CancelReplenishmentRequestCommand;
@@ -14,7 +18,9 @@ import com.primefuel.fulltank.platform.replenishment.domain.repositories.Repleni
 import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
 import com.primefuel.fulltank.platform.shared.application.result.Result;
 import com.primefuel.fulltank.platform.shared.events.EventPublicationRegistry;
+import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Unit;
 import com.primefuel.fulltank.platform.supply.api.SupplyCatalog;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +34,7 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
 
     private static final String AGGREGATE_TYPE = "ReplenishmentRequest";
     private static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Lima");
+    private static final double MIN_QUANTITY = 1.0;
 
     private final ReplenishmentRequestRepository repository;
     private final SupplyCatalog supplyCatalog;
@@ -35,19 +42,29 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
     private final CustomerDirectory customers;
     private final TankAssets tanks;
     private final Clock clock;
+    private final LegacyCompanyDirectory companies;
+    private final RefillEpisodeRepository episodes;
+    private final boolean regenerateAfterRequestDecision;
 
     public ReplenishmentCommandServiceImpl(ReplenishmentRequestRepository repository,
                                            SupplyCatalog supplyCatalog,
                                            EventPublicationRegistry publicationRegistry,
                                            CustomerDirectory customers,
                                            TankAssets tanks,
-                                           Clock clock) {
+                                           Clock clock,
+                                           LegacyCompanyDirectory companies,
+                                           RefillEpisodeRepository episodes,
+                                           @Value("${app.refill.regenerate-after-request-decision:false}")
+                                           boolean regenerateAfterRequestDecision) {
         this.repository = repository;
         this.supplyCatalog = supplyCatalog;
         this.publicationRegistry = publicationRegistry;
         this.customers = customers;
         this.tanks = tanks;
         this.clock = clock;
+        this.companies = companies;
+        this.episodes = episodes;
+        this.regenerateAfterRequestDecision = regenerateAfterRequestDecision;
     }
 
     @Override
@@ -65,6 +82,10 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
                         && command.customerAccountId().equals(tank.customerAccountId()))
                 .isEmpty()) {
             return Result.failure(ApplicationError.notFound("Tank", "not found"));
+        }
+        var invalid = validateQuantity(command);
+        if (invalid != null) {
+            return Result.failure(invalid);
         }
         var today = LocalDate.now(clock.withZone(BUSINESS_ZONE));
         var deliveryDate = command.deliveryDate() == null ? today : command.deliveryDate();
@@ -88,6 +109,12 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
                 return Result.success(existing.get());
             }
         }
+        // US-17: one pending manual request per tank. Automatic ones are governed by their episode instead.
+        var manual = command.source() == null || command.source() == ReplenishmentSource.MANUAL;
+        if (manual && command.tankId() != null && repository.findPendingManualByTankId(command.tankId()).isPresent()) {
+            return Result.failure(ApplicationError.conflict("ReplenishmentRequest",
+                    "The tank already has a pending manual request"));
+        }
         var snapshot = supplyCatalog.findForTenant(command.providerId(), command.fuelProductId());
         if (snapshot.isEmpty()) {
             return Result.failure(ApplicationError.notFound("FuelProduct", String.valueOf(command.fuelProductId())));
@@ -100,7 +127,9 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
                     command.organizationId(), command.customerAccountId(), command.tankId(), command.providerId(),
                     command.fuelProductId(), command.quantity(), command.unit(), command.source(), command.episodeKey(),
                     deliveryAddress.trim(), deliveryDate), snapshot.get().pricePerUnit());
-            return Result.success(repository.save(request));
+            var saved = repository.save(request);
+            publishRequested(saved);
+            return Result.success(saved);
         } catch (IllegalArgumentException exception) {
             return Result.failure(ApplicationError.validationError("replenishment", exception.getMessage()));
         }
@@ -122,7 +151,47 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
         return transition(command.requestId(), request -> request.reject(command.reason()))
                 .map(request -> {
                     publishDecision(request, "replenishment.rejected.v1");
+                    closeEpisodeIfRegenerating(request);
                     return request;
+                });
+    }
+
+    /**
+     * US-17: the request was published to the distributor (NEW_REQUEST). The organization of the distributor is
+     * resolved from the legacy provider, the same way as the delivery events; with no resolvable distributor
+     * nothing is published, because the buyer's organization would be the wrong recipient.
+     */
+    private void publishRequested(ReplenishmentRequest request) {
+        companies.organizationIdForProvider(request.getProviderId()).ifPresent(distributor ->
+                publicationRegistry.publish("replenishment.requested.v1", AGGREGATE_TYPE,
+                        String.valueOf(request.getId()), distributor, (long) request.getVersion(),
+                        "{\"requestId\":" + request.getId()
+                                + ",\"organizationId\":" + request.getOrganizationId()
+                                + ",\"providerId\":" + request.getProviderId()
+                                + ",\"status\":\"" + request.getStatus().name() + "\"}"));
+    }
+
+    /**
+     * R05: by default a rejected or cancelled request keeps its refill episode open, so a decision never opens
+     * a loop of new requests. Only with {@code app.refill.regenerate-after-request-decision=true} the decision
+     * closes the episode (US-17), letting the next low reading open one new episode and request. Cancelling the
+     * order always closes it (OrderCancelledConsumer).
+     */
+    private void closeEpisodeIfRegenerating(ReplenishmentRequest request) {
+        if (regenerateAfterRequestDecision) {
+            closeEpisodeOf(request);
+        }
+    }
+
+    private void closeEpisodeOf(ReplenishmentRequest request) {
+        if (request.getEpisodeKey() == null) {
+            return;
+        }
+        episodes.findByEpisodeKey(request.getEpisodeKey())
+                .filter(RefillEpisode::isOpen)
+                .ifPresent(episode -> {
+                    episode.closeByRequest(clock.instant());
+                    episodes.saveAndFlush(episode);
                 });
     }
 
@@ -143,7 +212,11 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
     @Override
     @Transactional
     public Result<ReplenishmentRequest, ApplicationError> handle(CancelReplenishmentRequestCommand command) {
-        return transition(command.requestId(), request -> request.cancel());
+        return transition(command.requestId(), request -> request.cancel())
+                .map(request -> {
+                    closeEpisodeIfRegenerating(request);
+                    return request;
+                });
     }
 
     @Override
@@ -179,6 +252,34 @@ public class ReplenishmentCommandServiceImpl implements ReplenishmentCommandServ
             return Result.failure(ApplicationError.conflict("ReplenishmentRequest", exception.getMessage()));
         }
         return Result.success(repository.saveAndFlush(request));
+    }
+
+    /** Required tank, known unit, positive quantity above the minimum, and it must fit in the tank. */
+    private ApplicationError validateQuantity(CreateReplenishmentRequestCommand command) {
+        if (command.tankId() == null) {
+            return ApplicationError.validationError("tankId", "A tank is required");
+        }
+        var unit = Unit.parse(command.unit());
+        if (unit.isEmpty()) {
+            return ApplicationError.validationError("unit", "Unit must be LITRE or GALLON");
+        }
+        var quantity = command.quantity();
+        if (quantity == null || !Double.isFinite(quantity) || quantity <= 0) {
+            return ApplicationError.validationError("quantity", "Quantity must be greater than zero");
+        }
+        if (quantity < MIN_QUANTITY) {
+            return ApplicationError.validationError("quantity", "Quantity must be at least " + MIN_QUANTITY);
+        }
+        var tank = tanks.findById(command.tankId());
+        if (tank.isPresent()) {
+            var snapshot = tank.get();
+            var tankUnit = Unit.fromCode(snapshot.unit()); // legacy column: lenient read
+            var room = tankUnit.toLitres(snapshot.capacity() - snapshot.currentLevel());
+            if (unit.get().toLitres(quantity) > room + 1e-6) {
+                return ApplicationError.validationError("quantity", "Quantity exceeds the free capacity of the tank");
+            }
+        }
+        return null;
     }
 
     private Result<ReplenishmentRequest, ApplicationError> transition(

@@ -48,4 +48,8 @@ public class FuelOrderPersistenceEntity extends AuditableAbstractPersistenceEnti
     private String deliveryAddress;
 
     private LocalDate scheduledDate;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 }

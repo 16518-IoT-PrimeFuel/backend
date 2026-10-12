@@ -47,6 +47,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -139,6 +140,72 @@ class ReplenishmentAcceptanceIntegrationTest {
                         .with(provider))
                 .andExpect(status().isConflict());
         assertThat(orders.findByProviderId(fixture.providerId())).hasSize(1);
+    }
+
+    @Test
+    void gallonRequestOrdersTheQuantityInTheProductUnit() throws Exception {
+        var fixture = fixture();
+        var requestId = createRequest(fixture, 100.0, "GALLON");
+        var provider = auth(fixture.providerId(), "ROLE_PROVIDER");
+
+        var order = orders.findById(acceptRequest(requestId, provider)).orElseThrow();
+
+        // The product is priced per LITRE, so the order holds 100 gallons converted to litres, not 100 units.
+        assertThat(order.getRequestedQuantity()).isCloseTo(100 * 3.785411784, within(1e-6));
+        assertThat(order.getTotalPrice()).isCloseTo(10.0 * 100 * 3.785411784, within(1e-4));
+    }
+
+    @Test
+    void recommendationWindowIsLimaMidnightSerializedInUtc() throws Exception {
+        var fixture = fixture();
+        var requestId = createRequest(fixture);
+        var provider = auth(fixture.providerId(), "ROLE_PROVIDER");
+        var orderId = acceptRequest(requestId, provider);
+
+        var lima = java.time.ZoneId.of("America/Lima");
+        var date = LocalDate.now(lima).plusDays(7);
+        mockMvc.perform(get("/api/deliveries/recommendation").param("orderId", String.valueOf(orderId))
+                        .with(provider))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.windowStart").value(date.atStartOfDay(lima).toInstant().toString()))
+                .andExpect(jsonPath("$.windowEnd").value(date.plusDays(1).atStartOfDay(lima).toInstant().toString()));
+    }
+
+    @Test
+    void assignedDeliveryReportsDispatchInstantAsUtcIsoString() throws Exception {
+        var fixture = fixture();
+        var requestId = createRequest(fixture);
+        var provider = auth(fixture.providerId(), "ROLE_PROVIDER");
+        var orderId = acceptRequest(requestId, provider);
+        var driver = fleet.registerDriver(new RegisterDriverCommand(fixture.providerId(), null, "Prueba", "Conductor",
+                "L-" + IDS.incrementAndGet(), "999000555", "driver" + IDS.get() + "@example.test", "AVAILABLE"))
+                .getOrElse(null);
+        var tanker = fleet.registerTanker(new RegisterTankerCommand(fixture.providerId(),
+                "T-" + IDS.incrementAndGet(), "Volvo", "FH", 1000.0, "LITRE", "AVAILABLE"))
+                .getOrElse(null);
+
+        var assigned = mockMvc.perform(post("/api/deliveries")
+                        .with(provider)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"commandId":"dispatch-%d","orderId":%d,"driverId":%d,"tankerId":%d,
+                                 "windowStart":"2026-09-27T12:00:00Z","windowEnd":"2026-09-27T14:00:00Z",
+                                 "scheduledDate":"2026-09-27","notes":"instante de despacho"}
+                                """.formatted(IDS.incrementAndGet(), orderId, driver.id(), tanker.id())))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        long deliveryId = new tools.jackson.databind.ObjectMapper().readTree(assigned).get("deliveryId").asLong();
+
+        mockMvc.perform(get("/api/deliveries/{id}", deliveryId).with(provider))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.legacyStatus").value("DISPATCHED"))
+                .andExpect(jsonPath("$.dispatchedAt").value(org.hamcrest.Matchers.endsWith("Z")));
+    }
+
+    private Long acceptRequest(Long requestId, RequestPostProcessor provider) throws Exception {
+        var acceptedJson = mockMvc.perform(post("/api/replenishment-requests/{id}/accept", requestId).with(provider))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        return new tools.jackson.databind.ObjectMapper().readTree(acceptedJson).get("orderId").asLong();
     }
 
     @Test
@@ -297,9 +364,13 @@ class ReplenishmentAcceptanceIntegrationTest {
     }
 
     private Long createRequest(Fixture fixture) {
+        return createRequest(fixture, 100.0, "LITRE");
+    }
+
+    private Long createRequest(Fixture fixture, double quantity, String unit) {
         var response = replenishmentCommands.handle(new CreateReplenishmentRequestCommand(
                 fixture.organizationId(), fixture.customerId(), fixture.tankId(), fixture.providerId(),
-                fixture.productId(), 100.0, "LITRE", ReplenishmentSource.MANUAL, null,
+                fixture.productId(), quantity, unit, ReplenishmentSource.MANUAL, null,
                 "Av. Prueba 123", LocalDate.now(java.time.ZoneId.of("America/Lima")).plusDays(7)));
         return response.getOrElse(null).getId();
     }

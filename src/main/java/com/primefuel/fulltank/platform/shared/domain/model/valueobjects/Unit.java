@@ -19,10 +19,19 @@ public enum Unit {
         return litres / factorToLitre;
     }
 
-    /**
-     * Maps a legacy free-text unit code onto a known unit. Unknown or blank codes default to LITRE
-     * (the conservative assumption documented in T11-A, since the legacy column is a bare String).
-     */
+    /** Strict parse for API inputs: blank/unknown codes are empty instead of degrading to LITRE. */
+    public static java.util.Optional<Unit> parse(String code) {
+        if (code == null || code.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        return switch (code.trim().toUpperCase()) {
+            case "GAL", "GALLON", "GALON", "GALONES", "GALLONS" -> java.util.Optional.of(GALLON);
+            case "L", "LT", "LITRE", "LITRES", "LITER", "LITERS", "LITRO", "LITROS" -> java.util.Optional.of(LITRE);
+            default -> java.util.Optional.empty();
+        };
+    }
+
+    /** Lenient mapping for legacy reads only; unknown or blank codes default to LITRE. */
     public static Unit fromCode(String code) {
         if (code == null || code.isBlank()) {
             return LITRE;

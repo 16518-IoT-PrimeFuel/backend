@@ -93,7 +93,7 @@ class NotificationFanoutTest {
 
     private long request(long organizationId, long providerId, long productId) {
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
-                organizationId, null, null, providerId, productId, 10.0, "GALLONS", ReplenishmentSource.MANUAL,
+                organizationId, null, 1L, providerId, productId, 10.0, "GALLONS", ReplenishmentSource.MANUAL,
                 "fanout-" + SEQUENCE.incrementAndGet(), "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
         return created.getOrElse(null).getId();

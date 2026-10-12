@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.replenishment.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import com.primefuel.fulltank.platform.replenishment.application.commandservices.ReplenishmentCommandService;
@@ -68,7 +69,7 @@ public class ReplenishmentRequestsController {
     public ResponseEntity<?> create(@Valid @RequestBody CreateReplenishmentRequestResource resource) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var source = resource.source() == null
                 ? ReplenishmentSource.MANUAL
@@ -96,7 +97,7 @@ public class ReplenishmentRequestsController {
     public ResponseEntity<List<ReplenishmentRequestResource>> list() {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var requests = queryService.handle(new GetReplenishmentRequestsByOrganizationQuery(organizationId.get()));
         return new ResponseEntity<>(requests.stream()
@@ -113,7 +114,7 @@ public class ReplenishmentRequestsController {
     @GetMapping("/inbox")
     public ResponseEntity<List<ReplenishmentRequestResource>> inbox() {
         var providerId = tenantAccess.currentProviderId();
-        if (providerId.isEmpty()) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        if (providerId.isEmpty()) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         var requests = queryService.handle(new GetReplenishmentRequestsByProviderQuery(providerId.get()));
         return ResponseEntity.ok(requests.stream()
                 .map(ReplenishmentRequestResourceFromDomainAssembler::toResourceFromDomain).toList());
@@ -131,7 +132,7 @@ public class ReplenishmentRequestsController {
         var organizationId = membershipAccess.currentOrganizationId();
         var providerId = tenantAccess.currentProviderId();
         if (organizationId.isEmpty() && providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         // El distribuidor destinatario también puede leerla: accept/reject ya lo autorizan por providerId.
         return queryService.handle(new GetReplenishmentRequestByIdQuery(requestId))
@@ -139,7 +140,7 @@ public class ReplenishmentRequestsController {
                         || providerId.map(id -> id.equals(request.getProviderId())).orElse(false))
                 .map(request -> new ResponseEntity<>(
                         ReplenishmentRequestResourceFromDomainAssembler.toResourceFromDomain(request), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -160,7 +161,7 @@ public class ReplenishmentRequestsController {
     public ResponseEntity<?> reject(@PathVariable Long requestId,
                                     @Valid @RequestBody RejectReplenishmentRequestResource resource) {
         if (!providerOwns(requestId)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = commandService.handle(new RejectReplenishmentRequestCommand(requestId, resource.reason()));
         return ResponseEntityAssembler.toResponseEntityFromResult(
@@ -184,7 +185,7 @@ public class ReplenishmentRequestsController {
     public ResponseEntity<?> cancel(@PathVariable Long requestId) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty() || !organizationIdOwns(requestId, organizationId.get())) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = commandService.handle(new CancelReplenishmentRequestCommand(requestId));
         return ResponseEntityAssembler.toResponseEntityFromResult(

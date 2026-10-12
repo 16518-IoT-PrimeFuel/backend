@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.replenishment.interfaces.rest.transform;
 
+import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Unit;
 import com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.RefillEpisode;
 import com.primefuel.fulltank.platform.replenishment.interfaces.rest.resources.RefillEpisodeResource;
 
@@ -21,7 +22,7 @@ public final class RefillEpisodeResourceFromDomainAssembler {
                 episode.getOpenedLevel(),
                 episode.getTargetLevel(),
                 episode.getRequestedVolume(),
-                episode.getUnit(),
+                Unit.fromCode(episode.getUnit()).name(),
                 episode.isRequestEmitted(),
                 episode.getRequestId(),
                 episode.getClosedAt(),

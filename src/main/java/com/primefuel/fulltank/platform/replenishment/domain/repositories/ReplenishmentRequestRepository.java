@@ -16,6 +16,9 @@ public interface ReplenishmentRequestRepository {
 
     /** An active (still undecided) request for a tank blocks opening a new refill episode. */
     Optional<ReplenishmentRequest> findPendingByTankId(Long tankId);
+
+    /** A pending MANUAL request for a tank: a second one is refused until the first is decided (US-17). */
+    Optional<ReplenishmentRequest> findPendingManualByTankId(Long tankId);
     ReplenishmentRequest save(ReplenishmentRequest request);
 
     /** Flushes immediately so optimistic-lock conflicts surface inside the caller's transaction. */

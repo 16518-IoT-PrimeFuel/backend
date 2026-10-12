@@ -1,10 +1,12 @@
 package com.primefuel.fulltank.platform.ordering.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.ordering.application.commandservices.FuelOrderCommandService;
 import com.primefuel.fulltank.platform.ordering.application.queryservices.FuelOrderQueryService;
 import com.primefuel.fulltank.platform.ordering.domain.model.aggregates.FuelOrder;
 import com.primefuel.fulltank.platform.ordering.domain.model.commands.CancelFuelOrderCommand;
 import com.primefuel.fulltank.platform.ordering.domain.model.commands.ConfirmFuelOrderCommand;
+import com.primefuel.fulltank.platform.ordering.domain.model.commands.ReceiveFuelOrderCommand;
 import com.primefuel.fulltank.platform.ordering.domain.model.queries.GetAllFuelOrdersQuery;
 import com.primefuel.fulltank.platform.ordering.domain.model.queries.GetFuelOrderByIdQuery;
 import com.primefuel.fulltank.platform.ordering.domain.model.queries.GetFuelOrdersByCompanyIdQuery;
@@ -53,8 +55,9 @@ public class FuelOrdersController {
      *
      * <p>La empresa debe pertenecer al usuario; el producto al distribuidor y el equipo a la empresa indicada.</p>
      */
-    @Operation(summary = "Crear orden de combustible",
-            description = "Registra una orden para la empresa del usuario y valida la relación entre distribuidor, producto y equipo.")
+    @Deprecated
+    @Operation(summary = "Crear orden de combustible", deprecated = true,
+            description = "Deprecado: se mantiene para la app móvil y clientes existentes. Registra una orden para la empresa del usuario y valida la relación entre distribuidor, producto y equipo.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Orden de combustible creada."),
             @ApiResponse(responseCode = "403", description = "La empresa no pertenece al usuario o el producto/equipo no corresponde al tenant indicado."),
@@ -84,7 +87,7 @@ public class FuelOrdersController {
     })
     @PostMapping("/{orderId}/confirm")
     public ResponseEntity<?> confirmOrder(@PathVariable Long orderId) {
-        if (!ownsOrderAsBuyer(orderId)) return ResponseEntity.notFound().build();
+        if (!ownsOrderAsBuyer(orderId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var result = fuelOrderCommandService.handle(new ConfirmFuelOrderCommand(orderId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
@@ -106,8 +109,31 @@ public class FuelOrdersController {
     })
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
-        if (!ownsOrder(orderId)) return ResponseEntity.notFound().build();
+        if (!ownsOrder(orderId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var result = fuelOrderCommandService.handle(new CancelFuelOrderCommand(orderId));
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                result,
+                this::toResource,
+                HttpStatus.OK);
+    }
+
+    /**
+     * Registra la recepción del combustible por la empresa compradora propietaria (US-07).
+     *
+     * <p>Pasa la orden de DISPATCHED a PENDING_PAYMENT. Si la entrega física ya la liquidó o la orden ya está
+     * pagada, la llamada no cambia nada y responde 200, así que repetirla es seguro.</p>
+     */
+    @Operation(summary = "Registrar recepción de la orden de combustible",
+            description = "Lo llama la empresa compradora propietaria cuando recibe el combustible. Despachada pasa a pendiente de pago; si ya estaba en pendiente de pago o pagada, no cambia nada.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Orden de combustible recibida (o ya liquidada/pagada)."),
+            @ApiResponse(responseCode = "404", description = "La orden no existe o pertenece a otra empresa compradora."),
+            @ApiResponse(responseCode = "409", description = "La orden no está despachada, ni pendiente de pago ni pagada.")
+    })
+    @PostMapping("/{orderId}/receive")
+    public ResponseEntity<?> receiveOrder(@PathVariable Long orderId) {
+        if (!ownsOrderAsBuyer(orderId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        var result = fuelOrderCommandService.handle(new ReceiveFuelOrderCommand(orderId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
                 this::toResource,
@@ -150,7 +176,7 @@ public class FuelOrdersController {
                 .filter(order -> currentUserAccess.ownsCompanyOrProvider(order.getCompanyId(), order.getProviderId()));
         return result.map(o -> new ResponseEntity<>(
                         toResource(o), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**

@@ -13,6 +13,4 @@ public interface EventPublicationPersistenceRepository extends JpaRepository<Eve
     Optional<EventPublicationPersistenceEntity> findByEventId(String eventId);
 
     List<EventPublicationPersistenceEntity> findByAggregateTypeAndAggregateIdOrderByIdAsc(String aggregateType, String aggregateId);
-
-    List<EventPublicationPersistenceEntity> findByCompletedAtIsNullOrderByIdAsc();
 }

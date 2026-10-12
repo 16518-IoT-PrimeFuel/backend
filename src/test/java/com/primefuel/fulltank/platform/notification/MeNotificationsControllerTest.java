@@ -96,7 +96,7 @@ class MeNotificationsControllerTest {
                 providerId, true));
         assertThat(product.isSuccess()).isTrue();
         var created = replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
-                organizationId, null, null, providerId, product.getOrElse(null).getId(), 10.0, "GALLONS",
+                organizationId, null, 1L, providerId, product.getOrElse(null).getId(), 10.0, "GALLONS",
                 ReplenishmentSource.MANUAL, "me-inbox-" + SEQUENCE.incrementAndGet(), "Av. Prueba", null));
         assertThat(created.isSuccess()).isTrue();
         assertThat(replenishmentCommandService.handle(

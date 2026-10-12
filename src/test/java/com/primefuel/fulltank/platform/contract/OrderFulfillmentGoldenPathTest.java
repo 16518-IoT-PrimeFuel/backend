@@ -1,4 +1,5 @@
 package com.primefuel.fulltank.platform.contract;
+import com.primefuel.fulltank.platform.RucFixtures;
 
 import com.primefuel.fulltank.platform.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
@@ -74,7 +75,7 @@ class OrderFulfillmentGoldenPathTest {
         var order = fuelOrderRepository.findById(orderId).orElseThrow();
         order.setStatus(status);
         fuelOrderRepository.save(order);
-    }
+    }
 
     @MockitoBean
     private JavaMailSender mailSender;
@@ -293,7 +294,7 @@ class OrderFulfillmentGoldenPathTest {
     private static final AtomicInteger RUC_SEQUENCE = new AtomicInteger();
 
     private static String nextRuc() {
-        return "209%08d".formatted(RUC_SEQUENCE.incrementAndGet());
+        return RucFixtures.sequenced("209", RUC_SEQUENCE.incrementAndGet());
     }
 
     private long signUpBuyer(String username) throws Exception {

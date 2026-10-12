@@ -16,11 +16,21 @@ import com.primefuel.fulltank.platform.replenishment.application.internal.consum
 import com.primefuel.fulltank.platform.replenishment.application.queryservices.RefillPolicyQueryService;
 import com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.RefillEpisode;
 import com.primefuel.fulltank.platform.replenishment.domain.model.aggregates.ReplenishmentRequest;
+import com.primefuel.fulltank.platform.replenishment.application.internal.consumers.OrderCancelledConsumer;
+import com.primefuel.fulltank.platform.replenishment.domain.model.commands.AcceptReplenishmentRequestCommand;
+import com.primefuel.fulltank.platform.replenishment.domain.model.commands.AttachReplenishmentOrderCommand;
+import com.primefuel.fulltank.platform.replenishment.domain.model.commands.CancelReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.ConfigureRefillPolicyCommand;
+import com.primefuel.fulltank.platform.replenishment.domain.model.commands.CreateReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.commands.RejectReplenishmentRequestCommand;
 import com.primefuel.fulltank.platform.replenishment.domain.model.queries.GetRefillEpisodesByTankQuery;
+import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.RefillEpisodeStatus;
 import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.ReplenishmentSource;
+import com.primefuel.fulltank.platform.replenishment.domain.model.valueobjects.ReplenishmentStatus;
 import com.primefuel.fulltank.platform.replenishment.domain.repositories.ReplenishmentRequestRepository;
+import com.primefuel.fulltank.platform.shared.application.result.ApplicationError;
+import com.primefuel.fulltank.platform.shared.application.result.Result;
+import com.primefuel.fulltank.platform.shared.events.EventEnvelope;
 import com.primefuel.fulltank.platform.telemetry.api.events.ValidatedTankReadingEvent;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +41,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -56,6 +67,9 @@ class RefillGenerationIntegrationTest {
     private static final String CHANNEL = "tank-level";
     private static final long ORGANIZATION = 1L;
     private static final long PROVIDER = 7L;
+
+    @Autowired
+    private OrderCancelledConsumer orderCancelledConsumer;
 
     @Autowired
     private RefillPolicyEvaluationConsumer consumer;
@@ -143,7 +157,7 @@ class RefillGenerationIntegrationTest {
 
     @Test
     void oneHundredLowReadingsGenerateExactlyOneRequest() {
-        var tankId = aTank("20900000001");
+        var tankId = aTank("20960000090");
         var productId = aProduct();
         configure(tankId, productId, true);
         setLevel(tankId, 50.0, T1); // 10% of 500
@@ -169,7 +183,7 @@ class RefillGenerationIntegrationTest {
 
     @Test
     void shadowModeDoesNotGenerateRequestsByDefault() {
-        var tankId = aTank("20900000002");
+        var tankId = aTank("20960000103");
         var productId = aProduct();
         configure(tankId, productId, false); // explicit opt-out
         setLevel(tankId, 50.0, T1);
@@ -186,7 +200,7 @@ class RefillGenerationIntegrationTest {
 
     @Test
     void automaticGenerationSkipsTanksWithoutSiteAddressAndKeepsEpisode() {
-        var tankId = aTank("20900000008", null);
+        var tankId = aTank("20960000154", null);
         configure(tankId, aProduct(), true);
 
         setLevel(tankId, 50.0, T1);
@@ -199,7 +213,7 @@ class RefillGenerationIntegrationTest {
 
     @Test
     void recoveryAndANewCrossingGenerateASecondRequest() {
-        var tankId = aTank("20900000003");
+        var tankId = aTank("20960000111");
         var productId = aProduct();
         configure(tankId, productId, true);
 
@@ -248,8 +262,110 @@ class RefillGenerationIntegrationTest {
     }
 
     @Test
+    void aCancelledRequestKeepsItsEpisodeOpenByDefault() {
+        var tankId = aTank("20960000162");
+        configure(tankId, aProduct(), true);
+        setLevel(tankId, 50.0, T1);
+        read(tankId, 1, T1);
+        var request = requestsFor(tankId).get(0);
+
+        assertThat(replenishmentCommandService.handle(new CancelReplenishmentRequestCommand(request.getId()))
+                .isSuccess()).isTrue();
+
+        // R05: without app.refill.regenerate-after-request-decision=true a cancelled request does not reopen the tank.
+        assertThat(episodesFor(tankId)).filteredOn(RefillEpisode::isOpen).hasSize(1);
+        assertThat(episodesFor(tankId)).filteredOn(episode -> episode.getStatus() == RefillEpisodeStatus.CLOSED)
+                .isEmpty();
+    }
+
+    @Test
+    void aSecondPendingManualRequestForTheSameTankIsRefusedUntilTheFirstIsDecided() {
+        var tankId = aTank("20960000171");
+        var productId = aProduct();
+        var first = manualRequest(tankId, productId, null);
+        assertThat(first.isSuccess()).isTrue();
+
+        var second = manualRequest(tankId, productId, null);
+        assertThat(second.isFailure()).isTrue();
+        assertThat(((Result.Failure<ReplenishmentRequest, ApplicationError>) second).error().code())
+                .isEqualTo("REPLENISHMENTREQUEST_CONFLICT");
+
+        assertThat(replenishmentCommandService.handle(new CancelReplenishmentRequestCommand(
+                first.getOrElse(null).getId())).isSuccess()).isTrue();
+        assertThat(manualRequest(tankId, productId, null).isSuccess()).isTrue();
+    }
+
+    @Test
+    void aPendingManualRequestSuppressesAutomaticGenerationForTheTank() {
+        // Existing invariant: any undecided request blocks a new refill episode, so the automatic path waits.
+        var tankId = aTank("20960000189");
+        var productId = aProduct();
+        configure(tankId, productId, true);
+        assertThat(manualRequest(tankId, productId, null).isSuccess()).isTrue();
+
+        setLevel(tankId, 50.0, T1);
+        read(tankId, 1, T1);
+
+        assertThat(requestsFor(tankId)).filteredOn(request -> request.getSource() == ReplenishmentSource.AUTOMATIC)
+                .isEmpty();
+        assertThat(episodesFor(tankId)).isEmpty();
+    }
+
+    @Test
+    void aCancelledOrderClosesTheEpisodeOfItsAcceptedRequestAndTheTankCanAskAgain() {
+        var tankId = aTank("20960000197");
+        configure(tankId, aProduct(), true);
+        setLevel(tankId, 50.0, T1);
+        read(tankId, 1, T1);
+        var request = requestsFor(tankId).get(0);
+        assertThat(replenishmentCommandService.handle(new AcceptReplenishmentRequestCommand(request.getId()))
+                .isSuccess()).isTrue();
+        assertThat(replenishmentCommandService.handle(new AttachReplenishmentOrderCommand(request.getId(), 9013L))
+                .isSuccess()).isTrue();
+
+        orderCancelledConsumer.on(new EventEnvelope(UUID.randomUUID(), "order.cancelled.v1", "FuelOrder", "9013",
+                ORGANIZATION, 1L, T1, "{\"orderId\":9013,\"requestId\":" + request.getId() + "}"));
+
+        assertThat(requestRepository.findById(request.getId()).orElseThrow().getStatus())
+                .isEqualTo(ReplenishmentStatus.CANCELLED);
+        assertThat(episodesFor(tankId)).filteredOn(RefillEpisode::isOpen).isEmpty();
+
+        // The tank is still low: the next reading may generate one new automatic request.
+        read(tankId, 2, T1.plusSeconds(2));
+        assertThat(requestsFor(tankId)).filteredOn(r -> r.getSource() == ReplenishmentSource.AUTOMATIC).hasSize(2);
+    }
+
+    @Test
+    void aCancelledOrderDoesNotGenerateWhileAnotherRequestIsPendingForTheTank() {
+        var tankId = aTank("20960000201");
+        var productId = aProduct();
+        configure(tankId, productId, true);
+        setLevel(tankId, 50.0, T1);
+        read(tankId, 1, T1);
+        var request = requestsFor(tankId).get(0);
+        assertThat(replenishmentCommandService.handle(new AcceptReplenishmentRequestCommand(request.getId()))
+                .isSuccess()).isTrue();
+        assertThat(replenishmentCommandService.handle(new AttachReplenishmentOrderCommand(request.getId(), 9014L))
+                .isSuccess()).isTrue();
+        // Another undecided request exists for the tank: it blocks the automatic path (existing invariant).
+        assertThat(manualRequest(tankId, productId, null).isSuccess()).isTrue();
+
+        orderCancelledConsumer.on(new EventEnvelope(UUID.randomUUID(), "order.cancelled.v1", "FuelOrder", "9014",
+                ORGANIZATION, 1L, T1, "{\"orderId\":9014,\"requestId\":" + request.getId() + "}"));
+        read(tankId, 2, T1.plusSeconds(2));
+
+        assertThat(requestsFor(tankId)).filteredOn(r -> r.getSource() == ReplenishmentSource.AUTOMATIC).hasSize(1);
+    }
+
+    private Result<ReplenishmentRequest, ApplicationError> manualRequest(Long tankId, Long productId, String episodeKey) {
+        return replenishmentCommandService.handle(new CreateReplenishmentRequestCommand(
+                ORGANIZATION, null, tankId, PROVIDER, productId, 100.0, "LITRE", ReplenishmentSource.MANUAL,
+                episodeKey, "Av. Combustibles 123", null));
+    }
+
+    @Test
     void aReplayedReadingDoesNotDuplicateTheEpisodeOrTheRequest() {
-        var tankId = aTank("20900000005");
+        var tankId = aTank("20960000138");
         var productId = aProduct();
         configure(tankId, productId, true);
         setLevel(tankId, 50.0, T1);
@@ -263,7 +379,7 @@ class RefillGenerationIntegrationTest {
 
     @Test
     void aManualLevelEditTriggersTheSameIdempotentEvaluation() {
-        var tankId = aTank("20900000006");
+        var tankId = aTank("20960000146");
         var productId = aProduct();
         configure(tankId, productId, true);
 

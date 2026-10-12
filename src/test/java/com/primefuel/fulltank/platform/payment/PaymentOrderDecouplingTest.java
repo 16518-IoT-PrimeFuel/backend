@@ -124,6 +124,8 @@ class PaymentOrderDecouplingTest {
         assertThat(paymentCommandService.handle(new FailPaymentCommand(failedId)).getOrElse(null).getStatus())
                 .isEqualTo(PaymentStatus.FAILED);
         assertThat(paymentCommandService.handle(new FailPaymentCommand(failedId)).isSuccess()).isFalse();
+        assertThat(publicationRepository.findByAggregateTypeAndAggregateIdOrderByIdAsc("Payment",
+                String.valueOf(failedId))).extracting("eventType").containsOnlyOnce("payment.failed.v1");
 
         var retry = paymentCommandService
                 .handle(new CreatePaymentCommand(orderId, companyId, 50.0, PaymentMethod.CASH));
