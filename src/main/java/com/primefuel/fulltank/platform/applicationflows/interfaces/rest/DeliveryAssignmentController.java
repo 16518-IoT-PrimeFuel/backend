@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.applicationflows.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.applicationflows.AssignDeliveryFlow;
 import com.primefuel.fulltank.platform.applicationflows.AssignDeliveryFlowCommand;
 import com.primefuel.fulltank.platform.applicationflows.AssignDeliveryResult;
@@ -56,7 +57,7 @@ public class DeliveryAssignmentController {
     public ResponseEntity<?> assign(@RequestBody AssignDeliveryResource resource) {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var command = new AssignDeliveryFlowCommand(resource.commandId(), resource.orderId(), providerId.get(),
                 resource.driverId(), resource.tankerId(), resource.windowStart(), resource.windowEnd(),

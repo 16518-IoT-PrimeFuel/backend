@@ -31,7 +31,7 @@ class TankModelTest {
 
     private Long aCustomer() {
         var customer = customerCommandService.handle(
-                new RegisterCustomerCommand(1L, "Cliente Tanque", "20555555555", null, null, null, null));
+                new RegisterCustomerCommand(1L, "Cliente Tanque", "20960000065", null, null, null, null));
         assertThat(customer.isSuccess()).isTrue();
         return customer.getOrElse(null).getId();
     }

@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.tracking.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.fleet.api.FleetCatalog;
 import com.primefuel.fulltank.platform.fulfillment.api.DeliveryTrackingLookup;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
@@ -69,7 +70,7 @@ public class DeliveryTrackingQueryController {
         }
         return trackingQuery.latest(deliveryId)
                 .map(snapshot -> new ResponseEntity<>(toResource(snapshot), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -107,12 +108,12 @@ public class DeliveryTrackingQueryController {
     private ResponseEntity<?> denialOrNull(Long deliveryId) {
         var delivery = deliveryTrackingLookup.findAssignedDelivery(deliveryId);
         if (delivery.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var assignment = delivery.get();
         var driver = fleetCatalog.findDriver(assignment.driverId());
         if (driver.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var assignedDriver = driver.get();
 
@@ -129,7 +130,7 @@ public class DeliveryTrackingQueryController {
         if (providerOwner || assignedDriverCaller) {
             return null;
         }
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
 
     private static DeliveryTrackingResource toResource(DeliveryTrackingQuery.TrackingSnapshot snapshot) {

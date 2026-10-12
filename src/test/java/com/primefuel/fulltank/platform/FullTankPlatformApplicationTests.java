@@ -62,7 +62,7 @@ class FullTankPlatformApplicationTests {
         mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
-                                {"username":"signup-owner@example.test","password":"StrongPass1!","roles":["ROLE_BUYER"],"buyerCompany":{"name":"Signup LLC","ruc":"20999111223","sector":"Fuel","address":"Lima","contactEmail":"signup-owner@example.test","phone":"999111222"}}
+                                {"username":"signup-owner@example.test","password":"StrongPass1!","roles":["ROLE_BUYER"],"buyerCompany":{"name":"Signup LLC","ruc":"20960000219","sector":"Fuel","address":"Lima","contactEmail":"signup-owner@example.test","phone":"999111222"}}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.companyId").isNumber());
@@ -83,7 +83,7 @@ class FullTankPlatformApplicationTests {
         mockMvc.perform(post("/api/authentication/sign-up")
                         .contentType("application/json")
                         .content("""
-                                {"username":"reset-owner@example.test","password":"OldPass123!","roles":["ROLE_BUYER"],"buyerCompany":{"name":"Reset LLC","ruc":"20999111224","sector":"Fuel","address":"Lima","contactEmail":"reset-owner@example.test","phone":"999111222"}}
+                                {"username":"reset-owner@example.test","password":"OldPass123!","roles":["ROLE_BUYER"],"buyerCompany":{"name":"Reset LLC","ruc":"20960000227","sector":"Fuel","address":"Lima","contactEmail":"reset-owner@example.test","phone":"999111222"}}
                                 """))
                 .andExpect(status().isCreated());
         clearInvocations(mailSender);

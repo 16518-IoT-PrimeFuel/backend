@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.safety.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.fulfillment.api.DeliveryTrackingLookup;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import com.primefuel.fulltank.platform.safety.api.GeofencePolicies;
@@ -67,14 +68,14 @@ public class GeofencePoliciesController {
                                     @Valid @RequestBody CreateGeofencePolicyResource resource) {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var delivery = deliveryTrackingLookup.findAssignedDelivery(deliveryId);
         if (delivery.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         if (!providerId.get().equals(delivery.get().providerId())) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = geofencePolicies.createPolicy(new CreateGeofencePolicyCommand(
                 deliveryId, providerId.get(), resource.centerLatitude(), resource.centerLongitude(),

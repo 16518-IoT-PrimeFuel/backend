@@ -29,7 +29,7 @@ class ProviderBuyerRegistrationTest extends ProviderReadTestSupport {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(
                                                 "{\"name\":\"Nuevo Comprador"
-                                                    + " SAC\",\"ruc\":\"20999888777\",\"sector\":\"Industrial\",\"address\":\"Planta"
+                                                    + " SAC\",\"ruc\":\"20960000235\",\"sector\":\"Industrial\",\"address\":\"Planta"
                                                     + " Lima\",\"siteName\":\"Planta\"}"))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.tankCount").value(0))

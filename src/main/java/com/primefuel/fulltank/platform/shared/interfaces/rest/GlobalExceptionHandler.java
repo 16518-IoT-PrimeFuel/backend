@@ -15,7 +15,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -39,9 +43,7 @@ public class GlobalExceptionHandler {
         MissingServletRequestParameterException.class,
         HandlerMethodValidationException.class
     })
-    public ResponseEntity<?> handleProviderParameterValidation(
-            Exception exception, HttpServletRequest request) {
-        if (!isProviderRoute(request.getRequestURI())) return unexpected(exception);
+    public ResponseEntity<?> handleParameterValidation(Exception exception) {
         if (exception instanceof HandlerMethodValidationException validation
                 && validation.isForReturnValue()) return unexpected(exception);
         return ErrorResponseAssembler.toErrorResponseFromApplicationError(
@@ -51,12 +53,41 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<?> handleProviderConflict(
+    public ResponseEntity<?> handleDataIntegrity(
             DataIntegrityViolationException exception, HttpServletRequest request) {
-        if (!isProviderRoute(request.getRequestURI())) return unexpected(exception);
+        LOG.warn("Data integrity violation: {}", exception.getMostSpecificCause().getMessage());
+        var resource = isProviderRoute(request.getRequestURI()) ? "ProviderResource" : "Resource";
         return ErrorResponseAssembler.toErrorResponseFromApplicationError(
-                ApplicationError.conflict(
-                        "ProviderResource", "A conflicting association already exists"));
+                ApplicationError.conflict(resource, "A conflicting resource already exists"));
+    }
+
+    @ExceptionHandler(org.springframework.dao.OptimisticLockingFailureException.class)
+    public ResponseEntity<?> handleOptimisticLock(org.springframework.dao.OptimisticLockingFailureException exception) {
+        LOG.warn("Optimistic lock conflict: {}", exception.getMessage());
+        return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                ApplicationError.conflict("Resource", "The resource was modified concurrently; retry"));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResource> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .headers(ex.getHeaders())
+                .body(new ErrorResource("METHOD_NOT_ALLOWED", "HTTP method not supported for this resource"));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResource> handleMediaTypeNotSupported(
+            HttpMediaTypeNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .headers(ex.getHeaders())
+                .body(new ErrorResource("UNSUPPORTED_MEDIA_TYPE", "Content type not supported"));
+    }
+
+    @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
+    public ResponseEntity<?> handleNoResource(Exception ex) {
+        return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+                ApplicationError.notFound("resource", "route"));
     }
 
     private static boolean isProviderRoute(String uri) {
@@ -85,9 +116,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<?> handleResponseStatusException(ResponseStatusException ex) {
-        return ErrorResponseAssembler.toErrorResponseFromApplicationError(
-                ApplicationError.validationError(
-                        "request", ex.getReason() != null ? ex.getReason() : "Invalid request"));
+        var reason = ex.getReason();
+        var error = switch (ex.getStatusCode().value()) {
+            case 404 -> ApplicationError.notFound("resource", reason != null ? reason : "requested");
+            case 403 -> ApplicationError.forbidden(reason != null ? reason : "Access denied");
+            case 409 -> ApplicationError.conflict("resource", reason != null ? reason : "Conflict");
+            default -> ApplicationError.validationError(
+                    "request", reason != null ? reason : "Invalid request");
+        };
+        return ErrorResponseAssembler.toErrorResponseFromApplicationError(error);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

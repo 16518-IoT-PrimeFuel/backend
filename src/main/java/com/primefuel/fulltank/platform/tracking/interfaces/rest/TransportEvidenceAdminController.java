@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.tracking.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.fulfillment.api.DeliveryTrackingLookup;
 import com.primefuel.fulltank.platform.tracking.api.DeliveryTrackingQuery;
 import com.primefuel.fulltank.platform.tracking.domain.repositories.DeliveryTrackingRepository;
@@ -55,7 +56,7 @@ public class TransportEvidenceAdminController {
     })
     public ResponseEntity<Void> delete(@PathVariable Long deliveryId) {
         if (deliveryLookup.findAssignedDelivery(deliveryId).isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         samples.deleteByDeliveryId(deliveryId);
         tracking.deleteByDeliveryId(deliveryId);
@@ -74,7 +75,7 @@ public class TransportEvidenceAdminController {
     })
     public ResponseEntity<?> export(@PathVariable Long deliveryId) {
         if (deliveryLookup.findAssignedDelivery(deliveryId).isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var resources = trackingQuery.samples(deliveryId).stream()
                 .map(snapshot -> new TrackingSampleResource(snapshot.evidenceId(), snapshot.kind(),

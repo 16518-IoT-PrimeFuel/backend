@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.notification.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
 import com.primefuel.fulltank.platform.notification.application.commandservices.NotificationCommandService;
 import com.primefuel.fulltank.platform.notification.application.queryservices.NotificationQueryService;
@@ -57,7 +58,7 @@ public class MeNotificationsController {
     public ResponseEntity<List<NotificationResource>> list() {
         var userId = membershipAccess.currentUserId();
         if (userId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return ResponseEntity.ok(toResources(
                 notificationQueryService.handle(new GetNotificationsByUserIdQuery(userId.get()))));
@@ -74,7 +75,7 @@ public class MeNotificationsController {
     public ResponseEntity<List<NotificationResource>> listUnread() {
         var userId = membershipAccess.currentUserId();
         if (userId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return ResponseEntity.ok(toResources(
                 notificationQueryService.handle(new GetUnreadNotificationsByUserIdQuery(userId.get()))));
@@ -96,11 +97,11 @@ public class MeNotificationsController {
     public ResponseEntity<?> markAsRead(@PathVariable Long notificationId) {
         var userId = membershipAccess.currentUserId();
         if (userId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var existing = notificationQueryService.handle(new GetNotificationByIdQuery(notificationId));
         if (existing.isEmpty() || !userId.get().equals(existing.get().getUserId())) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var result = notificationCommandService.handle(new MarkNotificationAsReadCommand(notificationId));
         return ResponseEntityAssembler.toResponseEntityFromResult(

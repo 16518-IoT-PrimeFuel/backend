@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.tracking.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,7 +39,7 @@ public class AdminApiMetricsController {
     })
     public ResponseEntity<?> list(@RequestParam(required = false) String version) {
         if (version != null && !version.equals("v1") && !version.equals("v2")) {
-            return ResponseEntity.badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
         var result = jdbc.query("SELECT m.route_key, m.version, m.handler, m.request_count, m.last_seen, "
                         + "COUNT(c.caller_key) AS distinct_callers FROM api_route_metrics m "

@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.equipment.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.equipment.application.commandservices.TankCommandService;
 import com.primefuel.fulltank.platform.equipment.application.queryservices.TankQueryService;
 import com.primefuel.fulltank.platform.equipment.domain.model.commands.RegisterTankCommand;
@@ -59,7 +60,7 @@ public class TanksController {
     public ResponseEntity<?> registerTank(@Valid @RequestBody RegisterTankResource resource) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = tankCommandService.handle(new RegisterTankCommand(
                 organizationId.get(), resource.customerAccountId(), resource.siteId(), resource.name(),
@@ -83,7 +84,7 @@ public class TanksController {
     public ResponseEntity<List<TankResource>> listTanks() {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var tanks = tankQueryService.handle(new GetTanksByOrganizationQuery(organizationId.get()));
         return new ResponseEntity<>(
@@ -107,12 +108,12 @@ public class TanksController {
     public ResponseEntity<TankResource> getTank(@PathVariable Long tankId) {
         var organizationId = membershipAccess.currentOrganizationId();
         if (organizationId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return tankQueryService.handle(new com.primefuel.fulltank.platform.equipment.domain.model.queries.GetTankByIdQuery(tankId))
                 .filter(tank -> organizationId.get().equals(tank.getOrganizationId()))
                 .map(tank -> new ResponseEntity<>(
                         TankResourceFromDomainAssembler.toResourceFromDomain(tank), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 }

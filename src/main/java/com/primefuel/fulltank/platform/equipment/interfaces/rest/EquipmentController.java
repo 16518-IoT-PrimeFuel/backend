@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.equipment.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.equipment.application.commandservices.EquipmentCommandService;
 import com.primefuel.fulltank.platform.equipment.application.queryservices.EquipmentQueryService;
 import com.primefuel.fulltank.platform.equipment.domain.model.queries.GetAllEquipmentQuery;
@@ -84,7 +85,7 @@ public class EquipmentController {
                                              @RequestBody UpdateEquipmentResource resource) {
         var existing = equipmentRepository.findById(equipmentId).orElse(null);
         if (existing == null || !currentUserAccess.ownsCompany(existing.getCompanyId())) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var command = UpdateEquipmentCommandFromResourceAssembler.toCommandFromResource(equipmentId, resource);
         var result = equipmentCommandService.handle(command);
@@ -130,7 +131,7 @@ public class EquipmentController {
                 .filter(equipment -> currentUserAccess.ownsCompany(equipment.getCompanyId()));
         return result.map(e -> new ResponseEntity<>(
                         EquipmentResourceFromEntityAssembler.toResourceFromEntity(e), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**

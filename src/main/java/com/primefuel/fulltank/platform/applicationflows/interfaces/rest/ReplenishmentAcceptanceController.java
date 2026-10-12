@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.applicationflows.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.applicationflows.ReplenishmentAcceptanceFlow;
 import com.primefuel.fulltank.platform.iam.api.TenantAccess;
 import com.primefuel.fulltank.platform.replenishment.api.ReplenishmentLookup;
@@ -49,7 +50,7 @@ public class ReplenishmentAcceptanceController {
         var providerId = tenantAccess.currentProviderId();
         if (providerId.isEmpty() || requests.findById(requestId)
                 .filter(request -> providerId.get().equals(request.providerId())).isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         var result = acceptanceFlow.accept(requestId);
         return ResponseEntityAssembler.toResponseEntityFromResult(

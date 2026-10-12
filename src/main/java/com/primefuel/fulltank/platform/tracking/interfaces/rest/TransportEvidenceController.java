@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.tracking.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.fleet.api.FleetCatalog;
 import com.primefuel.fulltank.platform.fulfillment.api.DeliveryTrackingLookup;
 import com.primefuel.fulltank.platform.iam.api.MembershipAccess;
@@ -78,28 +79,28 @@ public class TransportEvidenceController {
                                     @Valid @RequestBody TransportEvidenceResource resource) {
         var userId = membershipAccess.currentUserId();
         if (userId.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
         var delivery = deliveryTrackingLookup.findAssignedDelivery(deliveryId);
         if (delivery.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var assignment = delivery.get();
 
         var driver = fleetCatalog.findDriver(assignment.driverId());
         if (driver.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         var assignedDriver = driver.get();
 
         // S16 invariant: driver and delivery share a tenant. A mismatch is an inconsistent assignment.
         if (!assignment.providerId().equals(assignedDriver.providerId())) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         // The caller must be the assigned driver (identity resolved from the principal, never the body).
         if (assignedDriver.userId() == null || !assignedDriver.userId().equals(userId.get())) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
         TransportEvidenceKind kind;

@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.inventory.interfaces.rest;
 
+import org.springframework.web.server.ResponseStatusException;
 import com.primefuel.fulltank.platform.inventory.application.commandservices.FuelProductCommandService;
 import com.primefuel.fulltank.platform.inventory.application.queryservices.FuelProductQueryService;
 import com.primefuel.fulltank.platform.inventory.domain.model.commands.DeleteFuelProductCommand;
@@ -70,10 +71,10 @@ public class FuelProductsController {
     public ResponseEntity<Void> alertEmptyCatalog(@PathVariable Long providerId) {
         var products = fuelProductQueryService.handle(new GetFuelProductsByProviderIdQuery(providerId));
         if (products.stream().anyMatch(product -> !Boolean.FALSE.equals(product.getActive()))) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
         var organizationId = companies.organizationIdForProvider(providerId);
-        if (organizationId.isEmpty()) return ResponseEntity.notFound().build();
+        if (organizationId.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         // ponytail: one alert per provider/day; use catalog epochs if same-day re-alerting becomes necessary.
         var key = "empty-catalog:" + providerId + ":" + LocalDate.now(clock.withZone(ZoneId.of("America/Lima")));
         events.publishEvent(new EventEnvelope(UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.UTF_8)),
@@ -118,7 +119,7 @@ public class FuelProductsController {
     @PostMapping("/{fuelProductId}/update-stock")
     public ResponseEntity<?> updateStock(@PathVariable Long fuelProductId,
                                          @RequestBody UpdateFuelProductStockResource resource) {
-        if (!ownsProduct(fuelProductId)) return ResponseEntity.notFound().build();
+        if (!ownsProduct(fuelProductId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var command = UpdateFuelProductStockCommandFromResourceAssembler.toCommandFromResource(fuelProductId, resource);
         var result = fuelProductCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
@@ -164,7 +165,7 @@ public class FuelProductsController {
                         || tenantAccess.ownsProvider(product.getProviderId()));
         return result.map(p -> new ResponseEntity<>(
                         FuelProductResourceFromEntityAssembler.toResourceFromEntity(p), HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -200,7 +201,7 @@ public class FuelProductsController {
     @PutMapping("/{fuelProductId}")
     public ResponseEntity<?> updateFuelProduct(@PathVariable Long fuelProductId,
                                                @RequestBody UpdateFuelProductResource resource) {
-        if (!ownsProduct(fuelProductId)) return ResponseEntity.notFound().build();
+        if (!ownsProduct(fuelProductId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var command = UpdateFuelProductCommandFromResourceAssembler.toCommandFromResource(fuelProductId, resource);
         var result = fuelProductCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
@@ -223,7 +224,7 @@ public class FuelProductsController {
     })
     @DeleteMapping("/{fuelProductId}")
     public ResponseEntity<?> deleteFuelProduct(@PathVariable Long fuelProductId) {
-        if (!ownsProduct(fuelProductId)) return ResponseEntity.notFound().build();
+        if (!ownsProduct(fuelProductId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         var result = fuelProductCommandService.handle(new DeleteFuelProductCommand(fuelProductId));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,

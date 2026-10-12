@@ -1,5 +1,6 @@
 package com.primefuel.fulltank.platform.equipment.interfaces.rest.transform;
 
+import com.primefuel.fulltank.platform.shared.domain.model.valueobjects.Unit;
 import com.primefuel.fulltank.platform.equipment.domain.model.valueobjects.ProviderTank;
 import com.primefuel.fulltank.platform.equipment.interfaces.rest.resources.ProviderTankResource;
 
@@ -20,7 +21,7 @@ public final class ProviderTankResourceFromDomainAssembler {
                 t.fuelProductId(),
                 t.capacity(),
                 t.currentLevel(),
-                t.unit(),
+                Unit.fromCode(t.unit()).name(),
                 t.levelPercent(),
                 t.lowLevelPercent(),
                 t.critical(),
