@@ -20,7 +20,8 @@
 #define TOPIC_SUFFIX "cambia-este-sufijo"   // igual que en MQTT_TOPIC de la Edge
 #define EDGE_URL "http://192.168.1.50:8090/api/v1/readings"  // solo USE_MQTT 0
 #define EDGE_API_KEY ""                                       // solo USE_MQTT 0
-#define DEVICE_ID "esp32-tank-1"
+#define DEVICE_ID "esp32-tank-1"   // = deviceId con el que se registró el tanque
+#define CHANNEL "level"            // = channel con el que se registró el tanque
 #define TANK_ID "1"
 
 // secrets.h (no se sube a git) redefine lo que haga falta para la placa real.
@@ -36,7 +37,7 @@ const int PIN_LED_ERROR = 25;
 // ---------- Tanque (valores de demo: calibrar con el tanque real) ----------
 const float SENSOR_GAP_CM = 25.0;     // del sensor a la superficie con el tanque lleno
 const float USABLE_HEIGHT_CM = 100.0; // altura útil del líquido
-const float CAPACITY_L = 1000.0;
+const float CAPACITY_L = 1000.0;     // <= capacidad registrada del tanque (si no, el backend pone CUARENTENA)
 const float CHANGE_TRIGGER_PCT = 2.0; // enviar antes si el nivel cambia al menos esto
 const unsigned long SAMPLE_EVERY_MS = 10UL * 1000;
 const unsigned long PUBLISH_EVERY_MS = 5UL * 60 * 1000;
@@ -100,9 +101,9 @@ bool measure(Reading &r) {
 // ---------- Envío ----------
 void toJson(const Reading &r, char *out, size_t size) {
   snprintf(out, size,
-           "{\"schemaVersion\":1,\"deviceId\":\"%s\",\"channel\":\"level\",\"sequence\":%lld,"
+           "{\"schemaVersion\":1,\"deviceId\":\"%s\",\"channel\":\"%s\",\"sequence\":%lld,"
            "\"capturedAt\":\"%s\",\"level\":%.1f,\"unit\":\"LITRE\"}",
-           DEVICE_ID, r.sequence, r.capturedAt, r.litres);
+           DEVICE_ID, CHANNEL, r.sequence, r.capturedAt, r.litres);
 }
 
 // true = la lectura quedó entregada o debe descartarse; false = reintentar.

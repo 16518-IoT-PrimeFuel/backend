@@ -8,6 +8,8 @@ ESP32 ──MQTT──▶ broker (público o Mosquitto) ──▶ Edge API ─�
 ESP32 ──HTTP (misma red)──────────────────────▶ Edge API
 ```
 
+Guía paso a paso (compilar, correr, desplegar y probar con el sensor): abrir [`GUIA.html`](GUIA.html) en el navegador.
+
 ## Endpoints
 
 | Método | Ruta | Uso |

@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía Edge API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fbf8f4; --surface: #ffffff; --ink: #3d3a4b; --muted: #7a7690; --line: #ece6f0; --code: #f4f0f8;
+    --lavender: #e6dcfa; --lavender-ink: #6b4fb3;
+    --mint: #d6f3e6;     --mint-ink: #2f7d5b;
+    --peach: #ffe2d1;    --peach-ink: #b45c2c;
+    --sky: #d9ebfb;      --sky-ink: #2f6aa0;
+    --butter: #fff3c4;   --butter-ink: #8a6d10;
+    --rose: #fbdbe4;     --rose-ink: #a83a5c;
+    --shadow: 0 6px 24px rgba(107, 79, 179, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1e1c26; --surface: #272431; --ink: #ece9f5; --muted: #a9a4bd; --line: #3a3647; --code: #1f1d28;
+      --lavender: #3b3157; --lavender-ink: #cbb8ff; --mint: #23413a; --mint-ink: #9fe3c4;
+      --peach: #4a3226; --peach-ink: #ffc3a0; --sky: #233a52; --sky-ink: #a9d2fb;
+      --butter: #463e1d; --butter-ink: #f5e08f; --rose: #4a2733; --rose-ink: #ffb3c8;
+      --shadow: 0 6px 24px rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1e1c26; --surface: #272431; --ink: #ece9f5; --muted: #a9a4bd; --line: #3a3647; --code: #1f1d28;
+    --lavender: #3b3157; --lavender-ink: #cbb8ff; --mint: #23413a; --mint-ink: #9fe3c4;
+    --peach: #4a3226; --peach-ink: #ffc3a0; --sky: #233a52; --sky-ink: #a9d2fb;
+    --butter: #463e1d; --butter-ink: #f5e08f; --rose: #4a2733; --rose-ink: #ffb3c8;
+    --shadow: 0 6px 24px rgba(0,0,0,0.3);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Nunito", system-ui, sans-serif; line-height: 1.6; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 40px 16px 80px; }
+  .eyebrow { display: inline-block; background: var(--lavender); color: var(--lavender-ink); padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 13px; }
+  h1 { font-size: clamp(28px, 5vw, 42px); margin: 12px 0 8px; font-weight: 800; letter-spacing: -0.02em; }
+  h2 { font-size: 24px; margin: 0 0 12px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+  h3 { font-size: 17px; margin: 18px 0 6px; }
+  p.lead { color: var(--muted); font-size: 17px; margin: 0; max-width: 72ch; }
+  code { font-family: "JetBrains Mono", monospace; font-size: 13px; background: var(--code); padding: 1px 6px; border-radius: 6px; }
+  pre { font-family: "JetBrains Mono", monospace; font-size: 13px; background: var(--code); padding: 14px 16px; border-radius: 12px; overflow-x: auto; margin: 8px 0 12px; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  section { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 22px; box-shadow: var(--shadow); margin-top: 22px; scroll-margin-top: 16px; }
+  .badge { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; font-size: 16px; font-weight: 800; flex: 0 0 auto; }
+  .c-lav { background: var(--lavender); color: var(--lavender-ink); }
+  .c-mint { background: var(--mint); color: var(--mint-ink); }
+  .c-peach { background: var(--peach); color: var(--peach-ink); }
+  .c-sky { background: var(--sky); color: var(--sky-ink); }
+  .c-butter { background: var(--butter); color: var(--butter-ink); }
+  .c-rose { background: var(--rose); color: var(--rose-ink); }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  nav.toc a { text-decoration: none; font-weight: 700; font-size: 14px; padding: 6px 12px; border-radius: 999px; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+  .node { border-radius: 14px; padding: 10px 12px; font-weight: 700; font-size: 14px; flex: 1 1 140px; text-align: center; }
+  .node small { display: block; font-weight: 400; font-size: 12px; opacity: .85; }
+  .arrow { color: var(--muted); font-weight: 800; }
+  .callout { border-radius: 14px; padding: 12px 14px; margin: 12px 0; font-size: 15px; }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+  .tbl { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  ol.steps { padding-left: 20px; margin: 6px 0; }
+  ol.steps li { margin: 6px 0; }
+  ul.check { list-style: none; padding: 0; margin: 6px 0; }
+  ul.check li { padding-left: 28px; position: relative; margin: 6px 0; }
+  ul.check li::before { content: "✓"; position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 6px; background: var(--mint); color: var(--mint-ink); font-size: 12px; font-weight: 800; display: grid; place-items: center; }
+  .tabs { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .tabs > div h3 { margin-top: 4px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">FullTank · PrimeFuel · Edge API</span>
+  <h1>Guía: compilar, correr, desplegar y probar con el sensor</h1>
+  <p class="lead">La Edge API recibe las lecturas del ESP32 (por MQTT o HTTP), las valida y las reenvía al backend en Render con el <code>X-Device-Token</code>. El dispositivo nunca tiene ese token.</p>
+  <nav class="toc">
+    <a class="c-lav" href="#arquitectura">Arquitectura</a>
+    <a class="c-butter" href="#requisitos">0 · Requisitos</a>
+    <a class="c-sky" href="#compilar">1 · Compilar</a>
+    <a class="c-mint" href="#configurar">2 · Configurar</a>
+    <a class="c-peach" href="#correr">3 · Correr / desplegar</a>
+    <a class="c-lav" href="#contrato">4 · Contrato del firmware</a>
+    <a class="c-sky" href="#pruebas">5 · Pruebas</a>
+    <a class="c-butter" href="#planb">6 · Plan B</a>
+    <a class="c-rose" href="#problemas">7 · Problemas</a>
+  </nav>
+</header>
+
+<section id="arquitectura">
+  <h2><span class="badge c-lav">◆</span>Arquitectura</h2>
+  <div class="flow">
+    <div class="node c-peach">ESP32 + sensor<small>Wokwi o placa real</small></div>
+    <div class="arrow">→ MQTT →</div>
+    <div class="node c-butter">broker.hivemq.com<small>plan B: Mosquitto</small></div>
+    <div class="arrow">→</div>
+    <div class="node c-lav">Edge API :8090<small>tu PC · Docker</small></div>
+    <div class="arrow">→ HTTPS →</div>
+    <div class="node c-sky">Backend Render<small>/api/telemetry/readings</small></div>
+  </div>
+  <div class="callout c-sky"><strong>También por HTTP</strong>Con la placa real en la misma WiFi, el ESP32 puede hacer <code>POST http://&lt;IP-de-tu-PC&gt;:8090/api/v1/readings</code> directo a la Edge.</div>
+</section>
+
+<section id="requisitos">
+  <h2><span class="badge c-butter">0</span>Requisitos</h2>
+  <div class="tbl"><table>
+    <tr><th>Qué</th><th>Para qué</th><th>Comprobar</th></tr>
+    <tr><td><strong>Docker</strong> + Docker Compose</td><td>Correr la Edge y Mosquitto (recomendado)</td><td><code>docker ps</code></td></tr>
+    <tr><td><strong>JDK 26</strong> (opcional)</td><td>Compilar y correr sin Docker; el Maven Wrapper viene incluido</td><td><code>java -version</code></td></tr>
+    <tr><td>Usuario <strong>distribuidor</strong> + tanque registrado</td><td>Emitir el token del dispositivo</td><td>Login en la web</td></tr>
+    <tr><td>Cuenta en <strong>wokwi.com</strong></td><td>Simular el ESP32 con el HC-SR04</td><td>—</td></tr>
+    <tr><td><strong>MQTTX</strong> (opcional)</td><td>Ver o publicar mensajes MQTT sin ESP32</td><td>—</td></tr>
+  </table></div>
+  <div class="callout c-rose"><strong>Linux: "permission denied" con Docker</strong>Agrega tu usuario al grupo y vuelve a iniciar sesión: <code>sudo usermod -aG docker $USER</code></div>
+</section>
+
+<section id="compilar">
+  <h2><span class="badge c-sky">1</span>Compilar y pruebas unitarias</h2>
+  <p>Desde la carpeta <code>edge/</code>:</p>
+  <div class="tabs">
+    <div>
+      <h3>Linux / macOS</h3>
+<pre><code>./mvnw test                     # 14 pruebas
+./mvnw package -DskipTests      # genera target/*.jar</code></pre>
+    </div>
+    <div>
+      <h3>Windows (PowerShell)</h3>
+<pre><code>$env:JAVA_HOME = 'C:\ruta\a\jdk-26'
+.\mvnw.cmd test
+.\mvnw.cmd package -DskipTests</code></pre>
+    </div>
+  </div>
+  <p>Sin Java instalado, Docker compila por ti:</p>
+<pre><code>docker build -t fulltank-edge .</code></pre>
+  <ul class="check">
+    <li>Las pruebas cubren: validación (deviceId, rango, esquema, hora futura), orden de reenvío, reintentos con backoff, rechazos 4xx, cuarentena, duplicados, cola llena y arranque de la aplicación.</li>
+  </ul>
+</section>
+
+<section id="configurar">
+  <h2><span class="badge c-mint">2</span>Configurar</h2>
+  <h3>2.1 · Emitir el token del dispositivo (una vez)</h3>
+  <ol class="steps">
+    <li>Despierta Render abriendo <code>https://fulltank-backend.onrender.com/api</code> (tarda cerca de 1 minuto).</li>
+    <li>Inicia sesión como distribuidor:
+<pre><code>curl -X POST https://fulltank-backend.onrender.com/api/authentication/sign-in \
+  -H "Content-Type: application/json" \
+  -d '{"username":"&lt;usuario&gt;","password":"&lt;clave&gt;"}'</code></pre></li>
+    <li>Emite la credencial con el <code>token</code> (JWT) de la respuesta:
+<pre><code>curl -X POST https://fulltank-backend.onrender.com/api/provider/tanks/&lt;tankId&gt;/device-credential \
+  -H "Authorization: Bearer &lt;JWT&gt;"</code></pre></li>
+    <li>Guarda <code>token</code>, <code>deviceId</code> y <code>channel</code> de la respuesta. <strong>El token se muestra una sola vez.</strong> Si responde 409, ya hay uno activo: usa <code>…/device-credential/rotate</code>.</li>
+  </ol>
+
+  <h3>2.2 · Crear <code>.env</code></h3>
+<pre><code>cp .env.example .env</code></pre>
+  <div class="tbl"><table>
+    <tr><th>Variable</th><th>Valor</th></tr>
+    <tr><td><code>DEVICE_TOKEN</code></td><td>Token del paso 2.1</td></tr>
+    <tr><td><code>EDGE_API_KEY</code></td><td>Clave larga inventada (la usa el ESP32 en modo HTTP)</td></tr>
+    <tr><td><code>MQTT_TOPIC</code></td><td><code>fulltank/&lt;sufijo-aleatorio&gt;/tanks/+/readings</code></td></tr>
+    <tr><td><code>ALLOWED_DEVICE_IDS</code></td><td>El <code>deviceId</code> del tanque</td></tr>
+    <tr><td><code>MAX_LEVEL</code></td><td>Capacidad del tanque (p. ej. <code>1000</code>)</td></tr>
+    <tr><td><code>MOSQUITTO_PASSWORD</code></td><td>Clave para el plan B</td></tr>
+    <tr><td><code>MQTT_USERNAME</code> / <code>MQTT_PASSWORD</code></td><td><strong>Vacíos</strong> mientras uses el broker público</td></tr>
+  </table></div>
+  <div class="callout c-butter"><strong>Nunca subas <code>.env</code></strong>Ya está en <code>.gitignore</code>. El token solo debe vivir ahí.</div>
+</section>
+
+<section id="correr">
+  <h2><span class="badge c-peach">3</span>Correr y desplegar</h2>
+  <h3>Opción A · Docker Compose (recomendada)</h3>
+<pre><code>docker compose up -d --build     # Edge + Mosquitto
+docker compose logs -f edge      # ver lecturas en vivo
+docker compose down              # apagar</code></pre>
+  <h3>Opción B · Java directo</h3>
+<pre><code>set -a; source .env; set +a      # Linux/macOS: carga las variables
+java -jar target/fulltank-edge-0.0.1-SNAPSHOT.jar</code></pre>
+  <h3>Comprobar</h3>
+<pre><code>curl http://localhost:8090/health</code></pre>
+  <ul class="check">
+    <li><code>"mqtt": {"connected": true, …}</code></li>
+    <li><code>"backend": {"deviceTokenConfigured": true, …}</code></li>
+    <li><code>"relay": {"queued": 0, "lastError": null, …}</code></li>
+  </ul>
+  <div class="callout c-lav"><strong>¿Dónde se despliega?</strong>En el PC que está junto al sensor (es una API <em>de borde</em>), con Docker Compose. No va en Render: el plan gratis se duerme a los 15 min y el suscriptor MQTT dejaría de escuchar. Todas sus conexiones son salientes (al broker y a Render), así que no hay que abrir puertos en el router; solo el 8090 en la red local si el ESP32 usa HTTP.</div>
+</section>
+
+<section id="contrato">
+  <h2><span class="badge c-lav">4</span>Contrato para el firmware</h2>
+  <div class="tabs">
+    <div>
+      <h3>MQTT (Wokwi)</h3>
+      <ul class="check">
+        <li>Broker <code>broker.hivemq.com:1883</code>, sin usuario</li>
+        <li>Topic <code>fulltank/&lt;sufijo&gt;/tanks/&lt;tankId&gt;/readings</code></li>
+        <li>Mismo sufijo que en <code>MQTT_TOPIC</code></li>
+      </ul>
+    </div>
+    <div>
+      <h3>HTTP (placa real, misma WiFi)</h3>
+      <ul class="check">
+        <li><code>POST http://&lt;IP-PC&gt;:8090/api/v1/readings</code></li>
+        <li><code>Content-Type: application/json</code></li>
+        <li><code>X-Edge-Key: &lt;EDGE_API_KEY&gt;</code></li>
+      </ul>
+    </div>
+  </div>
+  <h3>Cuerpo (igual en los dos)</h3>
+<pre><code>{"schemaVersion":1,"deviceId":"esp32-tank-1","channel":"level","sequence":1792650000,
+ "capturedAt":"2026-10-22T15:00:00Z","level":640.5,"unit":"LITRE"}</code></pre>
+  <div class="tbl"><table>
+    <tr><th>Campo</th><th>Regla</th><th>Si no se cumple</th></tr>
+    <tr><td><code>deviceId</code>, <code>channel</code></td><td><strong>Exactamente</strong> los del registro del tanque</td><td>Backend: QUARANTINED</td></tr>
+    <tr><td><code>sequence</code></td><td>Única y creciente. En Wokwi usar la hora UNIX (la NVS se borra en cada simulación)</td><td>Se ignora como duplicada</td></tr>
+    <tr><td><code>capturedAt</code></td><td>UTC por NTP, con <code>Z</code>, nunca en el futuro</td><td>Edge: 400</td></tr>
+    <tr><td><code>level</code></td><td>Litros, entre 0 y la capacidad</td><td>Edge: 400 · Backend: QUARANTINED</td></tr>
+    <tr><td>Token</td><td><strong>No</strong> se envía desde el ESP32</td><td>—</td></tr>
+  </table></div>
+  <div class="tbl"><table>
+    <tr><th>Respuesta HTTP de la Edge</th><th>Qué hace el ESP32</th></tr>
+    <tr><td><code>202</code></td><td>Lectura entregada</td></tr>
+    <tr><td><code>400</code> / <code>401</code></td><td>Descartar y encender el LED de error (reenviar no cambiaría nada)</td></tr>
+    <tr><td>Sin respuesta / <code>5xx</code></td><td>Reintentar la <strong>misma</strong> lectura con la misma <code>sequence</code></td></tr>
+  </table></div>
+</section>
+
+<section id="pruebas">
+  <h2><span class="badge c-sky">5</span>Pruebas, de menor a mayor</h2>
+
+  <h3>5.1 · Edge sola por HTTP (sin ESP32)</h3>
+<pre><code>curl -X POST http://localhost:8090/api/v1/readings \
+  -H "Content-Type: application/json" -H "X-Edge-Key: &lt;EDGE_API_KEY&gt;" \
+  -d '{"schemaVersion":1,"deviceId":"&lt;deviceId&gt;","channel":"&lt;channel&gt;","sequence":'$(date +%s)',"capturedAt":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","level":500,"unit":"LITRE"}'</code></pre>
+  <ul class="check">
+    <li>Responde <code>{"status":"QUEUED",…}</code> con 202</li>
+    <li><code>docker compose logs edge</code> muestra <code>reenviada: quality=ACCEPTED</code></li>
+  </ul>
+
+  <h3>5.2 · Edge por MQTT (sin ESP32)</h3>
+  <p>En MQTTX conéctate a <code>broker.hivemq.com:1883</code> y publica el mismo JSON (con una <code>sequence</code> nueva) en <code>fulltank/&lt;sufijo&gt;/tanks/&lt;tankId&gt;/readings</code>.</p>
+  <ul class="check"><li>El log muestra <code>encolada (MQTT)</code> y luego <code>reenviada: quality=ACCEPTED</code></li></ul>
+
+  <h3>5.3 · Sensor simulado en Wokwi</h3>
+  <ol class="steps">
+    <li>Plantilla <strong>ESP32</strong> (la clásica, DevKit; no la S3).</li>
+    <li>Pega el sketch y <code>diagram.json</code>, y agrega la biblioteca <strong>PubSubClient</strong>.</li>
+    <li>Configura <code>DEVICE_ID</code>, <code>CHANNEL</code>, <code>TOPIC_SUFFIX</code> y <code>CAPACITY_L</code>.</li>
+    <li>▶ Simula y mueve el control de distancia del HC-SR04: un cambio ≥ 2 % envía al instante.</li>
+  </ol>
+  <ul class="check">
+    <li>Monitor serie: <code>MQTT … publicado</code></li>
+    <li><code>http://localhost:8090/api/v1/readings/recent</code>: <code>FORWARDED</code> / <code>ACCEPTED</code></li>
+  </ul>
+
+  <h3>5.4 · Sensor real (placa + JSN-SR04T)</h3>
+  <ol class="steps">
+    <li>TRIG en GPIO 5, ECHO en GPIO 18 <strong>con divisor 1 kΩ / 2 kΩ</strong> (el eco sale a 5 V), VCC a 5 V, GND común.</li>
+    <li>Credenciales WiFi en <code>secrets.h</code> (no se sube a git).</li>
+    <li>Mide la distancia real con el tanque lleno y vacío, y calibra la separación, la altura útil y la capacidad.</li>
+    <li>Prueba con objetos a 30, 60 y 100 cm y compara con lo que muestra el monitor serie.</li>
+  </ol>
+
+  <h3>5.5 · Comprobar en el backend</h3>
+<pre><code>curl https://fulltank-backend.onrender.com/api/provider/tanks/&lt;tankId&gt;/readings \
+  -H "Authorization: Bearer &lt;JWT&gt;"</code></pre>
+  <ul class="check"><li>La lectura aparece con <code>quality: ACCEPTED</code> y el nivel del tanque cambió en la web</li></ul>
+
+  <h3>5.6 · Resiliencia: Render dormido</h3>
+  <p>Envía una lectura con Render dormido: la Edge la deja en cola (<code>/health</code> → <code>queued: 1</code>) y la reintenta (2 s, 4 s … hasta 60 s) hasta que el backend responda. La lectura llega sola, sin duplicarse.</p>
+</section>
+
+<section id="planb">
+  <h2><span class="badge c-butter">6</span>Plan B: el broker público se cae</h2>
+  <ol class="steps">
+    <li>En <code>.env</code>: <code>MQTT_URL=tcp://mosquitto:1883</code> y <code>MQTT_USERNAME</code>/<code>MQTT_PASSWORD</code> iguales a los de Mosquitto.</li>
+    <li><code>docker compose up -d</code></li>
+    <li>El ESP32 físico apunta a <code>&lt;IP-de-tu-PC&gt;:1883</code> con esas credenciales (o usa HTTP directo a la Edge).</li>
+  </ol>
+  <div class="callout c-rose"><strong>Wokwi no llega a tu PC</strong>Wokwi en el navegador solo sale a internet. Con el plan B, prueba con la placa real o con MQTTX apuntando a <code>localhost:1883</code>.</div>
+</section>
+
+<section id="problemas">
+  <h2><span class="badge c-rose">7</span>Problemas frecuentes</h2>
+  <div class="tbl"><table>
+    <tr><th>Síntoma</th><th>Causa probable</th><th>Solución</th></tr>
+    <tr><td><code>quality: QUARANTINED</code></td><td><code>deviceId</code>/<code>channel</code> distintos a los del tanque, token malo o rotado, o nivel mayor a la capacidad</td><td>Revisar el firmware contra la credencial; volver a emitir el token</td></tr>
+    <tr><td><code>"connected": false</code></td><td>Broker caído o <code>MQTT_URL</code> mal escrita</td><td>Revisar <code>docker compose logs edge</code>; pasar al plan B</td></tr>
+    <tr><td><code>deviceTokenConfigured: false</code></td><td><code>DEVICE_TOKEN</code> vacío</td><td>Completar <code>.env</code> y <code>docker compose up -d</code></td></tr>
+    <tr><td>Lecturas en cola que no salen</td><td>Render dormido o sin internet</td><td>Esperar; mirar <code>lastError</code> en <code>/health</code></td></tr>
+    <tr><td>401 en <code>/api/v1/readings</code></td><td><code>X-Edge-Key</code> distinta de <code>EDGE_API_KEY</code></td><td>Usar la misma clave en el firmware</td></tr>
+    <tr><td>400 <code>deviceId no autorizado</code></td><td>No está en <code>ALLOWED_DEVICE_IDS</code></td><td>Agregarlo en <code>.env</code></td></tr>
+    <tr><td>El ESP32 publica pero la Edge no recibe</td><td>Sufijo del topic distinto</td><td>Mismo sufijo en el firmware y en <code>MQTT_TOPIC</code></td></tr>
+    <tr><td>Wokwi repite la <code>sequence</code></td><td>Contador en NVS, que Wokwi borra</td><td>Usar la hora UNIX como <code>sequence</code></td></tr>
+  </table></div>
+</section>
+
+<footer>Edge API · rama <code>feat/edge-broker</code> · detalles técnicos en <code>README.md</code>. Antes de la exposición: despertar Render y tener el plan B ensayado.</footer>
+</div>
+</body>
+</html>

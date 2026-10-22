@@ -3,6 +3,11 @@
 #define WIFI_SSID "mi-red"
 #undef WIFI_PASSWORD
 #define WIFI_PASSWORD "mi-clave"
+// deviceId y channel EXACTOS del registro del tanque (si no, CUARENTENA):
+#undef DEVICE_ID
+#define DEVICE_ID "el-deviceId-del-tanque"
+#undef CHANNEL
+#define CHANNEL "el-channel-del-tanque"
 #undef TOPIC_SUFFIX
 #define TOPIC_SUFFIX "el-mismo-sufijo-que-en-la-edge"
 
