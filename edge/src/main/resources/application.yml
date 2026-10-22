@@ -1,0 +1,38 @@
+server:
+  port: ${PORT:8090}
+
+spring:
+  application:
+    name: fulltank-edge
+
+edge:
+  backend:
+    # Base de la API del backend; la Edge agrega /telemetry/readings.
+    base-url: ${BACKEND_URL:https://fulltank-backend.onrender.com/api}
+    # Token emitido con POST /api/provider/tanks/{tankId}/device-credential. Solo vive aquí, nunca en MQTT.
+    device-token: ${DEVICE_TOKEN:}
+    connect-timeout: 10s
+    # Render gratuito tarda cerca de un minuto en despertar.
+    read-timeout: 90s
+  ingest:
+    # Clave que el dispositivo envía en X-Edge-Key al usar HTTP. Vacía = sin control (solo pruebas).
+    api-key: ${EDGE_API_KEY:}
+  mqtt:
+    enabled: ${MQTT_ENABLED:true}
+    url: ${MQTT_URL:tcp://broker.hivemq.com:1883}
+    topic: ${MQTT_TOPIC:fulltank/change-me/tanks/+/readings}
+    username: ${MQTT_USERNAME:}
+    password: ${MQTT_PASSWORD:}
+    # Vacío = se genera uno aleatorio al arrancar (evita choques en brokers públicos).
+    client-id: ${MQTT_CLIENT_ID:}
+    qos: 1
+  policy:
+    # Lista separada por comas. Vacía = cualquier deviceId.
+    allowed-device-ids: ${ALLOWED_DEVICE_IDS:}
+    min-level: 0
+    max-level: ${MAX_LEVEL:100000}
+    max-clock-skew: 5m
+  queue:
+    capacity: 500
+    initial-backoff: 2s
+    max-backoff: 60s

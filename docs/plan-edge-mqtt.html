@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan Edge MQTT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fbf8f4;
+    --surface: #ffffff;
+    --ink: #3d3a4b;
+    --muted: #7a7690;
+    --line: #ece6f0;
+    --lavender: #e6dcfa; --lavender-ink: #6b4fb3;
+    --mint: #d6f3e6;     --mint-ink: #2f7d5b;
+    --peach: #ffe2d1;    --peach-ink: #b45c2c;
+    --sky: #d9ebfb;      --sky-ink: #2f6aa0;
+    --butter: #fff3c4;   --butter-ink: #8a6d10;
+    --rose: #fbdbe4;     --rose-ink: #a83a5c;
+    --shadow: 0 6px 24px rgba(107, 79, 179, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1e1c26; --surface: #272431; --ink: #ece9f5; --muted: #a9a4bd; --line: #3a3647;
+      --lavender: #3b3157; --lavender-ink: #cbb8ff;
+      --mint: #23413a;     --mint-ink: #9fe3c4;
+      --peach: #4a3226;    --peach-ink: #ffc3a0;
+      --sky: #233a52;      --sky-ink: #a9d2fb;
+      --butter: #463e1d;   --butter-ink: #f5e08f;
+      --rose: #4a2733;     --rose-ink: #ffb3c8;
+      --shadow: 0 6px 24px rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1e1c26; --surface: #272431; --ink: #ece9f5; --muted: #a9a4bd; --line: #3a3647;
+    --lavender: #3b3157; --lavender-ink: #cbb8ff;
+    --mint: #23413a;     --mint-ink: #9fe3c4;
+    --peach: #4a3226;    --peach-ink: #ffc3a0;
+    --sky: #233a52;      --sky-ink: #a9d2fb;
+    --butter: #463e1d;   --butter-ink: #f5e08f;
+    --rose: #4a2733;     --rose-ink: #ffb3c8;
+    --shadow: 0 6px 24px rgba(0,0,0,0.3);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Nunito", system-ui, sans-serif; line-height: 1.6;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 40px 16px 80px; }
+  header { margin-bottom: 32px; }
+  .eyebrow { display:inline-block; background: var(--lavender); color: var(--lavender-ink);
+    padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 13px; }
+  h1 { font-size: clamp(28px, 5vw, 42px); margin: 12px 0 8px; font-weight: 800; letter-spacing: -0.02em; }
+  h2 { font-size: 22px; margin: 44px 0 14px; font-weight: 800; }
+  h3 { margin: 0 0 6px; font-size: 17px; }
+  p.lead { color: var(--muted); font-size: 17px; max-width: 70ch; margin: 0; }
+  code, pre { font-family: "JetBrains Mono", monospace; font-size: 13px; }
+  code { background: var(--line); padding: 1px 6px; border-radius: 6px; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+    padding: 20px; box-shadow: var(--shadow); }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+  /* Diagram */
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .node { border-radius: 14px; padding: 12px 14px; font-weight: 700; font-size: 14px; flex: 1 1 150px; text-align: center; }
+  .node small { display:block; font-weight: 400; font-size: 12px; opacity: .85; }
+  .arrow { color: var(--muted); font-weight: 800; flex: 0 0 auto; }
+  .n-dev { background: var(--peach); color: var(--peach-ink); }
+  .n-brk { background: var(--butter); color: var(--butter-ink); }
+  .n-edge { background: var(--lavender); color: var(--lavender-ink); }
+  .n-be { background: var(--sky); color: var(--sky-ink); }
+  .note { margin-top: 14px; font-size: 14px; color: var(--muted); }
+
+  /* Phases */
+  .phase { position: relative; padding-left: 64px; margin-bottom: 14px; }
+  .phase .num { position: absolute; left: 0; top: 4px; width: 46px; height: 46px; border-radius: 14px;
+    display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+  .phase .meta { display:flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .chip { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+  .phase ul { margin: 6px 0 0; padding-left: 18px; }
+  .phase li { margin: 4px 0; }
+  .c-lav { background: var(--lavender); color: var(--lavender-ink); }
+  .c-mint { background: var(--mint); color: var(--mint-ink); }
+  .c-peach { background: var(--peach); color: var(--peach-ink); }
+  .c-sky { background: var(--sky); color: var(--sky-ink); }
+  .c-butter { background: var(--butter); color: var(--butter-ink); }
+  .c-rose { background: var(--rose); color: var(--rose-ink); }
+  .milestone { margin-top: 10px; background: var(--mint); color: var(--mint-ink);
+    border-radius: 12px; padding: 8px 12px; font-weight: 700; font-size: 14px; }
+
+  /* Timeline */
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .tbl { overflow-x: auto; }
+
+  .risk { border-left: 5px solid var(--rose-ink); }
+  .ok { border-left: 5px solid var(--mint-ink); }
+  pre { background: var(--line); padding: 14px; border-radius: 12px; overflow-x: auto; margin: 8px 0 0; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">FullTank · PrimeFuel · 21/10/2026</span>
+  <h1>Plan IoT: sensor → Edge API → backend</h1>
+  <p class="lead">Hoja de ruta para tener el prototipo funcionando antes del <strong>22/10 a las 23:00</strong>. Respeta lo que pide el profesor: la integración obligatoria es con una <strong>Edge API propia</strong>, MQTT es complementario, se puede usar un broker público con plan B y todo se documenta en <em>Solution Software Design</em>.</p>
+</header>
+
+<h2>Arquitectura</h2>
+<div class="card">
+  <div class="flow">
+    <div class="node n-dev">ESP32 + HC-SR04<small>Wokwi o placa real</small></div>
+    <div class="arrow">→ MQTT →</div>
+    <div class="node n-brk">broker.hivemq.com<small>plan B: Mosquitto en Docker</small></div>
+    <div class="arrow">→</div>
+    <div class="node n-edge">Edge API<small>Spring Boot · tu PC · Docker</small></div>
+    <div class="arrow">→ HTTPS →</div>
+    <div class="node n-be">Backend Render<small>/api/telemetry/readings</small></div>
+  </div>
+  <p class="note">Alternativa: el ESP32 físico en la misma WiFi hace <code>POST</code> directo a la Edge API por HTTP. El <code>X-Device-Token</code> vive <strong>solo en la Edge API</strong>; nunca viaja por el broker público. El backend no cambia.</p>
+</div>
+
+<h2>Fases</h2>
+
+<div class="card phase">
+  <div class="num c-butter">0</div>
+  <h3>Confirmar y preparar</h3>
+  <div class="meta"><span class="chip c-butter">≈ 30 min</span><span class="chip c-rose">hoy</span></div>
+  <ul>
+    <li>Leer en el enunciado cómo se define la Edge API (¿REST propio para el dispositivo?, ¿tecnología obligatoria?).</li>
+    <li>Despertar Render y emitir el token: <code>POST /api/provider/tanks/{tankId}/device-credential</code>. Guardarlo: se muestra una sola vez.</li>
+    <li>Probar la ingesta con curl y un <code>deviceId</code> de pruebas; confirmar <code>quality: ACCEPTED</code> (no basta con el 202).</li>
+    <li>Elegir un topic difícil de adivinar: <code>fulltank/&lt;sufijo-aleatorio&gt;/tanks/&lt;tankId&gt;/readings</code>.</li>
+  </ul>
+</div>
+
+<div class="card phase">
+  <div class="num c-lav">1</div>
+  <h3>Edge API (Spring Boot, carpeta <code>edge/</code>)</h3>
+  <div class="meta"><span class="chip c-lav">≈ 2–3 h</span><span class="chip c-rose">hoy</span></div>
+  <ul>
+    <li><code>POST /api/v1/readings</code>: entrada HTTP del dispositivo (red local).</li>
+    <li>Suscriptor MQTT (Eclipse Paho) al topic del tanque.</li>
+    <li>Validación: <code>deviceId</code> esperado, nivel dentro del rango, campos del contrato.</li>
+    <li>Reenvío al backend con <code>X-Device-Token</code> (variable de entorno) + cola en memoria con reintento y la <strong>misma</strong> <code>sequence</code> si Render no responde.</li>
+    <li><code>GET /health</code> y <code>GET /api/v1/readings/recent</code> para la demo; log de <code>quality</code> devuelto.</li>
+  </ul>
+</div>
+
+<div class="card phase">
+  <div class="num c-mint">2</div>
+  <h3>docker-compose (Edge + Mosquitto plan B)</h3>
+  <div class="meta"><span class="chip c-mint">≈ 45 min</span><span class="chip c-rose">hoy</span></div>
+  <ul>
+    <li>Servicios <code>edge</code> y <code>mosquitto</code> (con <code>mosquitto.conf</code>, usuario/clave).</li>
+    <li><code>.env.example</code>: <code>MQTT_URL</code>, <code>MQTT_TOPIC</code>, <code>BACKEND_URL</code>, <code>DEVICE_TOKEN</code>. El <code>.env</code> real no se sube.</li>
+    <li>Cambiar de broker público a Mosquitto = cambiar <code>MQTT_URL</code>.</li>
+  </ul>
+  <div class="milestone">✅ Hito mínimo: publicar con MQTTX → Edge → Render → lectura ACCEPTED.</div>
+</div>
+
+<div class="card phase">
+  <div class="num c-peach">3</div>
+  <h3>Firmware ESP32 + Wokwi</h3>
+  <div class="meta"><span class="chip c-peach">≈ 2–3 h</span><span class="chip c-sky">mañana mañana</span></div>
+  <ul>
+    <li>Reutilizar la medición: mediana de 5, NTP, <code>sequence</code> en NVS.</li>
+    <li>Envío por MQTT (PubSubClient, <code>setBufferSize(512)</code>) al broker público; modo HTTP directo a la Edge API como opción.</li>
+    <li>Proyecto Wokwi (<code>diagram.json</code> con HC-SR04, red <code>Wokwi-GUEST</code>).</li>
+    <li>Arrancar <code>sequence</code> en 1000 o usar otro <code>deviceId</code> para no chocar con las pruebas de curl.</li>
+  </ul>
+</div>
+
+<div class="card phase">
+  <div class="num c-sky">4</div>
+  <h3>Prueba de punta a punta y ensayo del plan B</h3>
+  <div class="meta"><span class="chip c-sky">≈ 1 h</span><span class="chip c-sky">mañana tarde</span></div>
+  <ul>
+    <li>Mover el obstáculo → nueva lectura → ACCEPTED → el nivel cambia en la web.</li>
+    <li>Simular la caída del broker público → cambiar a Mosquitto → seguir funcionando.</li>
+    <li>Capturas: Wokwi, MQTTX, logs de la Edge, web y lecturas del tanque.</li>
+  </ul>
+</div>
+
+<div class="card phase">
+  <div class="num c-rose">5</div>
+  <h3>Documentación (Solution Software Design)</h3>
+  <div class="meta"><span class="chip c-rose">≈ 1–2 h</span><span class="chip c-sky">mañana noche</span></div>
+  <ul>
+    <li>Justificar el broker: público para el prototipo y Wokwi, Mosquitto como plan B.</li>
+    <li>Limitaciones: topics legibles por cualquiera, publicación de lecturas falsas posible, sin garantía de disponibilidad.</li>
+    <li>Diagramas: contenedores (4.1.3.3), despliegue (4.1.3.4), Figura 5.15, contrato MQTT y REST de la Edge (5.6).</li>
+    <li>Corregir 4.2.2, 5.6 y T03: el endpoint para emitir el token ya existe.</li>
+  </ul>
+</div>
+
+<h2>Cronograma</h2>
+<div class="card tbl">
+  <table>
+    <tr><th>Cuándo</th><th>Qué</th><th>Resultado</th></tr>
+    <tr><td><strong>Hoy noche</strong></td><td>Fases 0, 1 y 2</td><td>MQTTX → Edge → Render funcionando</td></tr>
+    <tr><td><strong>Mañana mañana</strong></td><td>Fase 3</td><td>Wokwi publica lecturas reales</td></tr>
+    <tr><td><strong>Mañana tarde</strong></td><td>Fase 4</td><td>Prueba de punta a punta + plan B probado</td></tr>
+    <tr><td><strong>Mañana hasta 23:00</strong></td><td>Fase 5 + margen</td><td>Informe actualizado</td></tr>
+  </table>
+</div>
+
+<h2>Riesgos</h2>
+<div class="grid">
+  <div class="card risk"><h3>Broker público caído</h3><p>Mosquitto en el mismo compose; ESP32 físico en la misma WiFi.</p></div>
+  <div class="card risk"><h3>Render dormido</h3><p>La Edge reintenta con la misma <code>sequence</code>; despertar el backend antes de la demo.</p></div>
+  <div class="card risk"><h3>Lecturas falsas</h3><p>Topic con sufijo aleatorio y validación en la Edge; documentarlo como limitación.</p></div>
+  <div class="card risk"><h3>Wokwi no ve localhost</h3><p>Por eso Wokwi usa el broker público; la Edge se suscribe desde tu PC.</p></div>
+</div>
+
+<h2>Entregables</h2>
+<div class="card ok">
+<pre>edge/                      Spring Boot: REST + suscriptor MQTT + reenvío
+docker-compose.yml         edge + mosquitto
+mosquitto/mosquitto.conf   plan B
+.env.example               variables (sin secretos)
+firmware/                  sketch MQTT + sketch para guardar credenciales en NVS
+wokwi/                     diagram.json + wokwi.toml
+docs/                      justificación del broker y diagramas</pre>
+</div>
+
+<footer>Sin commits ni despliegues hasta el visto bueno de Samuel. Pendiente: confirmar en el enunciado la definición de la Edge API.</footer>
+</div>
+</body>
+</html>

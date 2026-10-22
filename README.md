@@ -2,6 +2,23 @@
 
 API del proyecto FullTank con Spring Boot 4.0.6 y Java 26.
 
+## Componentes del repositorio
+
+El repositorio tiene tres componentes. Cada uno se despliega por separado, y los tres comparten el mismo contrato JSON de lectura (`schemaVersion`, `deviceId`, `channel`, `sequence`, `capturedAt`, `level`, `unit`).
+
+| Carpeta | Componente | Dónde corre |
+|---|---|---|
+| `src/` | Backend: API REST y dominio. El bounded context `telemetry` recibe las lecturas en `POST /api/telemetry/readings` | Render |
+| [`edge/`](edge/README.md) | Edge API: adaptador de borde de `telemetry`. Recibe lecturas por HTTP o MQTT, las valida y las reenvía al backend con `X-Device-Token` | PC junto al sensor (Docker Compose, con Mosquitto como plan B) |
+| [`firmware/`](firmware/README.md) | Firmware del ESP32 con sensor ultrasónico. Mide el nivel del tanque y lo envía a la Edge API | ESP32 o simulación en Wokwi |
+
+```
+ESP32 ──MQTT──▶ broker ──▶ Edge API ──HTTPS + X-Device-Token──▶ Backend (telemetry)
+ESP32 ──HTTP (misma red)──▶ Edge API
+```
+
+El token del dispositivo solo lo tiene la Edge API. No pasa por el broker ni se guarda en el firmware. Render solo construye `src/`; `edge/` y `firmware/` no afectan ese despliegue.
+
 ## Requisitos
 
 - JDK 26

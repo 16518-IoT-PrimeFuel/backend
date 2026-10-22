@@ -1,0 +1,27 @@
+# Edge API + Mosquitto (plan B si el broker público falla).
+# Uso: cp .env.example .env && docker compose up -d --build
+services:
+  edge:
+    build: .
+    env_file: .env
+    ports:
+      - "8090:8090"   # ESP32 físico por HTTP en la misma red
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.20
+    environment:
+      MOSQUITTO_USERNAME: ${MOSQUITTO_USERNAME:?definir en .env}
+      MOSQUITTO_PASSWORD: ${MOSQUITTO_PASSWORD:?definir en .env}
+    # El archivo de claves se genera al arrancar desde .env: nada de secretos en el repo.
+    command: >
+      sh -c 'mosquitto_passwd -c -b /mosquitto/data/passwd "$$MOSQUITTO_USERNAME" "$$MOSQUITTO_PASSWORD"
+      && chown mosquitto:mosquitto /mosquitto/data/passwd && chmod 0700 /mosquitto/data/passwd
+      && exec mosquitto -c /mosquitto/config/mosquitto.conf'
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    ports:
+      - "1883:1883"   # ESP32 físico en la misma red (plan B)
+    restart: unless-stopped
