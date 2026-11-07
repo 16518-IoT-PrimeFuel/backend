@@ -55,6 +55,12 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "spendingTrend" : {
+            "items" : {
+              "$ref" : "#/components/schemas/DailyAmount"
+            },
+            "type" : "array"
+          },
           "totalOrders" : {
             "format" : "int64",
             "type" : "integer"
@@ -514,6 +520,19 @@
         },
         "type" : "object"
       },
+      "DailyAmount" : {
+        "properties" : {
+          "amount" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "date" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "DeliveryRecommendationResource" : {
         "properties" : {
           "criterion" : {
@@ -900,7 +919,7 @@
             "type" : "string"
           },
           "status" : {
-            "enum" : [ "PENDING", "CONFIRMED", "DISPATCHED", "PENDING_PAYMENT", "PAID", "IN_PROGRESS", "DELIVERED", "CANCELLED" ],
+            "enum" : [ "PENDING", "CONFIRMED", "DISPATCHED", "PENDING_PAYMENT", "PAID", "CANCELLED" ],
             "type" : "string"
           },
           "totalPrice" : {
@@ -943,6 +962,17 @@
             "type" : "integer"
           },
           "unit" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "HealthCheckResource" : {
+        "properties" : {
+          "database" : {
+            "type" : "string"
+          },
+          "status" : {
             "type" : "string"
           }
         },
@@ -1069,6 +1099,21 @@
           }
         },
         "required" : [ "name", "ruc", "type" ],
+        "type" : "object"
+      },
+      "OrganizationMemberResource" : {
+        "properties" : {
+          "role" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "username" : {
+            "type" : "string"
+          }
+        },
         "type" : "object"
       },
       "OrganizationResource" : {
@@ -2926,7 +2971,8 @@
         "tags" : [ "Empresas compradoras" ]
       },
       "post" : {
-        "description" : "Persiste un nuevo perfil de empresa compradora. La ruta está disponible sin autenticación y no crea usuarios ni membresías.",
+        "deprecated" : true,
+        "description" : "Deprecado: se mantiene solo por compatibilidad con clientes existentes. Persiste un nuevo perfil de empresa compradora. La ruta está disponible sin autenticación y no crea usuarios ni membresías.",
         "operationId" : "createBuyerCompany",
         "requestBody" : {
           "content" : {
@@ -3595,55 +3641,6 @@
           }
         },
         "summary" : "Registrar llegada de entrega",
-        "tags" : [ "Ciclo de entrega" ]
-      }
-    },
-    "/api/deliveries/{deliveryId}/assign" : {
-      "post" : {
-        "description" : "Avanza a asignada una entrega propia del distribuidor autenticado. Repetir la operación en ese estado no genera efectos duplicados.",
-        "operationId" : "assign_1",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "deliveryId",
-          "required" : true,
-          "schema" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "Entrega asignada o ya se encontraba asignada."
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "La entrega no existe o pertenece a otro distribuidor."
-          },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            },
-            "description" : "El estado físico actual no permite asignar la entrega."
-          }
-        },
-        "summary" : "Asignar entrega",
         "tags" : [ "Ciclo de entrega" ]
       }
     },
@@ -4998,7 +4995,8 @@
         "tags" : [ "Órdenes de combustible" ]
       },
       "post" : {
-        "description" : "Registra una orden para la empresa del usuario y valida la relación entre distribuidor, producto y equipo.",
+        "deprecated" : true,
+        "description" : "Deprecado: se mantiene para la app móvil y clientes existentes. Registra una orden para la empresa del usuario y valida la relación entre distribuidor, producto y equipo.",
         "operationId" : "createFuelOrder",
         "requestBody" : {
           "content" : {
@@ -5635,6 +5633,35 @@
         "tags" : [ "Productos de combustible" ]
       }
     },
+    "/api/health-check" : {
+      "get" : {
+        "operationId" : "healthCheck",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HealthCheckResource"
+                }
+              }
+            },
+            "description" : "API y base de datos disponibles"
+          },
+          "503" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HealthCheckResource"
+                }
+              }
+            },
+            "description" : "La base de datos no responde"
+          }
+        },
+        "summary" : "Comprobar el estado de la API y de la base de datos",
+        "tags" : [ "Health check" ]
+      }
+    },
     "/api/invitations/{invitationId}" : {
       "delete" : {
         "description" : "Revoca una invitación pendiente de una organización a la que pertenece el usuario autenticado.",
@@ -6056,6 +6083,51 @@
         },
         "summary" : "Invitar miembro a una organización",
         "tags" : [ "Invitaciones" ]
+      }
+    },
+    "/api/organizations/{organizationId}/members" : {
+      "get" : {
+        "description" : "Devuelve usuario y rol de cada membresía activa de la organización. Requiere pertenecer a ella.",
+        "operationId" : "getMembers",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "organizationId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizationMemberResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "Se devuelve la lista de miembros activos."
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizationMemberResource"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "El usuario no pertenece a la organización indicada."
+          }
+        },
+        "summary" : "Listar miembros de una organización",
+        "tags" : [ "Miembros de organización" ]
       }
     },
     "/api/payments" : {
@@ -6571,7 +6643,8 @@
         "tags" : [ "Distribuidores" ]
       },
       "post" : {
-        "description" : "Persiste un nuevo perfil de distribuidor. La ruta está disponible sin autenticación y no crea usuarios ni membresías.",
+        "deprecated" : true,
+        "description" : "Deprecado: se mantiene solo por compatibilidad con clientes existentes. Persiste un nuevo perfil de distribuidor. La ruta está disponible sin autenticación y no crea usuarios ni membresías.",
         "operationId" : "createProviderCompany",
         "requestBody" : {
           "content" : {
@@ -8774,6 +8847,9 @@
     "description" : "Asignación transaccional de solicitudes aceptadas",
     "name" : "Asignación de entregas"
   }, {
+    "description" : "Miembros activos de una organización",
+    "name" : "Miembros de organización"
+  }, {
     "description" : "Historial físico y de seguridad reconstruido",
     "name" : "Cronología de entregas"
   }, {
@@ -8797,6 +8873,9 @@
   }, {
     "description" : "Administración y ciclo de vida de cisternas por distribuidor",
     "name" : "Cisternas de flota"
+  }, {
+    "description" : "Estado de la API y de su conexión a la base de datos",
+    "name" : "Health check"
   }, {
     "description" : "Registro, consulta y actualización de perfiles de distribuidores",
     "name" : "Distribuidores"

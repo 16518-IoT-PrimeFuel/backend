@@ -78,6 +78,8 @@ public class WebSecurityConfiguration {
                                 // Machine ingestion authenticates with a rotating device token (T07-B), not
                                 // with the user JWT, so it is exempt from the bearer filter chain.
                                 "/api/telemetry/readings").permitAll()
+                        // Keep-alive probe from GitHub Actions (.github/workflows/keep-alive.yml).
+                        .requestMatchers(HttpMethod.GET, "/api/health-check").permitAll()
                         .requestMatchers(
                                 "/api/authentication/**",
                                 "/api-docs/**",

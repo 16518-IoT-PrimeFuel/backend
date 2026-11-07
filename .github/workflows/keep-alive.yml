@@ -1,0 +1,54 @@
+# Mantiene despierta la base de datos (Aiven MySQL) y, opcionalmente, el backend en Render.
+#
+# Secrets requeridos (Settings > Secrets and variables > Actions > Secrets):
+#   DATABASE_URL, DATABASE_PORT, DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD
+# Variable opcional (Settings > Secrets and variables > Actions > Variables):
+#   BACKEND_URL  p. ej. https://fulltank-backend.onrender.com  -> consulta GET $BACKEND_URL/api/health-check
+#
+# GitHub solo ejecuta los cron desde la rama por defecto (main).
+name: Keep alive
+
+on:
+  schedule:
+    # Cada 48 h aprox. (días impares a las 12:00 UTC). El cron de GitHub no admite intervalos de horas > 24.
+    - cron: "0 12 */2 * *"
+  workflow_dispatch:
+    inputs:
+      health_check:
+        description: "Consultar también /api/health-check (requiere la variable BACKEND_URL)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: SELECT 1 contra la base de datos
+        env:
+          DB_HOST: ${{ secrets.DATABASE_URL }}
+          DB_PORT: ${{ secrets.DATABASE_PORT }}
+          DB_NAME: ${{ secrets.DATABASE_NAME }}
+          DB_USER: ${{ secrets.DATABASE_USER }}
+          MYSQL_PWD: ${{ secrets.DATABASE_PASSWORD }}
+        run: |
+          if [ -z "$DB_HOST" ] || [ -z "$DB_USER" ] || [ -z "$MYSQL_PWD" ]; then
+            echo "::error::Faltan los secrets DATABASE_URL, DATABASE_USER o DATABASE_PASSWORD"
+            exit 1
+          fi
+          mysql --host="$DB_HOST" --port="${DB_PORT:-3306}" --user="$DB_USER" \
+                --ssl-mode=REQUIRED --connect-timeout=30 \
+                "${DB_NAME:-defaultdb}" --execute="SELECT 1;"
+
+      - name: GET /api/health-check
+        if: ${{ vars.BACKEND_URL != '' && (github.event_name == 'schedule' || inputs.health_check) }}
+        env:
+          BACKEND_URL: ${{ vars.BACKEND_URL }}
+        run: |
+          # Render free tarda hasta ~1 min en arrancar: reintentos con espera.
+          curl --fail-with-body --silent --show-error \
+               --retry 5 --retry-delay 20 --retry-all-errors --max-time 90 \
+               "${BACKEND_URL%/}/api/health-check"

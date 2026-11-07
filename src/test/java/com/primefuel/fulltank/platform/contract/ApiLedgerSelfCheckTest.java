@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
         })
 class ApiLedgerSelfCheckTest {
 
-    private static final int EXPECTED_OPERATION_COUNT = 126;
+    private static final int EXPECTED_OPERATION_COUNT = 127;
     private static final Pattern LEDGER_ROW =
             Pattern.compile(
                     "^\\|\\s*\\d+\\s*\\|\\s*(GET|POST|PUT|PATCH|DELETE)\\s*\\|\\s*(`[^`]+`)\\s*\\|");

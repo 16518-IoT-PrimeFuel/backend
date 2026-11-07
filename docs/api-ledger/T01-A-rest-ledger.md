@@ -126,3 +126,4 @@ Las rutas de distribuidor se detallan en [provider-contracts.md](provider-contra
 | 116 | GET | `/api/provider/tanks/{tankId}` |
 | 117 | GET | `/api/payments/provider/{providerId}` |
 | 118 | GET | `/api/provider/buyer-companies/lookup` |
+| 119 | GET | `/api/health-check` |
