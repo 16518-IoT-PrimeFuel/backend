@@ -2,6 +2,22 @@
 
 API del proyecto FullTank con Spring Boot 4.0.6 y Java 26.
 
+## Componentes del repositorio
+
+El repositorio tiene tres componentes. Cada uno se despliega por separado, y los tres comparten el mismo contrato JSON de lectura (`schemaVersion`, `deviceId`, `channel`, `sequence`, `capturedAt`, `level`, `unit`).
+
+| Carpeta | Componente | Dónde corre |
+|---|---|---|
+| `src/` | Backend: API REST y dominio. El bounded context `telemetry` recibe las lecturas en `POST /api/telemetry/readings` | Render |
+| [`fog/`](fog/README.md) | Fog API: nodo fog de `telemetry`. Recibe lecturas por HTTP o MQTT, las valida y las reenvía al backend con `X-Device-Token` | PC junto al sensor (Docker Compose). MQTT por HiveMQ público como complemento |
+
+```
+ESP32 ──MQTT──▶ broker ──▶ Fog API ──HTTPS + X-Device-Token──▶ Backend (telemetry)
+ESP32 ──HTTP (misma red)──▶ Fog API
+```
+
+El token del dispositivo solo lo tiene la Fog API. No pasa por el broker ni se guarda en el firmware del ESP32. Render solo construye `src/`; `fog/` no afecta ese despliegue.
+
 ## Requisitos
 
 - JDK 26

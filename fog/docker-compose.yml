@@ -1,0 +1,9 @@
+# Fog API. MQTT llega por el broker público HiveMQ (complemento); HTTP directo como respaldo.
+# Uso: cp .env.example .env && docker compose up -d --build
+services:
+  fog:
+    build: .
+    env_file: .env
+    ports:
+      - "8090:8090"   # ESP32 físico por HTTP en la misma red
+    restart: unless-stopped
